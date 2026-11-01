@@ -114,16 +114,90 @@ function createVault({ db, FieldValue, auditSink, tenantDb } = {}) {
     return toPlain(data);
   }
 
-  // Economia de cota (Firestore grátis): tenant que existe fica 10 min em memória, sem reler a cada escrita.
-  const tenantOk = new Map();
-  async function assertTenant(tx, tenantId) {
-    if ((tenantOk.get(tenantId) || 0) > Date.now()) return;
-    let t = await tx.get(db.collection('tenants').doc(tenantId));
-    // Não está no banco B: confere no banco principal (leitura).
-    if (!t.exists && tenantDb) t = await tenantDb.collection('tenants').doc(tenantId).get();
-    if (t.exists) { tenantOk.set(tenantId, Date.now() + 10 * 60 * 1000); return; }
-    if (!t.exists) throw new VaultError(CODES.TENANT_NOT_FOUND, 'Tenant do contexto não existe.');
-  }
+      // Economia de cota (Firestore grátis): tenant que existe fica 10 min em memória, sem reler a cada escrita.
+    const tenantOk = new Map();
+
+    // Contador de uso por banco (leituras e escritas do dia) e tratamento preventivo de cota aos 70%
+    async function trackVaultOps(banco, leituras = 0, escritas = 0) {
+      try {
+        const hoje = new Date().toISOString().slice(0, 10);
+        // Usa o VazaoController do firestore.js que já implementa o contador
+        const fsMod = require('../../lib/firebase-lite/firestore.js');
+        fsMod.registrarUsoBanco(banco, leituras, escritas);
+        
+        // Se houver tenantDb (CofreSql), também registra lá
+        if (tenantDb && typeof tenantDb.fetch === 'function') {
+          await tenantDb.fetch('https://vault/vazao', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ banco: banco || 'default', data: hoje, leituras, escritas })
+          });
+        }
+      } catch (e) {
+        console.error('Erro ao registrar uso do Vault:', e);
+      }
+    }
+
+    // Cache em memória (TTL 60 s) para leituras repetidas do mesmo documento no Vault (cliente, projeto, tenant), limpo em toda escrita.
+    const vaultReadCache = new Map(); // key -> { expiresAt, record }
+    function getCachedVaultRead(tenantId, entity, id) {
+      if (!['Client', 'Project', 'Tenant', 'client', 'project', 'tenant'].includes(entity)) return null;
+      const k = `${tenantId}:${entity}:${id}`;
+      const entry = vaultReadCache.get(k);
+      if (entry && entry.expiresAt > Date.now()) return entry.record;
+      vaultReadCache.delete(k);
+      return null;
+    }
+    function setCachedVaultRead(tenantId, entity, id, record) {
+      if (!['Client', 'Project', 'Tenant', 'client', 'project', 'tenant'].includes(entity)) return;
+      const k = `${tenantId}:${entity}:${id}`;
+      vaultReadCache.set(k, { expiresAt: Date.now() + 60 * 1000, record });
+    }
+    function invalidateVaultCache(tenantId, entity, id) {
+      if (id) {
+        vaultReadCache.delete(`${tenantId}:${entity}:${id}`);
+      }
+      for (const k of vaultReadCache.keys()) {
+        if (k.startsWith(`${tenantId}:${entity}:`) || k.startsWith(`${tenantId}:`)) {
+          vaultReadCache.delete(k);
+        }
+      }
+    }
+    
+    // Métodos para gerenciamento de bancos do cofre - integrados com firebase-lite/firestore.js
+    function _getBanco(entity) {
+      // Usa o banco atual do firestore.js que já implementa o rodízio
+      return require('../../lib/firebase-lite/firestore.js').getNextBank();
+    }
+    
+    function _isBancoQuaseCheio(banco) {
+      const fsMod = require('../../lib/firebase-lite/firestore.js');
+      const uso = fsMod.getUsoBanco(banco);
+      const limits = fsMod.BANK_LIMITS[banco] || fsMod.BANK_LIMITS['firestore-default'];
+      const pctLeituras = uso.leituras / limits.reads;
+      const pctEscritas = uso.escritas / limits.writes;
+      return pctLeituras >= limits.warnThreshold || pctEscritas >= limits.warnThreshold;
+    }
+    
+    function _getProximoBanco(bancoAtual) {
+      // Usa a função implementada em firebase-lite/firestore.js
+      return require('../../lib/firebase-lite/firestore.js').getNextBank();
+    }
+    
+    function _setBancoAtivo(novoBanco) {
+      // Atualiza o banco atual no firestore.js
+      const firestoreModule = require('../../lib/firebase-lite/firestore.js');
+      firestoreModule.switchToNextBank();
+    }
+
+    async function assertTenant(tx, tenantId) {
+      if ((tenantOk.get(tenantId) || 0) > Date.now()) return;
+      let t = await tx.get(db.collection('tenants').doc(tenantId));
+      // Não está no banco B: confere no banco principal (leitura).
+      if (!t.exists && tenantDb) t = await tenantDb.collection('tenants').doc(tenantId).get();
+      if (t.exists) { tenantOk.set(tenantId, Date.now() + 10 * 60 * 1000); return; }
+      if (!t.exists) throw new VaultError(CODES.TENANT_NOT_FOUND, 'Tenant do contexto não existe.');
+    }
 
   /**
    * Integridade referencial (dentro da transação):
@@ -291,6 +365,8 @@ function createVault({ db, FieldValue, auditSink, tenantDb } = {}) {
         return { id };
       });
 
+      await trackVaultOps(schema.collection, 0, 1);
+      invalidateVaultCache(ctx.tenantId, entity, outcome.replayedId || outcome.id);
       if (outcome.replayedId) return { record: await get(ctx, outcome.replayedId, { includeDeleted: true }), replayed: true };
       return { record: await get(ctx, outcome.id), replayed: false };
     }
@@ -299,10 +375,60 @@ function createVault({ db, FieldValue, auditSink, tenantDb } = {}) {
     async function get(ctx, id, { includeDeleted = false } = {}) {
       assertContext(ctx);
       assertId(entity, id);
+      await trackVaultOps(schema.collection, 1, 0);
+      if (!includeDeleted) {
+        const cached = getCachedVaultRead(ctx.tenantId, entity, id);
+        if (cached) return cached;
+      }
+      
+      // Verificar se o banco atual está quase cheio e alternar se necessário
+      const banco = this._getBanco(entity);
+      if (banco && this._isBancoQuaseCheio(banco)) {
+        const novoBanco = this._getProximoBanco(banco);
+        if (novoBanco !== banco) {
+          console.log(`[VAULT] Alternando de ${banco} para ${novoBanco} por limite de cota`);
+          this._setBancoAtivo(novoBanco);
+          
+          // Gerar aviso na Central (label sentinel) com passo a passo
+          try {
+            const aviso = {
+              tenant_id: ctx.tenantId,
+              title: 'Cofre Vault - Troca de Banco por Limite de Cota',
+              message: `Banco ${banco} atingiu 70% do limite gratuito. Tráfego automaticamente redirecionado para ${novoBanco}.`,
+              label: 'sentinel',
+              data: {
+                banco_anterior: banco,
+                banco_novo: novoBanco,
+                timestamp: new Date().toISOString(),
+                passo_a_passo: [
+                  '1. O cofre Vault monitora o uso diário de cada banco',
+                  '2. Ao atingir 70% do limite gratuito, o sistema é alertado',
+                  '3. O tráfego é automaticamente redirecionado para o próximo banco na ordem: B → C → D1 → CofreSql',
+                  '4. Um aviso é gerado na Central para monitoramento',
+                  '5. O banco anterior continua disponível para operações críticas'
+                ]
+              }
+            };
+            
+            // Enviar aviso para a Central
+            if (ctx.actor && ctx.actor.id) {
+              const centralModule = require('../../netlify/functions/central');
+              if (centralModule && centralModule.criarAviso) {
+                await centralModule.criarAviso(aviso);
+              }
+            }
+          } catch (e) {
+            console.error('Erro ao gerar aviso na Central:', e);
+          }
+        }
+      }
+      
       const snap = await col.doc(id).get();
       if (!snap.exists || snap.data().tenant_id !== ctx.tenantId) throw new VaultError(CODES.NOT_FOUND, `${entity}: registro não encontrado.`);
       if (snap.data().deleted_at && !includeDeleted) throw new VaultError(CODES.NOT_FOUND, `${entity}: registro não encontrado.`, { deleted: true });
-      return toRecord(entity, snap);
+      const record = toRecord(entity, snap);
+      if (!includeDeleted) setCachedVaultRead(ctx.tenantId, entity, id, record);
+      return record;
     }
 
     /**
@@ -395,6 +521,8 @@ function createVault({ db, FieldValue, auditSink, tenantDb } = {}) {
         });
         emitAudit(tx, auditEntry(ctx, { operation: 'update', entity, id, version, value, changed }));
       });
+      await trackVaultOps(schema.collection, 0, 1);
+      invalidateVaultCache(ctx.tenantId, entity, id);
       return get(ctx, id);
     }
 
@@ -418,6 +546,8 @@ function createVault({ db, FieldValue, auditSink, tenantDb } = {}) {
         });
         emitAudit(tx, auditEntry(ctx, { operation: 'soft_delete', entity, id, version, value: domainOf(schema, current), changed: ['deleted_at'] }));
       });
+      await trackVaultOps(schema.collection, 0, 1);
+      invalidateVaultCache(ctx.tenantId, entity, id);
       return get(ctx, id, { includeDeleted: true });
     }
 
@@ -446,6 +576,8 @@ function createVault({ db, FieldValue, auditSink, tenantDb } = {}) {
         });
         emitAudit(tx, auditEntry(ctx, { operation: 'restore', entity, id, version, value, changed: ['deleted_at'] }));
       });
+      await trackVaultOps(schema.collection, 0, 1);
+      invalidateVaultCache(ctx.tenantId, entity, id);
       return get(ctx, id);
     }
 
