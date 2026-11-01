@@ -14,6 +14,12 @@ const MODELOS_SUPORTADOS = {
   PEQUENO: 'Qwen2.5-0.5B-Instruct-q4f16_1-MLC'
 };
 
+const CONFIGURACAO_PADRAO = {
+  ativo: false,
+  modelo: MODELOS_SUPORTADOS.PEQUENO,
+  iaAparelhoAtivo: false  // Novo switch: IA no meu aparelho (grátis, offline)
+};
+
 const WEBLLM_CDN_URL = 'https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm@0.2.46/+esm';
 
 let engineInstancia = null;
