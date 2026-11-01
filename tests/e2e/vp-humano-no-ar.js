@@ -87,6 +87,7 @@ async function rodar(perfil, nome) {
     if (await e.isVisible('#senha')) { await e.fill('#senha', SENHA); await e.click('#login button'); await e.waitForTimeout(3000); }
     const n = await e.$$eval('#lista [data-i]', x => x.length);
     ok(`[${nome}] editor abre com os destinos`, n > 0, n + ' destinos');
+    ok(`[${nome}] editor tem botão Salvar e publicar`, await e.isVisible('#salvar'));
     await foto(e, '7-editor');
     // limpar: excluir a viagem de teste
     await v.click('#voltar').catch(() => {}); await v.click('#abaViagens'); await v.waitForTimeout(800);
