@@ -97,7 +97,10 @@
     // Configura o listener para mudanças de visibilidade
     document.addEventListener('visibilitychange', function() {
       if (document.visibilityState === 'visible') {
-        decolar();
+        var agora = Date.now();
+        if (agora - ultimoVoo >= 5 * 60 * 1000) {
+          decolar();
+        }
       }
     });
   }
