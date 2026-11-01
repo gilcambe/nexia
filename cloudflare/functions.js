@@ -55,18 +55,84 @@ const LOADERS = {
   'viajante-pro': () => require('../netlify/functions/viajante-pro.js'),
   'whatsapp-business': () => require('../netlify/functions/whatsapp-business.js'),
   'central': () => require('../netlify/functions/central.js'),
-  'conheca': () => require('../netlify/functions/conheca.js'),
   'pedidos': () => require('../netlify/functions/pedidos.js'),
+  'pedidos-acoes': () => require('../netlify/functions/pedidos-acoes.js'),
+  'entender-anexo': () => require('../netlify/functions/entender-anexo.js'),
   'nexia-api': () => require('../nexia-ai/api/index.js'),
 };
 
 const loaded = new Map();
 
 /** Handler no formato Netlify, ou null se não existe ou falhou ao carregar (como no server.js). */
-function getFunction(name) {
+function getFunction(name, env) {
   if (!Object.prototype.hasOwnProperty.call(LOADERS, name)) return null;
-  if (!loaded.has(name)) {
-    try { loaded.set(name, LOADERS[name]()); }
+      if (!loaded.has(name)) {
+    try {
+      const mod = LOADERS[name]();
+      // Garante que o env e a binding AI estejam sempre presentes e repassados
+      const resolvedEnv = env || {};
+      if (!resolvedEnv.AI) {
+        resolvedEnv.AI = {};
+      }
+      // Repassa o `env` do worker para os handlers se ele existir e tiver a binding AI
+      const passEnvToHandler = (handler) => async (event, context, env) => {
+  // Garante que o env e a binding AI estejam sempre presentes e repassados
+  const resolvedEnv = env || (context && context.env) || (event && event.env) || globalThis.env || {};
+  if (!resolvedEnv.AI) {
+    resolvedEnv.AI = {};
+  }
+  if (event && !event.env) event.env = resolvedEnv;
+  if (context && !context.env) context.env = resolvedEnv;
+  return await handler(event, context, resolvedEnv);
+};
+
+      const wrapHandler = (fn) => {
+        if (typeof fn !== 'function') return fn;
+        return async function(event, context, env) {
+          // Assegura que o objeto env do worker inclua a binding AI (env.AI) e repassa para pedidos-acoes / entenderAnexo
+          const resolvedEnv = env || (context && context.env) || (event && event.env) || globalThis.env || {};
+          if (!resolvedEnv.AI) {
+            resolvedEnv.AI = {};
+          }
+          if (event && !event.env) event.env = resolvedEnv;
+          if (context && !context.env) context.env = resolvedEnv;
+          return await fn(event, context, resolvedEnv);
+        };
+      };
+
+      if (typeof mod.createHandler === 'function') {
+        const originalCreateHandler = mod.createHandler;
+        mod.createHandler = function(deps = {}) {
+          const handler = originalCreateHandler(deps);
+          return wrapHandler(handler);
+        };
+      }
+      if (typeof mod.handler === 'function') {
+        mod.handler = wrapHandler(mod.handler);
+      }
+      // Garante também exportações customizadas comuns (como run, handle, default, etc.) para cobrir pedidos-acoes / entenderAnexo
+      ['run', 'handle', 'default', 'entenderAnexo', 'executar'].forEach(method => {
+        if (typeof mod[method] === 'function') {
+          mod[method] = wrapHandler(mod[method]);
+        }
+      });
+        const originalCreateHandler = mod.createHandler;
+        mod.createHandler = function(deps = {}) {
+          const handler = originalCreateHandler(deps);
+          return wrapHandler(handler);
+        };
+      }
+      if (typeof mod.handler === 'function') {
+        mod.handler = wrapHandler(mod.handler);
+      }
+      // Garante também exportações customizadas comuns (como run, handle, default, etc.) para cobrir pedidos-acoes / entenderAnexo
+      ['run', 'handle', 'default', 'entenderAnexo', 'executar'].forEach(method => {
+        if (typeof mod[method] === 'function') {
+          mod[method] = wrapHandler(mod[method]);
+        }
+      });
+      loaded.set(name, mod);
+    }
     catch (e) { console.warn('[FN] ✗', name, '-', e && e.message); loaded.set(name, null); }
   }
   return loaded.get(name);

@@ -99,7 +99,7 @@ async function runFunction(fnName, request, url, env, getFunction, reqId) {
   try {
     const ev = toEvent(request, url, body);
     if (reqId) ev.headers['x-request-id'] = reqId;
-    const result = await fn.handler(ev, {});
+    const result = await fn.handler(ev, env);
     const headers = { ...baseHeaders, ...((result && result.headers) || {}) };
     if (isStreamResult(result)) {
       return new Response(streamBody(result.stream), { status: result.statusCode || 200, headers: { ...headers, 'X-Accel-Buffering': 'no' } });
