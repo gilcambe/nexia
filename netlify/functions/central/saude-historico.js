@@ -42,14 +42,14 @@ async function guardarAmostra(db, { at = Date.now(), medir, rotas = ROTAS } = {}
   const ref = db.collection(COLECAO).doc(hora);
   if ((await ref.get()).exists) return { skipped: 'hora já medida', hora };
   const medidas = [];
-for (const r of rotas) {
+const medidas = await Promise.allSettled(rotas.map(async (r) => {
   try {
     const resultado = await medir(r.url);
-    medidas.push([r.id, resultado]);
+    return [r.id, resultado];
   } catch (error) {
-    medidas.push([r.id, { ok: false, codigo: 500, tempo: 0, error: error.message }]);
+    return [r.id, { ok: false, codigo: 500, tempo: 0, error: error.message }];
   }
-}
+}));
   const porRota = {};
   for (const [id, m] of medidas) porRota[id] = { ok: !!m.ok, codigo: Number(m.codigo) || 0, tempo: Math.round(Number(m.tempo) || 0) };
   await ref.set({ hora, em: new Date(at).toISOString(), rotas: porRota });
