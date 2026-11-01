@@ -26,8 +26,8 @@ const getToken = () => {
   return localStorage.getItem('token');
 };
 
-// Função para obter viagens
-const getViagens = async () => {
+// Função para listar viagens
+const listarViagens = async () => {
   const token = getToken();
   const response = await fetch('https://api.viajantepro.com.br/viagens', {
     headers: {
@@ -77,8 +77,8 @@ const excluirViagem = async (id) => {
   return response.json();
 };
 
-// Função para obter chats
-const getChats = async () => {
+// Função para listar chats
+const listarChat = async () => {
   const token = getToken();
   const response = await fetch('https://api.viajantepro.com.br/chats', {
     headers: {
@@ -98,6 +98,23 @@ const enviarChat = async (chat) => {
       'Content-Type': 'application/json'
     },
     body: JSON.stringify(chat)
+  });
+  return response.json();
+};
+
+// Função para obter viagem pública
+const obterViagemPublica = async (id) => {
+  const response = await fetch(`https://api.viajantepro.com.br/viagens/publica/${id}`);
+  return response.json();
+};
+
+// Função para listar conversas
+const listarConversas = async () => {
+  const token = getToken();
+  const response = await fetch('https://api.viajantepro.com.br/conversas', {
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
   });
   return response.json();
 };
@@ -131,4 +148,4 @@ const lerConteudo = async () => {
   return response.json();
 };
 
-module.exports = { VIAJANTE_PRO, getViagens, criarViagem, editarViagem, excluirViagem, getChats, enviarChat, salvarConteudo, lerConteudo };
+module.exports = { VIAJANTE_PRO, listarViagens, criarViagem, editarViagem, excluirViagem, listarChat, enviarChat, obterViagemPublica, listarConversas, salvarConteudo, lerConteudo };
