@@ -62,58 +62,58 @@ export async function renderizarIALocal(containerOuSeletor) {
   const statusDiv = container.querySelector('#ia-local-status');
 
   if (inputSwitch && suporte.suportado) {
-    inputSwitch.addEventListener('change', async (e) => {
-      const ativando = e.target.checked;
+      inputSwitch.addEventListener('change', async (e) => {
+    const ativando = e.target.checked;
 
-      if (ativando) {
-        // Exibe aviso de download de ~1 GB com recomendação de Wi-Fi
-        const confirmar = window.confirm('Ativar a IA no aparelho?\n\nSerá feito o download de aproximadamente 1 GB de dados do modelo de IA.\nRecomendamos fortemente o uso de conexão Wi-Fi.');
+    if (ativando) {
+      // Exibe aviso de download de ~1 GB com recomendação de Wi-Fi
+      const confirmar = window.confirm('Ativar a IA no aparelho?\n\nSerá feito o download de aproximadamente 1 GB de dados do modelo de IA.\nRecomendamos fortemente o uso de conexão Wi-Fi.');
+      
+      if (!confirmar) {
+        e.target.checked = false;
+        return;
+      }
+
+      await configManager.setIAState(true);
+      if (statusDiv) {
+        statusDiv.innerHTML = `
+          <div style="padding: 12px; border-radius: 8px; background: rgba(230,162,60,0.15); color: #e6a23c; border: 1px solid rgba(230,162,60,0.3);">
+            <strong>Baixando modelo (~1 GB)...</strong> Certifique-se de estar no Wi-Fi. Inicializando IA local...
+          </div>
+        `;
+      }
+
+      try {
+        // Simula o download e inicialização do modelo
+        await simularDownload(statusDiv);
         
-        if (!confirmar) {
-          e.target.checked = false;
-          return;
-        }
-
-        await configManager.setIAState(true);
         if (statusDiv) {
           statusDiv.innerHTML = `
-            <div style="padding: 12px; border-radius: 8px; background: rgba(230,162,60,0.15); color: #e6a23c; border: 1px solid rgba(230,162,60,0.3);">
-              <strong>Baixando modelo (~1 GB)...</strong> Certifique-se de estar no Wi-Fi. Inicializando IA local...
+            <div style="padding: 12px; border-radius: 8px; background: rgba(42,122,78,0.2); color: #2A7A4E; border: 1px solid rgba(42,122,78,0.3);">
+              <strong>Sucesso!</strong> IA local ativada e modelo carregado no aparelho.
             </div>
           `;
         }
-
-        try {
-          // Simula o download e inicialização do modelo
-          await simularDownload(statusDiv);
-          
-          if (statusDiv) {
-            statusDiv.innerHTML = `
-              <div style="padding: 12px; border-radius: 8px; background: rgba(42,122,78,0.2); color: #2A7A4E; border: 1px solid rgba(42,122,78,0.3);">
-                <strong>Sucesso!</strong> IA local ativada e modelo carregado no aparelho.
-              </div>
-            `;
-          }
-        } catch (err) {
-          await configManager.setIAState(false);
-          e.target.checked = false;
-          if (statusDiv) {
-            statusDiv.innerHTML = `
-              <div style="padding: 12px; border-radius: 8px; background: rgba(255,107,107,0.15); color: #ff6b6b; border: 1px solid rgba(255,107,107,0.3);">
-                <strong>Erro ao carregar modelo:</strong> ${err?.message || err}
-              </div>
-            `;
-          }
-        }
-      } else {
+      } catch (err) {
         await configManager.setIAState(false);
+        e.target.checked = false;
         if (statusDiv) {
           statusDiv.innerHTML = `
-            <div style="color: rgba(255,255,255,0.7);">Desativado. O modelo (~1 GB) será baixado ao ativar.</div>
+            <div style="padding: 12px; border-radius: 8px; background: rgba(255,107,107,0.15); color: #ff6b6b; border: 1px solid rgba(255,107,107,0.3);">
+              <strong>Erro ao carregar modelo:</strong> ${err?.message || err}
+            </div>
           `;
         }
       }
-    });
+    } else {
+      await configManager.setIAState(false);
+      if (statusDiv) {
+        statusDiv.innerHTML = `
+          <div style="color: rgba(255,255,255,0.7);">Desativado. O modelo (~1 GB) será baixado ao ativar.</div>
+        `;
+      }
+    }
+  });
   }
 }
 
