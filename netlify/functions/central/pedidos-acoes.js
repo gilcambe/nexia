@@ -5,9 +5,11 @@ try { ({ montarPedido } = require('./pedidos-pedir')); } catch { /* sem o rotead
 
 const { publicar } = require('./pedidos-publicar');
 const { mandarParaJules } = require('./pedidos-jules');
-const { rodar } = require('./github');
 
 const issue = (c) => '/repos/gilcambe/nexia/issues/' + c;
+// Dispara um robô (workflow_dispatch) pelo mesmo token dos pedidos. Antes o socorro importava um "rodar" que não existe.
+const disparar = (p, arquivo, inputs) => p.gh('/repos/gilcambe/nexia/actions/workflows/' + arquivo + '/dispatches', { method: 'POST', body: JSON.stringify({ ref: 'develop', inputs }) });
+const ROTULO_PAUSA = 'fila-pausada';
 const r = (status, corpo) => ({ status, corpo });
 
 // Anexo de qualquer tipo (foto, PDF, planilha...): vai para o ramo cortex-anexos e o pedido cita o caminho.
@@ -47,7 +49,14 @@ async function agir(p, b, quem) {
   }
   if (b.acao === 'anexar') return anexar(p, b);
   if (b.acao === 'publicar') return publicar(p.gh);
+  // #2718: AJUDA AO CORTEX. Socorro geral, botão de emergência e pedir ajuda às IAs conectadas numa tarefa.
+  if (b.acao === 'socorro') { const x = await socorro(p, { jules: !!b.jules }); return r(200, x); }
+  if (b.acao === 'pausar-fila' || b.acao === 'voltar-fila') return pausa(p, b.acao === 'pausar-fila', quem);
   if (!n && b.acao !== 'juntar') return r(400, { error: 'Falta o número do pedido.' });
+  if (b.acao === 'reserva') {
+    await disparar(p, 'cortex-reserva.yml', { numero: String(n) });
+    return r(200, { ok: true, mensagem: 'Pedi às IAs conectadas na Central para fazer o pedido #' + n + '. Elas abrem o PR sozinhas.' });
+  }
   // Cortex → Jules (grátis): manda a tarefa travada para o Jules resolver e abrir o PR.
   if (b.acao === 'jules') { const x = await require('./pedidos-jules').mandarParaJules(p, n, quem); return r(x.status, x.corpo); }
   if (b.acao === 'comentar') {
@@ -76,62 +85,43 @@ async function agir(p, b, quem) {
   return r(400, { error: 'Ação desconhecida.' });
 }
 
+// Socorro (#2324, consertado no #2718): as travadas mais recentes vão para as IAs conectadas (Reserva) ou, com a opção
+// "Incluir o Jules", as que mexem em workflow ou já passaram 2 vezes pela Reserva vão para o Jules.
 async function socorro(p, { jules }) {
-  const issues = await p.gh('/repos/gilcambe/nexia/issues', {
-    method: 'GET',
-    body: JSON.stringify({
-      labels: 'cortex-travado',
-      state: 'open',
-      sort: 'updated',
-      direction: 'desc',
-      per_page: 5
-    })
-  });
-
-  const agora = new Date();
-  const seisHorasAtras = new Date(agora.getTime() - 6 * 60 * 60 * 1000);
-
+  const lista = await p.gh('/repos/gilcambe/nexia/issues?state=open&labels=cortex-travado&sort=updated&direction=desc&per_page=5');
+  const issues = (Array.isArray(lista) ? lista : []).filter((i) => !i.pull_request);
+  const seisHorasAtras = Date.now() - 6 * 36e5;
   const resultado = [];
-
-  for (const issue of issues) {
-    const labels = issue.labels.map(l => l.name);
-    const reservaTentou = labels.includes('reserva-tentou') && new Date(issue.updated_at) > seisHorasAtras;
-
-    if (reservaTentou) continue;
-
-    const tituloMencionaWorkflow = issue.title.includes('.github/workflows/');
-    const passouDuasVezesReserva = labels.filter(l => l.startsWith('reserva-tentativa-')).length >= 2;
-
-    if (tituloMencionaWorkflow || passouDuasVezesReserva) {
-      if (jules) {
-        let tentativas = 0;
-        let sucesso = false;
-        while (tentativas < 3 && !sucesso) {
-          const x = await mandarParaJules(p, issue.number, 'socorro');
-          if (x.status === 200) {
-            sucesso = true;
-            resultado.push({
-              numero: issue.number,
-              titulo: issue.title,
-              para: 'jules',
-              link: issue.html_url
-            });
-          }
-          tentativas++;
-        }
+  for (const i of issues) {
+    const labels = (i.labels || []).map((l) => l.name || l);
+    if (labels.includes('reserva-tentou') && Date.parse(i.updated_at) > seisHorasAtras) continue;
+    const praJules = jules && (/\.github\/workflows\//.test(String(i.title || '')) || labels.filter((l) => l.startsWith('reserva-tentativa-')).length >= 2);
+    try {
+      if (praJules) {
+        const x = await mandarParaJules(p, i.number, 'socorro');
+        if (x.status !== 200) continue;
       } else {
-        await rodar('cortex-reserva.yml', { numero: issue.number });
-        resultado.push({
-          numero: issue.number,
-          titulo: issue.title,
-          para: 'reserva',
-          link: issue.html_url
-        });
+        await disparar(p, 'cortex-reserva.yml', { numero: String(i.number) });
       }
-    }
+      resultado.push({ numero: i.number, titulo: i.title, para: praJules ? 'jules' : 'reserva', link: i.html_url });
+    } catch { /* uma tarefa que falhou não impede as outras */ }
   }
-
-  return resultado;
+  return {
+    total: resultado.length, ias: resultado.filter((x) => x.para === 'reserva').length, jules: resultado.filter((x) => x.para === 'jules').length,
+    travadas: issues.length, links: resultado.map((x) => ({ numero: x.numero, titulo: x.titulo })), ultimaExecucao: new Date().toISOString(), resultado,
+  };
 }
 
-module.exports = { agir, socorro };
+// Botão de emergência: uma issue aberta com fila-pausada faz a fila (scripts/cortex-fila.js) parar de despachar.
+async function pausa(p, pausar, quem) {
+  const abertas = await p.gh('/repos/gilcambe/nexia/issues?state=open&labels=' + ROTULO_PAUSA + '&per_page=10');
+  const lista = (Array.isArray(abertas) ? abertas : []).filter((i) => !i.pull_request);
+  if (pausar) {
+    if (!lista.length) await p.gh('/repos/gilcambe/nexia/issues', { method: 'POST', body: JSON.stringify({ title: '🛑 Fila do Cortex pausada', body: 'Pausada pelo botão de emergência da Central por ' + quem + '. Feche esta issue (ou toque em "Voltar a rodar") para a fila andar de novo.', labels: ['cortex-fila', ROTULO_PAUSA] }) });
+    return r(200, { ok: true, pausada: true, mensagem: 'Fila pausada. O que já está rodando termina; nada novo começa até você tocar em "Voltar a rodar".' });
+  }
+  for (const i of lista) await p.gh(issue(i.number), { method: 'PATCH', body: JSON.stringify({ state: 'closed', state_reason: 'completed' }) });
+  return r(200, { ok: true, pausada: false, mensagem: 'A fila voltou a rodar.' });
+}
+
+module.exports = { agir, socorro, pausa };

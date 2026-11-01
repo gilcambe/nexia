@@ -23,7 +23,7 @@ function depoisSemEntrega(labels) {
   return { n, travar: n >= MAX_SEM_ENTREGA };
 }
 const CONFIAVEIS = ['OWNER', 'MEMBER', 'COLLABORATOR'];
-const L = { jules: 'cortex-jules', fila: 'cortex-fila', rodando: 'cortex-rodando', feito: 'cortex-feito', travado: 'cortex-travado', dividido: 'cortex-dividido', parte: 'cortex-parte', semDivisao: 'cortex-sem-divisao', prioridade: 'cortex-prioridade', urgente: 'cortex-urgente', semCota: 'cortex-reserva-sem-cota' };
+const L = { jules: 'cortex-jules', fila: 'cortex-fila', rodando: 'cortex-rodando', feito: 'cortex-feito', travado: 'cortex-travado', dividido: 'cortex-dividido', parte: 'cortex-parte', semDivisao: 'cortex-sem-divisao', prioridade: 'cortex-prioridade', urgente: 'cortex-urgente', pausada: 'fila-pausada', semCota: 'cortex-reserva-sem-cota' };
 const MAX_CORPO = 2500;      // tarefa maior que isso é dividida em partes pequenas
 const MAX_ARQUIVOS = 4;      // ou que mexe em mais arquivos do que isso
 
@@ -309,7 +309,9 @@ function decidir({ issues, runs, agora = Date.now(), pistas = PISTAS, prs = [], 
   const acoes = [];
   const tamanhosDe = corpo => Object.fromEntries(plano.arquivosCitados(corpo).filter(a => tamanhos[a]).map(a => [a, tamanhos[a]]));
   const ultimaRun = n => runs.filter(r => r.name === `Cortex #${n}`).sort((a, b) => b.id - a.id)[0] || null;
-  const validas = issues.filter(i => !i.pull_request && confiavel(i) && nomes(i).includes(L.fila));
+  // #2718: botão de emergência da Central. Issue aberta com fila-pausada = nada novo sai; o que já roda termina.
+  const pausada = issues.some(i => !i.pull_request && confiavel(i) && nomes(i).includes(L.pausada));
+  const validas = issues.filter(i => !i.pull_request && confiavel(i) && nomes(i).includes(L.fila) && !nomes(i).includes(L.pausada));
   const pistasEmUso = new Set();
   let ativas = 0;
 
@@ -372,7 +374,7 @@ function decidir({ issues, runs, agora = Date.now(), pistas = PISTAS, prs = [], 
     if (mexeEmWorkflow(i)) { acoes.push({ tipo: 'para-jules', numero: i.number }); continue; }
     if (plano.conflitaCom(i, rodando)) continue;   // outra parte rodando mexe no mesmo arquivo: espera ela
     if (precisaDividir(i, tamanhos)) { acoes.push({ tipo: 'dividir', numero: i.number, titulo: i.title || '', tarefa: String(i.body || '').trim(), tamanhos: tamanhosDe(i.body) }); continue; }
-    if (ativas >= pistas) break;
+    if (pausada || ativas >= pistas) break;
     let pista = 1; while (pistasEmUso.has(pista)) pista++;
     pistasEmUso.add(pista); ativas++; rodando.push(i);
     acoes.push({ tipo: 'despachar', numero: i.number, pista, tarefa: String(i.body || '').replace(/<!-- cortex-plano [\s\S]*?-->\n?/, '').trim() });
