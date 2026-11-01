@@ -4,10 +4,10 @@
 // "site" é o que o público vê, "painel" é a área do dono. "suporte" = cliente com agenda (entrar sem senha).
 // Produto novo: acrescente uma linha aqui. "pendente: true" = ainda sem site no ar (a tela mostra "em breve"). Links grátis do dia a dia ficam em LINKS.
 
-const BASE = 'https://nexia.gcbezerra.workers.dev';
+const BASE = 'https://cortex.kernex.com.br';
 
 const PRODUTOS = [
-  { id: 'body-coach', logo: '/central/logos/body-coach.svg', segmento: 'Fitness', nome: 'Body Coach', icone: '💪', frase: 'App de treino e dieta (vende assinatura)', site: 'https://nexiabodycoach.pages.dev/', painel: 'https://nexiabodycoach.pages.dev/body-coach/admin/acessos', tipo: 'produto' },
+  { id: 'body-coach', logo: '/central/logos/body-coach.svg', segmento: 'Fitness', nome: 'Body Coach', icone: '💪', frase: 'App de treino e dieta (vende assinatura)', site: 'https://bodycoach.kernex.com.br/', painel: 'https://bodycoach.kernex.com.br/body-coach/admin/acessos', tipo: 'produto' },
   { id: 'cortex', logo: '/central/logos/cortex.svg', segmento: 'IA', nome: 'Cortex', icone: '🧠', frase: 'O robô que programa a Kernex', site: BASE + '/health', painel: BASE + '/cortex-app', tipo: 'produto' },
   { id: 'achados', segmento: 'Ofertas', nome: 'Achados (ofertas)', icone: '🛍️', frase: 'Vitrine de ofertas com link de afiliado', site: 'https://achados-nexia.pages.dev/', painel: 'https://github.com/gilcambe/nexia/actions/workflows/afiliados.yml', tipo: 'produto' },
   { id: 'divulga', segmento: 'Marketing', nome: 'Divulga', icone: '📣', frase: 'Posta os clientes no Facebook e Instagram', site: 'https://www.instagram.com/nexiabodycoach/', painel: 'https://github.com/gilcambe/nexia/actions/workflows/divulga.yml', tipo: 'produto' },

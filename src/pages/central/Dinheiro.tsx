@@ -40,7 +40,7 @@ export default function Dinheiro({ d, erro }: { d: Dados; erro?: string }) {
           <Numero valor={x.avisos7} rotulo="avisos de Pix (7 dias)" />
         </div>
         <Meta valor={x.receitaMes} />
-        <Botao href="https://nexiabodycoach.pages.dev/body-coach/admin/acessos" tipo="forte">Confirmar pagamentos e liberar acesso</Botao>
+        <Botao href="https://bodycoach.kernex.com.br/body-coach/admin/acessos" tipo="forte">Confirmar pagamentos e liberar acesso</Botao>
       </Cartao>
 
       <Cartao titulo="Quanto entrou por mês">
