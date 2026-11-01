@@ -65,7 +65,24 @@ function getFunction(name) {
   if (!loaded.has(name)) {
     try {
       const mod = LOADERS[name]();
-      // Garante que se o módulo exportar createHandler ou similar, injetamos ou garantimos que a AI binding esteja disponível
+      // Assegura que o env do worker (com env.AI) seja repassado aos handlers criados via createHandler ou diretamente
+      if (mod && typeof mod.createHandler === 'function') {
+        const originalCreateHandler = mod.createHandler;
+        mod.createHandler = function(deps = {}) {
+          const handler = originalCreateHandler(deps);
+          return async function(event, context, env) {
+            if (env && env.AI) {
+              if (event) event.env = env;
+              if (context) context.env = env;
+            }
+            return await handler(event, context, env);
+          };
+        };
+        // Recria o handler padrão se já houver exports.handler
+        if (mod.handler) {
+          // Mantém compatibilidade ou deixa o worker injetar env
+        }
+      }
       loaded.set(name, mod);
     }
     catch (e) { console.warn('[FN] ✗', name, '-', e && e.message); loaded.set(name, null); }
