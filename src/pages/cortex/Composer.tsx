@@ -18,6 +18,11 @@ const MAX = 60000;
 
 const paraBase64 = (f: Blob) => new Promise<string>((ok, no) => { const r = new FileReader(); r.onload = () => ok(String(r.result).split(",")[1] ?? ""); r.onerror = () => no(r.error); r.readAsDataURL(f); });
 
+// Função auxiliar para verificar se arquivo é pequeno e pode ser lido localmente
+const ehArquivoTextoPequeno = (f: File): boolean => {
+  return (f.type.startsWith("text/") || /\.(txt|csv|xlsm|xls|ods)$/i.test(f.name)) && f.size <= 100_000;
+};
+
 // Print ou foto: reduz até caber (~40 mil letras) para o pedido não passar do limite do GitHub.
 async function reduzirImagem(f: File): Promise<string> {
   const bmp = await createImageBitmap(f);
