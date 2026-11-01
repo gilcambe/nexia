@@ -25,6 +25,8 @@ export function ehPedidoDeCodigo(texto: string): boolean {
   return PALAVRAS_CODIGO.test(t);
 }
 
+// Função pura exportada - retorna true quando texto contém palavras relacionadas a alterações de projeto/sistema
+
 /** Pergunta sobre como andam as tarefas: a resposta lê a Central (fila do Cortex) antes. */
 export function ehSobreSituacao(texto: string): boolean {
   const t = sem(texto || "");
