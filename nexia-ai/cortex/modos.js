@@ -16,7 +16,11 @@ const buscaWebEngine = require('../../lib/busca-web');
 
 /** Resultados da web (grátis, sem chave). Devolve o contexto formatado da busca. */
 async function buscarWeb(pergunta, fetchImpl = fetch, ms = 4000) {
-  return (await buscarWebDetalhe(pergunta, fetchImpl, ms)).contexto;
+  const resultado = await buscarWebDetalhe(pergunta, fetchImpl, ms);
+  if (!resultado.contexto || resultado.contexto.trim() === '') {
+    return 'Não encontrei fontes agora. NUNCA invente notícias, leis, estatísticas ou fontes.';
+  }
+  return resultado.contexto;
 }
 
 /** Igual a buscarWeb, mais quantas fontes cada serviço trouxe (porFonte). */
