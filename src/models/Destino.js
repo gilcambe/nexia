@@ -40,10 +40,7 @@ const DestinoSchema = new mongoose.Schema({
     type: Boolean,
     default: true
   },
-  criadoEm: {
-    type: Date,
-    default: Date.now
-  },
+
 }, {
   timestamps: true
 });
