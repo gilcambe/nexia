@@ -23,6 +23,16 @@ class WebLLMChat {
 
 export const webLLMChat = new WebLLMChat();
 
+export async function chatWithWebLLM(prompt: string): Promise<string> {
+  try {
+    await webLLMChat.init();
+    return await webLLMChat.chat(prompt);
+  } catch (error) {
+    console.error('WebLLM initialization failed:', error);
+    throw error;
+  }
+}
+
 export async function chatWithFallback(prompt: string): Promise<{ response: string; engine: string }> {
   try {
     const response = await webLLMChat.chat(prompt);
