@@ -23,10 +23,10 @@ class WebLLMChat {
 
 export const webLLMChat = new WebLLMChat();
 
-export async function chatWithWebLLM(prompt: string): Promise<string> {
+export async function chatWithWebLLM(prompt: string): Promise<{ response: string; engine: string }> {
   try {
     await webLLMChat.init();
-    return await webLLMChat.chat(prompt);
+    return { response: await webLLMChat.chat(prompt), engine: 'WebLLM' };
   } catch (error) {
     console.error('WebLLM initialization failed:', error);
     throw error;
@@ -34,6 +34,15 @@ export async function chatWithWebLLM(prompt: string): Promise<string> {
 }
 
 export async function chatWithFallback(prompt: string): Promise<{ response: string; engine: string }> {
+  try {
+    const response = await webLLMChat.chat(prompt);
+    return { response, engine: 'WebLLM' };
+  } catch (error) {
+    console.error('WebLLM failed, falling back to Ollama:', error);
+    const ollamaResponse = await ollamaEngine.chat(prompt);
+    return { response: ollamaResponse, engine: 'Ollama' };
+  }
+}
   try {
     const response = await webLLMChat.chat(prompt);
     return { response, engine: 'WebLLM' };
