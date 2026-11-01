@@ -81,7 +81,8 @@ function getFunction(name) {
           const handler = originalCreateHandler(deps);
           return passEnvToHandler(handler);
         };
-      } else if (typeof mod.handler === 'function') {
+      }
+      if (typeof mod.handler === 'function') {
         mod.handler = passEnvToHandler(mod.handler);
       }
       loaded.set(name, mod);
