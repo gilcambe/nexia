@@ -66,14 +66,40 @@ export default function Composer({ modo, enviar, inicial = "" }: Props) {
   // Qualquer tipo de arquivo: texto/código entra como texto; print/foto é reduzido; o resto vai embutido se for pequeno.
   // #825: foto, PDF, planilha e áudio passam pela IA grátis do servidor (descrição, texto ou transcrição).
   const { agir } = usePedidos();
-  const entender = async (f: File): Promise<string | null> => {
-    if (f.size > 700_000 || !/^(image|audio)\//.test(f.type) && !/\.(pdf|xlsx|xlsm|xls|ods|docx|odt|csv|mp3|m4a|wav|ogg|opus|webm)$/i.test(f.name)) return null;
+  const entender = async (f: File): Promise<{ ok: boolean; texto?: string; tipo?: string }> => {
+    if (f.size > 700_000 || !/^(image|audio)\//.test(f.type) && !/\.(pdf|xlsx|xlsm|xls|ods|docx|odt|csv|mp3|m4a|wav|ogg|opus|webm)$/i.test(f.name)) 
+      return { ok: false };
+    
     try {
       const r = await agir({ acao: "entender", nome: f.name, tipo: f.type, base64: await paraBase64(f) }) as { ok: boolean; texto?: string; tipo?: string };
-      if (!r.ok || !r.texto) return null;
+      if (!r.ok || !r.texto) {
+        // Fallback para arquivos pequenos de texto/planilha
+        const isTextoPequeno = f.type.startsWith("text/") || /\.(txt|csv|xlsm|xls|ods)$/i.test(f.name) && f.size <= 100_000;
+        if (isTextoPequeno) {
+          try {
+            const conteudo = await f.text();
+            return { ok: true, texto: conteudo, tipo: "texto" };
+          } catch {
+            return { ok: false };
+          }
+        }
+        return { ok: false };
+      }
       const como = r.tipo === "imagem" ? "descrição da imagem" : r.tipo === "audio" ? "transcrição do áudio" : "texto do arquivo";
-      return `Anexo \`${f.name}\` (${como}, feita pela IA):\n\`\`\`\n${r.texto}\n\`\`\``;
-    } catch { return null; }
+      return { ok: true, texto: `Anexo \`${f.name}\` (${como}, feita pela IA):\n\`\`\`\n${r.texto}\n\`\`\``, tipo: r.tipo };
+    } catch { 
+      // Fallback para arquivos pequenos de texto/planilha
+      const isTextoPequeno = f.type.startsWith("text/") || /\.(txt|csv|xlsm|xls|ods)$/i.test(f.name) && f.size <= 100_000;
+      if (isTextoPequeno) {
+        try {
+          const conteudo = await f.text();
+          return { ok: true, texto: conteudo, tipo: "texto" };
+        } catch {
+          return { ok: false };
+        }
+      }
+      return { ok: false }; 
+    }
   };
   const anexar = async (f: File | undefined) => {
     if (!f) return;
