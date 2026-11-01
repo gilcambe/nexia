@@ -3,6 +3,11 @@
 // NEXIA Viajante Pro — API Backend do Painel CMS, Cotações e Aplicativo do Passageiro
 // Firestore: viajante_contas/viajantepro { senha_hash, senha_salt, config }
 //            viajante_contas/viajantepro/sessoes/<hash>
+//            viajante_contas/viajantepro/pax_sessoes/<hash>
+//            viajante_contas/viajantepro/pax_codigos/<emailHash>
+//            viajante_contas/viajantepro/pax_perfil/<emailHash>
+//            viajante_contas/viajantepro/pax_solicitacoes/<id>
+//            viajante_contas/viajantepro/pax_documentos/<id>
 //            viajante_contas/viajantepro/site/conteudo
 //            viajante_contas/viajantepro/fotos/<id>
 //            viajante_contas/viajantepro/viagens/<id>
@@ -90,6 +95,38 @@ async function enviarEmailBrevo(env, cotacao) {
         sender: { name: 'Viajante Pro Cotações', email: 'no-reply@viajante.pro' },
         to: [{ email: to, name: 'Atendimento Viajante Pro' }],
         subject: `NOVA COTAÇÃO | ${cotacao.nome} | ${cotacao.destino || 'Geral'} | ${cotacao.codigo}`,
+        htmlContent,
+      }),
+    });
+    return { ok: resp.ok, status: resp.status };
+  } catch (e) {
+    return { ok: false, error: e && e.message };
+  }
+}
+
+async function enviarCodigoBrevo(env, email, codigo) {
+  const key = env.BREVO_API_KEY;
+  if (!key) return { ok: false, motivo: 'BREVO_API_KEY ausente.' };
+
+  const htmlContent = `
+    <h2>Código de Acesso — Viajante Pro</h2>
+    <p>Seu código de validação para entrar no aplicativo é:</p>
+    <h1 style="font-size: 32px; letter-spacing: 4px; color: #2563eb;">${codigo}</h1>
+    <p>Este código expira em 15 minutos.</p>
+  `;
+
+  try {
+    const resp = await fetch('https://api.brevo.com/v3/smtp/email', {
+      method: 'POST',
+      headers: {
+        'accept': 'application/json',
+        'api-key': key,
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        sender: { name: 'Viajante Pro', email: 'no-reply@viajante.pro' },
+        to: [{ email }],
+        subject: `Seu código de acesso: ${codigo}`,
         htmlContent,
       }),
     });
@@ -228,6 +265,237 @@ exports.handler = async function (event, context) {
     cDoc = await contaRef.get();
   }
   const conta = cDoc.data();
+
+  // ── AÇÕES DO PASSAGEIRO (PAX) ──
+  if (acao === 'pax-codigo') {
+    const email = str(body.email, 120).toLowerCase();
+    if (!email || !email.includes('@')) return res(400, { error: 'E-mail inválido.' });
+
+    const emailHash = await sha256(email);
+    const docRef = contaRef.collection('pax_codigos').doc(emailHash);
+    const docSnap = await docRef.get();
+    const dadosAtuais = docSnap.exists ? docSnap.data() : {};
+
+    if (dadosAtuais.bloqueado_ate && new Date(dadosAtuais.bloqueado_ate).getTime() > now) {
+      const minutosRestantes = Math.ceil((new Date(dadosAtuais.bloqueado_ate).getTime() - now) / 60000);
+      return res(429, { error: `Conta bloqueada temporariamente. Tente novamente em ${minutosRestantes} minuto(s).` });
+    }
+
+    const codigo = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiraEm = new Date(now + 15 * 60000).toISOString();
+
+    await docRef.set({
+      email,
+      codigo,
+      expira_em: expiraEm,
+      tentativas_erradas: 0,
+      bloqueado_ate: null,
+      criado_em: new Date(now).toISOString(),
+    }, { merge: true });
+
+    await enviarCodigoBrevo(env, email, codigo);
+
+    return res(200, { ok: true, mensagem: 'Código enviado por e-mail.' });
+  }
+
+  if (acao === 'pax-entrar') {
+    const email = str(body.email, 120).toLowerCase();
+    const codigo = str(body.codigo, 10);
+    const senha = String(body.senha || '');
+    const senhaNova = String(body.senha_nova || '');
+
+    if (!email || !email.includes('@')) return res(400, { error: 'E-mail é obrigatório.' });
+
+    const emailHash = await sha256(email);
+    const codDocRef = contaRef.collection('pax_codigos').doc(emailHash);
+    const codSnap = await codDocRef.get();
+    const codData = codSnap.exists ? codSnap.data() : {};
+
+    if (codData.bloqueado_ate && new Date(codData.bloqueado_ate).getTime() > now) {
+      return res(403, { error: 'Conta bloqueada por 15 minutos devido a múltiplas tentativas incorretas.' });
+    }
+
+    let autenticado = false;
+
+    if (codigo) {
+      if (!codData.codigo || new Date(codData.expira_em).getTime() < now) {
+        return res(400, { error: 'Código expirado ou inválido.' });
+      }
+
+      if (codData.codigo === codigo) {
+        autenticado = true;
+        await codDocRef.update({ tentativas_erradas: 0, codigo: null });
+      } else {
+        const erros = (codData.tentativas_erradas || 0) + 1;
+        if (erros >= 3) {
+          const bloqueadoAte = new Date(now + 15 * 60000).toISOString();
+          await codDocRef.update({ tentativas_erradas: erros, bloqueado_ate: bloqueadoAte });
+          return res(403, { error: 'Código incorreto. Múltiplas tentativas falharam. Conta bloqueada por 15 minutos.' });
+        } else {
+          await codDocRef.update({ tentativas_erradas: erros });
+          return res(400, { error: `Código incorreto. Restam ${3 - erros} tentativa(s).` });
+        }
+      }
+    } else if (senha) {
+      const perfRef = contaRef.collection('pax_perfil').doc(emailHash);
+      const perfSnap = await perfRef.get();
+      if (!perfSnap.exists || !perfSnap.data().senha_hash) {
+        return res(401, { error: 'Senha incorreta ou não cadastrada.' });
+      }
+      const perfData = perfSnap.data();
+      const hc = await hashSenha(senha, perfData.senha_salt);
+      if (iguais(hc, perfData.senha_hash)) {
+        autenticado = true;
+      } else {
+        return res(401, { error: 'Senha incorreta.' });
+      }
+    } else {
+      return res(400, { error: 'Informe o código de 6 dígitos ou sua senha.' });
+    }
+
+    if (autenticado) {
+      if (senhaNova && senhaNova.length >= 6) {
+        const salt = aleatorio(16);
+        const hash = await hashSenha(senhaNova, salt);
+        await contaRef.collection('pax_perfil').doc(emailHash).set({
+          email,
+          senha_hash: hash,
+          senha_salt: salt,
+          atualizado_em: new Date(now).toISOString(),
+        }, { merge: true });
+      }
+
+      const token = aleatorio(24);
+      const tokenHash = await sha256(token);
+      const expiraEm = new Date(now + SESSAO_DIAS * 86400000).toISOString();
+
+      await contaRef.collection('pax_sessoes').doc(tokenHash).set({
+        email,
+        perfil: 'passageiro',
+        criado_em: new Date(now).toISOString(),
+        expira_em: expiraEm,
+      });
+
+      return res(200, { ok: true, token, email, perfil: 'passageiro', expira_em: expiraEm });
+    }
+  }
+
+  // Verificar autenticação do passageiro para rotas pax-* privadas
+  if (acao.startsWith('pax-')) {
+    const token = body.token || event.headers.authorization?.replace(/^Bearer\s+/i, '') || '';
+    if (!token) return res(401, { error: 'Token de autenticação ausente.' });
+
+    const tokenHash = await sha256(token);
+    const sSnap = await contaRef.collection('pax_sessoes').doc(tokenHash).get();
+    if (!sSnap.exists) return res(401, { error: 'Sessão do passageiro inválida ou expirada.' });
+
+    const sessaoPax = sSnap.data();
+    if (new Date(sessaoPax.expira_em).getTime() < now) {
+      await contaRef.collection('pax_sessoes').doc(tokenHash).delete();
+      return res(401, { error: 'Sessão expirada.' });
+    }
+
+    const emailPax = sessaoPax.email;
+    const emailPaxHash = await sha256(emailPax);
+
+    if (acao === 'pax-perfil-obter') {
+      const perfSnap = await contaRef.collection('pax_perfil').doc(emailPaxHash).get();
+      const perfil = perfSnap.exists ? perfSnap.data() : { email: emailPax };
+      delete perfil.senha_hash;
+      delete perfil.senha_salt;
+      return res(200, { ok: true, perfil });
+    }
+
+    if (acao === 'pax-perfil-salvar') {
+      const p = body.perfil || {};
+      const payload = {
+        email: emailPax,
+        nome: str(p.nome, 100),
+        cpf: str(p.cpf, 20),
+        passaporte: str(p.passaporte, 30),
+        telefone: str(p.telefone, 30),
+        contato_emergencia: {
+          nome: str(p.contato_emergencia?.nome, 100),
+          telefone: str(p.contato_emergencia?.telefone, 30),
+          parentesco: str(p.contato_emergencia?.parentesco, 50),
+        },
+        consentimento_lgpd: p.consentimento_lgpd === true,
+        atualizado_em: new Date(now).toISOString(),
+      };
+      await contaRef.collection('pax_perfil').doc(emailPaxHash).set(payload, { merge: true });
+      return res(200, { ok: true, perfil: payload });
+    }
+
+    if (acao === 'pax-minhas') {
+      // Se solicitou id específico, verificar autorização (Isolamento de Passageiro)
+      if (body.viagem_id) {
+        const vSnap = await contaRef.collection('viagens').doc(str(body.viagem_id, 64)).get();
+        if (!vSnap.exists) return res(404, { error: 'Viagem não encontrada.' });
+        const vData = vSnap.data();
+        const pertence = vData.email === emailPax || (Array.isArray(vData.passageiros) && vData.passageiros.some(p => p.email === emailPax || p.nome === emailPax));
+        if (!pertence) return res(403, { error: 'Acesso negado: a viagem solicitada pertence a outro passageiro.' });
+        return res(200, { ok: true, viagem: vData });
+      }
+
+      const vSnaps = await contaRef.collection('viagens').get();
+      const viagens = [];
+      vSnaps.docs.forEach(doc => {
+        const d = doc.data();
+        if (d.email === emailPax || (Array.isArray(d.passageiros) && d.passageiros.some(p => p.email === emailPax || p.nome === emailPax))) {
+          viagens.push(d);
+        }
+      });
+
+      const cSnaps = await contaRef.collection('cotacoes').get();
+      const cotacoes = [];
+      cSnaps.docs.forEach(doc => {
+        const d = doc.data();
+        if (d.email === emailPax) cotacoes.push(d);
+      });
+
+      return res(200, { ok: true, viagens, cotacoes });
+    }
+
+    if (acao === 'pax-solicitar') {
+      const id = aleatorio(12);
+      const payload = {
+        id,
+        email: emailPax,
+        tipo: str(body.tipo, 50) || 'duvida', // p.ex: alterar_data, segunda_via, duvida
+        mensagem: str(body.mensagem, 1000),
+        viagem_id: str(body.viagem_id, 64) || null,
+        status: 'pendente',
+        criado_em: new Date(now).toISOString(),
+      };
+      await contaRef.collection('pax_solicitacoes').doc(id).set(payload);
+      return res(200, { ok: true, solicitacao: payload });
+    }
+
+    if (acao === 'pax-documentos') {
+      if (body.subacao === 'adicionar') {
+        const id = aleatorio(12);
+        const docData = {
+          id,
+          email: emailPax,
+          tipo: str(body.tipo, 50),
+          numero: str(body.numero, 50),
+          validade: str(body.validade, 20),
+          url: str(body.url, 500),
+          criado_em: new Date(now).toISOString(),
+        };
+        await contaRef.collection('pax_documentos').doc(id).set(docData);
+        return res(200, { ok: true, documento: docData });
+      }
+
+      const dSnaps = await contaRef.collection('pax_documentos').get();
+      const documentos = [];
+      dSnaps.docs.forEach(doc => {
+        const d = doc.data();
+        if (d.email === emailPax) documentos.push(d);
+      });
+      return res(200, { ok: true, documentos });
+    }
+  }
 
   // ── AÇÃO PÚBLICA: Solicitar Cotação ──
   if (acao === 'solicitar_cotacao') {
@@ -432,6 +700,7 @@ exports.handler = async function (event, context) {
     };
     const passageiros = Array.isArray(body.passageiros) ? body.passageiros.map(p => ({
       nome: str(p.nome, 100),
+      email: str(p.email, 120),
       tipo: str(p.tipo, 20) || 'adulto',
     })) : [];
     const roteiro = Array.isArray(body.roteiro) ? body.roteiro.map(r => ({
@@ -449,6 +718,7 @@ exports.handler = async function (event, context) {
       id,
       nome,
       destino,
+      email: str(body.email, 120) || (passageiros[0] && passageiros[0].email) || '',
       datas,
       passageiros,
       roteiro,
@@ -486,6 +756,7 @@ exports.handler = async function (event, context) {
     };
     const passageiros = Array.isArray(body.passageiros) ? body.passageiros.map(p => ({
       nome: str(p.nome, 100),
+      email: str(p.email, 120),
       tipo: str(p.tipo, 20) || 'adulto',
     })) : [];
     const roteiro = Array.isArray(body.roteiro) ? body.roteiro.map(r => ({
@@ -504,6 +775,7 @@ exports.handler = async function (event, context) {
       ...atual,
       nome: nome || atual.nome,
       destino: destino || atual.destino,
+      email: str(body.email, 120) || atual.email,
       datas: datas.inicio || datas.fim ? { ...atual.datas, ...datas } : atual.datas,
       passageiros: passageiros.length ? passageiros : atual.passageiros,
       roteiro: roteiro.length ? roteiro : atual.roteiro,
