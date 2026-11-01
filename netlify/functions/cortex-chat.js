@@ -30,8 +30,24 @@ const SSE_HEADERS = {
   'Connection': 'keep-alive',
   'Access-Control-Allow-Origin': (process.env.NEXIA_APP_URL ? process.env.NEXIA_APP_URL.split(',')[0].trim() : '*'),
   'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-  'X-Accel-Buffering': 'no'
+  'X-Accel-Buffering': 'no',
 };
+
+// ═══════════════════════════════════════════════════════════════════════
+//  LIMITE DE RECURSOS E OTIMIZAÇÃO DE IA
+// ═══════════════════════════════════════════════════════════════════════
+
+// NEXIA CORTEX — SEM LIMITES: todos os planos têm acesso ilimitado
+const PLAN_LIMITS = { master: -1, enterprise: -1, pro: -1, starter: -1, free: -1 };
+
+// FUNÇÃO DE TRATAMENTO DE ERROS DE LIMITE E CPU
+// Para evitar o erro 503 (Service Unavailable) por limite de CPU ou de tokens,
+// vamos adicionar verificações mais robustas e o uso de bindings de IA quando disponíveis.
+// A função `checkAndTrackUsage` já lida com limites de chamadas, mas precisamos
+// otimizar o processamento de arquivos e chamadas para não estourar o CPU.
+
+// Identifica se estamos em um ambiente com binding AI disponível (ex: Cloudflare Workers AI)
+const HAS_WORKER_AI_BINDING = typeof globalThis.__NEXIA_AI__ !== 'undefined';
 
 // NEXIA CORTEX — SEM LIMITES: todos os planos têm acesso ilimitado
 const PLAN_LIMITS = { master: -1, enterprise: -1, pro: -1, starter: -1, free: -1 };
