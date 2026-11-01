@@ -1,27 +1,5 @@
 // config.js - Configurações do Cortex e preferências de IA local
-
-export const verificarSuporteWebGPU = async () => {
-  if (typeof navigator === 'undefined') {
-    return { suportado: false, motivo: 'Ambiente sem navegador', memoriaGb: 0 };
-  }
-  const hasGpu = 'gpu' in navigator && navigator.gpu !== undefined;
-  const memoriaGb = typeof navigator.deviceMemory === 'number' ? navigator.deviceMemory : 4;
-  if (!hasGpu) {
-    return { suportado: false, motivo: 'WebGPU não suportada neste navegador', memoriaGb };
-  }
-  if (memoriaGb < 4) {
-    return { suportado: false, motivo: 'Memória insuficiente (mínimo recomendado: 4 GB)', memoriaGb };
-  }
-  try {
-    const adapter = await navigator.gpu?.requestAdapter();
-    if (!adapter) {
-      return { suportado: false, motivo: 'Adaptador WebGPU não encontrado', memoriaGb };
-    }
-  } catch {
-    return { suportado: false, motivo: 'Falha ao solicitar adaptador WebGPU', memoriaGb };
-  }
-  return { suportado: true, memoriaGb };
-};
+import { verificarSuporteWebGPU } from './ia-local.js';
 
 export const configManager = {
   async getIAState() {
