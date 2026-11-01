@@ -134,20 +134,37 @@ if (typeof module !== 'undefined' && module.exports) {
     if (abertura) window.addEventListener('kernex-fim', function () { setTimeout(decolar, 150); }, { once: true });
     else setTimeout(decolar, 400);
 
-    // Configura o listener para mudanças de visibilidade
-    // Garante que não dispare múltiplas vezes quando a aba volta para 'visible'
-    var visibilityChangeHandler = function() {
-      if (document.visibilityState === 'visible') {
-        var agora = Date.now();
-        // Só dispara se já passaram 5 minutos desde a última animação e não há animação em andamento
-        if (agora - ultimoVoo >= 5 * 60 * 1000 && !emVoo) {
-          decolar();
-        }
+      // Configura o listener para mudanças de visibilidade
+  // Garante que não dispare múltiplas vezes quando a aba volta para 'visible'
+  var visibilityChangeHandler = function() {
+    if (document.visibilityState === 'visible') {
+      var agora = Date.now();
+      // Só dispara se já passaram 5 minutos desde a última animação e não há animação em andamento
+      if (agora - ultimoVoo >= 5 * 60 * 1000 && !emVoo) {
+        decolar();
       }
-    };
-    
-    // Adiciona listener para mudanças de visibilidade
-    document.addEventListener('visibilitychange', visibilityChangeHandler);
+    }
+  };
+  
+  // Adiciona listener para mudanças de visibilidade
+  document.addEventListener('visibilitychange', visibilityChangeHandler);
+  
+  // Listener para garantir que quando a aba volta de inativa, não dispare múltiplas vezes
+  var ultimaVerificacao = 0;
+  var verificadorDeVisibilidade = function() {
+    var agora = Date.now();
+    if (document.visibilityState === 'visible' && !emVoo) {
+      // Verifica se já passaram 5 minutos desde a última verificação ou animação
+      if (agora - Math.max(ultimoVoo, ultimaVerificacao) >= 5 * 60 * 1000) {
+        decolar();
+        ultimaVerificacao = agora;
+      }
+    }
+  };
+  
+  // Usa setInterval para verificar a visibilidade a cada 30 segundos
+  // Isso garante que quando a aba volta de inativa, a verificação é feita
+  setInterval(verificadorDeVisibilidade, 30 * 1000);
   }
 
   // foto que não carregar vira um fundo bonito com o nome do lugar (nunca ícone de imagem quebrada)
