@@ -111,6 +111,7 @@
             configurarAbaConversa(codigoViagem);
           } else {
             console.error('Erro ao carregar viagem:', data.error);
+            var ac = document.getElementById('app-conteudo'); if (ac) { ac.innerHTML = '<p style="padding:24px;text-align:center">' + String(data.error || 'Viagem não encontrada.').replace(/</g, '&lt;') + '</p>'; }
           }
         })
         .catch(error => {

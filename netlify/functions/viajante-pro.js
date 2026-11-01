@@ -748,6 +748,7 @@ exports.handler = async function (event, context) {
       nome,
       destino,
       email: str(body.email, 120) || (passageiros[0] && passageiros[0].email) || '',
+      whatsapp: str(body.whatsapp, 20).replace(/\D/g, ''),
       datas,
       passageiros,
       roteiro,
@@ -805,6 +806,7 @@ exports.handler = async function (event, context) {
       nome: nome || atual.nome,
       destino: destino || atual.destino,
       email: str(body.email, 120) || atual.email,
+      whatsapp: body.whatsapp !== undefined ? str(body.whatsapp, 20).replace(/\D/g, '') : (atual.whatsapp || ''),
       datas: datas.inicio || datas.fim ? { ...atual.datas, ...datas } : atual.datas,
       passageiros: passageiros.length ? passageiros : atual.passageiros,
       roteiro: roteiro.length ? roteiro : atual.roteiro,
@@ -867,6 +869,9 @@ exports.handler = async function (event, context) {
     if (!snap.exists) return res(404, { error: 'Viagem não encontrada.' });
 
     const mensagens = await listarMensagens(vDocRef, desde);
+    for (const m of mensagens) {
+      if (m.autor === 'viajante' && !m.lida) await vDocRef.collection('mensagens').doc(m.id).update({ lida: true });
+    }
     return res(200, { ok: true, mensagens });
   }
 
