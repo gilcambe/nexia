@@ -28,6 +28,7 @@
 //   fast → Mistral, Cloudflare e Codestral primeiro, depois Groq (GROQ_FAST), depois TAIL.
 // semRepetir() garante que não haja descritores repetidos (mesmo provider e model) em nenhuma classe.
 const { getPlacar } = require('../model-router/cota');
+const { vagasCustom } = require('../model-router/vagas');
 const { getQualidade } = require('../model-router/qualidade');
 const { contasExtra } = require('../model-router/providers/openai-compatible');
 const g = model => ({ provider: 'groq', model });
@@ -92,7 +93,9 @@ function listFor(cls, env = process.env) {
   const custom = parseList(env[`NEXIA_MODELS_${key.toUpperCase()}`]);
   const base = CLASSES[key];
   const res = custom.length ? custom : base;
-  return Array.isArray(res) ? res : [];
+  // #2716: vagas "Outra IA" da Central entram primeiro (o dono escolheu conectar).
+  const vagas = vagasCustom(env).map(c => ({ provider: c.provider, model: c.model }));
+  return [...vagas, ...(Array.isArray(res) ? res : [])];
 }
 
 /** @returns {{ provider, model }[]} candidatos disponíveis para a classe */

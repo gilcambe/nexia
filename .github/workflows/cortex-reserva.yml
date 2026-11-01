@@ -131,6 +131,15 @@ jobs:
               huggingface) contas+=("vaga-$N-huggingface|huggingface/meta-llama/Llama-3.3-70B-Instruct|HUGGINGFACE_API_KEY|$CH") ;;
               codestral) contas+=("vaga-$N-codestral|codestral/codestral-latest|CODESTRAL_API_KEY|$CH") ;;
               nvidia) contas+=("vaga-$N-nvidia|nvidia_nim/meta/llama-3.3-70b-instruct|NVIDIA_NIM_API_KEY|$CH") ;;
+              zai) contas+=("vaga-$N-zai|openai/glm-4.5-flash|OPENAI_API_KEY|$CH|https://api.z.ai/api/paas/v4") ;;
+              sambanova) contas+=("vaga-$N-sambanova|sambanova/Meta-Llama-3.3-70B-Instruct|SAMBANOVA_API_KEY|$CH") ;;
+              custom)
+                # #2716: "Outra IA" = base64url de {url, modelo, chave}; entra como modelo openai/ com OPENAI_API_BASE.
+                CU=$(node -e 'try{const o=JSON.parse(Buffer.from(process.argv[1],"base64url").toString());if(/^https:\/\//.test(o.url)&&o.modelo&&o.chave)console.log([o.url.replace(/\/chat\/completions$/,""),o.modelo,o.chave].join("\t"))}catch{}' "$CH")
+                [ -z "$CU" ] && continue
+                IFS=$'\t' read -r CURL CMOD CKEY <<< "$CU"
+                echo "::add-mask::$CKEY"
+                contas+=("vaga-$N-custom|openai/$CMOD|OPENAI_API_KEY|$CKEY|$CURL") ;;
             esac
           done
           if [ -n "$RESERVA_GEMINI_KEY" ]; then
@@ -173,10 +182,10 @@ jobs:
             return 0
           }
           for c in "${contas[@]}"; do
-            IFS='|' read -r nome modelo var chave <<< "$c"
+            IFS='|' read -r nome modelo var chave base <<< "$c"
             echo "Tentando conta: $nome"
             git reset -q --hard "origin/${GITHUB_REF_NAME}" || true
-            if env "$var=$chave" aider --yes-always --no-auto-commits --no-gitignore --no-detect-urls --no-check-update --no-analytics --model "$modelo" --message "$PROMPT" $(tr '\n' ' ' < "$RUNNER_TEMP/arquivos.txt") 2>&1 | tail -40; tem_conteudo && sem_estrago; then
+            if env "$var=$chave" ${base:+"OPENAI_API_BASE=$base"} aider --yes-always --no-auto-commits --no-gitignore --no-detect-urls --no-check-update --no-analytics --read AGENTS.md --read docs/CONTEXTO-IA.md --model "$modelo" --message "$PROMPT" $(tr '\n' ' ' < "$RUNNER_TEMP/arquivos.txt") 2>&1 | tail -40; tem_conteudo && sem_estrago; then
               echo "ok=1" >> "$GITHUB_OUTPUT"; echo "conta=$nome" >> "$GITHUB_OUTPUT"; exit 0
             fi
             echo "Conta $nome sem resultado (cota/limite); próxima."
