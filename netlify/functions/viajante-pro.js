@@ -198,6 +198,16 @@ function limparConteudoViajante(c) {
   return out;
 }
 
+// Mensagens da conversa em ordem; com "desde" (id da última que o app já tem) devolve só as novas.
+async function listarMensagens(vRef, desde) {
+  const snaps = await vRef.collection('mensagens').get();
+  const lista = snaps.docs.map(d => d.data());
+  lista.sort((a, b) => String(a.criado_em).localeCompare(String(b.criado_em)) || String(a.id).localeCompare(String(b.id)));
+  if (!desde) return lista;
+  const i = lista.findIndex(m => m.id === desde);
+  return i >= 0 ? lista.slice(i + 1) : lista;
+}
+
 exports.handler = async function (event, context) {
   if (event.httpMethod === 'OPTIONS') return res(204, null);
 
@@ -586,6 +596,25 @@ exports.handler = async function (event, context) {
     return res(200, { ok: true, token, expira_em: expiraEm });
   }
 
+  // ── Ações do viajante (públicas, só com o código secreto do link do app) ──
+  if (acao === 'app-viagem' || acao === 'app-chat-listar' || acao === 'app-chat-enviar') {
+    const codigo = str(body.codigo || body.v, 64);
+    if (!codigo) return res(400, { error: 'Abra o app pelo link que a agência enviou.' });
+    const achados = await contaRef.collection('viagens').where('codigoSecreto', '==', codigo).get();
+    if (!achados.docs.length) return res(404, { error: 'Viagem não encontrada. Peça um link novo à agência.' });
+    const viagemDoc = achados.docs[0];
+    const vRef = contaRef.collection('viagens').doc(viagemDoc.id);
+    if (acao === 'app-viagem') return res(200, { ok: true, viagem: viagemDoc.data() });
+    if (acao === 'app-chat-listar') {
+      return res(200, { ok: true, mensagens: await listarMensagens(vRef, str(body.desde, 64)) });
+    }
+    const texto = str(body.texto, 1000);
+    if (!texto) return res(400, { error: 'Escreva a mensagem.' });
+    const msgData = { id: aleatorio(16), autor: 'viajante', texto, lida: false, criado_em: new Date(now).toISOString() };
+    await vRef.collection('mensagens').doc(msgData.id).set(msgData);
+    return res(200, { ok: true, mensagem: msgData });
+  }
+
   // ── Verificação de Token de Sessão para Ações Administrativas ──
   const token = body.token || event.headers.authorization?.replace(/^Bearer\s+/i, '') || '';
   if (!token) return res(401, { error: 'Token de autenticação ausente.' });
@@ -800,23 +829,11 @@ exports.handler = async function (event, context) {
     return res(200, { ok: true, id: vId });
   }
 
-  // ── Ação: app-viagem (Pública) ──
-  if (acao === 'app-viagem') {
-    const codigo = str(body.v, 24);
-    if (!codigo) return res(400, { error: 'Código da viagem é obrigatório.' });
-
-    const snaps = await contaRef.collection('viagens').where('codigoSecreto', '==', codigo).get();
-    if (snaps.empty) return res(404, { error: 'Viagem não encontrada.' });
-
-    const viagem = snaps.docs[0].data();
-    return res(200, { ok: true, viagem });
-  }
-
   // ── Ação: chat-enviar ──
   if (acao === 'chat-enviar') {
     const vId = str(body.v, 64);
     const texto = str(body.texto, 1000);
-    const autor = str(body.autor, 20) || 'viajante';
+    const autor = 'agencia';
 
     if (!vId || !texto) return res(400, { error: 'ID da viagem e texto são obrigatórios.' });
 
@@ -849,16 +866,7 @@ exports.handler = async function (event, context) {
     const snap = await vDocRef.get();
     if (!snap.exists) return res(404, { error: 'Viagem não encontrada.' });
 
-    let query = vDocRef.collection('mensagens').orderBy('criado_em', 'desc');
-    if (desde) {
-      query = query.startAfter(desde);
-    }
-
-    const snaps = await query.get();
-    const mensagens = [];
-    snaps.docs.forEach(doc => mensagens.push(doc.data()));
-    mensagens.sort((a, b) => new Date(a.criado_em) - new Date(b.criado_em));
-
+    const mensagens = await listarMensagens(vDocRef, desde);
     return res(200, { ok: true, mensagens });
   }
 
@@ -869,16 +877,9 @@ exports.handler = async function (event, context) {
 
     for (const doc of snaps.docs) {
       const viagem = doc.data();
-      const msgSnaps = await doc.ref.collection('mensagens').orderBy('criado_em', 'desc').limit(1).get();
-
-      let ultimaMsg = null;
-      let naoLidas = 0;
-
-      if (!msgSnaps.empty) {
-        ultimaMsg = msgSnaps.docs[0].data();
-        const todasMsg = await doc.ref.collection('mensagens').where('lida', '==', false).get();
-        naoLidas = todasMsg.size;
-      }
+      const msgs = await listarMensagens(contaRef.collection('viagens').doc(doc.id));
+      const ultimaMsg = msgs.length ? msgs[msgs.length - 1] : null;
+      const naoLidas = msgs.filter(m => m.autor === 'viajante' && !m.lida).length;
 
       conversas.push({
         viagemId: viagem.id,
