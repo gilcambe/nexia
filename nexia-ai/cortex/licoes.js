@@ -61,9 +61,3 @@ module.exports = {
   licoesParaPrompt,
   LessonStore: lessonStore
 };
-
-module.exports = {
-  LICOES,
-  licoesParaPrompt,
-  LessonStore: lessonStore
-};

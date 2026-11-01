@@ -15,6 +15,10 @@ class Cofre {
   async recuperar(key) {
     return this.data[key];
   }
+
+  async recuperar(key) {
+    return this.data[key];
+  }
 }
 
 module.exports = Cofre;
