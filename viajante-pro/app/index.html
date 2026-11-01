@@ -108,7 +108,7 @@
             atualizarInterfaceViagem(data.viagem);
 
             // Configurar a aba de conversa
-            configurarAbaConversa(data.viagem.id);
+            configurarAbaConversa(codigoViagem);
           } else {
             console.error('Erro ao carregar viagem:', data.error);
           }
@@ -166,6 +166,8 @@
       }
 
       // Função para configurar a aba de conversa
+      function escHtml(t) { return String(t == null ? '' : t).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
       function configurarAbaConversa(viagemId) {
         let ultimaMensagemId = null;
         let intervaloChat = null;
@@ -178,14 +180,14 @@
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-              acao: 'chat-listar',
-              v: viagemId,
+              acao: 'app-chat-listar',
+              codigo: viagemId,
               desde: ultimaMensagemId,
             }),
           })
           .then(response => response.json())
           .then(data => {
-            if (data.ok && data.mensagens.length > 0) {
+            if (data.ok) {
               const conversaContent = document.getElementById('conversa-content') || document.createElement('div');
               conversaContent.id = 'conversa-content';
 
@@ -212,7 +214,7 @@
                 const msgElement = document.createElement('div');
                 msgElement.className = `p-3 rounded-lg ${msg.autor === 'viajante' ? 'bg-brand-card/50 ml-auto max-w-[80%]' : 'bg-brand-accent/20 mr-auto max-w-[80%]'}`;
                 msgElement.innerHTML = `
-                  <p class="text-sm ${msg.autor === 'viajante' ? 'text-white' : 'text-brand-dark'}">${msg.texto}</p>
+                  <p class="text-sm ${msg.autor === 'viajante' ? 'text-white' : 'text-brand-dark'}">${escHtml(msg.texto)}</p>
                   <p class="text-[10px] text-brand-muted mt-1 text-right">${new Date(msg.criado_em).toLocaleString()}</p>
                 `;
                 mensagensContainer.appendChild(msgElement);
@@ -240,11 +242,10 @@
                 'Content-Type': 'application/json',
               },
               body: JSON.stringify({
-                acao: 'chat-enviar',
-                v: viagemId,
+                acao: 'app-chat-enviar',
+                codigo: viagemId,
                 texto: texto,
-                autor: 'viajante',
-              }),
+                              }),
             })
             .then(response => response.json())
             .then(data => {
