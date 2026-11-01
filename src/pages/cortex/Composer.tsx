@@ -79,7 +79,7 @@ export default function Composer({ modo, enviar, inicial = "" }: Props) {
       const r = await agir({ acao: "entender", nome: f.name, tipo: f.type, base64: await paraBase64(f) }) as { ok: boolean; texto?: string; tipo?: string };
       if (!r.ok || !r.texto) {
         // Fallback para arquivos pequenos de texto/planilha
-        const isTextoPequeno = f.type.startsWith("text/") || /\.(txt|csv|xlsm|xls|ods)$/i.test(f.name) && f.size <= 100_000;
+        const isTextoPequeno = ehArquivoTextoPequeno(f);
         if (isTextoPequeno) {
           try {
             const conteudo = await f.text();
@@ -94,7 +94,7 @@ export default function Composer({ modo, enviar, inicial = "" }: Props) {
       return { ok: true, texto: `Anexo \`${f.name}\` (${como}, feita pela IA):\n\`\`\`\n${r.texto}\n\`\`\``, tipo: r.tipo };
     } catch { 
       // Fallback para arquivos pequenos de texto/planilha
-      const isTextoPequeno = f.type.startsWith("text/") || /\.(txt|csv|xlsm|xls|ods)$/i.test(f.name) && f.size <= 100_000;
+      const isTextoPequeno = ehArquivoTextoPequeno(f);
       if (isTextoPequeno) {
         try {
           const conteudo = await f.text();
