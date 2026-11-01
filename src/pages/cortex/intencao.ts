@@ -10,6 +10,7 @@ const INICIO = /^(como|o que|oque|que |qual|quais|quanto|quantos|quantas|quando|
 
 /** Palavras relacionadas a alterações de projeto/sistema. */
 const PALAVRAS_CODIGO = /\b(projeto|site|app|tela|bot[ãa]o|p[áa]gina|painel|c[óo]digo|reposit[óo]rio|bug|erro|deploy|publicar|issue|pr|tenant|body coach|splash|central)\b/;
+const PALAVRAS_CODIGO = /\b(projeto|site|app|tela|bot[ãa]o|p[áa]gina|painel|c[óo]digo|reposit[óo]rio|bug|erro|deploy|publicar|issue|pr|tenant|body coach|splash|central)\b/;
 
 /** Texto curto que pergunta algo e não pede mudança de código. */
 export function ehPergunta(texto: string): boolean {
@@ -20,6 +21,10 @@ export function ehPergunta(texto: string): boolean {
 }
 
 /** Função pura que retorna true apenas quando o texto contém palavras relacionadas a alterações de projeto/sistema. */
+export function ehPedidoDeCodigo(texto: string): boolean {
+  const t = sem(texto || "");
+  return PALAVRAS_CODIGO.test(t);
+}
 export function ehPedidoDeCodigo(texto: string): boolean {
   const t = sem(texto || "");
   return PALAVRAS_CODIGO.test(t);
