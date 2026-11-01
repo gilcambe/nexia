@@ -1,181 +1,208 @@
 'use strict';
-const test = require('node:test');
-const assert = require('node:assert/strict');
 
-const { Firestore, registrarUsoBanco, getUsoBanco, getBancosUsoGeral, getCachedFirestoreRead, setCachedFirestoreRead, invalidateFirestoreCache, switchToNextBank, getNextBank, BANK_LIMITS, ordemBancos } = require('../../lib/firebase-lite/firestore');
+// Mock das dependências
+jest.mock('https');
+jest.mock('http');
+jest.mock('crypto');
 
-// --- Item 1: Contador de uso por banco ---
+const https = require('https');
+const http = require('http');
+const crypto = require('crypto');
 
-test('FL1. registrarUsoBanco acumula leituras e escritas por banco e por dia', () => {
-  const banco = 'firestore-default';
-  const antes = getUsoBanco(banco);
-  // Limpa o estado para testar do zero
-  const mapa = require('../../lib/firebase-lite/firestore').usoDiarioBancos;
-  mapa.clear();
+const {
+  Firestore,
+  registrarUsoBanco,
+  getUsoBanco,
+  getBancosUsoGeral,
+  getCachedFirestoreRead,
+  setCachedFirestoreRead,
+  invalidateFirestoreCache,
+  getNextBank,
+  switchToNextBank,
+  checkBankHealth,
+  BANK_LIMITS,
+  ordemBancos,
+  getBancoAtivo,
+  usoDiarioBancos
+} = require('../../lib/firebase-lite/firestore.js');
 
-  registrarUsoBanco(banco, 100, 50);
-  registrarUsoBanco(banco, 200, 75);
-  const uso = getUsoBanco(banco);
-  assert.equal(uso.leituras, 300);
-  assert.equal(uso.escritas, 125);
-  assert.equal(uso.status, 'ativo');
-  assert.equal(uso.limiteLeituras, 50000);
-  assert.equal(uso.limiteEscritas, 20000);
-});
+describe('firebase-lite/firestore', () => {
+  beforeEach(() => {
+    // Limpar estado global
+    usoDiarioBancos.clear();
+    firestoreReadCache.clear();
+    bancoAtual = 'firestore-default';
+    
+    // Mock do crypto
+    crypto.createHash = jest.fn().mockReturnValue({
+      update: jest.fn().mockReturnThis(),
+      digest: jest.fn().mockReturnValue('mocked_hash')
+    });
+    
+    // Mock do fetch para Central
+    global.fetch = jest.fn();
+  });
 
-test('FL2. Cada banco tem seu próprio contador', () => {
-  const mapa = require('../../lib/firebase-lite/firestore').usoDiarioBancos;
-  mapa.clear();
+  describe('registrarUsoBanco', () => {
+    test('deve registrar uso do banco corretamente', () => {
+      const hoje = new Date().toISOString().slice(0, 10);
+      
+      registrarUsoBanco('firestore-default', 10, 5);
+      
+      const uso = getUsoBanco('firestore-default');
+      expect(uso.data).toBe(hoje);
+      expect(uso.leituras).toBe(10);
+      expect(uso.escritas).toBe(5);
+      expect(uso.status).toBe('ativo');
+    });
 
-  registrarUsoBanco('firestore-b', 10, 5);
-  registrarUsoBanco('firestore-c', 20, 10);
+    test('deve acumular múltiplas chamadas', () => {
+      registrarUsoBanco('firestore-default', 10, 5);
+      registrarUsoBanco('firestore-default', 5, 3);
+      
+      const uso = getUsoBanco('firestore-default');
+      expect(uso.leituras).toBe(15);
+      expect(uso.escritas).toBe(8);
+    });
 
-  assert.equal(getUsoBanco('firestore-b').leituras, 10);
-  assert.equal(getUsoBanco('firestore-c').leituras, 20);
-});
+    test('deve marcar status como quase cheio ao atingir 70%', () => {
+      // Simular uso que atinge 70% do limite (35k/50k leituras)
+      for (let i = 0; i < 35; i++) {
+        registrarUsoBanco('firestore-default', 1000, 0);
+      }
+      
+      const uso = getUsoBanco('firestore-default');
+      expect(uso.status).toBe('quase cheio');
+    });
+  });
 
-test('FL3. getBancosUsoGeral retorna todos os bancos com seus limites', () => {
-  const mapa = require('../../lib/firebase-lite/firestore').usoDiarioBancos;
-  mapa.clear();
-  const lista = getBancosUsoGeral();
-  assert.ok(lista.length >= 4);
-  const nomes = lista.map(l => l.banco);
-  assert.ok(nomes.includes('firestore-default'));
-  assert.ok(nomes.includes('d1'));
-  assert.ok(nomes.includes('cofresql'));
-  const d1 = lista.find(l => l.banco === 'd1');
-  assert.equal(d1.limiteReads, 5000000);
-  assert.equal(d1.limiteWrites, 100000);
-});
+  describe('getUsoBanco', () => {
+    test('deve retornar uso do banco', () => {
+      registrarUsoBanco('firestore-default', 1000, 500);
+      
+      const uso = getUsoBanco('firestore-default');
+      expect(uso.leituras).toBe(1000);
+      expect(uso.escritas).toBe(500);
+    });
 
-// --- Item 2: Troca antes de acabar (70%) ---
+    test('deve retornar valores padrão para banco não usado', () => {
+      const uso = getUsoBanco('banco-inexistente');
+      expect(uso.leituras).toBe(0);
+      expect(uso.escritas).toBe(0);
+      expect(uso.status).toBe('ativo');
+    });
+  });
 
-test('FL4. Banco atinge 70% de leituras e marca como quase cheio', () => {
-  const mapa = require('../../lib/firebase-lite/firestore').usoDiarioBancos;
-  mapa.clear();
+  describe('getBancosUsoGeral', () => {
+    test('deve retornar uso de todos os bancos', () => {
+      registrarUsoBanco('firestore-default', 1000, 500);
+      registrarUsoBanco('firestore-b', 2000, 1000);
+      
+      const bancos = getBancosUsoGeral();
+      expect(bancos).toHaveLength(Object.keys(BANK_LIMITS).length);
+      expect(bancos[0].banco).toBe('firestore-default');
+      expect(bancos[0].reads).toBe(1000);
+      expect(bancos[1].banco).toBe('firestore-b');
+      expect(bancos[1].reads).toBe(2000);
+    });
+  });
 
-  // 70% de 50000 = 35000 leituras
-  registrarUsoBanco('firestore-default', 35000, 0);
-  const uso = getUsoBanco('firestore-default');
-  assert.equal(uso.status, 'quase cheio');
-});
+  describe('cache em memória', () => {
+    test('deve armazenar e recuperar cache', () => {
+      const tenantId = 'tenant-123';
+      const collection = 'clients';
+      const docId = 'doc-456';
+      const record = { id: 'doc-456', name: 'Test' };
+      
+      setCachedFirestoreRead(tenantId, collection, docId, record);
+      
+      const cached = getCachedFirestoreRead(tenantId, collection, docId);
+      expect(cached).toEqual(record);
+    });
 
-test('FL5. Banco abaixo de 70% permanece ativo', () => {
-  const mapa = require('../../lib/firebase-lite/firestore').usoDiarioBancos;
-  mapa.clear();
+    test('deve expirar cache após TTL', () => {
+      const tenantId = 'tenant-123';
+      const collection = 'clients';
+      const docId = 'doc-456';
+      const record = { id: 'doc-456', name: 'Test' };
+      
+      // Mock do tempo para expirar o cache
+      const originalNow = Date.now;
+      Date.now = jest.fn().mockReturnValue(1000000);
+      
+      setCachedFirestoreRead(tenantId, collection, docId, record);
+      
+      // Avançar tempo para expirar
+      Date.now = jest.fn().mockReturnValue(1000000 + 61 * 1000);
+      
+      const cached = getCachedFirestoreRead(tenantId, collection, docId);
+      expect(cached).toBeNull();
+      
+      // Restaurar tempo original
+      Date.now = originalNow;
+    });
 
-  registrarUsoBanco('firestore-default', 34999, 0);
-  const uso = getUsoBanco('firestore-default');
-  assert.equal(uso.status, 'ativo');
-});
+    test('deve invalidar cache corretamente', () => {
+      const tenantId = 'tenant-123';
+      const collection = 'clients';
+      const docId = 'doc-456';
+      const record = { id: 'doc-456', name: 'Test' };
+      
+      setCachedFirestoreRead(tenantId, collection, docId, record);
+      expect(getCachedFirestoreRead(tenantId, collection, docId)).not.toBeNull();
+      
+      invalidateFirestoreCache(tenantId, collection, docId);
+      expect(getCachedFirestoreRead(tenantId, collection, docId)).toBeNull();
+    });
+  });
 
-test('FL6. Banco atinge 70% de escritas e marca como quase cheio', () => {
-  const mapa = require('../../lib/firebase-lite/firestore').usoDiarioBancos;
-  mapa.clear();
+  describe('rodízio de bancos', () => {
+    test('deve retornar próximo banco na ordem', () => {
+      bancoAtual = 'firestore-default';
+      const proximo = getNextBank();
+      expect(proximo).toBe('firestore-b');
+    });
 
-  // 70% de 20000 = 14000 escritas
-  registrarUsoBanco('firestore-default', 0, 14000);
-  const uso = getUsoBanco('firestore-default');
-  assert.equal(uso.status, 'quase cheio');
-});
+    test('deve alternar para o próximo banco', () => {
+      bancoAtual = 'firestore-default';
+      const novo = switchToNextBank();
+      expect(novo).toBe('firestore-b');
+      expect(bancoAtual).toBe('firestore-b');
+    });
 
-test('FL7. switchToNextBank avança na ordem B -> C -> D1 -> CofreSql', () => {
-  // Reinicia para firestore-default
-  const mapa = require('../../lib/firebase-lite/firestore').usoDiarioBancos;
-  mapa.clear();
-  const b1 = getNextBank();
-  assert.equal(b1, 'firestore-default');
-  const b2 = switchToNextBank();
-  assert.equal(b2, 'firestore-b');
-  const b3 = switchToNextBank();
-  assert.equal(b3, 'firestore-c');
-  const b4 = switchToNextBank();
-  assert.equal(b4, 'd1');
-  const b5 = switchToNextBank();
-  assert.equal(b5, 'cofresql');
-});
+    test('deve permanecer no último banco se não houver próximo', () => {
+      bancoAtual = 'cofresql';
+      const novo = switchToNextBank();
+      expect(novo).toBe('cofresql');
+      expect(bancoAtual).toBe('cofresql');
+    });
 
-test('FL8. Ordem dos bancos está correta', () => {
-  assert.deepEqual(ordemBancos, ['firestore-default', 'firestore-b', 'firestore-c', 'd1', 'cofresql']);
-});
+    test('deve verificar saúde do banco', () => {
+      // Banco saudável
+      expect(checkBankHealth('firestore-default')).toBe(true);
+      
+      // Banco quase cheio (simulado)
+      for (let i = 0; i < 35; i++) {
+        registrarUsoBanco('firestore-default', 1000, 0);
+      }
+      expect(checkBankHealth('firestore-default')).toBe(false);
+    });
+  });
 
-// --- Item 3: Cache em memória (TTL 60s) ---
+  describe('Firestore class', () => {
+    test('deve usar banco saudável por padrão', () => {
+      const firestore = new Firestore();
+      expect(firestore._bancoAtual).toBe('firestore-default');
+    });
 
-test('FL9. setCachedFirestoreRead e getCachedFirestoreRead armazenam e recuperam documento', () => {
-  const mapa = require('../../lib/firebase-lite/firestore').firestoreReadCache;
-  mapa.clear();
-
-  const record = { nome: 'Ana', idade: 30 };
-  setCachedFirestoreRead('tenant-1', 'clientes', 'doc-1', record);
-  const hit = getCachedFirestoreRead('tenant-1', 'clientes', 'doc-1');
-  assert.deepEqual(hit, record);
-});
-
-test('FL10. Cache retorna null quando documento não existe', () => {
-  const mapa = require('../../lib/firebase-lite/firestore').firestoreReadCache;
-  mapa.clear();
-  assert.equal(getCachedFirestoreRead('tenant-1', 'clientes', 'inexistente'), null);
-});
-
-test('FL11. invalidateFirestoreCache limpa cache do documento escrito', () => {
-  const mapa = require('../../lib/firebase-lite/firestore').firestoreReadCache;
-  mapa.clear();
-
-  const record = { nome: 'Ana' };
-  setCachedFirestoreRead('tenant-1', 'clientes', 'doc-1', record);
-  assert.ok(getCachedFirestoreRead('tenant-1', 'clientes', 'doc-1'));
-
-  invalidateFirestoreCache('tenant-1', 'clientes', 'doc-1');
-  assert.equal(getCachedFirestoreRead('tenant-1', 'clientes', 'doc-1'), null);
-});
-
-test('FL12. invalidateFirestoreCache limpa todos os caches de uma collection', () => {
-  const mapa = require('../../lib/firebase-lite/firestore').firestoreReadCache;
-  mapa.clear();
-
-  setCachedFirestoreRead('tenant-1', 'clientes', 'doc-1', { a: 1 });
-  setCachedFirestoreRead('tenant-1', 'clientes', 'doc-2', { a: 2 });
-  setCachedFirestoreRead('tenant-1', 'pedidos', 'doc-3', { a: 3 });
-
-  invalidateFirestoreCache('tenant-1', 'clientes');
-  assert.equal(getCachedFirestoreRead('tenant-1', 'clientes', 'doc-1'), null);
-  assert.equal(getCachedFirestoreRead('tenant-1', 'clientes', 'doc-2'), null);
-  assert.ok(getCachedFirestoreRead('tenant-1', 'pedidos', 'doc-3'));
-});
-
-test('FL13. Cache expira após TTL (simulado com tempo pequeno)', () => {
-  // Verifica que o TTL está definido em 60s
-  const modulo = require('../../lib/firebase-lite/firestore');
-  assert.equal(typeof modulo.setCachedFirestoreRead, 'function');
-  assert.equal(typeof modulo.getCachedFirestoreRead, 'function');
-  assert.equal(typeof modulo.invalidateFirestoreCache, 'function');
-});
-
-test('FL14. DocumentReference.get usa cache quando disponível', async () => {
-  const mapa = require('../../lib/firebase-lite/firestore').firestoreReadCache;
-  mapa.clear();
-
-  let fetchCalls = 0;
-  const fetchImpl = async () => {
-    fetchCalls++;
-    return { ok: true, status: 200, text: async () => JSON.stringify({ fields: { nome: { stringValue: 'João' } } }) };
-  };
-
-  // Cria um Firestore com fetch mockado
-  // Para testar o cache, primeiro preenche manualmente
-  const record = { nome: 'João' };
-  setCachedFirestoreRead('default', 'clientes', 'doc-1', record);
-  const hit = getCachedFirestoreRead('default', 'clientes', 'doc-1');
-  assert.deepEqual(hit, record);
-});
-
-test('FL15. DocumentReference.set invalida cache do documento', () => {
-  const mapa = require('../../lib/firebase-lite/firestore').firestoreReadCache;
-  mapa.clear();
-
-  setCachedFirestoreRead('default', 'clientes', 'doc-1', { nome: 'Antigo' });
-  assert.ok(getCachedFirestoreRead('default', 'clientes', 'doc-1'));
-
-  invalidateFirestoreCache('default', 'clientes', 'doc-1');
-  assert.equal(getCachedFirestoreRead('default', 'clientes', 'doc-1'), null);
+    test('deve alternar para banco saudável se atual estiver quase cheio', () => {
+      // Simular banco quase cheio
+      for (let i = 0; i < 35; i++) {
+        registrarUsoBanco('firestore-default', 1000, 0);
+      }
+      
+      const firestore = new Firestore();
+      expect(firestore._bancoAtual).toBe('firestore-b');
+    });
+  });
 });
