@@ -112,20 +112,41 @@ export default function Composer({ modo, enviar, inicial = "" }: Props) {
     try {
       let bloco: string;
       const entendido = await entender(f);
-      if (entendido && f.type.startsWith("image/")) bloco = `![${f.name}](${await reduzirImagem(f).catch(() => "")})\n\n${entendido}`;
-      else if (entendido) bloco = entendido;
-      else if (f.type.startsWith("image/")) bloco = `![${f.name}](${await reduzirImagem(f)})`;
-      else if (f.type.startsWith("text/") || /\.(txt|md|js|ts|tsx|jsx|json|css|html|yml|yaml|csv|log|sql|sh|py|xlsx|xls|ods)$/i.test(f.name)) {
-        if (f.size > 60_000) { setAviso("Esse arquivo de texto passa de 60 KB. Mande só o trecho que importa."); return; }
-        bloco = `Arquivo \`${f.name}\`:\n\`\`\`\n${await f.text()}\n\`\`\``;
-      } else {
-        // Aviso específico por tipo de arquivo
-        if (f.type.startsWith('application/pdf') || f.name.toLowerCase().endsWith('.pdf')) {
-          setAviso(`Não consegui ler o PDF \`${f.name}\`.`); return;
-        } else if (f.type.startsWith('text/') || /\.(txt|csv|xlsm|xls|ods)$/i.test(f.name)) {
-          setAviso(`Não consegui ler o arquivo de texto \`${f.name}\`.`); return;
+      if (entendido.ok && entendido.texto) {
+        if (f.type.startsWith("image/")) {
+          bloco = `![${f.name}](${await reduzirImagem(f).catch(() => "")})\n\n${entendido.texto}`;
         } else {
-          setAviso(`Não consegui ler o arquivo \`${f.name}\`.`); return;
+          bloco = entendido.texto;
+        }
+      } else if (f.type.startsWith("image/")) {
+        try {
+          bloco = `![${f.name}](${await reduzirImagem(f)})`;
+        } catch {
+          setAviso(`Não consegui ler a imagem \`${f.name}\`.`);
+          return;
+        }
+      } else if (ehArquivoTextoPequeno(f) || f.type.startsWith("text/") || /\.(txt|md|js|ts|tsx|jsx|json|css|html|yml|yaml|csv|log|sql|sh|py|xlsx|xls|ods)$/i.test(f.name)) {
+        if (f.size > 60_000) {
+          setAviso("Esse arquivo de texto passa de 60 KB. Mande só o trecho que importa.");
+          return;
+        }
+        try {
+          const conteudoTxt = await f.text();
+          bloco = `Arquivo \`${f.name}\`:\n\`\`\`\n${conteudoTxt}\n\`\`\``;
+        } catch {
+          setAviso(`Não consegui ler o arquivo \`${f.name}\`.`);
+          return;
+        }
+      } else {
+        if (f.type.startsWith('application/pdf') || f.name.toLowerCase().endsWith('.pdf')) {
+          setAviso(`Não consegui ler o PDF \`${f.name}\`.`);
+          return;
+        } else if (f.type.startsWith('text/') || /\.(txt|csv|xlsm|xls|ods)$/i.test(f.name)) {
+          setAviso(`Não consegui ler o arquivo de texto \`${f.name}\`.`);
+          return;
+        } else {
+          setAviso(`Não consegui ler o arquivo \`${f.name}\`.`);
+          return;
         }
       }
       setAnexos((a) => [...a, { nome: f.name, md: bloco }]);
