@@ -41,8 +41,7 @@ async function guardarAmostra(db, { at = Date.now(), medir, rotas = ROTAS } = {}
   const hora = horaDe(at);
   const ref = db.collection(COLECAO).doc(hora);
   if ((await ref.get()).exists) return { skipped: 'hora já medida', hora };
-  const medidas = [];
-const medidas = await Promise.allSettled(rotas.map(async (r) => {
+  const medidas = await Promise.allSettled(rotas.map(async (r) => {
   try {
     const resultado = await medir(r.url);
     return [r.id, resultado];
