@@ -68,10 +68,3 @@ test('C5d. ehPedidoDeCodigo detecta corretamente textos com palavras de código'
   assert.equal(ehPedidoDeCodigo(' '), false);
   assert.equal(ehPedidoDeCodigo('texto sem palavras relacionadas'), false);
 });
-  const page = fs.readFileSync(path.join(DIR, 'page.tsx'), 'utf8');
-  assert.match(page, /!forcarPedido && !ehPedidoDeCodigo\(texto\)/);
-  assert.match(page, /setForcarPedido\(true\)/);
-  const perg = fs.readFileSync(path.join(DIR, 'Pergunta.tsx'), 'utf8');
-  assert.match(perg, /\?parte=cortex/);
-  assert.match(perg, /primeira/);
-});
