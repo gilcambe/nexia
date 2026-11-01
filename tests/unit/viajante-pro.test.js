@@ -3,7 +3,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { handler, limparConteudoViajante } = require('../../netlify/functions/viajante-pro');
-const { VIAJANTE_PRO } = require('../../clientes/viajantepro');
+const { VIAJANTE_PRO, getViagens, criarViagem, editarViagem, excluirViagem, getChats, enviarChat } = require('../../clientes/viajantepro');
 const { API_ROUTES, TENANT_PAGES } = require('../../lib/routes');
 
 test('Viajante Pro Backend — Sanitização de Conteúdo CMS', () => {
