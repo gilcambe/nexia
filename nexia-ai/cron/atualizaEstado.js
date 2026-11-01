@@ -48,7 +48,10 @@ async function atualizaEstado() {
 
     console.log('Estado atualizado com sucesso!');
 
-atualizaEstado();
+// Executa a função apenas se este arquivo for executado diretamente
+if (require.main === module) {
+  atualizaEstado();
+}
   } catch (error) {
     console.error('Erro ao atualizar estado:', error);
   }
