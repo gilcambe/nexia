@@ -85,8 +85,13 @@ function CartaoVaga({ v, dados, aoMudar }: { v: Vaga; dados: Vagas; aoMudar: () 
             ) : "Ainda não precisou ajudar: entra sozinha quando uma tarefa do Cortex trava e o Jules não resolve."}
           </div>
           <div className="flex flex-wrap gap-2">
-            <button className={`${BOTAO} border border-slate-200 bg-white text-slate-700`} onClick={() => { setEditando(true); setMsg(null); }} disabled={ocupado} data-testid={`vaga-${v.vaga}-trocar`}>Trocar chave</button>
-            <button className={`${BOTAO} border border-red-200 bg-white text-red-600`} onClick={apagar} disabled={ocupado} data-testid={`vaga-${v.vaga}-apagar`}>Desligar</button>
+                      <button className={`${BOTAO} border border-slate-200 bg-white text-slate-700`} onClick={() => { setEditando(true); setMsg(null); }} disabled={ocupado} data-testid={`vaga-${v.vaga}-trocar`}>Trocar chave</button>
+          <button className={`${BOTAO} border border-red-200 bg-white text-red-600`} onClick={apagar} disabled={ocupado} data-testid={`vaga-${v.vaga}-apagar`}>Desligar</button>
+          <button className={`${BOTAO} border border-slate-200 bg-white text-slate-700`} onClick={() => onPause(v.vaga, !v.paused)} disabled={ocupado} data-testid={`vaga-${v.vaga}-pausar`}>
+            {v.paused ? 'Ligar' : 'Pausar'}
+          </button>
+          <button className={`${BOTAO} border border-slate-200 bg-white text-slate-700 ml-2`} onClick={() => onOrder(v.vaga, 'up')} disabled={ocupado} data-testid={`vaga-${v.vaga}-up`}>↑</button>
+          <button className={`${BOTAO} border border-slate-200 bg-white text-slate-700 ml-2`} onClick={() => onOrder(v.vaga, 'down')} disabled={ocupado} data-testid={`vaga-${v.vaga}-down`}>↓</button>
           </div>
         </>
       )}
