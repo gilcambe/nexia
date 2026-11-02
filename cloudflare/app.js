@@ -46,8 +46,6 @@ function populateProcessEnv(env) {
   if (env && env.COFRE_SQL) globalThis.__NEXIA_COFRE__ = env.COFRE_SQL;
   // #87bb03: binding SELF (Durable Object do Vault) disponível para os handlers via globalThis.
   if (env && env.SELF) globalThis.__NEXIA_SELF__ = env.SELF;
-  // #87bb03: binding SELF (Durable Object do Vault) disponível para os handlers via globalThis.
-  if (env && env.SELF) globalThis.__NEXIA_SELF__ = env.SELF;
 }
 
 async function readBody(request) {
