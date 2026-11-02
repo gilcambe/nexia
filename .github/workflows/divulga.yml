@@ -94,6 +94,9 @@ jobs:
           name: divulga-ensaio
           path: divulga-ensaio/
           retention-days: 14
+      - name: Resumo de seguidores
+        if: always()
+        run: node .github/scripts/divulga-estado.js
       - name: Guardar os dados
         if: always()
         run: |
