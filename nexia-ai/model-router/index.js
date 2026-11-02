@@ -58,9 +58,9 @@ function createRouter(o = {}) {
   // #830: NEXIA_CACHE_ARQUIVO (opcional) guarda o cache em disco entre rodadas.
   const cache = o.cache || createCache({ arquivo: (o.env || process.env).NEXIA_CACHE_ARQUIVO || '' });
   async function chat(desc, req) {
-  const p = providerFor(desc);
-  const processedReq = { ...req, messages: contextManager.processHistory(req.messages) };
-  if (!cacheavel(processedReq)) return p.chat(desc.model, normalizeRequest(processedReq));
+    const p = providerFor(desc);
+    const processedReq = { ...req, messages: contextManager.processHistory(req.messages) };
+    if (!cacheavel(processedReq)) return p.chat(desc.model, normalizeRequest(processedReq));
   // Modelo entra na chave: resposta ruim de um modelo não vira a resposta do próximo do rodízio.
     const k = `${desc.provider}|${desc.model}|${chave(req)}`;
     const hit = cache.get(k);
@@ -85,11 +85,11 @@ function createRouter(o = {}) {
   }
 
   async function toolCall(desc, req) {
-  const p = providerFor(desc);
-  if (!p.capabilities(desc.model).tool_call) throw new ModelError(CODES.UNSUPPORTED, `${desc.provider} não suporta tool_call.`, { provider: desc.provider });
-  if (!req || !Array.isArray(req.tools) || !req.tools.length) throw new ModelError(CODES.UNSUPPORTED, 'toolCall exige tools.');
-  const processedReq = { ...req, messages: contextManager.processHistory(req.messages) };
-  return p.chat(desc.model, normalizeRequest(processedReq));
+    const p = providerFor(desc);
+    if (!p.capabilities(desc.model).tool_call) throw new ModelError(CODES.UNSUPPORTED, `${desc.provider} não suporta tool_call.`, { provider: desc.provider });
+    if (!req || !Array.isArray(req.tools) || !req.tools.length) throw new ModelError(CODES.UNSUPPORTED, 'toolCall exige tools.');
+    const processedReq = { ...req, messages: contextManager.processHistory(req.messages) };
+    return p.chat(desc.model, normalizeRequest(processedReq));
   }
 
   /**
@@ -97,14 +97,14 @@ function createRouter(o = {}) {
    * Com tool_call: força uma ferramenta cujo input_schema é o schema. Sem: pede JSON e valida.
    */
   async function structuredOutput(desc, req, schema, name = 'resposta') {
-  const p = providerFor(desc);
-  let data;
-  let out;
-  if (p.capabilities(desc.model).tool_call) {
-    const processedReq = { ...req, messages: contextManager.processHistory(req.messages) };
-    out = await p.chat(desc.model, normalizeRequest({ ...processedReq, tools: [{ name, description: 'Devolva a resposta neste formato.', input_schema: schema }], toolChoice: name }));
-    const call = out.tool_calls.find(c => c.name === name);
-    data = call ? call.input : undefined;
+    const p = providerFor(desc);
+    let data;
+    let out;
+    if (p.capabilities(desc.model).tool_call) {
+      const processedReq = { ...req, messages: contextManager.processHistory(req.messages) };
+      out = await p.chat(desc.model, normalizeRequest({ ...processedReq, tools: [{ name, description: 'Devolva a resposta neste formato.', input_schema: schema }], toolChoice: name }));
+      const call = out.tool_calls.find(c => c.name === name);
+      data = call ? call.input : undefined;
     } else {
       const sys = `${req.system ? req.system + '\n\n' : ''}Responda SOMENTE com um objeto JSON válido que siga este JSON Schema, sem texto fora do JSON:\n${JSON.stringify(schema)}`;
       out = await p.chat(desc.model, normalizeRequest({ ...req, system: sys }));
