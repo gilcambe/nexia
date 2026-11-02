@@ -54,6 +54,8 @@ async function atualizaEstado() {
 if (require.main === module) {
   atualizaEstado();
 }
+
+atualizaEstado();
   } catch (error) {
     console.error('Erro ao atualizar estado:', error);
   }
