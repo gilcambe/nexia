@@ -66,9 +66,10 @@ function createRouter(o = {}) {
   // #830: NEXIA_CACHE_ARQUIVO (opcional) guarda o cache em disco entre rodadas.
   const cache = o.cache || createCache({ arquivo: (o.env || process.env).NEXIA_CACHE_ARQUIVO || '' });
   async function chat(desc, req) {
-    const p = providerFor(desc);
-    if (!cacheavel(req)) return p.chat(desc.model, normalizeRequest(req));
-    // Modelo entra na chave: resposta ruim de um modelo não vira a resposta do próximo do rodízio.
+  const p = providerFor(desc);
+  const processedReq = { ...req, messages: contextManager.processHistory(req.messages) };
+  if (!cacheavel(processedReq)) return p.chat(desc.model, normalizeRequest(processedReq));
+  // Modelo entra na chave: resposta ruim de um modelo não vira a resposta do próximo do rodízio.
     const k = `${desc.provider}|${desc.model}|${chave(req)}`;
     const hit = cache.get(k);
     if (hit) return { ...hit, cached: true };
