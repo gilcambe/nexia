@@ -22,7 +22,7 @@ export function calcularAvisos(d: Dados): Aviso[] {
   for (const m of d.saude?.produtos || []) {
     const p = produto(m.id);
     const url = p?.site || "";
-    if (!m.ok) {
+    if (m.ok === false) { // #2882: só com prova (2 checagens seguidas falhando); null = sem medição, sem alerta
       a.push({
         cor: "vermelho", texto: `${nome(m.id)} está fora do ar`, aba: "clientes",
         oque: `O endereço ${url} não respondeu${m.codigo ? ` (código ${m.codigo})` : ""}${m.quando ? `, na medição de ${new Date(m.quando).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}` : ""}.`,
@@ -35,7 +35,7 @@ export function calcularAvisos(d: Dados): Aviso[] {
         link: url ? { rotulo: "Abrir o site", url } : undefined,
         conserto: `${nome(m.id)} está fora do ar: ${url} não respondeu${m.codigo ? ` (código ${m.codigo})` : ""}. Descubra a causa e corrija.`,
       });
-    } else if (m.lento) {
+    } else if (m.ok && m.lento) {
       a.push({
         cor: "amarelo", texto: `${nome(m.id)} está lento para abrir`, aba: "clientes",
         oque: `${url} levou ${(m.tempo / 1000).toFixed(1).replace(".", ",")} s para responder (o normal é menos de 3 s).`,

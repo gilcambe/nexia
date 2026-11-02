@@ -29,7 +29,7 @@ test('CENT2. lista de produtos e links sem nenhum segredo', async () => {
 
 test('CENT3. saúde mede cada site (fora do ar = ok false)', async () => {
   const fetch = async (u) => { if (u.includes('bezsan')) throw new Error('fora'); return { status: 200 }; };
-  const b = JSON.parse((await createHandler({ getMw: () => master, fetch })(ev({ queryStringParameters: { parte: 'saude' } }))).body);
+  const b = JSON.parse((await createHandler({ esperaMs: 0, getMw: () => master, fetch })(ev({ queryStringParameters: { parte: 'saude' } }))).body);
   assert.strictEqual(b.produtos.find((p) => p.id === 'bezsan').ok, false);
   assert.strictEqual(b.produtos.find((p) => p.id === 'body-coach').ok, true);
 });
@@ -149,8 +149,9 @@ test('CENT-PROPRIO. sites no próprio Worker usam a medição de hora em hora (o
   const pedidos = [];
   const fetch = async (u) => { pedidos.push(u); return { status: 200 }; };
   const hora = new Date().toISOString().slice(0, 13);
-  const db = { collection: () => ({ where: () => ({ get: async () => ({ docs: [{ data: () => ({ hora, em: 'agora', rotas: { cortex: { ok: true, codigo: 200, tempo: 40 }, ces: { ok: false, codigo: 503, tempo: 10 } } }) }] }) }) }) };
-  const b = JSON.parse((await createHandler({ getMw: () => master, fetch, getHistoricoDb: () => db })(ev({ queryStringParameters: { parte: 'saude' } }))).body);
+  const antes = new Date(Date.now() - 3600e3).toISOString().slice(0, 13);
+  const db = { collection: () => ({ where: () => ({ get: async () => ({ docs: [{ data: () => ({ hora, em: 'agora', rotas: { cortex: { ok: true, codigo: 200, tempo: 40 }, ces: { ok: false, codigo: 503, tempo: 10 } } }) }, { data: () => ({ hora: antes, em: 'antes', rotas: { ces: { ok: false, codigo: 503, tempo: 10 } } }) }] }) }) }) };
+  const b = JSON.parse((await createHandler({ esperaMs: 0, getMw: () => master, fetch, getHistoricoDb: () => db })(ev({ queryStringParameters: { parte: 'saude' } }))).body);
   assert.strictEqual(b.produtos.find((p) => p.id === 'cortex').ok, true);
   assert.strictEqual(b.produtos.find((p) => p.id === 'ces').ok, false);
   assert.strictEqual(b.produtos.find((p) => p.id === 'ces').quando, 'agora');
@@ -161,14 +162,14 @@ test('CENT-PROPRIO. sites no próprio Worker usam a medição de hora em hora (o
 test('CENT-SEM-AMOSTRA. ausência de amostra resulta em status "sem medição" (cinza) e nunca ok:false', async () => {
   const fetch = async (u) => { if (u.includes('bezsan')) throw new Error('fora'); return { status: 200 }; };
   const db = { collection: () => ({ where: () => ({ get: async () => ({ docs: [] }) }) }) }; // banco vazio, sem amostras
-  const b = JSON.parse((await createHandler({ getMw: () => master, fetch, getHistoricoDb: () => db })(ev({ queryStringParameters: { parte: 'saude' } }))).body);
+  const b = JSON.parse((await createHandler({ esperaMs: 0, getMw: () => master, fetch, getHistoricoDb: () => db })(ev({ queryStringParameters: { parte: 'saude' } }))).body);
   
   // Sem amostra no histórico: sites próprios não têm medição (sem quando) e nunca ficam ok:false só por falta de amostra
   const cortex = b.produtos.find((p) => p.id === 'cortex');
   const ces = b.produtos.find((p) => p.id === 'ces');
   
-  assert.strictEqual(cortex.quando, undefined, 'cortex sem amostra não tem quando (status sem medição/cinza)');
-  assert.strictEqual(ces.quando, undefined, 'ces sem amostra não tem quando (status sem medição/cinza)');
+  assert.ok(!cortex.quando, 'cortex sem amostra não tem quando (status sem medição/cinza)');
+  assert.ok(!ces.quando, 'ces sem amostra não tem quando (status sem medição/cinza)');
   assert.ok(cortex.ok !== false, 'cortex sem amostra nunca fica ok:false apenas por falta de amostra');
   assert.ok(ces.ok !== false, 'ces sem amostra nunca fica ok:false apenas por falta de amostra');
   
@@ -198,12 +199,12 @@ test('CENT-SELF. rotas do próprio host utilizam o binding/mecanismo SELF (medi�
                 ces: { ok: false, codigo: 503, tempo: 10 } 
               } 
             }) 
-          }] 
+          }, { data: () => ({ hora: new Date(Date.now() - 3600e3).toISOString().slice(0, 13), em: 'antes', rotas: { ces: { ok: false, codigo: 503, tempo: 10 } } }) }] 
         }) 
       }) 
     }) 
   };
-  const b = JSON.parse((await createHandler({ getMw: () => master, fetch, getHistoricoDb: () => db })(ev({ queryStringParameters: { parte: 'saude' } }))).body);
+  const b = JSON.parse((await createHandler({ esperaMs: 0, getMw: () => master, fetch, getHistoricoDb: () => db })(ev({ queryStringParameters: { parte: 'saude' } }))).body);
   
   // Verifica que sites próprios usam a medição do histórico (binding/mecanismo SELF)
   const cortex = b.produtos.find((p) => p.id === 'cortex');
@@ -227,4 +228,42 @@ test('CENT-MAQ. máquinas do dono vêm do agente (só leitura)', async () => {
   const h = createHandler({ getMw: () => master, getMaquinas: () => ({ ligado: () => true, listar: async () => [{ nome: 'PC1', online: true, ramTotal: 16 }] }) });
   const b = JSON.parse((await h(ev({ queryStringParameters: { parte: 'maquinas' } }))).body);
   assert.deepStrictEqual([b.ligado, b.maquinas[0].nome, b.maquinas[0].online], [true, 'PC1', true]);
+});
+
+// #2882: alerta "fora do ar" só com prova (2 checagens seguidas falhando).
+const amostra = (horasAtras, rotas) => ({ data: () => ({ hora: new Date(Date.now() - horasAtras * 3600e3).toISOString().slice(0, 13), em: 'h-' + horasAtras, rotas }) });
+const dbCom = (docs) => ({ collection: () => ({ where: () => ({ get: async () => ({ docs }) }) }) });
+const saude = async (fetch, db) => JSON.parse((await createHandler({ esperaMs: 0, getMw: () => master, fetch, getHistoricoDb: () => db })(ev({ queryStringParameters: { parte: 'saude' } }))).body).produtos;
+
+test('CENT-2882a. uma falha só do próprio Worker não vira "fora do ar" (ok:null)', async () => {
+  const p = await saude(async () => ({ status: 200 }), dbCom([amostra(0, { vp: { ok: false, codigo: 0, tempo: 0 } }), amostra(1, { vp: { ok: true, codigo: 200, tempo: 50 } })]));
+  assert.strictEqual(p.find((x) => x.id === 'vp').ok, null);
+});
+
+test('CENT-2882b. duas falhas seguidas do próprio Worker = ok:false', async () => {
+  const p = await saude(async () => ({ status: 200 }), dbCom([amostra(0, { vp: { ok: false, codigo: 0, tempo: 0 } }), amostra(1, { vp: { ok: false, codigo: 0, tempo: 0 } })]));
+  assert.strictEqual(p.find((x) => x.id === 'vp').ok, false);
+});
+
+test('CENT-2882c. site de fora que falha 1 vez e volta na 2ª checagem fica no ar', async () => {
+  let n = 0;
+  const p = await saude(async (u) => { if (u.includes('bezsan') && n++ === 0) throw new Error('piscou'); return { status: 200 }; }, dbCom([]));
+  assert.strictEqual(p.find((x) => x.id === 'bezsan').ok, true);
+  assert.strictEqual(n, 2, 'mediu de novo antes de dar alerta');
+});
+
+test('CENT-2882d. medir10 do cron nunca lança erro e usa o binding SELF para o próprio Worker', async () => {
+  const { criarMedir10 } = require('../../cloudflare/saude.js');
+  const { medir } = require('../../netlify/functions/central.js');
+  const usados = [];
+  const self = { fetch: async (u) => { usados.push('self ' + u); return { status: 200 }; } };
+  const fetchFn = async (u) => { usados.push('fetch ' + u); return { status: 200 }; };
+  const m = criarMedir10(medir, { base: 'https://nexia.gcbezerra.workers.dev', self, fetchFn });
+  assert.strictEqual((await m('https://nexia.gcbezerra.workers.dev/vp')).ok, true);
+  assert.strictEqual((await m('https://bezsan.pages.dev/')).ok, true);
+  assert.deepStrictEqual(usados, ['self https://nexia.gcbezerra.workers.dev/vp', 'fetch https://bezsan.pages.dev/']);
+  const semSelf = criarMedir10(medir, { base: 'https://nexia.gcbezerra.workers.dev', self: undefined, fetchFn });
+  assert.strictEqual((await semSelf('https://nexia.gcbezerra.workers.dev/vp')).ok, true, 'sem SELF não quebra (antes: new URL(undefined))');
+  const quebra = criarMedir10(async () => { throw new Error('x'); }, { base: 'https://a.b', fetchFn });
+  assert.strictEqual((await quebra('lixo')).ok, false);
 });

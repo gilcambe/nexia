@@ -6,14 +6,7 @@ async function rodar(at) {
   const h = require('../netlify/functions/central/saude-historico.js');
   const { medir } = require('../netlify/functions/central.js');
   const db = h.abrirBanco(process.env);
-  const medir10 = (url) => {
-    const baseHost = new URL(process.env.SELF).hostname;
-    const targetHost = new URL(url).hostname;
-    if (baseHost === targetHost && process.env.SELF) {
-      return medir(url, (...a) => process.env.SELF.fetch(...a), 10000); // tempo limite 10 s
-    }
-    return medir(url, (...a) => fetch(...a), 10000); // tempo limite 10 s
-  };
+  const medir10 = criarMedir10(medir);
   const r = await h.guardarAmostra(db, { at, medir: medir10 });
   // Vigia (#1014): 2 falhas seguidas no mesmo endereço → 1 issue cortex-alerta. Nunca derruba a amostra.
   if (r && r.porRota) {
@@ -26,4 +19,18 @@ async function rodar(at) {
   return r;
 }
 
-module.exports = { rodar };
+// #2882: o próprio Worker é medido pelo binding SELF (fetch normal para o próprio workers.dev o Cloudflare barra).
+// Nunca lança erro: qualquer problema vira ok:false só daquela rota.
+function criarMedir10(medir, { base, self = globalThis.__NEXIA_SELF__, fetchFn = (...a) => fetch(...a) } = {}) {
+  const BASE = base || require('../central/produtos.js').BASE;
+  const host = (u) => { try { return new URL(u).hostname; } catch { return ''; } };
+  return async (url) => {
+    try {
+      const proprio = host(url) === host(BASE);
+      const f = proprio && self && typeof self.fetch === 'function' ? (...a) => self.fetch(...a) : fetchFn;
+      return await medir(url, f, 10000); // tempo limite 10 s
+    } catch (e) { return { ok: false, codigo: 0, tempo: 0, lento: false }; }
+  };
+}
+
+module.exports = { rodar, criarMedir10 };
