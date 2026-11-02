@@ -1,12 +1,5 @@
 'use strict';
 const { createContextManager } = require('./contextManager');
-// Model Router (spec §16, plano Fase 5). Um único ponto para chamar modelos:
-//   chat, stream (streaming real), toolCall, structuredOutput, capabilities, costEstimate,
-// e as variantes com fallback usadas pelo cortex-chat. Cada provedor implementa a
-// interface ModelProvider:
-//   { id, envKey, available(), capabilities(model), chat(model, req), stream?(model, req) }
-// O modelo é sempre um descritor { provider, model }; os catálogos (rótulos, intents,
-// modelos gratuitos) continuam com os chamadores (cortex-chat, multi-model-engine).
 const { ModelError, CODES } = require('./errors');
 const { normalizeRequest } = require('./messages');
 const { costEstimate } = require('./pricing');
