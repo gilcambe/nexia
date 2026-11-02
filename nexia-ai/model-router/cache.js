@@ -3,6 +3,9 @@
 // pedidos iguais; responder do cache economiza a cota grátis. Só vale quando o chamador pede (req.cache === true).
 // Cache permanente no Cloudflare D1 para respostas sem ferramentas com TTL de 7 dias
 // pedidos iguais; responder do cache economiza a cota grátis. Só vale quando o chamador pede (req.cache === true).
+=======
+// Cache permanente no Cloudflare D1 para respostas sem ferramentas com TTL de 7 dias
+// pedidos iguais; responder do cache economiza a cota grátis. Só vale quando o chamador pede (req.cache === true).
 const { createHash } = require('node:crypto');
 const fs = require('node:fs');
 const path = require('node:path');
