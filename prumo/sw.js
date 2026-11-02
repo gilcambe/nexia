@@ -1,6 +1,6 @@
 // Prumo: guarda só a casca do app para abrir sem internet. Respostas da API nunca são guardadas.
-const CACHE = 'prumo-casca-v1';
-const CASCA = ['/prumo/', '/prumo/index.html', '/prumo/app.js', '/prumo/manifest.webmanifest', '/prumo/icone.svg'];
+const CACHE = 'prumo-casca-v1-2';
+const CASCA = ['/prumo/', '/prumo/index.html', '/prumo/app.js', '/prumo/manifest.webmanifest', '/prumo/icone.svg', '/prumo/ui.js', '/prumo/carteira.js', '/prumo/gastos.js', '/prumo/compras.js', '/prumo/objetivos.js'];
 
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(CASCA)).then(() => self.skipWaiting()));
