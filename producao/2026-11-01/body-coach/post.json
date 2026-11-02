@@ -1,0 +1,29 @@
+{
+  "cliente": "body-coach",
+  "data": "2026-11-01",
+  "serie": "pergunta-enquete",
+  "fonte": "modelo",
+  "legenda": "Responda rápido: qual é o seu treino?\n\nOpção A: Academia, com ficha montada pelo objetivo. Opção B: Em casa, com treino curto de 20 minutos. Opção C: Ainda não comecei, mas quero começar. Para todo mundo: O Body Coach monta o treino para A, B ou C. Teste grátis: Sem cartão. Treino, dieta e evolução num só app.\n\nComente A, B ou C e marque quem treina com você.\nTeste grátis o app: nexiabodycoach.pages.dev\n\nQual é a sua: A, B ou C?",
+  "hashtags": [
+    "#treino",
+    "#academia",
+    "#musculacao",
+    "#treinoemcasa",
+    "#dieta",
+    "#fitness",
+    "#bodycoach",
+    "#nexiabodycoach"
+  ],
+  "imagens": [
+    "carrossel-1.jpg",
+    "carrossel-2.jpg",
+    "carrossel-3.jpg",
+    "carrossel-4.jpg",
+    "carrossel-5.jpg",
+    "carrossel-6.jpg",
+    "carrossel-7.jpg",
+    "carrossel-8.jpg"
+  ],
+  "video": "reel.mp4",
+  "capa": "capa.jpg"
+}
