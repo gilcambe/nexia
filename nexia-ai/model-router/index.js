@@ -4,13 +4,6 @@ const { ModelError, CODES } = require('./errors');
 const { normalizeRequest } = require('./messages');
 const { costEstimate } = require('./pricing');
 const { createAnthropicProvider } = require('./providers/anthropic');
-const { createContextManager } = require('./contextManager');
-const { createOpenAICompatibleProvider, PROVIDERS: OPENAI_COMPATIBLE } = require('./providers/openai-compatible');
-const { aplicarVagas, vagasCustom } = require('./vagas');
-const { createGeminiProvider } = require('./providers/gemini');
-const { createCohereProvider } = require('./providers/cohere');
-const { createCache, chave, cacheavel } = require('./cache');
-
 const { createOpenAICompatibleProvider, PROVIDERS: OPENAI_COMPATIBLE } = require('./providers/openai-compatible');
 const { aplicarVagas, vagasCustom } = require('./vagas');
 const { createGeminiProvider } = require('./providers/gemini');
