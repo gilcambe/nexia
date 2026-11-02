@@ -2594,6 +2594,7 @@
     carregarCalendario();
   }
 
+  if ('serviceWorker' in navigator) { var _ub=document.createElement('script');_ub.src='update-banner.js';_ub.defer=true;document.head.appendChild(_ub); }
   if ('serviceWorker' in navigator) try { Promise.resolve(navigator.serviceWorker.register('sw.js')).then(r => { try { r.update(); } catch (e) {} }).catch(() => {}); } catch (e) {}
   window.addEventListener('beforeinstallprompt', ev => { ev.preventDefault(); window.__instalar = ev; const b = document.getElementById('btn-instalar'); if (b) b.classList.remove('oculto'); });
   window.instalarApp = async function () { const ev = window.__instalar; if (!ev) return; ev.prompt(); try { await ev.userChoice; } catch (e) {} window.__instalar = null; const b = document.getElementById('btn-instalar'); if (b) b.classList.add('oculto'); };

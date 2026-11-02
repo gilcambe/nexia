@@ -11,7 +11,6 @@ var APP_FILES = [
 ];
 
 self.addEventListener('install', function (e) {
-  self.skipWaiting();
   e.waitUntil(
     caches.open(CACHE_VERSION).then(function (cache) {
       return cache.addAll(APP_FILES);
@@ -60,4 +59,10 @@ self.addEventListener('fetch', function (e) {
       });
     })
   );
+});
+
+// #2917: versão nova espera o toque em "Toque para atualizar" (update-banner.js); limpa o cache velho e assume.
+self.addEventListener('message', function (e) {
+  if (!e.data || e.data.tipo !== 'atualizar') return;
+  e.waitUntil(caches.keys().then(function (ks) { return Promise.all(ks.map(function (k) { return caches.delete(k); })); }).then(function () { return self.skipWaiting(); }));
 });

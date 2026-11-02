@@ -11,6 +11,7 @@
   // Registrar Service Worker com escopo explícito
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function () {
+      var _ub=document.createElement('script');_ub.src='/viajante-pro/app/update-banner.js';_ub.defer=true;document.head.appendChild(_ub);
       navigator.serviceWorker.register('/viajante-pro/app/sw.js', { scope: '/viajante-pro/app/' }).catch(function (e) {
         console.warn('Falha ao registrar SW:', e);
       });

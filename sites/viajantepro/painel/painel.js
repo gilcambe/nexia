@@ -332,5 +332,5 @@
   }
   if (TOKEN) entrar();
   setInterval(vigiarConversas, 20000);
-  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+  if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js').catch(() => {}); var _ub=document.createElement('script');_ub.src='update-banner.js';_ub.defer=true;document.head.appendChild(_ub); }
 })();

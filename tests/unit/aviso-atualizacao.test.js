@@ -28,3 +28,22 @@ test('banner de atualização existe e está ligado no app', () => {
   assert.match(b, /controllerchange/);
   assert.match(ler('index.html'), /\/js\/update-banner\.js/);
 });
+
+test('Viajante Pro, Splash agenda e CES: esperam o toque e carregam o banner', () => {
+  const apps = [
+    ['viajante-pro/app/sw.js', 'viajante-pro/app/app.js', 'viajante-pro/app/update-banner.js'],
+    ['sites/viajantepro/app/sw.js', 'sites/viajantepro/app/app.js', 'sites/viajantepro/app/update-banner.js'],
+    ['sites/viajantepro/painel/sw.js', 'sites/viajantepro/painel/painel.js', 'sites/viajantepro/painel/update-banner.js'],
+    ['sites/splash/agenda/sw.js', 'sites/splash/agenda/index.html', 'sites/splash/agenda/update-banner.js'],
+    ['ces/sw-ces.js', 'ces/ces-app-executivo.html', 'ces/update-banner.js'],
+  ];
+  const banner = ler('public/js/update-banner.js');
+  for (const [sw, pagina, copia] of apps) {
+    const s = ler(sw);
+    assert.match(s, /tipo !== 'atualizar'/, sw);
+    assert.match(s, /self\.skipWaiting\(\)/, sw);
+    assert.doesNotMatch(s.split("addEventListener('message'")[0], /skipWaiting/, sw + ' não pode assumir sozinho no install');
+    assert.match(ler(pagina), /update-banner\.js/, pagina);
+    assert.strictEqual(ler(copia), banner, copia + ' deve ser cópia de public/js/update-banner.js');
+  }
+});
