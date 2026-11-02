@@ -86,6 +86,32 @@ function CartaoVaga({ v, dados, aoMudar }: { v: Vaga; dados: Vagas; aoMudar: () 
           </div>
           <div className="flex flex-wrap gap-2">
                       <button className={`${BOTAO} border border-slate-200 bg-white text-slate-700`} onClick={() => { setEditando(true); setMsg(null); }} disabled={ocupado} data-testid={`vaga-${v.vaga}-trocar`}>Trocar chave</button>
+          <button className={`${BOTAO} border border-slate-200 bg-white text-slate-700`} onClick={async () => {
+            try {
+              await pausarVaga(v.vaga, !v.paused);
+              await aoMudar();
+            } catch (e) {
+              setMsg({ ok: false, texto: (e as Error).message });
+            }
+          }} disabled={ocupado} data-testid={`vaga-${v.vaga}-pausar`}>
+            {v.paused ? 'Ligar' : 'Pausar'}
+          </button>
+          <button className={`${BOTAO} border border-slate-200 bg-white text-slate-700 ml-2`} onClick={async () => {
+            try {
+              await reordenarVaga(v.vaga, 'up');
+              await aoMudar();
+            } catch (e) {
+              setMsg({ ok: false, texto: (e as Error).message });
+            }
+          }} disabled={ocupado} data-testid={`vaga-${v.vaga}-up`}>↑</button>
+          <button className={`${BOTAO} border border-slate-200 bg-white text-slate-700 ml-2`} onClick={async () => {
+            try {
+              await reordenarVaga(v.vaga, 'down');
+              await aoMudar();
+            } catch (e) {
+              setMsg({ ok: false, texto: (e as Error).message });
+            }
+          }} disabled={ocupado} data-testid={`vaga-${v.vaga}-down`}>↓</button>
           <button className={`${BOTAO} border border-slate-200 bg-white text-slate-700`} onClick={() => onPause(v.vaga, !v.paused)} disabled={ocupado} data-testid={`vaga-${v.vaga}-pausar`}>
             {v.paused ? 'Ligar' : 'Pausar'}
           </button>
