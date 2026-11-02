@@ -46,28 +46,4 @@ export async function chatWithFallback(prompt: string): Promise<{ response: stri
     throw error;
   }
 }
-export async function chatWithFallback(prompt: string): Promise<{ response: string; engine: string }> {
-  try {
-    const response = await webLLMChat.chat(prompt);
-    return { response, engine: 'WebLLM' };
-  } catch (error) {
-    console.error('WebLLM failed, falling back to Ollama:', error);
-    if (config.fallbackToOllama) {
-      const ollamaResponse = await ollamaEngine.chat(prompt);
-      return { response: ollamaResponse, engine: 'Ollama' };
-    }
-    throw error;
-  }
-}
-  try {
-    const response = await webLLMChat.chat(prompt);
-    return { response, engine: 'WebLLM' };
-  } catch (error) {
-    console.error('WebLLM failed, falling back to Ollama:', error);
-    if (config.fallbackToOllama) {
-      const ollamaResponse = await ollamaEngine.chat(prompt);
-      return { response: ollamaResponse, engine: 'Ollama' };
-    }
-    throw error;
-  }
 }
