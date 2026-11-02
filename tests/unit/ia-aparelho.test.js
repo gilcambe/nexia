@@ -61,3 +61,15 @@ test('IAA5. versão do WebLLM conhece Qwen2.5; celular sem shader-f16 usa q4f32;
   assert.match(A.motivoErro(new Error('Failed to fetch')), /internet/);
   assert.match(R('src/pages/cortex/Pergunta.tsx'), /motivoErro\(e\)/);
 });
+
+test('IAA6. antes de baixar testa os 2 sites e diz qual falhou', async () => {
+  const reg = { model_id: 'x', model: 'https://huggingface.co/mlc-ai/x', model_lib: 'https://raw.githubusercontent.com/a/x.wasm' };
+  const vistos = [];
+  const ok = async (u) => { vistos.push(u); return { ok: true, status: 200 }; };
+  assert.equal(await A.testarSites(reg, ok), null);
+  assert.equal(vistos[0], 'https://huggingface.co/mlc-ai/x/resolve/main/mlc-chat-config.json');
+  assert.match(await A.testarSites(reg, async () => { throw new TypeError('Failed to fetch'); }), /huggingface\.co/);
+  assert.match(await A.testarSites(reg, async (u) => (u.endsWith('.wasm') ? { ok: false, status: 404 } : { ok: true })), /raw\.githubusercontent\.com respondeu erro 404/);
+  assert.match(A.motivoErro(new Error('o aparelho não conseguiu abrir huggingface.co (onde fica a IA)')), /^o aparelho não conseguiu abrir huggingface/);
+  assert.match(R('src/lib/ia-aparelho.ts'), /useIndexedDBCache: true/);
+});
