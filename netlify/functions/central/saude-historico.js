@@ -56,8 +56,7 @@ async function guardarAmostra(db, { at = Date.now(), medir, rotas = ROTAS } = {}
   } catch (error) {
     return [r.id, { ok: false, codigo: 500, tempo: 0, error: error.message }];
   }
-}));
-  const porRota = {};
+}
   for (const [id, m] of medidas) porRota[id] = { ok: !!m.ok, codigo: Number(m.codigo) || 0, tempo: Math.round(Number(m.tempo) || 0) };
   await ref.set({ hora, em: new Date(at).toISOString(), rotas: porRota });
   const velhas = await db.collection(COLECAO).where('hora', '<', horaDe(at - DIAS * 24 * HORA)).limit(200).get();
