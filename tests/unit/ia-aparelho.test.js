@@ -51,3 +51,13 @@ test('IAA4. tela Perguntar tem o botão, carrega a lib só quando liga, e marca 
   assert.match(lib, /web-llm@\d+\.\d+\.\d+/, 'versão fixa do CDN');
   assert.match(lib, /import\(\/\* @vite-ignore \*\/ WEBLLM_URL\)/, 'import sob demanda');
 });
+
+test('IAA5. versão do WebLLM conhece Qwen2.5; celular sem shader-f16 usa q4f32; erro aparece com motivo', () => {
+  const v = /web-llm@0\.2\.(\d+)/.exec(A.WEBLLM_URL);
+  assert.ok(v && Number(v[1]) >= 61, 'Qwen2.5 só existe a partir da 0.2.61');
+  assert.equal(A.modeloParaGpu(A.MODELOS.leve, false), 'Qwen2.5-0.5B-Instruct-q4f32_1-MLC');
+  assert.equal(A.modeloParaGpu(A.MODELOS.leve, true), A.MODELOS.leve);
+  assert.match(A.motivoErro(new Error('Cannot find model record in appConfig for X')), /modelo não encontrado/);
+  assert.match(A.motivoErro(new Error('Failed to fetch')), /internet/);
+  assert.match(R('src/pages/cortex/Pergunta.tsx'), /motivoErro\(e\)/);
+});

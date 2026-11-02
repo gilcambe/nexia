@@ -9,7 +9,7 @@ import Composer from "./Composer";
 import MarkdownRenderer from "../../components/MarkdownRenderer";
 import { falarTexto } from "@/lib/voz";
 import { usePedidos } from "../meu-cortex/api";
-import { lerConfig, salvarConfig, suporte, carregar, pronto, responderNoAparelho, MODELOS } from "@/lib/ia-aparelho";
+import { lerConfig, salvarConfig, suporte, carregar, pronto, responderNoAparelho, motivoErro, MODELOS } from "@/lib/ia-aparelho";
 
 // Pergunta direta ao Cortex: a resposta chega palavra por palavra (SSE do Worker em /api/cortex), sem abrir pedido.
 // Para mudar código, "Virar pedido" manda a pergunta para a fila do Cortex como um pedido normal.
@@ -51,7 +51,7 @@ export default function Pergunta({ virarPedido, primeira }: { virarPedido: (text
       await carregar(modelo, (pct) => setStatusAparelho(`Baixando a IA no aparelho: ${pct}% (só na primeira vez)`));
       setStatusAparelho("IA no aparelho pronta ✅");
       setTimeout(() => setStatusAparelho(null), 3000);
-    } catch { setStatusAparelho("Não consegui baixar a IA no aparelho. As respostas seguem pela nuvem."); }
+    } catch (e) { setStatusAparelho(`Não consegui baixar a IA no aparelho: ${motivoErro(e)}. As respostas seguem pela nuvem.`); }
   }
   const alternarAparelho = () => {
     if (aparelho.ativo) { salvarConfig({ ...aparelho, ativo: false }); setAparelho({ ...aparelho, ativo: false }); setStatusAparelho(null); return; }
@@ -210,7 +210,7 @@ export default function Pergunta({ virarPedido, primeira }: { virarPedido: (text
               <option value={MODELOS.normal}>Normal (PC)</option>
             </select>
           )}
-          {statusAparelho && <span className="text-xs text-[var(--cx-mut)] truncate" data-testid="cx-ia-aparelho-status">{statusAparelho}</span>}
+          {statusAparelho && <span className="text-xs text-[var(--cx-mut)] w-full break-words" data-testid="cx-ia-aparelho-status">{statusAparelho}</span>}
           {statusVoz && <span className="text-xs text-[var(--cx-ac)] animate-pulse truncate" data-testid="cx-status-voz">{statusVoz}</span>}
         </div>
       </div>
