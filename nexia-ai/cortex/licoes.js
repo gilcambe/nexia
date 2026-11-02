@@ -18,23 +18,6 @@ class LessonStore {
   constructor() {
     this.lessons = [];
     this.avoidCounts = {};
-    this.init();
-  }
-
-  async init() {
-    try {
-      const Cofre = require('./cofre.js');
-      const savedLessons = await Cofre.recuperar('lessons');
-      if (savedLessons && Array.isArray(savedLessons)) {
-        this.lessons = savedLessons;
-      }
-      const savedAvoid = await Cofre.recuperar('avoidCounts');
-      if (savedAvoid && typeof savedAvoid === 'object') {
-        this.avoidCounts = savedAvoid;
-      }
-    } catch (e) {
-      // fallback silenciado caso cofre não esteja pronto
-    }
   }
 
   async addLesson({ assinatura, causa, resolucao, issue }) {
