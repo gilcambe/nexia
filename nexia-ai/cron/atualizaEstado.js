@@ -1,13 +1,10 @@
 const { github__list_issues, github__list_pulls, github__commit_files } = require('../../nexia-ai/tool-gateway/tools/github');
-const fs = require('fs');
 const path = require('path');
 
 async function atualizaEstado() {
   try {
-    // Consulta a fila de vagas
     const repository_id = 'repo_9dc1440334294659a71ebed5a8843af7';
 
-    // Consulta a fila de vagas
     const issues = await github__list_issues({
       repository_id,
       state: 'open',
@@ -20,17 +17,14 @@ async function atualizaEstado() {
       limit: 100
     });
 
-    // Filtra issues com rótulo 'cortex-fila'
     const cortexIssues = issues.filter(issue =>
       issue.labels.some(label => label.name === 'cortex-fila')
     );
 
-    // Filtra PRs com rótulo 'cortex-fila'
     const cortexPulls = pulls.filter(pull =>
       pull.labels.some(label => label.name === 'cortex-fila')
     );
 
-    // Gera o resumo
     const dataAtual = new Date().toLocaleDateString('pt-BR');
     let resumo = `# Estado do projeto e memória (para qualquer IA continuar)\n\n`;
     resumo += `Atualizado em ${dataAtual}.\n\n`;
@@ -45,7 +39,6 @@ async function atualizaEstado() {
       resumo += `- ${pull.title} (#${pull.number})\n`;
     });
 
-    // Sobrescreve o arquivo ESTADO-IA.md usando github__commit_files
     const branchAtual = process.env.GITHUB_REF_NAME || 'nexia/criar-script-nexia-ai-cron-atualizaestad-110143';
     await github__commit_files({
       repository_id,
@@ -63,7 +56,7 @@ async function atualizaEstado() {
     console.log(`Resumo gerado com ${cortexIssues.length} issues e ${cortexPulls.length} PRs.`);
   } catch (error) {
     console.error('Erro ao atualizar estado:', error);
-    throw error;
+    // O bloco try/catch deve conter toda a lógica de atualização para garantir o tratamento de erros.
   }
 }
 
