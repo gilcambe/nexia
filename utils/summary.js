@@ -10,14 +10,11 @@
 function summarizeHistory(messages, maxTokens, tokenCounter) {
   if (!messages || !messages.length) return [];
 
-  // Mantém as mensagens mais recentes e as mais relevantes
   const relevantMessages = messages.filter(m => m.role === 'user' || (m.role === 'assistant' && m.content && m.content.includes('ferramenta')));
-  const recentMessages = messages.slice(-10); // Últimas 10 mensagens
+  const recentMessages = messages.slice(-10);
 
-  // Combina e ordena por data (mais recentes primeiro)
   const combined = [...new Set([...relevantMessages, ...recentMessages])].sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
 
-  // Corta para caber no limite de tokens
   let totalTokens = 0;
   const summarized = [];
 

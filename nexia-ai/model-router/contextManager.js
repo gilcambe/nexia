@@ -1,7 +1,7 @@
 'use strict';
 
-const { countTokens } = require('../../utils/tokenCounter');
-const { summarizeHistory } = require('../../utils/summary');
+const { countTokens } = require('./tokenCounter');
+const { summarizeHistory } = require('./summary');
 
 /**
  * Gerencia o contexto das mensagens antes de chamadas ao modelo.
@@ -24,7 +24,7 @@ function createContextManager(options = {}) {
     if (!messages || !messages.length) return [];
 
     // Conta os tokens do histórico atual
-    let totalTokens = messages.reduce((sum, msg) => sum + countTokens(msg.content || ''), 0);
+    const totalTokens = messages.reduce((sum, msg) => sum + countTokens(msg.content || ''), 0);
 
     // Se estiver dentro do limite, retorna o histórico original
     if (totalTokens <= maxTokens) return messages;
