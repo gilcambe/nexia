@@ -6,7 +6,7 @@ const { getAiInference } = require('cloudflare:ai');
  * @param {string} text - Texto a ser embeded
  * @returns {Promise<Float32Array>} Vetor de embeddings
  */
-async function getEmbedding(text, env) {
+async function getWorkerAIEmbedding(text, env) {
   if (!env || !env.AI) {
     console.warn('[workerAI] AI binding not found in env.');
     return null;
@@ -23,4 +23,4 @@ async function getEmbedding(text, env) {
   }
 }
 
-module.exports = { getEmbedding };
+module.exports = { getWorkerAIEmbedding, getEmbedding: getWorkerAIEmbedding };
