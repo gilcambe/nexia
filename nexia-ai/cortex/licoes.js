@@ -20,7 +20,7 @@ class LessonStore {
     this.avoidCounts = {};
   }
 
-  addLesson({ assinatura, causa, resolucao, issue }) {
+  async addLesson({ assinatura, causa, resolucao, issue }) {
     const lesson = { assinatura, causa, resolucao, issue };
     this.lessons.push(lesson);
     this.avoidCounts[assinatura] = (this.avoidCounts[assinatura] || 0) + 1;
@@ -37,7 +37,7 @@ class LessonStore {
       .slice(0, limit);
   }
 
-  incrementAvoidCount(assinatura) {
+  async incrementAvoidCount(assinatura) {
     this.avoidCounts[assinatura] = (this.avoidCounts[assinatura] || 0) + 1;
     // Sincronizar com Cofre
     const Cofre = require('./cofre.js');
