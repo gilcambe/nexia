@@ -78,8 +78,11 @@ export interface Dados {
   vagas?: Vagas;
   maquinas?: { ligado: boolean; maquinas: Maquina[] };
   erros?: { erros: ErroRecente[] }; // aba Sistema, só quando abre
+  oQueFalta?: OQueFaltaDados; // aba O que falta (#2873), só quando abre
   historico?: Historico; // só a aba Sistema pede (lê 30 dias; não entra no "conferir" de 5 em 5 min)
 }
+export interface FaltaItem { tipo?: "pr" | "issue"; numero: number; titulo: string; link: string; quando: string; motivo?: string; urgente?: boolean; rodando?: boolean; partes?: { prontas: number; total: number } | null }
+export interface OQueFaltaDados { resumo: { pedidos: number; urgentes: number; rodando: number; travadas: number; partesNaFila: number; esperandoVoce: number; prontos72h: number; pausada: boolean }; esperandoVoce: FaltaItem[]; comCortex: FaltaItem[]; prontos: FaltaItem[]; em: string }
 export type Parte = keyof Dados;
 export const PARTES: Parte[] = ["lista", "saude", "dinheiro", "cortex", "robos", "divulga", "banco", "cloudflare", "cotas", "empresa", "clientes", "leads", "vagas", "maquinas"];
 
