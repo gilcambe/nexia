@@ -4,6 +4,7 @@
 const { createHash } = require('node:crypto');
 const fs = require('node:fs');
 const path = require('node:path');
+const semanticCache = require('./semanticCache');
 
 // #830: chave "semântica" = texto normalizado (espaços, quebras de linha e maiúsculas não mudam a pergunta).
 const normalizar = t => String(t == null ? '' : typeof t === 'string' ? t : JSON.stringify(t)).replace(/\s+/g, ' ').trim().toLowerCase();
@@ -120,4 +121,48 @@ async function salvarCacheNoD1(env = process.env, o = {}) {
 /** Pode usar o cache? Só com req.cache === true e sem ferramentas. */
 const cacheavel = req => !!req && req.cache === true && !(Array.isArray(req.tools) ? req.tools.length : req.tools);
 
-module.exports = { createCache, getSharedCache, chave, cacheavel, normalizar, DOC_CACHE, SETE_DIAS, carregarCacheDoD1, salvarCacheNoD1 };
+/**
+ * #956 / Semântico: Tenta buscar no cache exato e, se não achar, tenta o semanticCache como fallback (se env e embeddings disponíveis).
+ */
+async function getComFallback(cacheInstance, req, env = process.env) {
+  const k = chave(req);
+  let val = cacheInstance.get(k);
+  if (val !== undefined) return { valor: val, origem: 'exato' };
+  
+  if (cacheavel(req) && semanticCache && typeof semanticCache.buscarSemantico === 'function') {
+    try {
+      const texto = ((req.messages || []).map(m => m && m.content).filter(Boolean).join('\n')) || req.system || '';
+      if (texto) {
+        const semVal = await semanticCache.buscarSemantico(texto, env);
+        if (semVal !== undefined) {
+          // Grava também no cache local/compartilhado para agilizar a próxima
+          cacheInstance.set(k, semVal);
+          return { valor: semVal, origem: 'semantico' };
+        }
+      }
+    } catch (e) {
+      console.warn('[cache] erro no fallback semântico:', e && e.message);
+    }
+  }
+  return { valor: undefined, origem: 'miss' };
+}
+
+/**
+ * Salva no cache exato e também no semanticCache se aplicável.
+ */
+async function setComFallback(cacheInstance, req, valor, env = process.env) {
+  const k = chave(req);
+  cacheInstance.set(k, valor);
+  if (cacheavel(req) && semanticCache && typeof semanticCache.salvarSemantico === 'function') {
+    try {
+      const texto = ((req.messages || []).map(m => m && m.content).filter(Boolean).join('\n')) || req.system || '';
+      if (texto) {
+        await semanticCache.salvarSemantico(texto, valor, env);
+      }
+    } catch (e) {
+      console.warn('[cache] erro ao salvar semanticCache:', e && e.message);
+    }
+  }
+}
+
+module.exports = { createCache, getSharedCache, chave, cacheavel, normalizar, DOC_CACHE, SETE_DIAS, carregarCacheDoD1, salvarCacheNoD1, getComFallback, setComFallback };
