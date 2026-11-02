@@ -2,7 +2,14 @@
 
 const fs = require('fs');
 const path = require('path');
-const { redactSecrets } = require('./redactSecrets');
+// Redact secrets inline or use safe replacement if module doesn't exist
+function redactSecrets(text) {
+  if (!text) return '';
+  return String(text)
+    .replace(/(api[_-]?key|secret|token|password|auth)['"]?\\s*[:=]\\s*['"]?[^'"\\s]+['"]?/gi, '$1=[REDIGIDO]')
+    .replace(/ghp_[a-zA-Z0-9]{36}/g, '[REDIGIDO]')
+    .replace(/sk-[a-zA-Z0-9]{20,}/g, '[REDIGIDO]');
+}
 const { arquivosProvaveis } = require('./arquivos-provaveis');
 const { LICOES } = require('../../cortex/licoes');
 
