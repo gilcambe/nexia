@@ -183,6 +183,8 @@ async function gravarEstado(gh, mudar, acao) {
   const vagas = { ...atual.vagas };
   if (acao === 'vaga-pausar') {
     mudar(vagas, { pausada: true });
+  } else if (['vaga-pausar', 'vaga-ativar', 'vaga-teste'].includes(acao)) {
+    mudar(vagas);
   } else {
     mudar(vagas);
   }
