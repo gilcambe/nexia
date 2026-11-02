@@ -1,4 +1,5 @@
 'use strict';
+const { createContextManager } = require('./contextManager');
 // Model Router (spec §16, plano Fase 5). Um único ponto para chamar modelos:
 //   chat, stream (streaming real), toolCall, structuredOutput, capabilities, costEstimate,
 // e as variantes com fallback usadas pelo cortex-chat. Cada provedor implementa a
