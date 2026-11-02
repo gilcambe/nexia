@@ -93,10 +93,11 @@ function createRouter(o = {}) {
   }
 
   async function toolCall(desc, req) {
-    const p = providerFor(desc);
-    if (!p.capabilities(desc.model).tool_call) throw new ModelError(CODES.UNSUPPORTED, `${desc.provider} não suporta tool_call.`, { provider: desc.provider });
-    if (!req || !Array.isArray(req.tools) || !req.tools.length) throw new ModelError(CODES.UNSUPPORTED, 'toolCall exige tools.');
-    return p.chat(desc.model, normalizeRequest(req));
+  const p = providerFor(desc);
+  if (!p.capabilities(desc.model).tool_call) throw new ModelError(CODES.UNSUPPORTED, `${desc.provider} não suporta tool_call.`, { provider: desc.provider });
+  if (!req || !Array.isArray(req.tools) || !req.tools.length) throw new ModelError(CODES.UNSUPPORTED, 'toolCall exige tools.');
+  const processedReq = { ...req, messages: contextManager.processHistory(req.messages) };
+  return p.chat(desc.model, normalizeRequest(processedReq));
   }
 
   /**
