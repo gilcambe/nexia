@@ -26,8 +26,8 @@ class LessonStore {
     this.avoidCounts[assinatura] = (this.avoidCounts[assinatura] || 0) + 1;
     // Sincronizar com Cofre
     const Cofre = require('./cofre.js');
-    Cofre.salvar('lessons', this.lessons);
-    Cofre.salvar('avoidCounts', this.avoidCounts);
+    await Cofre.salvar('lessons', this.lessons);
+    await Cofre.salvar('avoidCounts', this.avoidCounts);
     return lesson;
   }
 

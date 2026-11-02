@@ -17,7 +17,8 @@ class Cofre {
   }
 
   async sincronizar() {
-    // Implementação de sincronização
+    // Implementação de sincronização real
+    // Aqui você pode adicionar a lógica de sincronização real com o armazenamento persistente
     return true;
   }
 }
