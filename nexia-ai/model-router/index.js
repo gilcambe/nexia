@@ -15,6 +15,8 @@ const { aplicarVagas, vagasCustom } = require('./vagas');
 const { createGeminiProvider } = require('./providers/gemini');
 const { createCohereProvider } = require('./providers/cohere');
 const { createCache, getSharedCache, chave, cacheavel } = require('./cache');
+const { textoSemantico, escopoDe, criarEmbedWorkersAI, getCacheSemantico } = require('./cache-semantico');
+const { encolher } = require('./contexto');
 
 const PROVIDER_IDS = Object.freeze(['anthropic', 'gemini', 'cohere', ...Object.keys(OPENAI_COMPATIBLE)]);
 
@@ -86,16 +88,30 @@ function createRouter(o = {}) {
   // #2853: sem arquivo, usa o cache compartilhado (7 dias), que o job carrega do D1 e salva no fim.
   const arquivoCache = (o.env || process.env).NEXIA_CACHE_ARQUIVO || '';
   const cache = o.cache || (arquivoCache ? createCache({ arquivo: arquivoCache }) : getSharedCache());
+  // #2854: cache semântico (mesmo sentido, outras palavras) com embeddings grátis do Workers AI.
+  const embed = o.embed !== undefined ? o.embed : criarEmbedWorkersAI(o.env || process.env);
+  const cacheSem = o.cacheSemantico || getCacheSemantico();
   async function chat(desc, req) {
     const p = providerFor(desc);
+    // #2855: conversa grande demais é resumida antes de ir ao modelo (menos tokens, menos 413).
+    req = encolher(req, o.env || process.env).req;
     if (!cacheavel(req)) return p.chat(desc.model, normalizeRequest(req));
     // Modelo entra na chave: resposta ruim de um modelo não vira a resposta do próximo do rodízio.
     const k = `${desc.provider}|${desc.model}|${chave(req)}`;
     const hit = cache.get(k);
     if (hit) return { ...hit, cached: true };
+    const ts = embed ? textoSemantico(req) : null;
+    const vetor = ts ? await embed(ts) : null;
+    if (vetor) {
+      const s = cacheSem.buscar(vetor, escopoDe(req));
+      if (s) return { ...s.valor, cached: true, semantic: true, similaridade: s.similaridade };
+    }
     const { cache: _c, ...limpo } = req;
     const out = await p.chat(desc.model, normalizeRequest(limpo));
-    if (out && !(out.tool_calls || []).length) cache.set(k, out);
+    if (out && !(out.tool_calls || []).length) {
+      cache.set(k, out);
+      if (vetor && out.text) cacheSem.guardar(vetor, escopoDe(req), out);
+    }
     return out;
   }
 
@@ -180,7 +196,7 @@ function createRouter(o = {}) {
       if (timer.unref) timer.unref();
     });
 
-    let currentReq = req;
+    let currentReq = encolher(req, o.env || process.env).req; // #2855
     let accumulatedText = '';
     const dedupped = dedupe(descs);
 
