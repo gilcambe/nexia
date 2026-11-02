@@ -21,10 +21,9 @@ class LessonStore {
   }
 
   async addLesson({ assinatura, causa, resolucao, issue }) {
-    const lesson = { assinatura, causa, resolucao, issue };
+    const lesson = { assinatura, causa, resolucao, issue, createdAt: new Date().toISOString() };
     this.lessons.push(lesson);
     this.avoidCounts[assinatura] = (this.avoidCounts[assinatura] || 0) + 1;
-    // Sincronizar com Cofre
     const Cofre = require('./cofre.js');
     await Cofre.salvar('lessons', this.lessons);
     await Cofre.salvar('avoidCounts', this.avoidCounts);
@@ -32,14 +31,14 @@ class LessonStore {
   }
 
   getSimilarLessons(assinatura, limit = 3) {
+    if (!assinatura) return this.lessons.slice(0, limit);
     return this.lessons
-      .filter(lesson => lesson.assinatura.includes(assinatura))
+      .filter(lesson => lesson.assinatura && lesson.assinatura.includes(assinatura))
       .slice(0, limit);
   }
 
   async incrementAvoidCount(assinatura) {
     this.avoidCounts[assinatura] = (this.avoidCounts[assinatura] || 0) + 1;
-    // Sincronizar com Cofre
     const Cofre = require('./cofre.js');
     await Cofre.salvar('avoidCounts', this.avoidCounts);
     return this.avoidCounts[assinatura];
