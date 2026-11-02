@@ -113,6 +113,31 @@ export function useCentral() {
     return `${body.painel}#suporte=${body.token}`;
   }, [getToken]);
   const distribuirTarefas = useCallback(async (tarefas: TarefaGratis[]) => {
+  const pausarVaga = useCallback(async (vagaId: number, pausar: boolean) => {
+    const token = await getToken();
+    const res = await fetch(apiPath("/central"), {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ acao: "vaga-pausar", vagaId, pausar }),
+    });
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(body.error || `Erro ${res.status}`);
+    return body as { ok: boolean; mensagem: string };
+  }, [getToken]);
+
+  const reordenarVaga = useCallback(async (vagaId: number, direcao: 'up' | 'down') => {
+    const token = await getToken();
+    const res = await fetch(apiPath("/central"), {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ acao: "vaga-ordem", vagaId, direcao }),
+    });
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(body.error || `Erro ${res.status}`);
+    return body as { ok: boolean; mensagem: string };
+  }, [getToken]);
+
+  const enviarTarefasParaContas = useCallback(async (tarefas: TarefaGratis[]) => {
     const token = await getToken();
     const res = await fetch(apiPath("/distribuir-tarefas"), {
       method: "POST",
