@@ -1,6 +1,8 @@
 const { github__list_issues, github__list_pulls, github__commit_files } = require('../../nexia-ai/tool-gateway/tools/github');
 const fs = require('fs');
 const path = require('path');
+const fs = require('fs');
+const path = require('path');
 
 async function atualizaEstado() {
   try {
@@ -47,6 +49,8 @@ async function atualizaEstado() {
     fs.writeFileSync(filePath, resumo);
 
     console.log('Estado atualizado com sucesso!');
+console.log(`Resumo gerado: ${resumo}`);
+console.log(`Arquivo atualizado: ${filePath}`);
     console.log(`Resumo gerado: ${resumo}`);
     console.log(`Arquivo atualizado: ${filePath}`);
 
