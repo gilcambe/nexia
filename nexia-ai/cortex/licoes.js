@@ -53,9 +53,8 @@ class LessonStore {
   }
 }
 
-module.exports = {
-  LICOES,
-  licoesParaPrompt,
-  LessonStore,
-  lessonStore: new LessonStore()
-};
+module.exports = LessonStore;
+module.exports.LessonStore = LessonStore;
+module.exports.LICOES = LICOES;
+module.exports.licoesParaPrompt = licoesParaPrompt;
+module.exports.lessonStore = new LessonStore();
