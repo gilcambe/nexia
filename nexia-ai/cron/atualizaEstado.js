@@ -47,6 +47,8 @@ async function atualizaEstado() {
     fs.writeFileSync(filePath, resumo);
 
     console.log('Estado atualizado com sucesso!');
+    console.log(`Resumo gerado: ${resumo}`);
+    console.log(`Arquivo atualizado: ${filePath}`);
 
 // Executa a função apenas se este arquivo for executado diretamente
 if (require.main === module) {
