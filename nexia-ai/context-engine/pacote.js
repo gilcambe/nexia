@@ -86,7 +86,7 @@ async function montarPacote({ issue, arquivos, limiteTokens }) {
   return pacote;
 }
 
-export { montarPacote }; // Corrigido para CommonJS
+export { montarPacote, licoesParaPrompt }; // Adicionado licoesParaPrompt
 
 const fs = require('fs');
 const path = require('path');
