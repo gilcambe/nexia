@@ -589,9 +589,12 @@ const NexiaRuntime = (() => {
       : await NexiaModuleEngine.loadForTenant(tenant.id);
     NexiaEventBus.emit('runtime:modules', { tenant: tenant.id, modules: moduleIds });
 
-    // 4. Register SW
+    // 4. SW antigo /sw.js aposentado (#2917): só desregistra se ainda existir.
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js').catch(() => {});
+      navigator.serviceWorker.getRegistrations().then((rs) => rs.forEach((r) => {
+        const w = r.active || r.waiting || r.installing;
+        if (w && /\/sw\.js$/.test(new URL(w.scriptURL).pathname)) r.unregister();
+      })).catch(() => {});
     }
 
     NexiaEventBus.emit('runtime:ready', { tenant, modules: moduleIds });
