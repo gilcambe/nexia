@@ -60,4 +60,4 @@ module.exports = {
   LICOES,
   licoesParaPrompt,
   LessonStore: lessonStore
-};
+}; // LessonStore já está exportado corretamente

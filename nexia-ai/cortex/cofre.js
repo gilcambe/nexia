@@ -22,4 +22,4 @@ class Cofre {
   }
 }
 
-module.exports = Cofre;
+module.exports = new Cofre(); // Exportar instância única do Cofre
