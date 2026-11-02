@@ -1,47 +1,9 @@
-const CACHE_NAME = 'cortex-cache-v1';
-const urlsToCache = [
-  '/cortex',
-  '/cortex-icon.svg',
-  '/cortex-icon-180.png',
-  '/cortex.webmanifest',
-  '/src/main.tsx',
-  '/src/layouts/OfflineNotice.tsx'
-];
-
-self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then((cache) => {
-        return cache.addAll(urlsToCache);
-      })
-  );
-});
-
-self.addEventListener('fetch', (event) => {
-  event.respondWith(
-    caches.match(event.request)
-      .then((response) => {
-        if (response) {
-          return response;
-        }
-        return fetch(event.request).catch(() => {
-          return caches.match('/cortex');
-        });
-      })
-  );
-});
-
-self.addEventListener('activate', (event) => {
-  const cacheWhitelist = [CACHE_NAME];
-  event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((cacheName) => {
-          if (cacheWhitelist.indexOf(cacheName) === -1) {
-            return caches.delete(cacheName);
-          }
-        })
-      );
-    })
-  );
-});
+// #2917: service worker antigo APOSENTADO. Ele guardava a tela /cortex para sempre e deixava o app Kernex velho.
+// Agora ele só apaga o cache que criou, se desregistra e recarrega as abas para pegarem a versão nova.
+self.addEventListener("install", () => self.skipWaiting());
+self.addEventListener("activate", (e) => e.waitUntil((async () => {
+  await caches.delete("cortex-cache-v1");
+  await self.registration.unregister();
+  const abas = await self.clients.matchAll({ type: "window" });
+  abas.forEach((c) => { try { c.navigate(c.url); } catch (_) {} });
+})()));
