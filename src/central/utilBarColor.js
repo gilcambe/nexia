@@ -4,6 +4,6 @@ export function utilBarColor(percent) {
   } else if (percent > 70) {
     return "bg-amber-500";
   } else {
-    return "bg-green-500";
+    return "bg-indigo-500";
   }
 }
