@@ -77,6 +77,7 @@ module.exports = {
   LICOES,
   licoesParaPrompt,
   LessonStore,
+  lessonStore,
   addLesson: lessonStore.addLesson.bind(lessonStore),
   getSimilarLessons: lessonStore.getSimilarLessons.bind(lessonStore),
   incrementAvoidCount: lessonStore.incrementAvoidCount.bind(lessonStore),
