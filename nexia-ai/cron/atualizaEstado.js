@@ -3,30 +3,28 @@ const path = require('path');
 
 async function atualizaEstado() {
   try {
-    // Consulta a fila de vagas
+    const repository_id = 'repo_9dc1440334294659a71ebed5a8843af7';
+
     const issues = await github__list_issues({
-      repository_id: 'repo_bd8628059cc64b168ef5c0d30d5e675c',
+      repository_id,
       state: 'open',
       limit: 100
     });
 
     const pulls = await github__list_pulls({
-      repository_id: 'repo_bd8628059cc64b168ef5c0d30d5e675c',
+      repository_id,
       state: 'open',
       limit: 100
     });
 
-    // Filtra issues com rótulo 'cortex-fila'
     const cortexIssues = issues.filter(issue =>
       issue.labels.some(label => label.name === 'cortex-fila')
     );
 
-    // Filtra PRs com rótulo 'cortex-fila'
     const cortexPulls = pulls.filter(pull =>
       pull.labels.some(label => label.name === 'cortex-fila')
     );
 
-    // Gera o resumo
     const dataAtual = new Date().toLocaleDateString('pt-BR');
     let resumo = `# Estado do projeto e memória (para qualquer IA continuar)\n\n`;
     resumo += `Atualizado em ${dataAtual}.\n\n`;
@@ -41,21 +39,29 @@ async function atualizaEstado() {
       resumo += `- ${pull.title} (#${pull.number})\n`;
     });
 
-    // Sobrescreve o arquivo ESTADO-IA.md
-    const filePath = path.join(__dirname, '../../docs/ESTADO-IA.md');
-    fs.writeFileSync(filePath, resumo);
+    const branchAtual = process.env.GITHUB_REF_NAME || 'nexia/criar-script-nexia-ai-cron-atualizaestad-110143';
+    await github__commit_files({
+      repository_id,
+      branch: branchAtual,
+      message: 'Atualiza docs/ESTADO-IA.md via script atualizaEstado.js',
+      files: [
+        {
+          path: 'docs/ESTADO-IA.md',
+          content: resumo
+        }
+      ]
+    });
 
     console.log('Estado atualizado com sucesso!');
-console.log(`Resumo gerado: ${resumo}`);
-console.log(`Arquivo atualizado: ${filePath}`);
-
-// Executa a função apenas se este arquivo for executado diretamente
-if (require.main === module) {
-  atualizaEstado();
-}
+    console.log(`Resumo gerado com ${cortexIssues.length} issues e ${cortexPulls.length} PRs.`);
   } catch (error) {
     console.error('Erro ao atualizar estado:', error);
+    // O bloco try/catch deve conter toda a lógica de atualização para garantir o tratamento de erros.
   }
 }
 
-atualizaEstado();
+if (require.main === module) {
+  atualizaEstado();
+}
+
+module.exports = { atualizaEstado };
