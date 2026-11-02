@@ -41,5 +41,13 @@ async function rodar(env = process.env, deps = {}) {
   return resultados;
 }
 
-if (require.main === module) rodar().catch((e) => { console.error(e.message); process.exit(1); });
-module.exports = { rodar, lerVaga };
+// #2847: às segundas, o mesmo robô diário confere se o modelo de teste de cada IA grátis ainda existe (só GET /models).
+async function conferirModelos(env = process.env, hoje = new Date()) {
+  if (hoje.getUTCDay() !== 1 && !env.IA_CONFERIR_MODELOS) return null;
+  const lista = await require('./checkFreeIAModels').conferir({ env });
+  for (const x of lista.filter((y) => y.situacao === 'sumiu')) console.log(`::warning title=IA grátis mudou::${x.nome}: ${x.motivo}. Veja docs/MATRIZ-IAS-GRATIS.md.`);
+  return lista;
+}
+
+if (require.main === module) rodar().then(() => conferirModelos().catch(() => null)).catch((e) => { console.error(e.message); process.exit(1); });
+module.exports = { rodar, lerVaga, conferirModelos };
