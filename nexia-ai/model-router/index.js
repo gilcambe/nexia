@@ -11,7 +11,6 @@ const { ModelError, CODES } = require('./errors');
 const { normalizeRequest } = require('./messages');
 const { costEstimate } = require('./pricing');
 const { createAnthropicProvider } = require('./providers/anthropic');
-const { createContextManager } = require('./contextManager');
 =======
 ARQUIVO: nexia-ai/model-router/index.js
 <<<<<<< SEARCH
