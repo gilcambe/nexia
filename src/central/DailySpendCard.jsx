@@ -13,6 +13,15 @@ const DailySpendCard = () => {
     fetchUsage();
   }, []);
 
+  if (!usageData || usageData.length === 0) {
+    return (
+      <div className="rounded-2xl bg-white border border-slate-200/80 shadow-[0_1px_3px_rgba(15,23,42,0.06)] p-5">
+        <h2 className="font-semibold text-slate-900 mb-4">Gasto de hoje</h2>
+        <p className="text-slate-500">Carregando dados de uso...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="rounded-2xl bg-white border border-slate-200/80 shadow-[0_1px_3px_rgba(15,23,42,0.06)] p-5">
       <h2 className="font-semibold text-slate-900 mb-4">Gasto de hoje</h2>
