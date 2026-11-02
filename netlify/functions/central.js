@@ -69,6 +69,10 @@ function createHandler(deps = {}) {
           const r = body.acao === 'vaga-salvar' ? await vagas.salvar(gh.api, body, { rodarRobo: () => gh.rodar('ia-vagas.yml', {}), nomeToken: gh.nomeToken, ...(deps.vagasDeps || {}) }) : await vagas.apagar(gh.api, body);
           return res(r.status, r.corpo);
         }
+        if (['vaga-pausar', 'vaga-ligar', 'vaga-subir', 'vaga-descer'].includes(body.acao)) {
+          const r = await vagas.organizar(gh.api, body);
+          return res(r.status, r.corpo);
+        }
         if (body.acao === 'vaga-testar') {
           await gh.rodar('ia-vagas.yml', {});
           return res(200, { ok: true, mensagem: 'Mandei o robô testar as 3 vagas com as chaves guardadas. Em 1 ou 2 minutos o resultado aparece aqui.' });

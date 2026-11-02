@@ -13,6 +13,7 @@ const PONTO: Record<Estado, string> = { verde: "bg-emerald-500", amarelo: "bg-am
 
 export function estadoVaga(v: Vaga): { e: Estado; texto: string } {
   if (!v.ligada) return { e: "cinza", texto: "Vazia" };
+  if (v.pausada) return { e: "cinza", texto: "Pausada (chave guardada)" };
   const t = v.teste;
   if (!t) return { e: "amarelo", texto: "Salva, ainda não testada" };
   if (t.situacao === "ok") return { e: "verde", texto: "Funcionando" };
@@ -29,7 +30,13 @@ function Pilula({ e, children }: { e: Estado; children: string }) {
 
 const BOTAO = "inline-flex items-center justify-center gap-1 rounded-xl px-3 py-2 text-sm font-medium min-h-[40px] cursor-pointer disabled:opacity-50";
 
-function CartaoVaga({ v, dados, aoMudar }: { v: Vaga; dados: Vagas; aoMudar: () => Promise<void> }) {
+// #2808: ordem das ligadas = posicao salva na Central; sem posição vão depois, por número.
+export function ordenarLigadas(vs: Vaga[]): Vaga[] {
+  const pos = (v: Vaga) => (typeof v.posicao === "number" ? v.posicao : 1000 + v.vaga);
+  return vs.filter((v) => v.ligada).sort((a, b) => pos(a) - pos(b));
+}
+
+function CartaoVaga({ v, dados, aoMudar, ligadas = [] }: { v: Vaga; dados: Vagas; aoMudar: () => Promise<void>; ligadas?: number[] }) {
   const { agir } = useCentral();
   const [editando, setEditando] = useState(!v.ligada);
   const [provedor, setProvedor] = useState(v.provedor || "");
@@ -51,6 +58,12 @@ function CartaoVaga({ v, dados, aoMudar }: { v: Vaga; dados: Vagas; aoMudar: () 
     setChave(""); // a chave sai da memória da página depois de cada tentativa
     setOcupado(false);
   };
+  const organizar = async (acao: "vaga-pausar" | "vaga-ligar" | "vaga-subir" | "vaga-descer") => {
+    setOcupado(true); setMsg(null);
+    try { const r = await agir<{ ok: boolean; mensagem: string }>({ acao, vaga: v.vaga, ligadas }); setMsg({ ok: true, texto: r.mensagem }); await aoMudar(); }
+    catch (e) { setMsg({ ok: false, texto: (e as Error).message }); } finally { setOcupado(false); }
+  };
+  const lugar = ligadas.indexOf(v.vaga);
   const apagar = async () => {
     if (!window.confirm(`Desligar a vaga ${v.vaga} e apagar a chave guardada?`)) return;
     setOcupado(true); setMsg(null);
@@ -86,6 +99,9 @@ function CartaoVaga({ v, dados, aoMudar }: { v: Vaga; dados: Vagas; aoMudar: () 
           </div>
           <div className="flex flex-wrap gap-2">
             <button className={`${BOTAO} border border-slate-200 bg-white text-slate-700`} onClick={() => { setEditando(true); setMsg(null); }} disabled={ocupado} data-testid={`vaga-${v.vaga}-trocar`}>Trocar chave</button>
+            <button className={`${BOTAO} border border-slate-200 bg-white text-slate-700`} onClick={() => organizar(v.pausada ? "vaga-ligar" : "vaga-pausar")} disabled={ocupado} data-testid={`vaga-${v.vaga}-pausar`}>{v.pausada ? "▶ Ligar" : "⏸ Pausar"}</button>
+            <button className={`${BOTAO} border border-slate-200 bg-white text-slate-700`} onClick={() => organizar("vaga-subir")} disabled={ocupado || lugar <= 0} aria-label={`Subir a vaga ${v.vaga} na ordem`} data-testid={`vaga-${v.vaga}-subir`}>↑</button>
+            <button className={`${BOTAO} border border-slate-200 bg-white text-slate-700`} onClick={() => organizar("vaga-descer")} disabled={ocupado || lugar < 0 || lugar >= ligadas.length - 1} aria-label={`Descer a vaga ${v.vaga} na ordem`} data-testid={`vaga-${v.vaga}-descer`}>↓</button>
             <button className={`${BOTAO} border border-red-200 bg-white text-red-600`} onClick={apagar} disabled={ocupado} data-testid={`vaga-${v.vaga}-apagar`}>Desligar</button>
           </div>
         </>
@@ -176,7 +192,7 @@ export default function ConectarIAs({ inicial }: { inicial?: Vagas }) {
       {!atual ? <div className="h-24 rounded-xl bg-slate-100 animate-pulse" /> : (
         <ul className="grid grid-cols-1 gap-3">
           {/* Vagas ligadas sempre aparecem; das livres, só uma por vez (o botão abaixo abre a próxima). */}
-          {[...atual.vagas.filter((v) => v.ligada), ...atual.vagas.filter((v) => !v.ligada).slice(0, livresVisiveis)].map((v) => <CartaoVaga key={`${v.vaga}-${v.ligada}-${v.provedor}`} v={v} dados={atual} aoMudar={recarregar} />)}
+          {(() => { const ord = ordenarLigadas(atual.vagas); const nums = ord.map((v) => v.vaga); return [...ord, ...atual.vagas.filter((v) => !v.ligada).slice(0, livresVisiveis)].map((v) => <CartaoVaga key={`${v.vaga}-${v.ligada}-${v.provedor}`} v={v} dados={atual} aoMudar={recarregar} ligadas={nums} />); })()}
         </ul>
       )}
       {atual && atual.vagas.length - ligadas > livresVisiveis && (

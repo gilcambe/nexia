@@ -197,6 +197,42 @@ async function gravarEstado(gh, mudar, acao) {
   return vagas;
 }
 
+// #2808: pausar sem apagar e mudar a ordem. Fica na variável do repositório IA_VAGAS_CONFIG (sem chave nenhuma),
+// que os workflows passam para o roteador e para a Reserva (nexia-ai/model-router/vagas.js lerConfig).
+const VARIAVEL = 'IA_VAGAS_CONFIG';
+async function lerConfigVagas(gh) {
+  try {
+    const r = await gh(`/actions/variables/${VARIAVEL}`);
+    const c = JSON.parse((r && r.value) || '{}');
+    return { pausadas: Array.isArray(c.pausadas) ? c.pausadas.map(Number) : [], ordem: Array.isArray(c.ordem) ? c.ordem.map(Number) : [] };
+  } catch { return { pausadas: [], ordem: [] }; }
+}
+async function gravarConfigVagas(gh, cfg) {
+  const value = JSON.stringify({ pausadas: cfg.pausadas, ordem: cfg.ordem });
+  try { await gh(`/actions/variables/${VARIAVEL}`, { method: 'PATCH', body: JSON.stringify({ name: VARIAVEL, value }) }); }
+  catch { await gh('/actions/variables', { method: 'POST', body: JSON.stringify({ name: VARIAVEL, value }) }); }
+}
+/** POST vaga-pausar / vaga-ligar / vaga-subir / vaga-descer. ligadas = números das vagas com chave, na ordem da tela. */
+async function organizar(gh, { acao, vaga, ligadas }) {
+  const n = Number(vaga);
+  if (!VAGAS.includes(n)) return { status: 400, corpo: { error: 'Vaga inválida.' } };
+  const cfg = await lerConfigVagas(gh);
+  if (acao === 'vaga-pausar') cfg.pausadas = [...new Set([...cfg.pausadas, n])];
+  else if (acao === 'vaga-ligar') cfg.pausadas = cfg.pausadas.filter(x => x !== n);
+  else if (acao === 'vaga-subir' || acao === 'vaga-descer') {
+    const base = (Array.isArray(ligadas) ? ligadas.map(Number) : []).filter(x => VAGAS.includes(x));
+    const ordem = [...cfg.ordem.filter(x => base.includes(x)), ...base.filter(x => !cfg.ordem.includes(x))];
+    if (!ordem.includes(n)) ordem.push(n);
+    const i = ordem.indexOf(n); const j = acao === 'vaga-subir' ? i - 1 : i + 1;
+    if (j >= 0 && j < ordem.length) [ordem[i], ordem[j]] = [ordem[j], ordem[i]];
+    cfg.ordem = ordem;
+  } else return { status: 400, corpo: { error: 'Ação inválida.' } };
+  try { await gravarConfigVagas(gh, cfg); }
+  catch (e) { return { status: 502, corpo: { error: `Não consegui gravar a ordem no GitHub (variável ${VARIAVEL}). O token precisa da permissão "Variables: escrita". ${String((e && e.message) || '').slice(0, 120)}` } }; }
+  const msg = acao === 'vaga-pausar' ? `Vaga ${n} pausada. A chave continua guardada; ela só não é usada.` : acao === 'vaga-ligar' ? `Vaga ${n} ligada de novo.` : `Ordem salva. A IA de cima é chamada primeiro.`;
+  return { status: 200, corpo: { ok: true, mensagem: msg, config: cfg } };
+}
+
 /** Prova de uso: PRs do robô de reserva dizem qual vaga respondeu ("Aplicado pela conta vaga-2-groq"). */
 function provasDeUso(prs) {
   const out = [];
@@ -225,6 +261,7 @@ function estadoJules(env, julesAbertas, prs, agora = Date.now()) {
 
 async function estado(gh, env = {}) {
   let julesAbertas = null;
+  const cfgP = lerConfigVagas(gh);
   const [nomes, est, prs] = await Promise.all([
     gh('/actions/secrets?per_page=100').then((r) => (r.secrets || [])).catch(() => null),
     lerEstado(gh),
@@ -236,8 +273,10 @@ async function estado(gh, env = {}) {
     const s = nomes ? nomes.find((x) => x.name === segredo(n)) : null;
     const e = est.vagas[n] || {};
     const ligada = nomes ? !!s : !!e.provedor;
-    return { vaga: n, ligada, provedor: ligada ? e.provedor || null : null, salvaEm: s ? s.updated_at : e.salvaEm || null, teste: ligada ? e.teste || null : null, usos: usos.filter((u) => u.vaga === n) };
+    return { vaga: n, ligada, provedor: ligada ? e.provedor || null : null, salvaEm: s ? s.updated_at : e.salvaEm || null, teste: ligada ? e.teste || null : null, usos: usos.filter((u) => u.vaga === n), pausada: false, posicao: null };
   });
+  const cfg = await cfgP;
+  for (const v of vagas) { v.pausada = v.ligada && cfg.pausadas.includes(v.vaga); const i = cfg.ordem.indexOf(v.vaga); v.posicao = v.ligada && i >= 0 ? i : null; }
   return { vagas, provedores: provedoresPublicos(), podeLerSegredos: nomes !== null, jules: estadoJules(env, julesAbertas, prs) };
 }
 
@@ -276,4 +315,4 @@ async function apagar(gh, { vaga }) {
   return { status: 200, corpo: { ok: true, mensagem: `Vaga ${n} desligada e chave apagada.` } };
 }
 
-module.exports = { estadoJules, VAGAS, PROVEDORES, SUPORTED_PROVIDERS: PROVEDORES, segredo, provedoresPublicos, testarChave, selar, lerEstado, gravarEstado, corpoEstado, provasDeUso, estado, salvar, apagar, classificar, ROTULO_ESTADO, SEM_PERMISSAO };
+module.exports = { organizar, lerConfigVagas, VARIAVEL, estadoJules, VAGAS, PROVEDORES, SUPORTED_PROVIDERS: PROVEDORES, segredo, provedoresPublicos, testarChave, selar, lerEstado, gravarEstado, corpoEstado, provasDeUso, estado, salvar, apagar, classificar, ROTULO_ESTADO, SEM_PERMISSAO };

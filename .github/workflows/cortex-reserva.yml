@@ -37,6 +37,7 @@ jobs:
       OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
       GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
       # #1958: vagas da Central (Conectar IAs). Valor "provedor:chave"; entram primeiro.
+      IA_VAGAS_CONFIG: ${{ vars.IA_VAGAS_CONFIG }}  # #2808 pausadas e ordem (sem chave)
       IA_VAGA_1: ${{ secrets.IA_VAGA_1 }}
       IA_VAGA_2: ${{ secrets.IA_VAGA_2 }}
       IA_VAGA_3: ${{ secrets.IA_VAGA_3 }}
@@ -117,7 +118,8 @@ jobs:
           git checkout -q -b "nexia/reserva-$NUMERO-$GITHUB_RUN_NUMBER"
           PROMPT="Aplique esta tarefa no repositório. Só grátis, não remova nenhuma função existente. $(cat "$RUNNER_TEMP/tarefa.md")"
           contas=()
-          for N in $(seq 1 50); do  # 50 vagas da Central (#2716)
+          ORDEM=$(node -e "const v=require('./nexia-ai/model-router/vagas');const c=v.lerConfig(process.env);const p=n=>{const i=c.ordem.indexOf(n);return i<0?1000+n:i};console.log(Array.from({length:v.MAX_VAGAS},(_,i)=>i+1).filter(n=>!c.pausadas.includes(n)).sort((a,b)=>p(a)-p(b)).join(' '))" 2>/dev/null || seq 1 50)
+          for N in $ORDEM; do  # 50 vagas da Central (#2716), sem as pausadas e na ordem da Central (#2808)
             V="IA_VAGA_$N"; V="${!V}"
             [ -z "$V" ] && continue
             PROV="${V%%:*}"; CH="${V#*:}"

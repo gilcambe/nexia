@@ -32,8 +32,23 @@ function valorCustom({ url, modelo, chave }) {
   return 'custom:' + Buffer.from(JSON.stringify({ url, modelo, chave }), 'utf8').toString('base64url');
 }
 
-/** Todas as vagas preenchidas, em ordem de número. */
+/** #2808: IA_VAGAS_CONFIG (variável do repositório, escrita pela Central) = { pausadas: [n], ordem: [n] }. Sem chave. */
+function lerConfig(env = process.env) {
+  try {
+    const c = JSON.parse(String((env && env.IA_VAGAS_CONFIG) || '{}'));
+    const nums = a => (Array.isArray(a) ? a : []).map(Number).filter(n => Number.isInteger(n) && n >= 1 && n <= MAX_VAGAS);
+    return { pausadas: [...new Set(nums(c.pausadas))], ordem: [...new Set(nums(c.ordem))] };
+  } catch { return { pausadas: [], ordem: [] }; }
+}
+
+/** Vagas preenchidas e não pausadas, na ordem escolhida na Central (as sem posição vêm depois, por número). */
 function lerVagas(env = process.env) {
+  const cfg = lerConfig(env);
+  const pos = n => { const i = cfg.ordem.indexOf(n); return i < 0 ? 1000 + n : i; };
+  return lerTodas(env).filter(v => !cfg.pausadas.includes(v.n)).sort((a, b) => pos(a.n) - pos(b.n));
+}
+
+function lerTodas(env) {
   const out = [];
   for (let n = 1; n <= MAX_VAGAS; n++) {
     const v = String((env && env[`IA_VAGA_${n}`]) || '').trim();
@@ -68,4 +83,4 @@ function vagasCustom(env = process.env) {
   });
 }
 
-module.exports = { MAX_VAGAS, ENV_DO_PROVEDOR, lerVagas, aplicarVagas, vagasCustom, lerCustom, valorCustom };
+module.exports = { MAX_VAGAS, ENV_DO_PROVEDOR, lerVagas, lerConfig, aplicarVagas, vagasCustom, lerCustom, valorCustom };
