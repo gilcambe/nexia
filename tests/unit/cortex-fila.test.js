@@ -152,6 +152,14 @@ test('CF-PAUSA. issue fila-pausada (botão de emergência) segura novos despacho
   assert.equal(decidir({ issues: [issue(1)], runs: [], agora: AGORA }).filter(x => x.tipo === 'despachar').length, 1);
 });
 
+test('CF-ENTREGUE. tarefa com PR já mesclado que diz "Fecha #N" não volta a rodar (lição 02/11)', () => {
+  const mesclados = [{ number: 2876, merged_at: '2026-11-01T22:13:00Z', title: 'x', body: 'Fecha #2848 e #2853 (partes travadas).' }];
+  const a = decidir({ issues: [issue(2853), issue(2854)], runs: [], agora: AGORA, mesclados });
+  assert.deepEqual(a.filter(x => x.tipo === 'despachar').map(x => x.numero), [2854]);
+  const b = decidir({ issues: [issue(2853)], runs: [], agora: AGORA, mesclados: [{ number: 1, merged_at: 'x', body: 'Refs #2853' }] });
+  assert.deepEqual(b.filter(x => x.tipo === 'despachar').map(x => x.numero), [2853], 'só citar não basta');
+});
+
 test('CF-HERDA. tarefa urgente dividida passa cortex-urgente para as partes', () => {
   const corpo = 'Faça algo em src/a.js. ' + 'z'.repeat(3000);
   const a = decidir({ issues: [issue(70, ['cortex-fila', 'cortex-urgente'], { body: corpo })], runs: [], agora: AGORA });
