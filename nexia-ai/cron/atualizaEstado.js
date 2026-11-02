@@ -48,15 +48,11 @@ async function atualizaEstado() {
     console.log('Estado atualizado com sucesso!');
 console.log(`Resumo gerado: ${resumo}`);
 console.log(`Arquivo atualizado: ${filePath}`);
-    console.log(`Resumo gerado: ${resumo}`);
-    console.log(`Arquivo atualizado: ${filePath}`);
 
 // Executa a função apenas se este arquivo for executado diretamente
 if (require.main === module) {
   atualizaEstado();
 }
-
-atualizaEstado();
   } catch (error) {
     console.error('Erro ao atualizar estado:', error);
   }
