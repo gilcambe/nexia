@@ -13,6 +13,7 @@ import Divulgar from "./Divulgar";
 import CortexAba from "./CortexAba";
 import Sistema from "./Sistema";
 import PrsAba from "./PrsAba";
+import OQueFalta from "./OQueFalta";
 import { Icone } from "./icones";
 import InstalarApp from "./InstalarApp";
 import { BotaoAvisar } from "./Painel";
@@ -21,6 +22,7 @@ import { Compacto, Grupo, useCelular } from "./celular";
 // Central Kernex: painel de controle de toda a Kernex. No computador, menu lateral + cabeçalho; no celular, app com barra de abas embaixo e uma tela por assunto.
 const ABAS: { id: Aba; nome: string; frase: string; icone: string }[] = [
   { id: "inicio", nome: "Início", frase: "Visão geral", icone: "inicio" },
+  { id: "falta", nome: "O que falta", frase: "Andamento de tudo", icone: "prs" },
   { id: "cortex", nome: "Cortex", frase: "Tarefas e IA", icone: "cortex" },
   { id: "clientes", nome: "Tenants", frase: "Clientes e produtos", icone: "tenants" },
   { id: "sistema", nome: "IA e Infraestrutura", frase: "IAs, chaves e robôs", icone: "ia" },
@@ -33,10 +35,10 @@ const NO_CELULAR: { id: Aba; nome: string; icone: string }[] = [
   { id: "inicio", nome: "Início", icone: "inicio" },
   { id: "cortex", nome: "Cortex", icone: "cortex" },
   { id: "sistema", nome: "IA e Infra", icone: "ia" },
-  { id: "clientes", nome: "Tenants", icone: "tenants" },
+  { id: "falta", nome: "Falta", icone: "prs" },
   { id: "mais", nome: "Mais", icone: "menu" },
 ];
-const DO_MAIS: Aba[] = ["prs", "dinheiro", "divulgar"];
+const DO_MAIS: Aba[] = ["clientes", "prs", "dinheiro", "divulgar"];
 
 const ACESSO_RAPIDO = [
   { nome: "Abrir Cortex", href: "/cortex-app", logo: "/central/logos/cortex.svg" },
@@ -246,6 +248,7 @@ export default function CentralPage() {
               )}
               {aba !== "inicio" && aba !== "mais" && (
                 <div className="max-w-3xl">
+                  {aba === "falta" && <OQueFalta />}
                   {aba === "clientes" && <Clientes d={d} erros={erros} />}
                   {aba === "dinheiro" && <Dinheiro d={d} erro={erros.dinheiro} />}
                   {aba === "divulgar" && <Divulgar d={d} erro={erros.divulga} />}
