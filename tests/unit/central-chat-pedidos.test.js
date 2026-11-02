@@ -37,3 +37,9 @@ test('CHAT2. o chat usa o que já existe e não cria rota nova', () => {
   assert.match(c, /setInterval\(carregar, 30000\)/);
   assert.match(c, /clearInterval/);
 });
+
+test('CHAT3. o chat aparece na aba Cortex e recarrega depois de pedir', () => {
+  const c = fs.readFileSync(path.join(__dirname, '../../src/pages/central/CortexAba.tsx'), 'utf8');
+  assert.match(c, /<MeusPedidosChat recarregar=\{novos\} \/>/);
+  assert.match(c, /setNovos\(\(n\) => n \+ 1\)/);
+});
