@@ -34,6 +34,7 @@ function valorCustom({ url, modelo, chave }) {
 
 /** Todas as vagas preenchidas, em ordem de número. */
 function lerVagas(env = process.env) {
+  const estado = env && env.IA_VAGAS_ESTADO;
   const out = [];
   for (let n = 1; n <= MAX_VAGAS; n++) {
     const v = String((env && env[`IA_VAGA_${n}`]) || '').trim();
@@ -41,10 +42,14 @@ function lerVagas(env = process.env) {
     if (i < 1) continue;
     const provedor = v.slice(0, i);
     const resto = v.slice(i + 1);
-    if (provedor === 'custom') { const c = lerCustom(resto); if (c) out.push({ n, provedor, ...c }); continue; }
-    if (ENV_DO_PROVEDOR[provedor] && resto) out.push({ n, provedor, chave: resto });
+    if (provedor === 'custom') {
+      const c = lerCustom(resto);
+      if (c) out.push({ n, provedor, ...c, pausada: estado && estado[`vaga_${n}`] && estado[`vaga_${n}`].pausada });
+      continue;
+    }
+    if (ENV_DO_PROVEDOR[provedor] && resto) out.push({ n, provedor, chave: resto, pausada: estado && estado[`vaga_${n}`] && estado[`vaga_${n}`].pausada });
   }
-  return out;
+  return out.filter(vaga => !vaga.pausada).sort((a, b) => a.ordem - b.ordem);
 }
 
 /** Cópia do env com a chave da primeira vaga de cada provedor onde a variável dele está vazia. */
