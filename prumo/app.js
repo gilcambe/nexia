@@ -4,7 +4,7 @@
 (function () {
   'use strict';
   const $ = (id) => document.getElementById(id);
-  const ABAS = ['carteira', 'gastos', 'compras', 'objetivos'];
+  const ABAS = ['carteira', 'gastos', 'compras', 'objetivos', 'orcamento', 'consultor', 'pontos'];
   let usuario = null;
 
   function mostrarErro(msg) {
@@ -70,9 +70,9 @@
       const lista = (r && r.avisos) || [];
       const el = $('aviso');
       if (!lista.length) { el.hidden = true; return; }
-      el.textContent = lista.length === 1
-        ? `🛒 Lembrete: na lista "${lista[0].nome}" ainda faltam ${lista[0].faltam} item(ns).`
-        : `🛒 Você tem ${lista.length} listas de compras com itens faltando.`;
+      el.textContent = lista.map((a) => (a.tipo === 'pontos'
+        ? `✈️ ${a.saldo.toLocaleString('pt-BR')} pontos da ${a.programa} vencem em ${a.dias} dia(s).`
+        : `🛒 Lembrete: na lista "${a.nome}" ainda faltam ${a.faltam} item(ns).`)).join(' ');
       el.hidden = false;
     } catch { /* aviso é opcional */ }
   }
