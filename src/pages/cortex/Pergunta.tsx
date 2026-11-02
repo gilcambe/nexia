@@ -9,6 +9,7 @@ import Composer from "./Composer";
 import MarkdownRenderer from "../../components/MarkdownRenderer";
 import { falarTexto } from "@/lib/voz";
 import { usePedidos } from "../meu-cortex/api";
+import { lerConfig, salvarConfig, suporte, carregar, pronto, responderNoAparelho, MODELOS } from "@/lib/ia-aparelho";
 
 // Pergunta direta ao Cortex: a resposta chega palavra por palavra (SSE do Worker em /api/cortex), sem abrir pedido.
 // Para mudar código, "Virar pedido" manda a pergunta para a fila do Cortex como um pedido normal.
@@ -38,6 +39,24 @@ export default function Pergunta({ virarPedido, primeira }: { virarPedido: (text
   const [modoConversa, setModoConversa] = useState(false);
   const [statusVoz, setStatusVoz] = useState<string | null>(null);
   const [falandoId, setFalandoId] = useState<string | null>(null);
+  // #2856: "IA no meu aparelho" (WebLLM). Pergunta curta é respondida aqui, sem gastar cota; o resto vai para a nuvem.
+  const [aparelho, setAparelho] = useState(() => lerConfig());
+  const [statusAparelho, setStatusAparelho] = useState<string | null>(null);
+  useEffect(() => { if (aparelho.ativo && !pronto()) void ligarAparelho(aparelho.modelo, true); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  async function ligarAparelho(modelo: string, silencioso = false) {
+    const s = await suporte();
+    if (!s.ok) { salvarConfig({ ativo: false, modelo }); setAparelho({ ativo: false, modelo }); setStatusAparelho(silencioso ? null : s.motivo || "Este aparelho não aguenta."); return; }
+    salvarConfig({ ativo: true, modelo }); setAparelho({ ativo: true, modelo });
+    try {
+      await carregar(modelo, (pct) => setStatusAparelho(`Baixando a IA no aparelho: ${pct}% (só na primeira vez)`));
+      setStatusAparelho("IA no aparelho pronta ✅");
+      setTimeout(() => setStatusAparelho(null), 3000);
+    } catch { setStatusAparelho("Não consegui baixar a IA no aparelho. As respostas seguem pela nuvem."); }
+  }
+  const alternarAparelho = () => {
+    if (aparelho.ativo) { salvarConfig({ ...aparelho, ativo: false }); setAparelho({ ...aparelho, ativo: false }); setStatusAparelho(null); return; }
+    void ligarAparelho(aparelho.modelo);
+  };
   const modoConversaRef = useRef(modoConversa);
   modoConversaRef.current = modoConversa;
 
@@ -55,6 +74,10 @@ export default function Pergunta({ virarPedido, primeira }: { virarPedido: (text
     corte.current = ctl;
     const mudar = (f: (x: Fala) => Fala) => setFalas((l) => l.map((x) => (x.id === id ? f(x) : x)));
     try {
+      if (aparelho.ativo && pronto() && !ehSobreSituacao(texto)) {
+        const local = await responderNoAparelho(texto, modo);
+        if (local) { textoFinal = local; mudar((x) => ({ ...x, texto: local, modelo: "no seu aparelho (grátis)" })); return textoFinal; }
+      }
       const token = ehSobreSituacao(texto) ? await getToken().catch(() => null) : null;
       const ctx = ehSobreSituacao(texto) ? await lerCentral(token) : "";
       const message = ctx ? `${ctx}\n\nPergunta do dono: ${texto}` : texto;
@@ -158,7 +181,7 @@ export default function Pergunta({ virarPedido, primeira }: { virarPedido: (text
   return (
     <div className="flex-1 min-h-0 flex flex-col" data-testid="cx-pergunta">
       <div className="px-4 py-2 border-b border-[var(--cx-line)] flex items-center justify-between bg-[var(--cx-card)] shrink-0">
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <button
             type="button"
             onClick={alternarModoConversa}
@@ -170,6 +193,24 @@ export default function Pergunta({ virarPedido, primeira }: { virarPedido: (text
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="9" y="3" width="6" height="11" rx="3" /><path d="M5 11a7 7 0 0 0 14 0M12 18v3" /></svg>
             <span>{modoConversa ? "Parar Modo Conversa" : "Ativar Modo Conversa"}</span>
           </button>
+          <button
+            type="button"
+            onClick={alternarAparelho}
+            data-testid="cx-ia-aparelho"
+            title="Perguntas curtas respondidas pela placa de vídeo do seu aparelho, sem gastar cota"
+            className={`h-9 px-3 rounded-xl text-xs font-semibold transition-colors ${aparelho.ativo ? "bg-[var(--cx-ac)] text-black" : "border border-[var(--cx-line)] text-[var(--cx-txt)] hover:bg-[var(--cx-hover)]"}`}
+          >
+            🖥 {aparelho.ativo ? "IA no aparelho: ligada" : "IA no meu aparelho (grátis)"}
+          </button>
+          {aparelho.ativo && (
+            <select aria-label="Tamanho da IA no aparelho" data-testid="cx-ia-aparelho-modelo" value={aparelho.modelo}
+              onChange={(e) => void ligarAparelho(e.target.value)}
+              className="h-9 px-2 rounded-xl border border-[var(--cx-line)] bg-transparent text-xs">
+              <option value={MODELOS.leve}>Leve (celular)</option>
+              <option value={MODELOS.normal}>Normal (PC)</option>
+            </select>
+          )}
+          {statusAparelho && <span className="text-xs text-[var(--cx-mut)] truncate" data-testid="cx-ia-aparelho-status">{statusAparelho}</span>}
           {statusVoz && <span className="text-xs text-[var(--cx-ac)] animate-pulse truncate" data-testid="cx-status-voz">{statusVoz}</span>}
         </div>
       </div>
