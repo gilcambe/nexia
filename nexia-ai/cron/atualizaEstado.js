@@ -5,14 +5,17 @@ const path = require('path');
 async function atualizaEstado() {
   try {
     // Consulta a fila de vagas
+    const repository_id = 'repo_9dc1440334294659a71ebed5a8843af7';
+
+    // Consulta a fila de vagas
     const issues = await github__list_issues({
-      repository_id: 'repo_bd8628059cc64b168ef5c0d30d5e675c',
+      repository_id,
       state: 'open',
       limit: 100
     });
 
     const pulls = await github__list_pulls({
-      repository_id: 'repo_bd8628059cc64b168ef5c0d30d5e675c',
+      repository_id,
       state: 'open',
       limit: 100
     });
@@ -42,23 +45,29 @@ async function atualizaEstado() {
       resumo += `- ${pull.title} (#${pull.number})\n`;
     });
 
-    // Sobrescreve o arquivo ESTADO-IA.md
-    const filePath = path.join(__dirname, '../../docs/ESTADO-IA.md');
-    fs.writeFileSync(filePath, resumo);
+    // Sobrescreve o arquivo ESTADO-IA.md usando github__commit_files
+    await github__commit_files({
+      repository_id,
+      branch: 'nexia/criar-script-nexia-ai-cron-atualizaestad-110143',
+      message: 'Atualiza docs/ESTADO-IA.md via script atualizaEstado.js',
+      files: [
+        {
+          path: 'docs/ESTADO-IA.md',
+          content: resumo
+        }
+      ]
+    });
 
     console.log('Estado atualizado com sucesso!');
-console.log(`Resumo gerado: ${resumo}`);
-console.log(`Arquivo atualizado: ${filePath}`);
-console.log(`Resumo gerado: ${resumo}`);
-console.log(`Arquivo atualizado: ${filePath}`);
-
-// Executa a função apenas se este arquivo for executado diretamente
-if (require.main === module) {
-  atualizaEstado();
-}
+    console.log(`Resumo gerado com ${cortexIssues.length} issues e ${cortexPulls.length} PRs.`);
   } catch (error) {
     console.error('Erro ao atualizar estado:', error);
+    throw error;
   }
 }
 
-atualizaEstado();
+if (require.main === module) {
+  atualizaEstado();
+}
+
+module.exports = { atualizaEstado };
