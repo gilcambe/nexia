@@ -1,0 +1,15 @@
+{
+  "name": "Prumo",
+  "short_name": "Prumo",
+  "description": "Suas finanças no controle: investimentos, gastos, objetivos e compras.",
+  "start_url": "/prumo/",
+  "scope": "/prumo/",
+  "display": "standalone",
+  "background_color": "#0b1410",
+  "theme_color": "#0b1410",
+  "lang": "pt-BR",
+  "icons": [
+    { "src": "/prumo/icone.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "/prumo/icone.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }
+  ]
+}

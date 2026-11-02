@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Prumo — suas finanças no controle</title>
+<meta name="description" content="Prumo: investimentos de todos os bancos, gastos de cartão, lista de compras e objetivos num lugar só.">
+<meta name="theme-color" content="#0b1410">
+<link rel="manifest" href="/prumo/manifest.webmanifest">
+<link rel="icon" href="/prumo/icone.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/prumo/icone.svg">
+<style>
+:root{--bg:#0b1410;--card:#13211a;--linha:#22352b;--txt:#e8f3ec;--fraco:#9bb3a5;--verde:#22c55e;--verde2:#16a34a;--verm:#ef4444;--amar:#f59e0b}
+*{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--txt);font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+body{padding-bottom:120px;overflow-x:hidden}
+header{display:flex;align-items:center;gap:10px;padding:14px 16px;position:sticky;top:0;background:var(--bg);z-index:5;border-bottom:1px solid var(--linha)}
+header img{width:34px;height:34px}header b{font-size:20px;flex:1}header button{background:none;border:0;color:var(--fraco);font-size:14px}
+main{padding:12px 16px;max-width:720px;margin:0 auto}
+.card{background:var(--card);border:1px solid var(--linha);border-radius:16px;padding:14px;margin:0 0 12px}
+.grande{font-size:30px;font-weight:700}.fraco{color:var(--fraco);font-size:14px}.verm{color:var(--verm)}.verde{color:var(--verde)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:46px;padding:0 16px;border-radius:12px;border:0;background:var(--verde);color:#05210f;font-weight:700;font-size:16px;cursor:pointer}
+.btn.sec{background:#1d3127;color:var(--txt)}.btn.perigo{background:#3a1717;color:#fecaca}.btn.mini{min-height:36px;padding:0 10px;font-size:14px}
+.linha{display:flex;gap:8px;flex-wrap:wrap}.linha>.btn{flex:1}
+.item{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--linha)}.item:last-child{border:0}
+.item .n{font-weight:600}.item .v{font-weight:700;white-space:nowrap}
+.barra{height:8px;background:#0e1a14;border-radius:8px;overflow:hidden;margin-top:4px}.barra i{display:block;height:100%;background:var(--verde)}
+label{display:block;font-size:14px;color:var(--fraco);margin:10px 0 4px}
+input,select{width:100%;min-height:44px;padding:8px 12px;border-radius:10px;border:1px solid var(--linha);background:#0e1a14;color:var(--txt);font-size:16px}
+nav{position:fixed;left:0;right:0;bottom:22px;display:flex;background:#0e1a14;border-top:1px solid var(--linha);z-index:6}
+nav button{flex:1;background:none;border:0;color:var(--fraco);padding:10px 2px 8px;font-size:12px}nav button span{display:block;font-size:22px}nav button.on{color:var(--verde)}
+footer{position:fixed;left:0;right:0;bottom:0;height:22px;font-size:11px;color:var(--fraco);text-align:center;background:var(--bg);line-height:22px}
+.aviso{background:#3a2a0a;border:1px solid #6b4e12;color:#fde68a;border-radius:12px;padding:10px 12px;margin:0 0 12px}
+.erro{position:fixed;left:16px;right:16px;bottom:96px;background:#3a1717;color:#fecaca;padding:12px;border-radius:12px;z-index:9}
+dialog{border:0;border-radius:16px;background:var(--card);color:var(--txt);width:min(560px,94vw);max-height:90vh;padding:16px}dialog::backdrop{background:#000a}
+.entrar{text-align:center;padding:60px 16px}.entrar img{width:96px}
+.chip{display:inline-block;padding:6px 10px;border-radius:20px;background:#1d3127;margin:3px;font-size:14px;cursor:pointer}
+</style>
+</head>
+<body>
+<header><img src="/prumo/icone.svg" alt=""><b>Prumo</b><button id="sair" hidden>Sair</button></header>
+<main id="tela"><p class="fraco">Carregando…</p></main>
+<nav id="abas" hidden>
+  <button data-aba="carteira"><span>💼</span>Carteira</button>
+  <button data-aba="objetivos"><span>🎯</span>Objetivos</button>
+  <button data-aba="gastos"><span>💳</span>Gastos</button>
+  <button data-aba="compras"><span>🛒</span>Compras</button>
+</nav>
+<footer>Seus dados são só seus. O app nunca pede senha de banco.</footer>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="/prumo/app.js"></script>
+<script src="/prumo/telas.js"></script>
+</body>
+</html>
