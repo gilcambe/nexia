@@ -6,7 +6,7 @@
 const { createHash } = require('node:crypto');
 const fs = require('node:fs');
 const path = require('node:path');
-const { createD1Cache } = require('../../src/db/d1Cache'); // Cache permanente no Cloudflare D1
+const { createD1Cache, createPermanentD1Cache } = require('../../src/db/d1Cache'); // Cache permanente no Cloudflare D1
 
 // #830: chave "semântica" = texto normalizado (espaços, quebras de linha e maiúsculas não mudam a pergunta).
 const normalizar = t => String(t == null ? '' : typeof t === 'string' ? t : JSON.stringify(t)).replace(/\s+/g, ' ').trim().toLowerCase();
@@ -25,31 +25,31 @@ let economiaTokensTotal = 0;
 // `arquivo` (opcional, desligado por padrão): guarda o cache em JSON para a próxima rodada reaproveitar.
 async function createCache({ d1, max = 500, ttlMs = 7 * 24 * 3600e3, agora = () => Date.now(), arquivo = '' } = {}) {
   if (d1) {
-    const d1Cache = await createD1Cache({ d1 });
-    return {
-      async get(k) {
-        const cached = await d1Cache.get(k);
-        if (cached) {
-          hitsCount++;
-          const tok = (cached.usage && cached.usage.total_tokens) || (cached.text ? Math.ceil(cached.text.length / 4) : 150);
-          economiaTokensTotal += tok;
-          return cached;
-        }
-        return undefined;
-      },
-      async set(k, valor) {
-        await d1Cache.set(k, valor);
-      },
-      size: async () => (await d1.prepare('SELECT COUNT(*) as count FROM router_cache').first()).count,
-      stats() {
-        return { hits: hitsCount, economiaTokens: economiaTokensTotal };
-      },
-      resetStats() {
-        hitsCount = 0;
-        economiaTokens = 0;
+  const d1Cache = await createPermanentD1Cache({ d1 });
+  return {
+    async get(k) {
+      const cached = await d1Cache.get(k);
+      if (cached) {
+        hitsCount++;
+        const tok = (cached.usage && cached.usage.total_tokens) || (cached.text ? Math.ceil(cached.text.length / 4) : 150);
+        economiaTokensTotal += tok;
+        return cached;
       }
-    };
-  }
+      return undefined;
+    },
+    async set(k, valor) {
+      await d1Cache.set(k, valor);
+    },
+    size: async () => (await d1.prepare('SELECT COUNT(*) as count FROM router_cache').first()).count,
+    stats() {
+      return { hits: hitsCount, economiaTokens: economiaTokensTotal };
+    },
+    resetStats() {
+      hitsCount = 0;
+      economiaTokens = 0;
+    }
+  };
+}
   if (d1) {
     const d1Cache = createD1Cache({ d1 });
     return {

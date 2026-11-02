@@ -22,7 +22,7 @@ async function createD1Cache({ d1, tableName = 'router_cache', ttlDays = 7 } = {
   };
 }
 
-module.exports = { createD1Cache }; // Cache permanente no Cloudflare D1 para respostas sem ferramentas
+module.exports = { createD1Cache, createPermanentD1Cache }; // Cache permanente no Cloudflare D1 para respostas sem ferramentas
 
 // Função para criar cache permanente no D1 com TTL de 7 dias
 async function createPermanentD1Cache({ d1, tableName = 'router_cache', ttlDays = 7 } = {}) {
