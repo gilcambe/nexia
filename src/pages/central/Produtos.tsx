@@ -28,8 +28,8 @@ export default function Produtos({ d }: { d: Dados }) {
   const renderCard = (p: Produto) => {
     const m = d.saude?.produtos.find((x) => x.id === p.id);
     const emBreve = p.pendente || !p.site;
-    const cor = emBreve || !m ? "cinza" : !m.ok ? "vermelho" : m.lento ? "amarelo" : "verde";
-    const estado = emBreve ? "em breve" : !m ? "conferindo…" : !m.ok ? "fora do ar" : m.lento ? `lento (${(m.tempo / 1000).toFixed(1)} s)` : `no ar (${(m.tempo / 1000).toFixed(1)} s)`;
+    const cor = emBreve || !m || m.ok == null ? "cinza" : !m.ok ? "vermelho" : m.lento ? "amarelo" : "verde";
+    const estado = emBreve ? "em breve" : !m || m.ok == null ? "conferindo…" : !m.ok ? "fora do ar" : m.lento ? `lento (${(m.tempo / 1000).toFixed(1)} s)` : `no ar (${(m.tempo / 1000).toFixed(1)} s)`;
     return (
       <Cartao key={p.id}>
         <div className="flex items-start gap-3" data-testid={`produto-${p.id}`}>

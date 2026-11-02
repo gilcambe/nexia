@@ -116,15 +116,25 @@ function createHandler(deps = {}) {
       if (parte === 'saude') {
         // O Worker não consegue abrir o próprio endereço dentro de um pedido (o Cloudflare barra o laço) e dava
         // "fora do ar" falso para Cortex, CES, Viajante Pro e Splash. Esses usam a medição de hora em hora do cron.
+        // #2882: "fora do ar" só com prova = 2 checagens seguidas falhando. Sem prova: ok:null (sem medição, cinza).
         const proprio = (u) => { try { return new URL(u).host === new URL(BASE).host; } catch { return false; } };
-        let hora = null;
+        let amostras = [];
         if (NO_AR.some((p) => proprio(p.site))) {
-          try { const h = getHistorico(); hora = await h.ultimaAmostra(deps.getHistoricoDb ? deps.getHistoricoDb() : h.abrirBanco(env)); } catch { hora = null; }
+          try { const h = getHistorico(); amostras = await h.ultimasAmostras(deps.getHistoricoDb ? deps.getHistoricoDb() : h.abrirBanco(env)); } catch { amostras = []; }
         }
+        const espera = deps.esperaMs != null ? deps.esperaMs : 2000;
         const medidos = await Promise.all(NO_AR.map(async (p) => {
-          const m = proprio(p.site) && hora && hora.rotas[p.id];
-          if (m) return { id: p.id, ok: !!m.ok, codigo: m.codigo || 0, tempo: m.tempo || 0, lento: (m.tempo || 0) > 3000, quando: hora.em || null };
-          return { id: p.id, ...(await medir(p.site, fetchFn)) };
+          if (proprio(p.site)) {
+            const a = amostras[0] && amostras[0].rotas[p.id];
+            if (!a) return { id: p.id, ok: null, codigo: 0, tempo: 0, lento: false, quando: null };
+            const base = { id: p.id, codigo: a.codigo || 0, tempo: a.tempo || 0, lento: (a.tempo || 0) > 3000, quando: amostras[0].em || null };
+            if (a.ok) return { ...base, ok: true };
+            const b2 = amostras[1] && amostras[1].rotas[p.id];
+            return { ...base, ok: b2 && !b2.ok ? false : null, lento: false };
+          }
+          let m = await medir(p.site, fetchFn);
+          if (!m.ok) { await new Promise((r) => setTimeout(r, espera)); m = await medir(p.site, fetchFn); } // 2ª checagem
+          return { id: p.id, ...m };
         }));
         return res(200, { produtos: medidos, em: new Date().toISOString() });
       }

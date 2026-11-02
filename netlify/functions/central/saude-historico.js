@@ -108,4 +108,11 @@ async function ultimaAmostra(db, agora = Date.now()) {
   return horas[0] || null;
 }
 
-module.exports = { ultimaAmostra, ROTAS, COLECAO, DIAS, horaDe, abrirBanco, guardarAmostra, resumo };
+/** #2882: as últimas amostras (mais nova primeiro) das últimas 3 horas, para exigir 2 falhas seguidas. */
+async function ultimasAmostras(db, agora = Date.now(), n = 2) {
+  if (!db) return [];
+  const snap = await db.collection(COLECAO).where('hora', '>=', horaDe(agora - 3 * HORA)).get();
+  return snap.docs.map((d) => d.data()).filter((h) => h && h.rotas).sort((a, b) => (a.hora < b.hora ? 1 : -1)).slice(0, n);
+}
+
+module.exports = { ultimaAmostra, ultimasAmostras, ROTAS, COLECAO, DIAS, horaDe, abrirBanco, guardarAmostra, resumo };

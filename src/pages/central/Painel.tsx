@@ -205,7 +205,7 @@ export default function Painel({ d, erros, avisos, ir, conferir, carregando, abr
         <ul className="divide-y divide-slate-100" data-testid="tenants">
           {produtos.filter((p) => !p.pendente).slice(0, 6).map((p) => {
             const m = saudeDe(p.id);
-            const e: Estado = !m ? "cinza" : !m.ok ? "erro" : m.lento ? "atencao" : "ok";
+            const e: Estado = !m || m.ok == null ? "cinza" : !m.ok ? "erro" : m.lento ? "atencao" : "ok";
             return (
               <li key={p.id} className="flex items-center gap-3 py-2.5">
                 <Logo nome={p.nome} src={p.logo} tam={36} />

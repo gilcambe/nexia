@@ -5,7 +5,7 @@ import { apiPath } from "@/config/env";
 // Central NEXIA: conversa com /api/central (só o administrador). Cada parte vem num pedido separado.
 
 export interface Produto { id: string; nome: string; icone: string; frase: string; logo?: string; segmento?: string; site?: string; painel?: string; suporte?: string; pendente?: boolean; tipo?: "produto" | "cliente" | "tenant" | string }
-export interface Medida { id: string; ok: boolean; codigo: number; tempo: number; lento: boolean; quando?: string | null }
+export interface Medida { id: string; ok: boolean | null; /* null = sem medição com prova (#2882) */ codigo: number; tempo: number; lento: boolean; quando?: string | null }
 export interface Maquina { nome: string; cpu?: string; ramTotal?: number | null; ramLivre?: number | null; modelos?: string[]; ollamaOk?: boolean; visto_em?: string; online: boolean }
 export interface Tarefa { numero: number; titulo: string; link: string; quando: string; atribuidoA?: string; gratis: boolean; motivo?: string } // Adicionado gratis
 export interface TarefaGratis { numero: number; titulo: string; link: string; quando: string; gratis: true } // Nova interface para tarefas gratuitas
