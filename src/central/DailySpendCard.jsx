@@ -3,6 +3,17 @@ import { getUsage } from './api';
 import { utilBarColor } from './utilBarColor';
 
 const DailySpendCard = () => {
+  const [usageData, setUsageData] = React.useState([]);
+
+  React.useEffect(() => {
+    const fetchUsage = async () => {
+      const data = await getUsage();
+      setUsageData(data);
+    };
+    fetchUsage();
+  }, []);
+
+  if (!usageData || usageData.length === 0) {
   if (!usageData || usageData.length === 0) {
     return (
       <div className="rounded-2xl bg-white border border-slate-200/80 shadow-[0_1px_3px_rgba(15,23,42,0.06)] p-5">
