@@ -26,13 +26,6 @@ let economiaTokensTotal = 0;
 async function createCache({ d1, max = 500, ttlMs = 7 * 24 * 3600e3, agora = () => Date.now(), arquivo = '' } = {}) {
   if (d1) {
     const d1Cache = await createD1Cache({ d1 });
-
-    // Verifica se a tabela existe e cria se necessário
-    await d1.prepare(`CREATE TABLE IF NOT EXISTS router_cache (chave TEXT PRIMARY KEY, valor TEXT, expires_at TEXT)`).run();
-
-    return {
-  if (d1) {
-    const d1Cache = createD1Cache({ d1 });
     return {
       async get(k) {
         const cached = await d1Cache.get(k);
