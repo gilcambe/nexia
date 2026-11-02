@@ -1,7 +1,7 @@
 'use strict';
 
 const { createD1Driver } = require('../../lib/firebase-lite/d1-backend');
-const { getWorkerAIEmbedding } = require('../../src/embeddings/workerAI');
+const { getEmbedding } = require('../../src/embeddings/workerAI');
 
 const DOC_SEMANTIC_CACHE = 'ia_cota/semantic_cache';
 
@@ -111,4 +111,4 @@ async function salvarCacheSemantico(texto, valor, env = process.env, ttlMs = 7 *
   }
 }
 
-module.exports = { buscarCacheSemantico, salvarCacheSemantico, cosseno };
+module.exports = { buscarSemantico: buscarCacheSemantico, salvarSemantico: salvarCacheSemantico, cosseno };

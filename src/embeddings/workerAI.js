@@ -1,12 +1,12 @@
 
-import { getAiInference } from1 'cloudflare:ai';
+const { getAiInference } = require('cloudflare:ai');
 
 /**
  * Gera embedding a partir do texto usando o modelo Workers AI bge-small-en-v1.5.
  * @param {string} text - Texto a ser embeded
  * @returns {Promise<Float32Array>} Vetor de embeddings
  */
-export async function getEmbedding(text, env) {
+async function getEmbedding(text, env) {
   if (!env || !env.AI) {
     console.warn('[workerAI] AI binding not found in env.');
     return null;
@@ -22,3 +22,5 @@ export async function getEmbedding(text, env) {
     return null;
   }
 }
+
+module.exports = { getEmbedding };
