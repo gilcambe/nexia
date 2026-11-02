@@ -1,4 +1,4 @@
-import React from 'react';
+
 import VagaRow from './VagaRow';
 
 const VagasTable = ({ vagas, onPause, onOrder }) => {

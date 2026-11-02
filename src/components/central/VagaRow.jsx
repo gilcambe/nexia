@@ -1,4 +1,4 @@
-import React from 'react';
+
 
 const VagaRow = ({ vaga, onPause, onOrder }) => {
   const handlePause = () => {
