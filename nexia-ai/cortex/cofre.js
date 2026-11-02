@@ -21,6 +21,11 @@ class Cofre {
     // Aqui você pode adicionar a lógica de sincronização real com o armazenamento persistente
     return true;
   }
+
+  async salvarTodos() {
+    // Método para salvar todos os dados
+    return true;
+  }
 }
 
 module.exports = new Cofre(); // Exportar instância única do Cofre
