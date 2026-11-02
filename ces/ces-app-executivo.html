@@ -379,7 +379,7 @@ const APP={
   },
 };
 
-if('serviceWorker' in navigator){ navigator.serviceWorker.register('/ces/sw-ces.js').catch(()=>{}); }
+if('serviceWorker' in navigator){ navigator.serviceWorker.register('/ces/sw-ces.js').catch(()=>{}); var _ub=document.createElement('script');_ub.src='/ces/update-banner.js';_ub.defer=true;document.head.appendChild(_ub); }
 </script>
 
 <script>

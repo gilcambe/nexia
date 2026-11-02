@@ -14,7 +14,6 @@ const OFFLINE_HTML = `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta nam
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE_NAME).then(c => c.addAll(SHELL)).catch(() => {}));
-  self.skipWaiting();
 });
 
 self.addEventListener('activate', e => {
@@ -58,4 +57,10 @@ self.addEventListener('notificationclick', e => {
     for (const c of cl) { if (c.url.includes('ces-') && 'focus' in c) return c.focus(); }
     if (clients.openWindow) return clients.openWindow('/ces/ces-app-executivo.html');
   }));
+});
+
+// #2917: versão nova espera o toque em "Toque para atualizar" (update-banner.js); limpa o cache velho e assume.
+self.addEventListener('message', function (e) {
+  if (!e.data || e.data.tipo !== 'atualizar') return;
+  e.waitUntil(caches.keys().then(function (ks) { return Promise.all(ks.map(function (k) { return caches.delete(k); })); }).then(function () { return self.skipWaiting(); }));
 });

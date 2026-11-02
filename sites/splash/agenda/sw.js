@@ -17,7 +17,6 @@ var PAINEL_ARQUIVOS = [
 ];
 
 self.addEventListener('install', function (e) {
-  self.skipWaiting();
   e.waitUntil(
     caches.open(CACHE_VERSION).then(function (cache) {
       return cache.addAll(PAINEL_ARQUIVOS);
@@ -74,4 +73,10 @@ self.addEventListener('notificationclick', function (e) {
     for (var i = 0; i < lista.length; i++) { if ('focus' in lista[i]) return lista[i].focus(); }
     return self.clients.openWindow('./');
   }));
+});
+
+// #2917: versão nova espera o toque em "Toque para atualizar" (update-banner.js); limpa o cache velho e assume.
+self.addEventListener('message', function (e) {
+  if (!e.data || e.data.tipo !== 'atualizar') return;
+  e.waitUntil(caches.keys().then(function (ks) { return Promise.all(ks.map(function (k) { return caches.delete(k); })); }).then(function () { return self.skipWaiting(); }));
 });
