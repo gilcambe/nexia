@@ -59,5 +59,10 @@ const lessonStore = new LessonStore();
 module.exports = {
   LICOES,
   licoesParaPrompt,
-  LessonStore: lessonStore
+  LessonStore: lessonStore,
+  addLesson: lessonStore.addLesson.bind(lessonStore),
+  getSimilarLessons: lessonStore.getSimilarLessons.bind(lessonStore),
+  incrementAvoidCount: lessonStore.incrementAvoidCount.bind(lessonStore),
+  getRecentLessons: lessonStore.getRecentLessons.bind(lessonStore),
+  getAvoidCounts: lessonStore.getAvoidCounts.bind(lessonStore)
 };
