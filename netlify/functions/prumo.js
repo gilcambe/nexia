@@ -6,6 +6,7 @@
 // Nunca pede senha de banco. Nunca escreve valores da pessoa em log.
 
 const { verifyBearerToken, checkRateLimit, makeHeaders } = require('./middleware');
+const extra = require('./prumo-extra');
 
 const TIPOS = ['renda_fixa', 'acoes', 'fundos', 'tesouro', 'cripto', 'previdencia', 'fgts', 'poupanca', 'outro'];
 const CATEGORIAS = ['mercado', 'casa', 'transporte', 'saude', 'lazer', 'educacao', 'restaurante', 'assinaturas', 'outros'];
@@ -239,6 +240,8 @@ async function agir(uid, body) {
   };
   const apagar = async (colecao) => { if (!id) return [400, { error: 'Diga qual item apagar.' }]; await base.collection(colecao).doc(id).delete(); return [200, { ok: true }]; };
 
+  // Fases 2 a 4 (holerite, orçamento, consultor, milhas) ficam em prumo-extra.js.
+  const ctx = { base, listar, salvar, apagar, deps, agoraIso, lerImagens, extrairJson, resumoMes, progressoObjetivos, resumoHistorico };
   switch (body.acao) {
     case 'carteira_listar': return [200, { itens: (await listar(base.collection('carteira'))).sort((a, b) => String(a.nome).localeCompare(String(b.nome), 'pt-BR')) }];
     case 'carteira_salvar': { const r = await salvar('carteira', validarItemCarteira(body)); if (r[0] === 200) await gravarHistorico(base); return r; }
@@ -267,7 +270,7 @@ async function agir(uid, body) {
       return [200, { ok: true, lista: detalharLista({ id, ...l }) }];
     }
     case 'lista_apagar': return apagar('listas');
-    case 'avisos': return [200, { avisos: avisosPendentes(await listar(base.collection('listas')), agoraIso) }];
+    case 'avisos': return [200, { avisos: [...avisosPendentes(await listar(base.collection('listas')), agoraIso), ...(await extra.avisosExtra(ctx))] }];
     case 'ler_print': {
       const im = lerImagens(body.imagens);
       if (!im.ok) return [400, { error: im.erro }];
@@ -286,7 +289,7 @@ async function agir(uid, body) {
       return [200, { ok: true }];
     }
     case 'historico_listar': return [200, { meses: resumoHistorico(await listar(base.collection('historico'))) }];
-    default: return [400, { error: 'Ação desconhecida.' }];
+    default: return (await extra.agirExtra(body.acao, body, ctx)) || [400, { error: 'Ação desconhecida.' }];
   }
 }
 
