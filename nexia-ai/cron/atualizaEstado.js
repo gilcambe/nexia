@@ -39,7 +39,7 @@ async function atualizaEstado() {
       resumo += `- ${pull.title} (#${pull.number})\n`;
     });
 
-    const branchAtual = process.env.GITHUB_REF_NAME || 'develop';
+        const branchAtual = 'nexia/criar-script-nexia-ai-cron-atualizaestad-110143';
     await github__commit_files({
       repository_id,
       branch: branchAtual,
@@ -52,10 +52,13 @@ async function atualizaEstado() {
       ]
     });
 
-    console.log('Estado atualizado com sucesso!');
-    console.log(`Resumo gerado com ${cortexIssues.length} issues e ${cortexPulls.length} PRs.`);
+        console.log('Sucesso: Estado do projeto atualizado com sucesso!');
+        console.log(`Resumo gerado com ${cortexIssues.length} issues e ${cortexPulls.length} PRs.`);
   } catch (error) {
-    console.error('Erro ao atualizar estado:', error);
+        console.error('Erro ao atualizar estado do projeto:', error.message);
+    // Em caso de erro, registramos o erro e o script termina sem comitar as alterações.
+    process.exit(1); // Sai com código de erro para indicar falha
+  }
     // O bloco try/catch deve conter toda a lógica de atualização para garantir o tratamento de erros.
   }
 }
