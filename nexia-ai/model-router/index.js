@@ -105,13 +105,14 @@ function createRouter(o = {}) {
    * Com tool_call: força uma ferramenta cujo input_schema é o schema. Sem: pede JSON e valida.
    */
   async function structuredOutput(desc, req, schema, name = 'resposta') {
-    const p = providerFor(desc);
-    let data;
-    let out;
-    if (p.capabilities(desc.model).tool_call) {
-      out = await p.chat(desc.model, normalizeRequest({ ...req, tools: [{ name, description: 'Devolva a resposta neste formato.', input_schema: schema }], toolChoice: name }));
-      const call = out.tool_calls.find(c => c.name === name);
-      data = call ? call.input : undefined;
+  const p = providerFor(desc);
+  let data;
+  let out;
+  if (p.capabilities(desc.model).tool_call) {
+    const processedReq = { ...req, messages: contextManager.processHistory(req.messages) };
+    out = await p.chat(desc.model, normalizeRequest({ ...processedReq, tools: [{ name, description: 'Devolva a resposta neste formato.', input_schema: schema }], toolChoice: name }));
+    const call = out.tool_calls.find(c => c.name === name);
+    data = call ? call.input : undefined;
     } else {
       const sys = `${req.system ? req.system + '\n\n' : ''}Responda SOMENTE com um objeto JSON válido que siga este JSON Schema, sem texto fora do JSON:\n${JSON.stringify(schema)}`;
       out = await p.chat(desc.model, normalizeRequest({ ...req, system: sys }));
