@@ -8,7 +8,8 @@ const DailySpendCard = () => {
   React.useEffect(() => {
     const fetchUsage = async () => {
       const data = await getUsage();
-      setUsageData(data);
+      const list = Array.isArray(data) ? data : data?.providers ?? [];
+      setUsageData(list);
     };
     fetchUsage();
   }, []);
