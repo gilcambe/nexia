@@ -3,7 +3,7 @@ const path = require('path');
 
 async function atualizaEstado() {
   try {
-    const repository_id = 'repo_9dc1440334294659a71ebed5a8843af7';
+    const repository_id = process.env.GITHUB_REPOSITORY_ID || process.env.REPOSITORY_ID || 'repo_bd8628059cc64b168ef5c0d30d5e675c';
 
     const issues = await github__list_issues({
       repository_id,
@@ -39,7 +39,7 @@ async function atualizaEstado() {
       resumo += `- ${pull.title} (#${pull.number})\n`;
     });
 
-    const branchAtual = process.env.GITHUB_REF_NAME || 'nexia/criar-script-nexia-ai-cron-atualizaestad-110143';
+    const branchAtual = process.env.GITHUB_REF_NAME || 'develop';
     await github__commit_files({
       repository_id,
       branch: branchAtual,
