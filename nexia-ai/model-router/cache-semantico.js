@@ -85,6 +85,7 @@ function createCacheSemantico(o = {}) {
       return n;
     },
     stats() { return { acertos, tamanho: itens.length }; },
+    zerarAcertos() { acertos = 0; },
   };
 }
 
@@ -112,7 +113,9 @@ async function salvarSemanticoNoD1(env = process.env, o = {}) {
     const atual = (await d.get([DOC_CACHE_SEMANTICO])).get(DOC_CACHE_SEMANTICO);
     c.importar(atual && atual.fields && atual.fields.itens);
     const t = new Date().toISOString();
-    await d.apply([{ type: 'upsert', path: DOC_CACHE_SEMANTICO, fields: { itens: c.exportar() }, create_time: (atual && atual.create_time) || t, update_time: t }]);
+    const af = (atual && atual.fields) || {};
+    await d.apply([{ type: 'upsert', path: DOC_CACHE_SEMANTICO, fields: { itens: c.exportar(), acertos: (Number(af.acertos) || 0) + c.stats().acertos }, create_time: (atual && atual.create_time) || t, update_time: t }]);
+    if (c.zerarAcertos) c.zerarAcertos();
     return true;
   } catch (e) { console.warn('[cache-semantico] não salvei no D1:', e && e.message); return false; }
 }

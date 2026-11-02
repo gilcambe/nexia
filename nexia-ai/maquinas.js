@@ -73,6 +73,14 @@ function createMaquinas({ env = process.env, driver, agora = () => new Date() } 
     return id;
   }
 
+  /** Lê uma tarefa (o provedor `maquinas` espera o resultado por aqui). */
+  async function lerTarefa(id) {
+    if (!NOME_RE.test(String(id || ''))) return null;
+    const path = `tarefas_locais/${id}`;
+    const t = (await d().get([path])).get(path);
+    return t ? t.fields : null;
+  }
+
   async function listar() {
     const t = agora().getTime();
     return (await d().list('', 'maquinas', false)).map(m => ({ ...m.fields, online: t - Date.parse(m.fields.visto_em || 0) < ONLINE_MS }));
@@ -103,7 +111,7 @@ function createMaquinas({ env = process.env, driver, agora = () => new Date() } 
     return json(event, 405, { error: 'Método não permitido.' });
   }
 
-  return { pulso, pegarTarefa, resultado, criarTarefa, listar, rotaDoPc, ligado: () => !!d() };
+  return { pulso, pegarTarefa, resultado, criarTarefa, lerTarefa, listar, rotaDoPc, ligado: () => !!d() };
 }
 
 module.exports = { createMaquinas, tokenOk, ONLINE_MS };

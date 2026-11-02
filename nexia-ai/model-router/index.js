@@ -14,6 +14,7 @@ const { createOpenAICompatibleProvider, PROVIDERS: OPENAI_COMPATIBLE } = require
 const { aplicarVagas, vagasCustom } = require('./vagas');
 const { createGeminiProvider } = require('./providers/gemini');
 const { createCohereProvider } = require('./providers/cohere');
+const { createMaquinasProvider } = require('./providers/maquinas');
 const { createCache, getSharedCache, chave, cacheavel } = require('./cache');
 const { textoSemantico, escopoDe, criarEmbedWorkersAI, getCacheSemantico } = require('./cache-semantico');
 const { encolher } = require('./contexto');
@@ -33,6 +34,7 @@ function createRouter(o = {}) {
   providers.anthropic = createAnthropicProvider({ env, clientOptions: { ...(base.anthropic ? { baseURL: base.anthropic } : {}), ...(o.anthropicClientOptions || {}) } });
   providers.gemini = createGeminiProvider({ env, ...(fetchImpl ? { fetchImpl } : {}), ...(base.gemini ? { baseUrl: base.gemini } : {}) });
   providers.cohere = createCohereProvider({ env, ...(fetchImpl ? { fetchImpl } : {}), ...(base.cohere ? { baseUrl: base.cohere } : {}) });
+  providers.maquinas = createMaquinasProvider({ env });   // #2826: PCs do dono (Ollama), só tarefas internas leves
   for (const id of Object.keys(OPENAI_COMPATIBLE)) {
     providers[id] = createOpenAICompatibleProvider(id, { env, ...(fetchImpl ? { fetchImpl } : {}), ...(base[id] ? { baseUrl: base[id] } : {}) });
   }
