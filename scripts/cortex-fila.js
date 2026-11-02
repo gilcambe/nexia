@@ -307,7 +307,7 @@ async function chamarReserva(token, n) {
 
 // Função pura: recebe issues e execuções e devolve a lista de ações. Fácil de testar.
 // prs = PRs nexia/* abertos ({ arquivos, criadoEm }) e tamanhos = { caminho: bytes }: usados pelo planejador (opcionais).
-function decidir({ issues, runs, agora = Date.now(), pistas = PISTAS, prs = [], tamanhos = {} }) {
+function decidir({ issues, runs, agora = Date.now(), pistas = PISTAS, prs = [], tamanhos = {}, mesclados = [] }) {
   const acoes = [];
   const tamanhosDe = corpo => Object.fromEntries(plano.arquivosCitados(corpo).filter(a => tamanhos[a]).map(a => [a, tamanhos[a]]));
   const ultimaRun = n => runs.filter(r => r.name === `Cortex #${n}`).sort((a, b) => b.id - a.id)[0] || null;
@@ -373,6 +373,9 @@ function decidir({ issues, runs, agora = Date.now(), pistas = PISTAS, prs = [], 
     }
     // A parte que ainda espera a anterior não vai para o Jules nem para o Cortex: antes ia ao Jules sem a dependência pronta.
     if (esperaAnterior(i)) continue;
+    // Lição 02/11: PR do Claude já mesclado dizia "Fecha #2853" (em português o GitHub não fecha sozinho) e a fila rodou a
+    // tarefa mais 10 vezes, ocupando pista. Entrega já integrada = não despacha de novo; a pessoa confere e fecha.
+    if (entregaComprovada(i.number, mesclados)) continue;
     if (mexeEmWorkflow(i)) { acoes.push({ tipo: 'para-jules', numero: i.number }); continue; }
     if (plano.conflitaCom(i, rodando)) continue;   // outra parte rodando mexe no mesmo arquivo: espera ela
     if (precisaDividir(i, tamanhos)) { acoes.push({ tipo: 'dividir', numero: i.number, herdar: herdados(i), titulo: i.title || '', tarefa: String(i.body || '').trim(), tamanhos: tamanhosDe(i.body) }); continue; }
@@ -788,7 +791,11 @@ async function corrigirCiDosPrs(token, runs) {
 // tamanho dos arquivos citados (pela listagem da pasta, sem baixar o arquivo), arquivos dos PRs nexia/* abertos
 // e partes enviadas ao Jules cujo PR já entrou na develop.
 async function dadosDoPlanejador(token, issues) {
-  const out = { tamanhos: {}, prs: [], julesFeitos: [] };
+  const out = { tamanhos: {}, prs: [], julesFeitos: [], mesclados: [] };
+  try {
+    const fechados = (await gh(token, 'GET', '/pulls?state=closed&sort=updated&direction=desc&per_page=100')).json;
+    out.mesclados = (Array.isArray(fechados) ? fechados : []).filter(pr => pr && pr.merged_at).map(pr => ({ number: pr.number, merged_at: pr.merged_at, title: pr.title, body: pr.body }));
+  } catch { /* sem a lista: segue como antes */ }
   try {
     const novas = issues.filter(i => !i.pull_request && !nomes(i).some(l => [L.rodando, L.feito, L.travado, L.dividido, L.parte, L.semDivisao].includes(l))).slice(0, 15);
     const pastas = new Map();
