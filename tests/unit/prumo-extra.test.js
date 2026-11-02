@@ -2,7 +2,7 @@
 // Prumo Fases 2 a 4 (#2971-#2978): holerite, orçamento, avaliação, consultor, milhas.
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const x = require('../../netlify/functions/prumo-extra.js');
+const x = require('../../netlify/functions/prumo-lib/extra.js');
 const p = require('../../netlify/functions/prumo.js');
 
 test('holerite: líquido maior que bruto é recusado; válido é aceito', () => {

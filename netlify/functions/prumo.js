@@ -6,7 +6,7 @@
 // Nunca pede senha de banco. Nunca escreve valores da pessoa em log.
 
 const { verifyBearerToken, checkRateLimit, makeHeaders } = require('./middleware');
-const extra = require('./prumo-extra');
+const extra = require('./prumo-lib/extra');
 
 const TIPOS = ['renda_fixa', 'acoes', 'fundos', 'tesouro', 'cripto', 'previdencia', 'fgts', 'poupanca', 'outro'];
 const CATEGORIAS = ['mercado', 'casa', 'transporte', 'saude', 'lazer', 'educacao', 'restaurante', 'assinaturas', 'outros'];
@@ -240,7 +240,7 @@ async function agir(uid, body) {
   };
   const apagar = async (colecao) => { if (!id) return [400, { error: 'Diga qual item apagar.' }]; await base.collection(colecao).doc(id).delete(); return [200, { ok: true }]; };
 
-  // Fases 2 a 4 (holerite, orçamento, consultor, milhas) ficam em prumo-extra.js.
+  // Fases 2 a 4 (holerite, orçamento, consultor, milhas) ficam em prumo-lib/extra.js.
   const ctx = { base, listar, salvar, apagar, deps, agoraIso, lerImagens, extrairJson, resumoMes, progressoObjetivos, resumoHistorico };
   switch (body.acao) {
     case 'carteira_listar': return [200, { itens: (await listar(base.collection('carteira'))).sort((a, b) => String(a.nome).localeCompare(String(b.nome), 'pt-BR')) }];
