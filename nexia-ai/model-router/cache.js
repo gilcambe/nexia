@@ -112,7 +112,12 @@ async function salvarCacheNoD1(env = process.env, o = {}) {
     const atual = (await d.get([DOC_CACHE])).get(DOC_CACHE);
     c.importar(atual && atual.fields && atual.fields.itens);
     const agora = new Date().toISOString();
-    await d.apply([{ type: 'upsert', path: DOC_CACHE, fields: { itens: c.exportar() }, create_time: (atual && atual.create_time) || agora, update_time: agora }]);
+    // #2857: acertos e tokens economizados somam no D1 (a Central mostra no card Tokens próprios).
+    const st = c.stats ? c.stats() : { hits: 0, economiaTokens: 0 };
+    const af = (atual && atual.fields) || {};
+    const fields = { itens: c.exportar(), acertos: (Number(af.acertos) || 0) + (st.hits || 0), economiaTokens: (Number(af.economiaTokens) || 0) + (st.economiaTokens || 0) };
+    await d.apply([{ type: 'upsert', path: DOC_CACHE, fields, create_time: (atual && atual.create_time) || agora, update_time: agora }]);
+    if (c.resetStats) c.resetStats();
     return true;
   } catch (e) { console.warn('[cache] não salvei o cache no D1:', e && e.message); return false; }
 }

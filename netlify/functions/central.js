@@ -178,6 +178,7 @@ function createHandler(deps = {}) {
         return res(200, { fornecedores: empresa.fornecedores(FORNECEDORES, env, robos) });
       }
       if (parte === 'cortex') return res(200, await gh.cortex());
+      if (parte === 'tokens') return res(200, await require('./central/tokens').buscar(env, deps.tokensDeps || {}));   // #2857
       if (parte === 'o-que-falta' || parte === 'oQueFalta') return res(200, await (o => o.buscar(deps.gql || o.criarGql(env)))(require('./central/o-que-falta')));   // #2873
       if (parte === 'pacote-ia') return res(200, await gh.pacoteIA());
       if (parte === 'maquinas') {

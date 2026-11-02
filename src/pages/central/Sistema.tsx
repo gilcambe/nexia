@@ -7,6 +7,7 @@ import Mais from "./Mais";
 import SaudeHistorico from "./SaudeHistorico";
 import ConectarIAs from "./ConectarIAs";
 import UltimosErros from "./UltimosErros";
+import TokensProprios from "./TokensProprios";
 import { Abre, useModo } from "./celular";
 import { buscarContextoIA, sanitizarTexto } from "@/lib/fetch-contexto-ia";
 
@@ -211,6 +212,8 @@ export default function Sistema({ d, erros }: { d: Dados; erros: Partial<Record<
           </div>
         )}
       </Cartao>
+
+      <TokensProprios />
 
       <Cartao titulo="Fornecedores e integrações">
         {!d.empresa ? <Carregando erro={erros.empresa} /> : (
