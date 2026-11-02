@@ -33,6 +33,7 @@ const PROVIDER_IDS = Object.freeze(['anthropic', 'gemini', 'cohere', ...Object.k
  */
 function createRouter(o = {}) {
   // #2716: chaves das vagas da Central (IA_VAGA_1..50) entram onde o provedor ainda não tem chave.
+  const contextManager = createContextManager({ maxTokens: o.maxTokens || 4096 });
   const env = aplicarVagas(o.env || process.env);
   const fetchImpl = o.fetchImpl;
   const base = o.baseUrls || {};
