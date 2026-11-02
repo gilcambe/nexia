@@ -46,9 +46,10 @@ async function atualizaEstado() {
     });
 
     // Sobrescreve o arquivo ESTADO-IA.md usando github__commit_files
+    const branchAtual = process.env.GITHUB_REF_NAME || 'nexia/criar-script-nexia-ai-cron-atualizaestad-110143';
     await github__commit_files({
       repository_id,
-      branch: 'nexia/criar-script-nexia-ai-cron-atualizaestad-110143',
+      branch: branchAtual,
       message: 'Atualiza docs/ESTADO-IA.md via script atualizaEstado.js',
       files: [
         {
