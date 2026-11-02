@@ -4,7 +4,8 @@
 // Ollama não entra aqui: ele roda no PC do dono, não no aparelho do cliente; o servidor já cai para as IAs grátis.
 
 export const MODELOS = { leve: "Qwen2.5-0.5B-Instruct-q4f16_1-MLC", normal: "Qwen2.5-1.5B-Instruct-q4f16_1-MLC" } as const;
-export const WEBLLM_URL = "https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm@0.2.46/+esm";
+// 0.2.46 não conhecia os modelos Qwen2.5 (o download falhava no celular do dono, 02/11). 0.2.79 conhece os dois.
+export const WEBLLM_URL = "https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm@0.2.79/+esm";
 const CHAVE = "nexia_ia_local_config"; // mesma chave do ia-local.js antigo
 const MAX_CARACTERES = 280;
 const LIMITE_MS = 20000;
@@ -22,11 +23,32 @@ export function salvarConfig(c: ConfigAparelho): void {
   try { localStorage.setItem(CHAVE, JSON.stringify(c)); } catch { /* modo privado: só nesta visita */ }
 }
 
+/** Muitos celulares Android não têm "shader-f16": aí usa a versão q4f32 do mesmo modelo. */
+export function modeloParaGpu(modelo: string, temF16: boolean): string {
+  return temF16 ? modelo : modelo.replace("q4f16_1", "q4f32_1");
+}
+let gpuTemF16 = true;
+
+/** Erro do WebLLM em palavras simples, com o detalhe técnico curto no fim. */
+export function motivoErro(e: unknown): string {
+  const m = String((e as { message?: string })?.message || e || "").slice(0, 160);
+  if (/not found|model.*list|appConfig/i.test(m)) return `modelo não encontrado (${m})`;
+  if (/fetch|network|Failed to load|import/i.test(m)) return `falha na internet ao baixar (${m})`;
+  if (/quota|storage|cache/i.test(m)) return `sem espaço no navegador para guardar a IA (${m})`;
+  if (/device|adapter|gpu|shader|lost/i.test(m)) return `a placa de vídeo recusou (${m})`;
+  return m || "erro desconhecido";
+}
+
 /** O aparelho aguenta? Precisa de WebGPU e (quando o navegador informa) 4 GB de memória. */
 export async function suporte(nav: Partial<Navigator> & { gpu?: { requestAdapter: () => Promise<unknown> }; deviceMemory?: number } = navigator as never): Promise<{ ok: boolean; motivo?: string }> {
   if (!nav || !nav.gpu) return { ok: false, motivo: "Este navegador não tem WebGPU. Use o Chrome ou Edge atualizado." };
   if (typeof nav.deviceMemory === "number" && nav.deviceMemory < 4) return { ok: false, motivo: "Este aparelho tem pouca memória (menos de 4 GB)." };
-  try { return (await nav.gpu.requestAdapter()) ? { ok: true } : { ok: false, motivo: "A placa de vídeo não liberou o WebGPU." }; }
+  try {
+    const ad = (await nav.gpu.requestAdapter()) as { features?: { has?: (f: string) => boolean } } | null;
+    if (!ad) return { ok: false, motivo: "A placa de vídeo não liberou o WebGPU." };
+    gpuTemF16 = !!(ad.features && typeof ad.features.has === "function" && ad.features.has("shader-f16"));
+    return { ok: true };
+  }
   catch { return { ok: false, motivo: "A placa de vídeo não liberou o WebGPU." }; }
 }
 
@@ -51,7 +73,7 @@ export function carregar(modelo: string, onProgresso?: (pct: number, texto: stri
   modeloAtual = modelo; motor = null;
   carregando = (async () => {
     const lib = await import(/* @vite-ignore */ WEBLLM_URL);
-    const m = await lib.CreateMLCEngine(modelo, { initProgressCallback: (r: { progress?: number; text?: string }) => onProgresso?.(Math.round((r.progress || 0) * 100), r.text || "") });
+    const m = await lib.CreateMLCEngine(modeloParaGpu(modelo, gpuTemF16), { initProgressCallback: (r: { progress?: number; text?: string }) => onProgresso?.(Math.round((r.progress || 0) * 100), r.text || "") });
     motor = m as Motor;
     return motor;
   })();
