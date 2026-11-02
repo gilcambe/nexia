@@ -50,12 +50,6 @@ async function guardarAmostra(db, { at = Date.now(), medir, rotas = ROTAS } = {}
       medidas.push([r.id, { ok: false, codigo: 500, tempo: 0, error: error.message }]);
     }
   }
-  try {
-    const resultado = await medir(r.url);
-    return [r.id, resultado];
-  } catch (error) {
-    return [r.id, { ok: false, codigo: 500, tempo: 0, error: error.message }];
-  }
 }
   for (const [id, m] of medidas) porRota[id] = { ok: !!m.ok, codigo: Number(m.codigo) || 0, tempo: Math.round(Number(m.tempo) || 0) };
   await ref.set({ hora, em: new Date(at).toISOString(), rotas: porRota });
