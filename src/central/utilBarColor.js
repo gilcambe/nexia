@@ -7,4 +7,3 @@ export function utilBarColor(percent) {
     return "bg-indigo-500";
   }
 }
-}
