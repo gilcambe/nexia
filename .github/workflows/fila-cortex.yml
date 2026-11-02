@@ -63,6 +63,7 @@ jobs:
           NEXIA_MODELS_FAST: ${{ secrets.NEXIA_MODELS_FAST }}
           BREVO_API_KEY: ${{ secrets.BREVO_API_KEY1 || secrets.BREVO_API_KEY }}
           LEADS_NOTIFY_EMAIL: ${{ secrets.LEADS_NOTIFY_EMAIL }}
+          IA_VAGAS_CONFIG: ${{ vars.IA_VAGAS_CONFIG }}  # #2808 pausadas e ordem (sem chave)
           IA_VAGA_1: ${{ secrets.IA_VAGA_1 }}
           IA_VAGA_2: ${{ secrets.IA_VAGA_2 }}
           IA_VAGA_3: ${{ secrets.IA_VAGA_3 }}

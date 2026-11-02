@@ -29,6 +29,7 @@ jobs:
       - name: Testar as vagas
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          IA_VAGAS_CONFIG: ${{ vars.IA_VAGAS_CONFIG }}  # #2808 pausadas e ordem (sem chave)
           IA_VAGA_1: ${{ secrets.IA_VAGA_1 }}
           IA_VAGA_2: ${{ secrets.IA_VAGA_2 }}
           IA_VAGA_3: ${{ secrets.IA_VAGA_3 }}
