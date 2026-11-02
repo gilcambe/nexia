@@ -3,6 +3,7 @@ import type { Dados, Tarefa } from "./api";
 import { useCentral, haQuanto } from "./api";
 import { Cartao, Numero, Botao, Carregando, Sinal } from "./ui";
 import ContasReserva from "../cortex/Reservas";
+import MeusPedidosChat from "./MeusPedidosChat";
 
 // Tipo estendido para dados extras que podem vir da API
 interface CortexEstendido {
@@ -38,9 +39,10 @@ export default function CortexAba({ d, erro }: { d: Dados; erro?: string }) {
   const [texto, setTexto] = useState("");
   const [msg, setMsg] = useState<string | null>(null);
   const [ocupado, setOcupado] = useState(false);
+  const [novos, setNovos] = useState(0);
   const pedir = async () => {
     setOcupado(true); setMsg(null);
-    try { setMsg((await agir({ acao: "pedir", texto })).mensagem); setTexto(""); } catch (e) { setMsg((e as Error).message); } finally { setOcupado(false); }
+    try { setMsg((await agir({ acao: "pedir", texto })).mensagem); setTexto(""); setNovos((n) => n + 1); } catch (e) { setMsg((e as Error).message); } finally { setOcupado(false); }
   };
   const x = d.cortex as unknown as CortexEstendido;
   const gratisOk = !d.cotas?.frear;
@@ -220,6 +222,7 @@ export default function CortexAba({ d, erro }: { d: Dados; erro?: string }) {
         </div>
         {msg && <p className="text-sm text-nexia-cyan" role="status">{msg}</p>}
       </Cartao>
+      <MeusPedidosChat recarregar={novos} />
       {!x ? <Carregando erro={erro} /> : (
         <>
           <div className="grid grid-cols-2 gap-2">
