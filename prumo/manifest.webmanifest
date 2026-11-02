@@ -1,0 +1,14 @@
+{
+  "name": "Prumo",
+  "short_name": "Prumo",
+  "description": "Suas finanças no prumo: investimentos, cartões e compras.",
+  "start_url": "/prumo/",
+  "scope": "/prumo/",
+  "display": "standalone",
+  "background_color": "#0b1210",
+  "theme_color": "#16a34a",
+  "lang": "pt-BR",
+  "icons": [
+    { "src": "/prumo/icone.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
