@@ -12,4 +12,4 @@ export function utilBarColor(percent) {
     return 'bg-amber-500';
   }
   return 'bg-indigo-500';
-}\n
+}
