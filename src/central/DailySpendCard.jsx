@@ -7,9 +7,13 @@ const DailySpendCard = () => {
 
   React.useEffect(() => {
     const fetchUsage = async () => {
-      const data = await getUsage();
-      const list = Array.isArray(data) ? data : data?.providers ?? [];
-      setUsageData(list);
+      try {
+        const data = await getUsage();
+        const list = Array.isArray(data) ? data : data?.providers ?? [];
+        setUsageData(list);
+      } catch (err) {
+        setUsageData([]);
+      }
     };
     fetchUsage();
   }, []);
@@ -18,7 +22,7 @@ const DailySpendCard = () => {
     return (
       <div className="rounded-2xl bg-white border border-slate-200/80 shadow-[0_1px_3px_rgba(15,23,42,0.06)] p-5">
         <h2 className="font-semibold text-slate-900 mb-4">Gasto de hoje</h2>
-        <p className="text-slate-500">Carregando dados de uso...</p>
+        <p className="text-slate-500 text-sm">Carregando dados de uso...</p>
       </div>
     );
   }
@@ -30,12 +34,12 @@ const DailySpendCard = () => {
         {usageData.map((provider, index) => (
           <div key={index} className="space-y-1">
             <div className="flex justify-between text-sm">
-              <span className="text-slate-700">{provider.name}</span>
+              <span className="text-slate-700 font-medium">{provider.name}</span>
               <span className="text-slate-500">{Math.round(provider.pct)}%</span>
             </div>
             <div className="h-2 rounded-full bg-slate-100 overflow-hidden">
               <div
-                className={`h-full rounded-full ${utilBarColor(provider.pct)}`}
+                className={`h-full rounded-full transition-all duration-300 ${utilBarColor(provider.pct)}`}
                 style={{ width: `${Math.max(2, Math.min(100, provider.pct))}%` }}
               ></div>
             </div>
