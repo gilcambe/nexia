@@ -20,8 +20,8 @@ function aparar(c) {
     return Promise.all(toDelete.map((k) => c.delete(k)));
   });
 }
+const CACHE = 'body-coach-v7'; // Atualiza versão do cache
 self.addEventListener('install', (e) => { e.waitUntil(caches.open(CACHE).then((c) => c.addAll(['./', './index.html']))); });
-const CACHE = 'body-coach-v6'; // Atualiza versão do cache
   self.addEventListener('activate', (e) => {
     e.waitUntil(
       caches.keys().then((ks) => Promise.all(ks.filter((k) => k !== CACHE).map((k) => caches.delete(k)))
@@ -101,7 +101,11 @@ self.addEventListener('notificationclick', (e) => {
 
 // Fim do descanso com a tela bloqueada ou em outro app: a página pede, o service worker avisa na hora certa.
 let descanso = 0;
-self.addEventListener('message', (e) => { if (e.data && e.data.tipo === 'atualizar') { self.skipWaiting(); }
+self.addEventListener('message', (e) => {
+  if (e.data && e.data.tipo === 'atualizar') {
+    self.skipWaiting();
+    return;
+  }
   const m = e.data || {};
   if (m.tipo === 'descanso_cancelar') { descanso += 1; self.registration.getNotifications({ tag: 'descanso' }).then((ns) => ns.forEach((n) => n.close())); return; }
   if (m.tipo !== 'descanso') return;
