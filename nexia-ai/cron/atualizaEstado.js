@@ -50,7 +50,7 @@ async function atualizaEstado() {
       console.log('[atualizaEstado] Token do GitHub não fornecido; gerando resumo com base no estado local.');
     }
 
-    const agora = new Date().toISOString();
+const agora = new Date().toISOString();
     const resumoContent = `# Estado da IA (NEXIA)
 
 *Atualizado em:* ${agora}
@@ -61,7 +61,7 @@ async function atualizaEstado() {
 - **Pull Requests abertos:** ${Array.isArray(openPulls) ? openPulls.length : 0}
 
 ### Últimas Atividades Registradas
-- Execução bem-sucedida do script \\\`atualizaEstado.js\\\`.
+- Execução bem-sucedida do script \`atualizaEstado.js\`.
 - Sistema operacional e módulos funcionando corretamente.
 `;
 
