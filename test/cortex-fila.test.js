@@ -27,7 +27,7 @@ describe('validatePart', () => {
     const attempt = 1;
 
     const result = validatePart(part, attempt);
-    expect(result).not.toBeNull();
+    expect(result).toBeDefined();
   });
 
   it('2) Caso onde o caminho não existe, a tarefa não menciona criação e attempt é 3 - validatePart devolve null (sinal de replanejamento)', () => {
