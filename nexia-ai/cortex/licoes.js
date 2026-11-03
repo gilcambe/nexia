@@ -53,4 +53,4 @@ class LessonStore {
   }
 }
 
-module.exports = LessonStore;
+module.exports = { LessonStore, lessonStore: new LessonStore() };
