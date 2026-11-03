@@ -48,4 +48,26 @@
     location.reload();
   });
   navigator.serviceWorker.ready.then(function () { return navigator.serviceWorker.getRegistration(); }).then(vigiar).catch(function () {});
+
+  // Extra: busca /version.json?t=agora e compara se mudou se não houver SW
+  if (!("serviceWorker" in navigator) || !navigator.serviceWorker.controller) {
+    var versaoKey = "__kx_app_ver";
+    fetch("/version.json?t=" + Date.now(), { cache: "no-store" })
+      .then(function (res) { return res.json(); })
+      .then(function (data) {
+        var v = data && (data.version || data.hash || data.build);
+        if (!v) return;
+        var salva = localStorage.getItem(versaoKey);
+        if (!salva) {
+          localStorage.setItem(versaoKey, v);
+        } else if (salva !== v) {
+          if (!document.getElementById("kx-atualizar")) {
+            var b = document.createElement("div");
+            b.id = "kx-atualizar";
+            b.setAttribute("role", "status");
+            b.style.cssText = "position:fixed;left:12px;right:12px;bottom:12px;z-index:2147483647;display:flex;align-items:center;gap:12px;" +\n              "padding:12px 14px;border-radius:14px;background:#111827;color:#fff;font:15px/1.3 system-ui,sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.35);max-width:520px;margin:0 auto";\n            b.innerHTML = '<span style="flex:1">Tem atualização nova 🎉 — Toque para atualizar</span>' +\n              '<button type="button" style="border:0;border-radius:10px;padding:10px 14px;font:600 15px system-ui,sans-serif;background:#e5e7eb;color:#1f2937;cursor:pointer">Toque para atualizar</button>' +\n              '<button type="button" aria-label="Fechar" style="border:0;background:none;color:#9ca3af;font-size:20px;cursor:pointer">×</button>';\n            var bts = b.querySelectorAll("button");\n            bts[0].onclick = function () {\n              localStorage.setItem(versaoKey, v);\n              location.reload();\n            };\n            bts[1].onclick = function () { b.remove(); };\n            (document.body || document.documentElement).appendChild(b);\n          }
+        }
+      })
+      .catch(function () {});
+  }
 })();
