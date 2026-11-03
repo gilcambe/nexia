@@ -1,10 +1,23 @@
-// #2917: service worker antigo APOSENTADO. Ele guardava a tela /cortex para sempre e deixava o app Kernex velho.
-// Agora ele só apaga o cache que criou, se desregistra e recarrega as abas para pegarem a versão nova.
+// #2917: service worker antigo APOSENTADO.
 // Não intercepta fetch.
+// No activate, apaga o cache "cortex-cache-v1", desregistra e recarrega as abas ativas.
 self.addEventListener("install", () => self.skipWaiting());
 self.addEventListener("activate", (e) => e.waitUntil((async () => {
-  await caches.delete("cortex-cache-v1");
-  await self.registration.unregister();
-  const abas = await self.clients.matchAll({ type: "window" });
-  abas.forEach((c) => { try { c.navigate(c.url); } catch (_) {} });
+  try {
+    await caches.delete("cortex-cache-v1");
+  } catch (_) {}
+  try {
+    await self.registration.unregister();
+  } catch (_) {}
+  try {
+    const clientsList = await self.clients.matchAll({ type: "window" });
+    for (const client of clientsList) {
+      if (client.url && 'navigate' in client) {
+        try {
+          await client.navigate(client.url);
+        } catch (_) {}
+      }
+    }
+  } catch (_) {}
 })()));
+
