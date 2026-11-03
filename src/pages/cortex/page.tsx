@@ -59,11 +59,12 @@ export default function CortexPage() {
     return () => m.removeEventListener("change", f);
   }, []);
 
-  // App instalável: o manifesto fica no index.html (escopo /cortex); aqui entram a cor da barra, o ícone e a abertura NEXIA.
-  useEffect(() => {
-    const cor = document.createElement("meta"); cor.name = "theme-color"; cor.content = "#000000";
-    const ico = document.createElement("link"); ico.rel = "apple-touch-icon"; ico.href = "/cortex-icon-180.png";
-    document.head.append(cor, ico);
+      // App instalável: o manifesto fica no index.html (escopo /cortex); aqui entram a cor da barra, o ícone e a abertura NEXIA.
+    useEffect(() => {
+      const cor = document.createElement("meta"); cor.name = "theme-color"; cor.content = "#000000";
+      const ico = document.createElement("link"); ico.rel = "apple-touch-icon"; ico.href = "/cortex-icon-180.png";
+      const upd = document.createElement("script"); upd.src = "/js/update-banner.js"; upd.defer = true;
+      document.head.append(cor, ico, upd);
     mostrarAbertura("CORTEX");
     if ("serviceWorker" in navigator) navigator.serviceWorker.register("/cortex-sw.js", { scope: "/cortex" }).catch(() => undefined);
     const titulo = document.title; document.title = "Cortex · NEXIA";
