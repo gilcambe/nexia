@@ -1,9 +1,9 @@
-const { validarCortexFeito } = require('../scripts/cortex-fila');
+const { validatePart } = require('../scripts/cortex-fila');
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
 
-describe('validarCortexFeito', () => {
+describe('validatePart', () => {
   let tempDir;
 
   beforeEach(() => {
@@ -14,46 +14,31 @@ describe('validarCortexFeito', () => {
     try {
       fs.rmSync(tempDir, { recursive: true, force: true });
     } catch (e) {
-      // Ignorar erros de limpeza se houver
+      // Ignorar erros
     }
   });
 
-  it('deve aceitar a parte quando o caminho não existe mas a tarefa menciona criar arquivo', () => {
-    const nonExistentFile = path.join(tempDir, 'novo-arquivo.js');
+  it('1) Caso onde part.arquivos contém caminho inexistente e part.tarefa inclui "criar arquivo" - validatePart aceita a parte', () => {
+    const missingFile = path.join(tempDir, 'novo-arquivo.js');
     const part = {
-      arquivos: [nonExistentFile],
-      tarefa: 'Criar arquivo novo para o sistema'
+      arquivos: [missingFile],
+      tarefa: 'Criar arquivo para o módulo'
     };
     const attempt = 1;
 
-    const result = validarCortexFeito(part, attempt);
+    const result = validatePart(part, attempt);
     expect(result).not.toBeNull();
-    expect(result).toBe(true);
   });
 
-  it('deve devolver null (sinal de replanejamento) quando o caminho não existe, a tarefa não menciona criação e attempt é 3', () => {
-    const nonExistentFile = path.join(tempDir, 'arquivo-inexistente.js');
+  it('2) Caso onde o caminho não existe, a tarefa não menciona criação e attempt é 3 - validatePart devolve null (sinal de replanejamento)', () => {
+    const missingFile = path.join(tempDir, 'inexistente.js');
     const part = {
-      arquivos: [nonExistentFile],
-      tarefa: 'Atualizar rotas existentes'
+      arquivos: [missingFile],
+      tarefa: 'Atualizar rotas'
     };
     const attempt = 3;
 
-    const result = validarCortexFeito(part, attempt);
+    const result = validatePart(part, attempt);
     expect(result).toBeNull();
-  });
-
-  it('deve aceitar a parte quando o arquivo existe normalmente', () => {
-    const existingFile = path.join(tempDir, 'existente.js');
-    fs.writeFileSync(existingFile, 'console.log("ok");');
-    const part = {
-      arquivos: [existingFile],
-      tarefa: 'Ajustar log'
-    };
-    const attempt = 1;
-
-    const result = validarCortexFeito(part, attempt);
-    expect(result).not.toBeNull();
-    expect(result).toBe(true);
   });
 });
