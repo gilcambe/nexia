@@ -87,6 +87,15 @@
 
   window.MB = { api, telas: window.MB && window.MB.telas ? window.MB.telas : {}, abrirAba, mostrarErro };
 
+  // Mostra o motivo real do erro de login (código do Firebase) para ficar fácil de corrigir.
+  function msgLogin(e) {
+    const c = (e && e.code) || 'desconhecido';
+    if (c === 'auth/unauthorized-domain') return `Este endereço (${location.hostname}) ainda não está liberado no Firebase. (${c})`;
+    if (c === 'auth/web-storage-unsupported' || c === 'auth/operation-not-supported-in-this-environment') return `Abra o link direto no Chrome (não dentro de outro app) e tente de novo. (${c})`;
+    if (c === 'auth/network-request-failed') return `Sem internet agora. Tente de novo. (${c})`;
+    return `Não consegui entrar com o Google. Tente de novo. (${c})`;
+  }
+
   async function iniciar() {
     let cfg;
     try {
@@ -107,10 +116,11 @@
         if (e && (e.code === 'auth/popup-blocked' || e.code === 'auth/operation-not-supported-in-this-environment')) {
           await auth.signInWithRedirect(new firebase.auth.GoogleAuthProvider());
         } else if (!(e && e.code === 'auth/popup-closed-by-user')) {
-          mostrarErro('Não consegui entrar com o Google. Tente de novo.');
+          mostrarErro(msgLogin(e));
         }
       }
     };
+    auth.getRedirectResult().catch((e) => mostrarErro(msgLogin(e)));
     $('sair').onclick = () => auth.signOut();
     document.querySelectorAll('#abas button').forEach((b) => { b.onclick = () => abrirAba(b.dataset.aba); });
     auth.onAuthStateChanged((u) => {
