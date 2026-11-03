@@ -61,7 +61,7 @@ async function atualizaEstado() {
 - **Pull Requests abertos:** ${Array.isArray(openPulls) ? openPulls.length : 0}
 
 ### Últimas Atividades Registradas
-- Execução bem-sucedida do script \\`atualizaEstado.js\\`.
+- Execução bem-sucedida do script \\\`atualizaEstado.js\\\`.
 - Sistema operacional e módulos funcionando corretamente.
 `;
 
