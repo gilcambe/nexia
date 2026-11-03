@@ -589,12 +589,19 @@ const NexiaRuntime = (() => {
       : await NexiaModuleEngine.loadForTenant(tenant.id);
     NexiaEventBus.emit('runtime:modules', { tenant: tenant.id, modules: moduleIds });
 
-    // 4. SW antigo /sw.js aposentado (#2917): só desregistra se ainda existir.
+    // 4. SW antigo /sw.js aposentado (#2917): para de registrar e desregistra se existir registro com scope / e script /sw.js.
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.getRegistrations().then((rs) => rs.forEach((r) => {
-        const w = r.active || r.waiting || r.installing;
-        if (w && /\/sw\.js$/.test(new URL(w.scriptURL).pathname)) r.unregister();
-      })).catch(() => {});
+      try {
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        for (const r of registrations) {
+          const scriptURL = r.active?.scriptURL || r.waiting?.scriptURL || r.installing?.scriptURL || '';
+          if (scriptURL.endsWith('/sw.js') || r.scope === window.location.origin + '/' || r.scope === window.location.origin) {
+            await r.unregister();
+          }
+        }
+      } catch (e) {
+        // Silencioso
+      }
     }
 
     NexiaEventBus.emit('runtime:ready', { tenant, modules: moduleIds });
