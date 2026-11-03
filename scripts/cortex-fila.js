@@ -1,4 +1,6 @@
 'use strict';
+const fs = require('fs');
+const path = require('path');
 // Fila fixa do Cortex: as tarefas são Issues do GitHub com o rótulo "cortex-fila" (grátis, sem Firestore).
 // REGRA DO DONO: o Cortex nunca espera horário para a fila voltar. O workflow roda a cada 15 min E logo que cada execução termina.
 // O workflow "Fila do Cortex" roda este script: conclui o que terminou, reenfileira o que
@@ -57,6 +59,65 @@ function paisConcluidos({ pais, partes }) {
   }
   return pais.filter(x => { const ps = porPai.get(x.number) || []; return ps.length > 0 && ps.every(p => p.state === 'closed' && nomes(p).includes(L.feito)); }).map(x => x.number);
 }
+// Valida os caminhos de arquivos de uma parte do plano.
+// Se um caminho não existir:
+// - permitido se part.tarefa contiver "criar arquivo" (case-insensitive);
+// - se attempt >= 3, marca a parte para replanejamento (retorna null);
+// - senão, tenta substituir pelo primeiro arquivo existente na mesma pasta com a mesma extensão;
+// - se não houver substituto, retorna null (marcar para replanejamento).
+function validatePart(part, attempt = 1) {
+  if (!part || !Array.isArray(part.arquivos)) return null;
+  const permitirCriar = /criar arquivo/i.test(String(part.tarefa || ''));
+  const novosArquivos = [];
+
+  for (const arq of part.arquivos) {
+    const caminho = String(arq || '').trim();
+    if (fs.existsSync(caminho)) {
+      novosArquivos.push(caminho);
+      continue;
+    }
+
+    if (permitirCriar) {
+      novosArquivos.push(caminho);
+      continue;
+    }
+
+    if (attempt >= 3) {
+      return null;
+    }
+
+    const pasta = path.dirname(caminho) || '.';
+    const ext = path.extname(caminho);
+    if (!fs.existsSync(pasta)) {
+      return null;
+    }
+
+    try {
+      const itens = fs.readdirSync(pasta);
+      const substituto = itens.find(item => {
+        const itemExt = path.extname(item);
+        if (itemExt !== ext) return false;
+        const itemCaminho = pasta === '.' ? item : path.join(pasta, item);
+        try {
+          return fs.statSync(itemCaminho).isFile();
+        } catch {
+          return false;
+        }
+      });
+
+      if (!substituto) {
+        return null;
+      }
+      const substitutoCaminho = pasta === '.' ? substituto : path.join(pasta, substituto);
+      novosArquivos.push(substitutoCaminho);
+    } catch {
+      return null;
+    }
+  }
+
+  return { ...part, arquivos: novosArquivos };
+}
+
 // Caminhos de arquivo entre crases no pedido (ex.: `src/a/b.ts`). Servem para conferir se a entrega mexeu no que foi pedido.
 function caminhosDoPedido(corpo) {
   const achados = String(corpo || '').match(/`[\w./-]*\/[\w.-]+\.(?:js|ts|tsx|jsx|css|html|json|md|yml|svg|webmanifest)`/g) || [];
@@ -527,8 +588,21 @@ async function executar(token, acao, dividir) {
     }
     let feito = dividir ? await dividir(acao.tarefa, acao.tamanhos || {}) : null;
     if (Array.isArray(feito)) feito = { partes: plano.planoDeTextos(feito), origem: 'divisor' };
-    const partes = feito && feito.partes;
+    let partes = feito && feito.partes;
     if (!partes) { await addLabel(L.semDivisao); await comentar('Não consegui dividir esta tarefa agora; ela segue inteira.'); return; }
+
+    const partesValidadas = [];
+    for (const p of partes) {
+      const validada = validatePart(p, acao.tentativa || 1);
+      if (!validada) {
+        await addLabel(L.semDivisao);
+        await comentar('Parte com caminho de arquivo inválido sem substituto ou excedeu tentativas; marcada para replanejamento.');
+        return;
+      }
+      partesValidadas.push(validada);
+    }
+    partes = partesValidadas;
+
     const criadas = [];
     for (let k = 0; k < partes.length; k++) {
       const p = partes[k];
@@ -926,5 +1000,5 @@ async function main() {
   }
 }
 
-module.exports = { ultimoRotuloEm, travadasPeloCofre, entregaComprovada, MAX_RECUPERAR_POR_CICLO, FORA_DA_RECUPERACAO, soPipelineModelo, assinaturaDoSmoke, errosDeAmbiente, mexeEmWorkflow, planejarComIA, revisarParte, dadosDoPlanejador, corrigirCiDosPrs, reservaVolta, reservasQueVoltam, travouAntesDoConserto, devePedirReserva, entregouAlgo, depoisSemEntrega, MAX_SEM_ENTREGA, rascunhosParados, candidatosRascunho, MSG_RASCUNHO_PARADO, tokenDaApp, TENTATIVAS_ATE_DIVIDIR, caminhosDoPedido, sondarCota, decidir, precisaTesteFinal, precisaDividir, paisConcluidos, dividirComIA, MAX_TENTATIVAS, validarCortexFeito, reabrirFeitosInvalidos };
+module.exports = { ultimoRotuloEm, travadasPeloCofre, entregaComprovada, MAX_RECUPERAR_POR_CICLO, FORA_DA_RECUPERACAO, soPipelineModelo, assinaturaDoSmoke, errosDeAmbiente, mexeEmWorkflow, planejarComIA, revisarParte, dadosDoPlanejador, corrigirCiDosPrs, reservaVolta, reservasQueVoltam, travouAntesDoConserto, devePedirReserva, entregouAlgo, depoisSemEntrega, MAX_SEM_ENTREGA, rascunhosParados, candidatosRascunho, MSG_RASCUNHO_PARADO, tokenDaApp, TENTATIVAS_ATE_DIVIDIR, caminhosDoPedido, sondarCota, decidir, precisaTesteFinal, precisaDividir, paisConcluidos, dividirComIA, MAX_TENTATIVAS, validarCortexFeito, reabrirFeitosInvalidos, validatePart };
 if (require.main === module) main().catch(e => { console.error(e.message); process.exit(1); });
