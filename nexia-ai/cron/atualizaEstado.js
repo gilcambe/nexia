@@ -59,8 +59,6 @@ async function atualizaEstado() {
     // Em caso de erro, registramos o erro e o script termina sem comitar as alterações.
     process.exit(1); // Sai com código de erro para indicar falha
   }
-    // O bloco try/catch deve conter toda a lógica de atualização para garantir o tratamento de erros.
-  }
 }
 
 if (require.main === module) {
