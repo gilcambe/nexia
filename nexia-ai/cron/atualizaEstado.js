@@ -39,7 +39,7 @@ async function atualizaEstado() {
       resumo += `- ${pull.title} (#${pull.number})\n`;
     });
 
-        const branchAtual = 'nexia/criar-script-nexia-ai-cron-atualizaestad-110143';
+        const branchAtual = process.env.GITHUB_REF_NAME || process.env.BRANCH || 'develop';
     await github__commit_files({
       repository_id,
       branch: branchAtual,
