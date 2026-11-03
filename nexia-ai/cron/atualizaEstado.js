@@ -5,8 +5,16 @@
  * de forma idempotente, registrando logs de sucesso.
  */
 
-import fs from 'fs';
-import path from 'path';
+/**
+ * Script: nexia-ai/cron/atualizaEstado.js
+ * Descrição: Consulta o estado atual do repositório (issues abertas, PRs, etc.),
+ * gera um resumo compacto em Markdown e atualiza o arquivo docs/ESTADO-IA.md
+ * de forma idempotente, utilizando a API do GitHub ou commit via ferramentas se necessário,
+ * registrando logs de sucesso.
+ */
+
+const fs = require('fs');
+const path = require('path');
 
 async function atualizaEstado() {
   console.log('[atualizaEstado] Iniciando atualização do estado da IA...');
@@ -22,7 +30,7 @@ async function atualizaEstado() {
       try {
         const headers = {
           'Authorization': `Bearer ${token}`,
-          'Accept': 'vnd.github+json',
+          'Accept': 'application/vnd.github+json',
           'User-Agent': 'Nexia-AI-AtualizaEstado'
         };
 
@@ -39,7 +47,7 @@ async function atualizaEstado() {
         console.warn('[atualizaEstado] Aviso ao consultar GitHub API:', apiErr.message);
       }
     } else {
-      console.log('[atualizaEstado] Token do GitHub não fornecido; gerando resumo com base no estado local e padrão.');
+      console.log('[atualizaEstado] Token do GitHub não fornecido; gerando resumo com base no estado local.');
     }
 
     const agora = new Date().toISOString();
@@ -53,7 +61,7 @@ async function atualizaEstado() {
 - **Pull Requests abertos:** ${Array.isArray(openPulls) ? openPulls.length : 0}
 
 ### Últimas Atividades Registradas
-- Execução bem-sucedida do script \`atualizaEstado.js\`.
+- Execução bem-sucedida do script \\`atualizaEstado.js\\`.
 - Sistema operacional e módulos funcionando corretamente.
 `;
 
@@ -73,9 +81,8 @@ async function atualizaEstado() {
   }
 }
 
-// Executa se chamado diretamente
-if (import.meta.url === `file://${process.argv[1]}` || process.argv[1]?.endsWith('atualizaEstado.js')) {
+if (require.main === module) {
   atualizaEstado();
 }
 
-export { atualizaEstado };
+module.exports = { atualizaEstado };
