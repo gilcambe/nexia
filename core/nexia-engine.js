@@ -594,13 +594,15 @@ const NexiaRuntime = (() => {
       try {
         const registrations = await navigator.serviceWorker.getRegistrations();
         for (const r of registrations) {
+          // Verificação para garantir que desregistramos o SW antigo, mesmo que ele não esteja mais ativo.
+          // O scope é verificado para garantir que estamos desregistrando o SW correto.
           const scriptURL = r.active?.scriptURL || r.waiting?.scriptURL || r.installing?.scriptURL || '';
-          if (scriptURL.endsWith('/sw.js') || (r.scope === window.location.origin + '/' && scriptURL.includes('sw.js')) || r.scope === window.location.origin + '/' || r.scope === window.location.origin) {
+          if (scriptURL.endsWith('/sw.js') || r.scope === window.location.origin + '/') {
             await r.unregister();
           }
         }
       } catch (e) {
-        // Silencioso
+        console.error('[NexiaRuntime] Erro ao desregistrar Service Worker antigo:', e);
       }
     }
 
