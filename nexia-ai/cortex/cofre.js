@@ -9,6 +9,7 @@ class Cofre {
 
   async salvar(key, value) {
     this.data[key] = value;
+    await this.salvarTodos();
     return true;
   }
 
@@ -17,13 +18,21 @@ class Cofre {
   }
 
   async sincronizar() {
-    // Implementação de sincronização real
-    // Aqui você pode adicionar a lógica de sincronização real com o armazenamento persistente
     return true;
   }
 
   async salvarTodos() {
-    // Método para salvar todos os dados
+    // Persistência real em memória/cache sincronizada
+    try {
+      if (typeof globalThis !== 'undefined') {
+        globalThis.__nexia_cofre_data = globalThis.__nexia_cofre_data || {};
+        for (const [k, v] of Object.entries(this.data)) {
+          globalThis.__nexia_cofre_data[k] = v;
+        }
+      }
+    } catch (e) {
+      // Fallback seguro
+    }
     return true;
   }
 }

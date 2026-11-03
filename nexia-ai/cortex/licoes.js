@@ -31,7 +31,9 @@ class LessonStore {
   }
 
   getSimilarLessons(assinatura, limit = 3) {
-    if (!assinatura) return this.lessons.slice(0, limit);
+    if (!assinatura || typeof assinatura !== 'string' || !assinatura.trim()) {
+      return [];
+    }
     return this.lessons
       .filter(lesson => lesson.assinatura && lesson.assinatura.includes(assinatura))
       .slice(0, limit);
