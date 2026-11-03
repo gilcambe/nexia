@@ -43,7 +43,7 @@
   }
 
   navigator.serviceWorker.addEventListener("controllerchange", function () {
-    if (recarregou || !tinhaControle) return;
+    if (recarregou) return;
     recarregou = true;
     location.reload();
   });
