@@ -1,6 +1,6 @@
 // Versão do cache: suba a cada mudança deste arquivo (o activate apaga os caches antigos).
 // Regras: HTML e API sempre pela rede primeiro; /api/ e o login do Firebase (/__/) nunca vão para o cache.
-const CACHE = 'body-coach-v5';
+
 // Abertura instantânea: sem resposta da rede neste tempo, abre a casca guardada e a rede atualiza depois.
 const ESPERA_REDE_MS = 3500;
 const MAX_ITENS = 120;
