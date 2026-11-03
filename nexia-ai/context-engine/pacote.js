@@ -6,7 +6,7 @@ const path = require('path');
 function redactSecrets(text) {
   if (!text) return '';
   return String(text)
-    .replace(/(api[_-]?key|secret|token|password|auth)['"]?\s*[:=]\s*['"]?[^'"\s]+['"]?/gi, '$1=[REDIGIDO]')
+    .replace(/(api[_-]?key|secret|token|password|auth)['\"]?\s*[:=]\s*['\"]?[^'\"\s]+['\"]?/gi, '$1=[REDIGIDO]')
     .replace(/ghp_[a-zA-Z0-9]{36}/g, '[REDIGIDO]')
     .replace(/sk-[a-zA-Z0-9]{20,}/g, '[REDIGIDO]');
 }
@@ -85,7 +85,7 @@ async function montarPacote({ issue = {}, arquivos = [], limiteTokens = 3000 } =
       pacote = redactSecrets(pacote);
     }
   } catch (e) {
-    pacote = pacote.replace(/(api[_-]?key|secret|token|password)['"]?\s*[:=]\s*['"]?[^'"\s]+['"]?/gi, '[REDIGIDO]');
+    pacote = pacote.replace(/(api[_-]?key|secret|token|password)['"]?\s*[:=]\s*['"]?[^'\"\s]+['"]?/gi, '[REDIGIDO]');
   }
 
   // 8. Corta o texto para ficar dentro de limiteTokens (~3000 tokens / aprox 4 chars por token)
