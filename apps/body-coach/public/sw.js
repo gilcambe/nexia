@@ -60,8 +60,8 @@ self.addEventListener('fetch', (e) => {
     e.waitUntil(rede.catch(() => undefined));
     return;
   }
-  // Manifesto e arquivos sem versão no nome: rede primeiro, cache só sem internet.
-  if (!url.pathname.includes('/assets/') && /\.(webmanifest|json|html)$/i.test(url.pathname)) {
+  // Scripts/estilos sem hash e arquivos estáticos sem versão: rede primeiro, cache offline.
+  if (!url.pathname.includes('/assets/') && /\.(webmanifest|json|html|js|css)$/i.test(url.pathname)) {
     e.respondWith(fetch(req).then((res) => {
       if (guardavel(res)) { const copy = res.clone(); caches.open(CACHE).then((c) => c.put(req, copy)); }
       return res;
