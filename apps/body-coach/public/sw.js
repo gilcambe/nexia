@@ -20,8 +20,14 @@ function aparar(c) {
     return Promise.all(toDelete.map((k) => c.delete(k)));
   });
 }
-self.addEventListener('install', (e) => { e.waitUntil(caches.open(CACHE).then((c) => c.addAll(['./', './index.html'])).then(() => self.skipWaiting())); });
-self.addEventListener('activate', (e) => { e.waitUntil(caches.keys().then((ks) => Promise.all(ks.filter((k) => k !== CACHE).map((k) => caches.delete(k)))).then(() => self.clients.claim())); });
+self.addEventListener('install', (e) => { e.waitUntil(caches.open(CACHE).then((c) => c.addAll(['./', './index.html']))); });
+const CACHE = 'body-coach-v6'; // Atualiza versão do cache
+  self.addEventListener('activate', (e) => {
+    e.waitUntil(
+      caches.keys().then((ks) => Promise.all(ks.filter((k) => k !== CACHE).map((k) => caches.delete(k)))
+      ).then(() => self.clients.claim())
+    );
+  });
 // Nunca guardado no aparelho: outras origens (Firebase, Google), /api/ e o login do Firebase (/__/auth, /__/firebase).
 function naoGuarda(req, url) {
   return req.method !== 'GET' || url.origin !== self.location.origin || url.pathname.includes('/api/') || url.pathname.includes('/__/');
@@ -95,7 +101,7 @@ self.addEventListener('notificationclick', (e) => {
 
 // Fim do descanso com a tela bloqueada ou em outro app: a página pede, o service worker avisa na hora certa.
 let descanso = 0;
-self.addEventListener('message', (e) => {
+self.addEventListener('message', (e) => { if (e.data && e.data.tipo === 'atualizar') { self.skipWaiting(); }
   const m = e.data || {};
   if (m.tipo === 'descanso_cancelar') { descanso += 1; self.registration.getNotifications({ tag: 'descanso' }).then((ns) => ns.forEach((n) => n.close())); return; }
   if (m.tipo !== 'descanso') return;
