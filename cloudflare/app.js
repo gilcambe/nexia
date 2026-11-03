@@ -212,8 +212,14 @@ async function fromAssets(assets, url, path, method) {
   if (r.status !== 200) return null;
   const headers = new Headers(r.headers);
   headers.set('X-Content-Type-Options', 'nosniff');
-  const cacheable = ['.css', '.woff2', '.svg', '.png', '.jpg', '.ico', '.woff', '.ttf', '.webp', '.js'].includes(extOf(path));
-  headers.set('Cache-Control', cacheable && /\/assets\//.test(path) ? 'public, max-age=31536000, immutable' : 'no-cache');
+  const isSw = /(^|\/)sw\.js$/i.test(path) || /sw\.js$/.test(path) || path.includes('sw.js');
+  const isVersion = /(^|\/)version\.json$/i.test(path);
+  if (isSw || isVersion) {
+    headers.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+  } else {
+    const cacheable = ['.css', '.woff2', '.svg', '.png', '.jpg', '.ico', '.woff', '.ttf', '.webp', '.js'].includes(extOf(path));
+    headers.set('Cache-Control', cacheable && /\/assets\//.test(path) ? 'public, max-age=31536000, immutable' : 'no-cache');
+  }
   return new Response(r.body, { status: 200, headers });
 }
 
