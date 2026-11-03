@@ -1,5 +1,5 @@
 {
-  "rodizio": 45,
+  "rodizio": 46,
   "feitos": [
     "body-coach-01",
     "body-coach-02",
@@ -948,6 +948,25 @@
         }
       ],
       "formato": "carrossel",
+      "serie": "passo-a-passo"
+    },
+    {
+      "quando": "2026-11-03T17:52:48.799Z",
+      "id": null,
+      "cliente": "body-coach",
+      "resultados": [
+        {
+          "canal": "facebook",
+          "ok": true,
+          "ref": "1380111745183159_122108490441518156"
+        },
+        {
+          "canal": "instagram",
+          "ok": true,
+          "ref": "18250007821310946"
+        }
+      ],
+      "formato": "foto",
       "serie": "passo-a-passo"
     }
   ],
