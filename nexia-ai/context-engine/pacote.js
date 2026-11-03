@@ -1,5 +1,7 @@
 'use strict';
 
+// Módulo de empacotamento de contexto para o Context Engine
+
 const fs = require('fs');
 const path = require('path');
 
@@ -98,5 +100,6 @@ async function montarPacote({ issue = {}, arquivos = [], limiteTokens = 3000 } =
 }
 
 module.exports = {
-  montarPacote
+  montarPacote,
+  redactSecrets
 };
