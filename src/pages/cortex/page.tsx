@@ -61,6 +61,10 @@ export default function CortexPage() {
 
       // App instalável: o manifesto fica no index.html (escopo /cortex); aqui entram a cor da barra, o ícone e a abertura NEXIA.
     useEffect(() => {
+      const scriptBanner = document.createElement("script");
+      scriptBanner.src = "/js/update-banner.js";
+      scriptBanner.defer = true;
+      document.head.appendChild(scriptBanner);
       const cor = document.createElement("meta"); cor.name = "theme-color"; cor.content = "#000000";
       const ico = document.createElement("link"); ico.rel = "apple-touch-icon"; ico.href = "/cortex-icon-180.png";
       document.head.append(cor, ico);
