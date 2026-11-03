@@ -7,7 +7,8 @@
 <meta name="theme-color" content="#16a34a">
 <link rel="manifest" href="/prumo/manifest.webmanifest">
 <link rel="icon" href="/prumo/icone.svg" type="image/svg+xml">
-<link rel="apple-touch-icon" href="/prumo/icone.svg">
+<link rel="apple-touch-icon" href="/prumo/icone-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
 <style>
   :root { --fundo:#0b1210; --cartao:#14201c; --borda:#22332d; --texto:#e8f1ed; --fraco:#9db3aa; --verde:#16a34a; --verde2:#22c55e; --perigo:#ef4444; --aviso:#f59e0b; }
   * { box-sizing:border-box; }
@@ -32,6 +33,11 @@
   nav.abas button span { font-size:22px; }
   nav.abas button[aria-selected="true"] { color:var(--verde2); font-weight:600; }
   footer { position:fixed; left:0; right:0; bottom:0; padding:6px 12px calc(6px + env(safe-area-inset-bottom)); text-align:center; font-size:12px; color:var(--fraco); background:var(--fundo); }
+  header .instalar { background:var(--verde); border-color:var(--verde); color:#fff; font-weight:600; }
+  .btn.sec { margin-top:12px; background:none; border:1px solid var(--verde); color:var(--verde2); }
+  .dica { position:fixed; inset:0; background:rgba(0,0,0,.7); display:flex; align-items:flex-end; z-index:20; }
+  .dica div { background:var(--cartao); border-top:1px solid var(--borda); border-radius:18px 18px 0 0; padding:20px 18px calc(20px + env(safe-area-inset-bottom)); width:100%; }
+  .dica h3 { margin:0 0 8px; } .dica ol { margin:0 0 16px; padding-left:20px; color:var(--texto); }
   [hidden] { display:none !important; }
 </style>
 </head>
@@ -39,6 +45,7 @@
 <header>
   <img src="/prumo/icone.svg" alt="">
   <h1>Prumo</h1>
+  <button id="instalar" class="instalar" type="button" hidden>📲 Instalar app</button>
   <button id="sair" type="button" hidden>Sair</button>
 </header>
 <div id="erro" class="faixa erro" role="alert" hidden></div>
@@ -50,6 +57,7 @@
     <h2>Suas finanças no prumo</h2>
     <p>Investimentos, cartões e lista de compras num lugar só.</p>
     <button id="entrar" class="btn" type="button" data-testid="prumo-entrar">Entrar com Google</button>
+    <button id="instalar2" class="btn sec" type="button" hidden>📲 Baixar o app no celular</button>
   </main>
 </section>
 
@@ -66,10 +74,16 @@
   <button type="button" role="tab" data-aba="consultor" aria-selected="false"><span>🧭</span>Consultor</button>
   <button type="button" role="tab" data-aba="pontos" aria-selected="false"><span>✈️</span>Milhas</button>
 </nav>
+<div id="dica" class="dica" role="dialog" aria-modal="true" hidden><div>
+  <h3>Instalar o Prumo</h3>
+  <ol id="dica-passos"></ol>
+  <button id="dica-ok" class="btn" type="button">Entendi</button>
+</div></div>
 <footer>Seus dados são só seus. O app nunca pede senha de banco.</footer>
 
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 <script src="/prumo/app.js"></script>
+<script src="/prumo/instalar.js"></script>
 </body>
 </html>
