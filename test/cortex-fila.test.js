@@ -1,87 +1,59 @@
-const { processPR } = require('../scripts/cortex-fila');
+const { validarCortexFeito } = require('../scripts/cortex-fila');
 const fs = require('fs');
-const { Octokit } = require('@octokit/rest');
+const path = require('path');
+const os = require('os');
 
-jest.mock('fs');
-jest.mock('@octokit/rest');
-
-describe('processPR', () => {
-  let mockOctokit;
-  let mockFs;
+describe('validarCortexFeito', () => {
+  let tempDir;
 
   beforeEach(() => {
-    mockOctokit = new Octokit();
-    mockFs = fs;
-    jest.clearAllMocks();
+    tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'cortex-fila-test-'));
   });
 
-  it('should apply label when PR is merged, files exist, and CI is OK', async () => {
-    const pr = { number: 1, merged: true };
-    const files = ['file1.js', 'file2.js'];
-    const workflowStatus = 'success';
-
-    mockFs.existsSync.mockReturnValue(true);
-    mockOctokit.rest.issues.addLabels.mockResolvedValue({});
-    mockOctokit.rest.issues.createComment.mockResolvedValue({});
-
-    await processPR(pr, files, workflowStatus, mockOctokit, mockFs);
-
-    expect(mockOctokit.rest.issues.addLabels).toHaveBeenCalledWith({
-      owner: 'owner',
-      repo: 'repo',
-      issue_number: pr.number,
-      labels: ['cortex-feito']
-    });
-    expect(mockOctokit.rest.issues.createComment).not.toHaveBeenCalled();
+  afterEach(() => {
+    try {
+      fs.rmSync(tempDir, { recursive: true, force: true });
+    } catch (e) {
+      // Ignorar erros de limpeza se houver
+    }
   });
 
-  it('should reopen issue with comment when PR is merged but some files do not exist', async () => {
-    const pr = { number: 1, merged: true };
-    const files = ['file1.js', 'file2.js'];
-    const workflowStatus = 'success';
+  it('deve aceitar a parte quando o caminho não existe mas a tarefa menciona criar arquivo', () => {
+    const nonExistentFile = path.join(tempDir, 'novo-arquivo.js');
+    const part = {
+      arquivos: [nonExistentFile],
+      tarefa: 'Criar arquivo novo para o sistema'
+    };
+    const attempt = 1;
 
-    mockFs.existsSync.mockImplementation((file) => file === 'file1.js');
-    mockOctokit.rest.issues.update.mockResolvedValue({});
-    mockOctokit.rest.issues.createComment.mockResolvedValue({});
-
-    await processPR(pr, files, workflowStatus, mockOctokit, mockFs);
-
-    expect(mockOctokit.rest.issues.update).toHaveBeenCalledWith({
-      owner: 'owner',
-      repo: 'repo',
-      issue_number: pr.number,
-      state: 'open'
-    });
-    expect(mockOctokit.rest.issues.createComment).toHaveBeenCalledWith({
-      owner: 'owner',
-      repo: 'repo',
-      issue_number: pr.number,
-      body: 'arquivo file2.js não encontrado'
-    });
+    const result = validarCortexFeito(part, attempt);
+    expect(result).not.toBeNull();
+    expect(result).toBe(true);
   });
 
-  it('should reopen issue with comment when PR is merged, files exist, but CI failed', async () => {
-    const pr = { number: 1, merged: true };
-    const files = ['file1.js', 'file2.js'];
-    const workflowStatus = 'failure';
+  it('deve devolver null (sinal de replanejamento) quando o caminho não existe, a tarefa não menciona criação e attempt é 3', () => {
+    const nonExistentFile = path.join(tempDir, 'arquivo-inexistente.js');
+    const part = {
+      arquivos: [nonExistentFile],
+      tarefa: 'Atualizar rotas existentes'
+    };
+    const attempt = 3;
 
-    mockFs.existsSync.mockReturnValue(true);
-    mockOctokit.rest.issues.update.mockResolvedValue({});
-    mockOctokit.rest.issues.createComment.mockResolvedValue({});
+    const result = validarCortexFeito(part, attempt);
+    expect(result).toBeNull();
+  });
 
-    await processPR(pr, files, workflowStatus, mockOctokit, mockFs);
+  it('deve aceitar a parte quando o arquivo existe normalmente', () => {
+    const existingFile = path.join(tempDir, 'existente.js');
+    fs.writeFileSync(existingFile, 'console.log("ok");');
+    const part = {
+      arquivos: [existingFile],
+      tarefa: 'Ajustar log'
+    };
+    const attempt = 1;
 
-    expect(mockOctokit.rest.issues.update).toHaveBeenCalledWith({
-      owner: 'owner',
-      repo: 'repo',
-      issue_number: pr.number,
-      state: 'open'
-    });
-    expect(mockOctokit.rest.issues.createComment).toHaveBeenCalledWith({
-      owner: 'owner',
-      repo: 'repo',
-      issue_number: pr.number,
-      body: 'CI falhou'
-    });
+    const result = validarCortexFeito(part, attempt);
+    expect(result).not.toBeNull();
+    expect(result).toBe(true);
   });
 });
