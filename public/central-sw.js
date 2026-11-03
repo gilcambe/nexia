@@ -1,6 +1,6 @@
 // Central: service worker mínimo para instalar a Central no celular. Guarda só o visual (scripts, estilos, ícones);
 // /api e /__/ (login do Firebase) e qualquer dado vão sempre direto à rede.
-const CACHE = "central-v1";
+
 // #2917: a versão nova espera o toque em "Atualizar" (public/js/update-banner.js) e então assume.
 self.addEventListener("message", (e) => { if (e.data && e.data.tipo === "atualizar") self.skipWaiting(); });
 const CACHE = "central-v2"; // Atualiza versão do cache
