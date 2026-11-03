@@ -76,7 +76,8 @@
               location.reload();
             };
             bts[1].onclick = function () { b.remove(); };
-            (document.body || document.documentElement).appendChild(b);\n          }
+            (document.body || document.documentElement).appendChild(b);
+          }
         }
       })
       .catch(function () {});
