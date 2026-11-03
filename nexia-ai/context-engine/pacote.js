@@ -100,5 +100,6 @@ async function montarPacote({ issue = {}, arquivos = [], limiteTokens = 3000 } =
 }
 
 module.exports = {
-  montarPacote
+  montarPacote,
+  redactSecrets
 };
