@@ -2,23 +2,24 @@
 
 const fs = require('fs');
 const path = require('path');
-// Redact secrets inline or use safe replacement if module doesn't exist
+
 function redactSecrets(text) {
   if (!text) return '';
   return String(text)
-    .replace(/(api[_-]?key|secret|token|password|auth)['"]?\\s*[:=]\\s*['"]?[^'"\\s]+['"]?/gi, '$1=[REDIGIDO]')
+    .replace(/(api[_-]?key|secret|token|password|auth)['"]?\s*[:=]\s*['"]?[^'"\s]+['"]?/gi, '$1=[REDIGIDO]')
     .replace(/ghp_[a-zA-Z0-9]{36}/g, '[REDIGIDO]')
     .replace(/sk-[a-zA-Z0-9]{20,}/g, '[REDIGIDO]');
 }
+
 const { arquivosProvaveis } = require('./arquivos-provaveis');
-const { LICOES } = require('../../cortex/licoes');
+const { LICOES } = require('../cortex/licoes');
 
 async function montarPacote({ issue = {}, arquivos = [], limiteTokens = 3000 } = {}) {
   let pacote = '';
 
   // 1. Lê docs/CONTEXTO-IA.md (resumo das regras fixas)
   try {
-    const contextoPath = path.join(__dirname, '../../..', 'docs', 'CONTEXTO-IA.md');
+    const contextoPath = path.join(__dirname, '../..', 'docs', 'CONTEXTO-IA.md');
     if (fs.existsSync(contextoPath)) {
       const contextoContent = fs.readFileSync(contextoPath, 'utf8');
       pacote += `## Contexto Fixo (CONTEXTO-IA.md)\n${contextoContent}\n\n`;
@@ -27,9 +28,9 @@ async function montarPacote({ issue = {}, arquivos = [], limiteTokens = 3000 } =
     // Ignora se não encontrar
   }
 
-  // 2. Lê o cabeçalho de docs/ESTADO-IA.md (primeiras linhas ou cabeçalho)
+  // 2. Lê o cabeçalho de docs/ESTADO-IA.md
   try {
-    const estadoPath = path.join(__dirname, '../../..', 'docs', 'ESTADO-IA.md');
+    const estadoPath = path.join(__dirname, '../..', 'docs', 'ESTADO-IA.md');
     if (fs.existsSync(estadoPath)) {
       const estadoContent = fs.readFileSync(estadoPath, 'utf8');
       const linhasCabecalho = estadoContent.split('\n').slice(0, 20).join('\n');
@@ -67,7 +68,7 @@ async function montarPacote({ issue = {}, arquivos = [], limiteTokens = 3000 } =
   // 6. Lista arquivos prováveis usando nexia-ai/context-engine/arquivos-provaveis.js
   try {
     const textoBusca = issue ? `${issue.title || ''} ${issue.body || ''}` : '';
-    const raizRepo = path.resolve(__dirname, '../../..');
+    const raizRepo = path.resolve(__dirname, '../..');
     const prov = arquivosProvaveis({ raiz: raizRepo, texto: textoBusca });
     if (prov && Array.isArray(prov.arquivos) && prov.arquivos.length > 0) {
       pacote += `## Arquivos Prováveis\n` + prov.arquivos.map((a) => `- ${a.path}`).join('\n') + `\n\n`;
@@ -84,11 +85,10 @@ async function montarPacote({ issue = {}, arquivos = [], limiteTokens = 3000 } =
       pacote = redactSecrets(pacote);
     }
   } catch (e) {
-    // Fallback básico de redigir se redactSecrets falhar
     pacote = pacote.replace(/(api[_-]?key|secret|token|password)['"]?\s*[:=]\s*['"]?[^'"\s]+['"]?/gi, '[REDIGIDO]');
   }
 
-  // 8. Corta o texto para ficar dentro de limiteTokens (~3000 tokens / aprox 4 chars por token = ~12000 caracteres, ou limite em caracteres/tokens)
+  // 8. Corta o texto para ficar dentro de limiteTokens (~3000 tokens / aprox 4 chars por token)
   const maxChars = (limiteTokens || 3000) * 4;
   if (pacote.length > maxChars) {
     pacote = pacote.substring(0, maxChars) + '\n[... cortado por limite de tokens ...]';
