@@ -2,6 +2,9 @@ import React from 'react';
 import { getUsage } from './api';
 import { utilBarColor } from './utilBarColor';
 
+/**
+ * Componente DailySpendCard - Exibe o uso de cada provedor de IA com base em getUsage().
+ */
 const DailySpendCard = () => {
   const [usageData, setUsageData] = React.useState([]);
 
