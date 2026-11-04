@@ -25,16 +25,7 @@ self.addEventListener("activate", (event) => {
         await self.registration.unregister();
       } catch (_) {}
 
-      try {
-        const clientsList = await self.clients.matchAll({ type: "window" });
-        for (const client of clientsList) {
-          if (client.url && 'navigate' in client) {
-            try {
-              await client.navigate(client.url);
-            } catch (_) {}
-          }
-        }
-      } catch (_) {}
+
     })()
   );
 });
