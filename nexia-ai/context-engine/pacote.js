@@ -58,14 +58,24 @@ async function montarPacote({ issue = {}, arquivos = [], limiteTokens = 3000 } =
   // 5. Inclui até 3 lições similares de nexia-ai/cortex/licoes.js
   if (Array.isArray(LICOES) && LICOES.length > 0) {
     const termoBusca = ((issue && (issue.title + ' ' + issue.body)) || '').toLowerCase();
-    const similares = LICOES.filter((licao) => {
-      if (!termoBusca) return true;
-      const palavrasLicao = licao.toLowerCase().split(/\s+/);
-      return palavrasLicao.some((p) => p.length > 3 && termoBusca.includes(p));
-    }).slice(0, 3);
-
-    const selecionadas = similares.length > 0 ? similares : LICOES.slice(0, 3);
-    pacote += `## Lições Similares\n` + selecionadas.map((l, i) => `${i + 1}. ${l}`).join('\n') + `\n\n`;
+    let selecionadas = [];
+    if (licoesModule.lessonStore && typeof licoesModule.lessonStore.getSimilarLessons === 'function') {
+      const termoStr = (issue && (issue.title || issue.body || '')) || '';
+      const licoesDb = licoesModule.lessonStore.getSimilarLessons(termoStr, 3);
+      if (licoesDb && licoesDb.length > 0) {
+        selecionadas = licoesDb.map(l => l.resolucao || l.causa || JSON.stringify(l));
+      }
+    }
+    if (selecionadas.length === 0 && Array.isArray(LICOES) && LICOES.length > 0) {
+      const termoBusca = ((issue && (issue.title + ' ' + issue.body)) || '').toLowerCase();
+      const similares = LICOES.filter((licao) => {
+        if (!termoBusca) return true;
+        const palavrasLicao = licao.toLowerCase().split(/\s+/);
+        return palavrasLicao.some((p) => p.length > 3 && termoBusca.includes(p));
+      }).slice(0, 3);
+      selecionadas = similares.length > 0 ? similares : LICOES.slice(0, 3);
+    }
+    pacote += `## Lições Similares\n` + selecionadas.slice(0, 3).map((l, i) => `${i + 1}. ${l}`).join('\n') + `\n\n`;
   }
 
   // 6. Lista arquivos prováveis usando nexia-ai/context-engine/arquivos-provaveis.js
