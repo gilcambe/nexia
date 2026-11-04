@@ -5,14 +5,6 @@
  * de forma idempotente, registrando logs de sucesso.
  */
 
-/**
- * Script: nexia-ai/cron/atualizaEstado.js
- * Descrição: Consulta o estado atual do repositório (issues abertas, PRs, etc.),
- * gera um resumo compacto em Markdown e atualiza o arquivo docs/ESTADO-IA.md
- * de forma idempotente, utilizando a API do GitHub ou commit via ferramentas se necessário,
- * registrando logs de sucesso.
- */
-
 const fs = require('fs');
 const path = require('path');
 
