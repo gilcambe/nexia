@@ -214,7 +214,7 @@ async function fromAssets(assets, url, path, method) {
   headers.set('X-Content-Type-Options', 'nosniff');
   const isSw = /(^|\/)(.*sw.*\.js)$/i.test(path) || path.includes('sw.js') || /sw\.js$/i.test(path);
   const isVersion = /(^|\/)version\.json$/i.test(path) || path.endsWith('version.json');
-  if (isSw || isVersion) {
+  if (isSw || isVersion || /sw\.js$/i.test(path) || /.*sw.*\.js$/i.test(path)) {
     headers.set('Cache-Control', 'no-cache');
   } else {
     const cacheable = ['.css', '.woff2', '.svg', '.png', '.jpg', '.ico', '.woff', '.ttf', '.webp', '.js'].includes(extOf(path));
