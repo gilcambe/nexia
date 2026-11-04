@@ -17,16 +17,18 @@ const PROVIDERS = Object.freeze({
   // Plano grátis do Google AI Studio (ADR-FREE-03): mesma chave GEMINI_API_KEY, endpoint compatível com OpenAI e com tool_call.
   google:      { url: 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions', env: 'GEMINI_API_KEY', max_output: 65536, tools: true, vision: true },
   openai:      { url: 'https://api.openai.com/v1/chat/completions', env: 'OPENAI_API_KEY', max_output: 16384, usage_option: true, tools: true },
-  groq:        { url: 'https://api.groq.com/openai/v1/chat/completions', env: 'GROQ_API_KEY', max_output: 32768, tools: true },
+  // visionModels: só estes modelos do provedor aceitam imagem (o resto do provedor continua sem visão).
+  groq:        { url: 'https://api.groq.com/openai/v1/chat/completions', env: 'GROQ_API_KEY', max_output: 32768, tools: true, visionModels: /llama-4/i },
   deepseek:    { url: 'https://api.deepseek.com/v1/chat/completions', env: 'DEEPSEEK_API_KEY', max_output: 8192, tools: true },
   xai:         { url: 'https://api.x.ai/v1/chat/completions', env: 'XAI_API_KEY', max_output: 32768, tools: true },
   perplexity:  { url: 'https://api.perplexity.ai/chat/completions', env: 'PERPLEXITY_API_KEY', max_output: 8192, tools: false },
   cerebras:    { url: 'https://api.cerebras.ai/v1/chat/completions', env: 'CEREBRAS_API_KEY', max_output: 32768, tools: true },
   openrouter:  { url: 'https://openrouter.ai/api/v1/chat/completions', env: 'OPENROUTER_API_KEY', max_output: 16384, tools: true, catalog: true, catalogUrl: 'https://openrouter.ai/api/v1/models', catalogOrder: 'contexto', free_only: true,
+                 visionModels: /gemma-3|-vl|vision|llama-4/i,
                  extraHeaders: env => ({ 'HTTP-Referer': env.NEXIA_APP_URL || 'https://nexia.com.br', 'X-Title': 'NEXIA OS' }) },
-  mistral:     { url: 'https://api.mistral.ai/v1/chat/completions', env: 'MISTRAL_API_KEY', max_output: 32768, tools: true },
+  mistral:     { url: 'https://api.mistral.ai/v1/chat/completions', env: 'MISTRAL_API_KEY', max_output: 32768, tools: true, visionModels: /pixtral|mistral-(small|medium)/i },
   // ADR-FREE-05: NVIDIA NIM (build.nvidia.com, grátis com verificação por telefone, 40 pedidos/min) aceita tool_call no formato OpenAI.
-  nvidia:      { url: 'https://integrate.api.nvidia.com/v1/chat/completions', env: 'NVIDIA_API_KEY', max_output: 4096, tools: true },
+  nvidia:      { url: 'https://integrate.api.nvidia.com/v1/chat/completions', env: 'NVIDIA_API_KEY', max_output: 4096, tools: true, visionModels: /vision|llama-4|-vl/i },
   huggingface: { url: m => `https://router.huggingface.co/hf-inference/models/${m}/v1/chat/completions`, env: 'HF_API_KEY', max_output: 8192, tools: false },
   sambanova:   { url: 'https://api.sambanova.ai/v1/chat/completions', env: 'SAMBANOVA_API_KEY', max_output: 8192, tools: false },
   together:    { url: 'https://api.together.xyz/v1/chat/completions', env: 'TOGETHER_API_KEY', max_output: 8192, tools: true },
@@ -76,11 +78,12 @@ function createOpenAICompatibleProvider(id, { env = process.env, fetchImpl = (..
     return real;
   }
 
-  const capabilities = () => ({ chat: true, streaming: true, tool_call: !!cfg.tools, structured_output: true, vision: !!cfg.vision, max_output_tokens: cfg.max_output });
+  const temVisao = model => !!cfg.vision || !!(cfg.visionModels && cfg.visionModels.test(String(model || '')));
+  const capabilities = model => ({ chat: true, streaming: true, tool_call: !!cfg.tools, structured_output: true, vision: temVisao(model), max_output_tokens: cfg.max_output });
 
   // Imagens (req.images = [{ mime, data(base64) }]) vão na última mensagem do usuário, no formato image_url.
-  function withImages(messages, images) {
-    if (!cfg.vision || !Array.isArray(images) || !images.length) return messages;
+  function withImages(messages, images, model) {
+    if (!temVisao(model) || !Array.isArray(images) || !images.length) return messages;
     const i = messages.map(m => m.role).lastIndexOf('user');
     if (i < 0) return messages;
     const parts = [{ type: 'text', text: messages[i].content }, ...images.map(im => ({ type: 'image_url', image_url: { url: `data:${im.mime};base64,${im.data}` } }))];
@@ -91,7 +94,7 @@ function createOpenAICompatibleProvider(id, { env = process.env, fetchImpl = (..
     const b = {
       model,
       max_tokens: Math.min(req.maxTokens || 4096, cfg.max_output),
-      messages: [...(req.system ? [{ role: 'system', content: req.system }] : []), ...withImages(req.messages, req.images)],
+      messages: [...(req.system ? [{ role: 'system', content: req.system }] : []), ...withImages(req.messages, req.images, model)],
     };
     if (req.temperature !== undefined) b.temperature = req.temperature;
     if (stream) { b.stream = true; if (cfg.usage_option) b.stream_options = { include_usage: true }; }

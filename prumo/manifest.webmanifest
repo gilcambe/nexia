@@ -1,8 +1,8 @@
 {
-  "name": "Prumo",
-  "short_name": "Prumo",
+  "name": "Fortune",
+  "short_name": "Fortune",
   "id": "/prumo/",
-  "description": "Suas finanças no prumo: investimentos, cartões e compras.",
+  "description": "Suas finanças sob controle: investimentos, cartões e compras.",
   "start_url": "/prumo/",
   "scope": "/prumo/",
   "display": "standalone",
