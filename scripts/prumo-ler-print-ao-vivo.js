@@ -24,6 +24,14 @@ const p = require('../netlify/functions/prumo.js');
       console.log('com imagem OK', Date.now() - t0, 'ms', d.provider, d.model, (o.text || '').slice(0, 80).replace(/\n/g, ' '));
     } catch (e) { const x = e.details || {}; console.log('com imagem ERRO', d.provider, d.model, x.status || e.code, String(x.upstream || e.message).slice(0, 220).replace(/\n/g, ' ')); }
   }
+  // Mede o modelo principal com o pedido real e limites diferentes de resposta.
+  for (const mt of [1500, 4000]) {
+    const t0 = Date.now();
+    try {
+      const o = await router.chat(p.VISAO[0], { system: p.LER_PRINT, messages: [{ role: 'user', content: 'Leia este print e devolva o JSON.' }], images: [{ mime: 'image/jpeg', data }], maxTokens: mt, temperature: 0, timeoutMs: 110000 });
+      console.log('pedido real', mt, 'OK', Date.now() - t0, 'ms', (o.text || '').length, 'letras', (o.text || '').slice(-120).replace(/\n/g, ' '));
+    } catch (e) { console.log('pedido real', mt, 'ERRO', Date.now() - t0, 'ms', e.code || e.message); }
+  }
   const avisos = []; const warn = console.warn; console.warn = (...a) => { avisos.push(a.join(' ')); warn(...a); };
   const t = Date.now();
   const r = await p.lerPrint([{ mime: 'image/jpeg', data }], p.deps);

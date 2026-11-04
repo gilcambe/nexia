@@ -405,4 +405,4 @@ exports.handler = async (event) => {
   }
 };
 
-Object.assign(exports, { conferir, VISAO, normalizarLido, valorLido, validarItemCarteira, validarCartao, validarGasto, resumoMes, validarLista, avisosPendentes, extrairJson, lerImagens, lerPrint, validarObjetivo, progressoObjetivos, resumoHistorico, fotoDoDia, agir, deps, TIPOS, CATEGORIAS });
+Object.assign(exports, { conferir, VISAO, LER_PRINT, normalizarLido, valorLido, validarItemCarteira, validarCartao, validarGasto, resumoMes, validarLista, avisosPendentes, extrairJson, lerImagens, lerPrint, validarObjetivo, progressoObjetivos, resumoHistorico, fotoDoDia, agir, deps, TIPOS, CATEGORIAS });
