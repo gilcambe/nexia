@@ -61,7 +61,13 @@
     const tela = window.MB.telas[nome];
     if (!ok || typeof tela !== 'function') { el.innerHTML = '<p class="em-breve">Em breve</p>'; return; }
     el.innerHTML = '';
-    try { await tela(el); } catch (e) { if (!e.status) mostrarErro('Não consegui abrir esta aba. Tente de novo.'); }
+    try { await tela(el); } catch (e) {
+      // Nunca deixa a aba em branco: mostra o motivo e um botão para tentar de novo.
+      const msg = (e && e.message && e.status) ? e.message : 'Não consegui abrir esta aba agora.';
+      el.innerHTML = '<div class="faixa erro" style="margin:0 0 12px"></div><button class="btn" type="button">Tentar de novo</button>';
+      el.querySelector('.faixa').textContent = msg;
+      el.querySelector('button').onclick = () => abrirAba(nome);
+    }
   }
 
   async function verAvisos() {

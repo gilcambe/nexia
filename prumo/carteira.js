@@ -41,19 +41,39 @@
     const arq = el.querySelector('#arq');
     el.querySelector('#print').onclick = () => arq.click();
     arq.onchange = async () => {
-      const files = [...arq.files].slice(0, 5);
+      const files = [...arq.files].slice(0, MAX_PRINTS);
       if (!files.length) return;
-      if (arq.files.length > 5) MB.mostrarErro('Mandei só os 5 primeiros prints.');
-      el.innerHTML = '<div class="card">📷 Lendo seus prints… isso leva até 1 minuto.</div>';
-      let lidos;
-      try { lidos = await MB.api('ler_print', { imagens: await Promise.all(files.map(reduzir)) }); } catch { return recarregar(); }
+      if (arq.files.length > MAX_PRINTS) MB.mostrarErro(`Mandei só os ${MAX_PRINTS} primeiros prints.`);
+      // Vários prints de uma vez: vão em grupos de 5, com progresso na tela.
+      const lidos = { itens: [], descartados: [] };
+      let falhas = 0;
+      for (let i = 0; i < files.length; i += 5) {
+        const grupo = files.slice(i, i + 5);
+        el.innerHTML = `<div class="card">📷 Lendo prints ${i + 1} a ${i + grupo.length} de ${files.length}… cada grupo leva até 1 minuto. Não feche o app.</div>`;
+        try {
+          const r = await MB.api('ler_print', { imagens: await Promise.all(grupo.map(reduzir)) });
+          lidos.itens.push(...(r.itens || [])); lidos.descartados.push(...(r.descartados || []));
+        } catch { falhas += grupo.length; }
+      }
+      if (!lidos.itens.length) { if (!falhas) conferir(el, lidos, optObj, itens); else recarregar(); return; }
+      if (falhas) MB.mostrarErro(`${falhas} print(s) não foram lidos. Mande de novo só esses.`);
+      guardarRascunho(lidos);
       conferir(el, lidos, optObj, itens);
     };
+    // Itens lidos e ainda não salvos ficam guardados só neste celular até salvar ou cancelar.
+    const rascunho = lerRascunho();
+    if (rascunho) conferir(el, rascunho, optObj, itens);
   };
+
+  const MAX_PRINTS = 15;
+  const CHAVE = 'fortune-lidos';
+  function guardarRascunho(l) { try { localStorage.setItem(CHAVE, JSON.stringify(l)); } catch { /* sem armazenamento */ } }
+  function lerRascunho() { try { const l = JSON.parse(localStorage.getItem(CHAVE) || 'null'); return l && Array.isArray(l.itens) && l.itens.length ? l : null; } catch { return null; } }
+  function apagarRascunho() { try { localStorage.removeItem(CHAVE); } catch { /* sem armazenamento */ } }
 
   function conferir(el, { itens, descartados }, optObj, atuais) {
     if (!itens.length) { el.innerHTML = '<div class="card">Não achei valores nesses prints. Tente um print mais nítido ou preencha à mão.</div><button class="btn sec" id="volta">Voltar</button>'; el.querySelector('#volta').onclick = recarregar; return; }
-    el.innerHTML = `<div class="card"><b>Confira antes de salvar</b><p class="fraco">Corrija o que estiver errado e desmarque o que não quer salvar. Nada foi salvo ainda.</p>
+    el.innerHTML = `<div class="card"><b>Confira antes de salvar</b><p class="fraco">Corrija o que estiver errado e desmarque o que não quer salvar. Ainda não foi salvo na sua carteira, mas fica guardado neste celular até você salvar ou cancelar.</p>
       ${itens.map((i, n) => `<div class="card" data-n="${n}" style="background:#0e1a14">
         <label><input type="checkbox" checked style="width:auto;min-height:0"> Salvar este</label>
         <label>Nome</label><input data-k="nome" value="${esc(i.nome)}">
@@ -63,14 +83,14 @@
         <label>Objetivo</label><select data-k="objetivo_id">${optObj('')}</select></div>`).join('')}
       ${descartados && descartados.length ? `<p class="fraco">${descartados.length} item(ns) sem valor legível foram ignorados.</p>` : ''}
       <div class="linha"><button class="btn sec" id="cancelar">Cancelar</button><button class="btn" id="salvar">Salvar selecionados</button></div></div>`;
-    el.querySelector('#cancelar').onclick = recarregar;
+    el.querySelector('#cancelar').onclick = () => { apagarRascunho(); recarregar(); };
     el.querySelector('#salvar').onclick = async () => {
       const escolhidos = [...el.querySelectorAll('[data-n]')].filter((c) => c.querySelector('input[type=checkbox]').checked).map((c) => {
         const base = { ...itens[Number(c.dataset.n)] };
         c.querySelectorAll('[data-k]').forEach((f) => { base[f.dataset.k] = f.dataset.k === 'valor' ? Number(f.value) : f.value; });
         return base;
       });
-      if (!escolhidos.length) return recarregar();
+      if (!escolhidos.length) { apagarRascunho(); return recarregar(); }
       let salvos = 0;
       for (const it of escolhidos) {
         // Mesmo nome + banco = atualiza o valor (não duplica quando o dono manda o print de novo).
@@ -80,6 +100,8 @@
         if (!dados.objetivo_id) delete dados.objetivo_id;
         try { await MB.api('carteira_salvar', dados); salvos++; } catch { /* erro já mostrado */ }
       }
+      if (salvos === escolhidos.length) apagarRascunho();
+      else MB.mostrarErro(`${escolhidos.length - salvos} item(ns) não foram salvos e continuam guardados para tentar de novo.`);
       ok(`✅ ${salvos} investimento(s) salvos/atualizados.`);
       recarregar();
     };
