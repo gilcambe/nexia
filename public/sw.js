@@ -1,10 +1,3 @@
-// #2917: service worker antigo APOSENTADO.
-// Não intercepta fetch.
-// No activate, apaga o cache "cortex-cache-v1", desregistra e recarrega as abas ativas.
-// #2917: Service worker aposentado.
-// Não intercepta fetch.
-// No activate, apaga o cache "cortex-cache-v1" e desregistra.
-
 // #2917: Service worker aposentado.
 // Não intercepta fetch.
 // No activate, apaga o cache "cortex-cache-v1" e desregistra.
