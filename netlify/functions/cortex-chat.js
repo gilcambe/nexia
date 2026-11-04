@@ -534,7 +534,7 @@ exports.handler = async (event, ctx) => {
               yield 'data: [DONE]\n\n';
               return;
             }
-            // #1657: grava a memória ANTES do "done". O app para de ler no "done", e o código depois dele nunca rodava,
+            // #1657 (#2797): grava a memória ANTES do "done". O app para de ler no "done", e o código depois dele nunca rodava,
             // então a conversa não era salva e o Cortex esquecia o que a pessoa tinha dito.
             const nm = [{ role: 'user', content: message }, { role: 'assistant', content: fullText }];
             if (typeof memModule.save === 'function') ctx.waitUntil(memModule.save(effectiveUserId, [...(mem.history || []), ...nm], mem.summaries, tenantId, memModule.extractEntities ? memModule.extractEntities(nm, mem.entities) : {}, conversationId).catch(() => {}));
