@@ -37,8 +37,8 @@ describe('calcularRecuperacao', () => {
     const treino: TreinoParaRecuperacao = {
       done_at: dataTreino,
       series_por_grupo: {
-        costas: 12, // 60 pontos
-        biceps: 6,  // 30 pontos
+        costas: 12, // 12 * 5 = 60 pontos
+        biceps: 6,  // 6 * 5 = 30 pontos
       },
     };
 
