@@ -201,9 +201,7 @@ const VISAO = [
   // Testado ao vivo em 04/11/2026 (scripts/prumo-ler-print-ao-vivo.js): NVIDIA 90B leu banco e valores certos.
   { provider: 'nvidia', model: 'meta/llama-3.2-90b-vision-instruct' },
   // NVIDIA 11B, llama-4, gemma-3, phi-4 e nemotron-vl saíram do ar (404/410) em 04/11/2026.
-  { provider: 'cloudflare', model: '@cf/meta/llama-4-scout-17b-16e-instruct' },
-  { provider: 'cloudflare', model: '@cf/mistralai/mistral-small-3.1-24b-instruct' },
-  { provider: 'cloudflare', model: '@cf/google/gemma-3-12b-it' },
+  // Workers AI entra pela pista do binding (viaWorkersAi), sem chave.
   { provider: 'mistral', model: 'mistral-small-latest' },
   { provider: 'google', model: 'gemini-2.5-flash-lite' }, { provider: 'google', model: 'gemini-flash-lite-latest' },
   { provider: 'google', model: 'gemini-2.5-flash' }, { provider: 'google', model: 'gemini-flash-latest' },
@@ -218,7 +216,16 @@ async function lerPrint(imagens, deps) {
   const lista = [...VISAO, ...deps.listFor('fast')].filter((d) => d.provider !== 'anthropic' && !vistos.has(d.provider + d.model) && vistos.add(d.provider + d.model));
   // Os prints são lidos ao mesmo tempo (até 5), cada um tentando os modelos em ordem.
   const inicio = Date.now();
-  const lidos = await Promise.all(imagens.map(async (img) => {
+  const ai = deps.ai !== undefined ? deps.ai : globalThis.__NEXIA_AI__;
+  // Cada print corre em duas pistas ao mesmo tempo: a lista de IAs grátis e o Workers AI do próprio
+  // Cloudflare (sem chave). Vale a primeira que devolver o JSON certo.
+  const ler = (img) => {
+    const pistas = [viaLista(img)];
+    if (ai && typeof ai.run === 'function') pistas.push(viaWorkersAi(ai, img, falhas));
+    return Promise.any(pistas.map((x) => x.then((j) => j || Promise.reject(new Error('nada'))))).catch(() => null);
+  };
+  const lidos = await Promise.all(imagens.map(ler));
+  async function viaLista(img) {
     let tentou = 0;
     for (const d of lista) {
       try {
@@ -236,7 +243,7 @@ async function lerPrint(imagens, deps) {
       } catch (e) { falhas.push(`${d.model}: ${String((e && (e.code || e.message)) || 'erro').slice(0, 60)}`); }
     }
     return null;
-  }));
+  }
   const conferencia = [];
   for (const lido of lidos) {
     if (!lido) continue;
@@ -247,6 +254,21 @@ async function lerPrint(imagens, deps) {
   }
   if (!algum && falhas.length) console.warn('[prumo] ler_print falhou:', falhas.slice(0, 6).join(' | '));
   return algum ? { itens, descartados, conferencia } : null;
+}
+// Workers AI pelo binding "AI" do Worker (grátis). Modelos que aceitam imagem no formato de chat.
+const VISAO_WORKERS = ['@cf/meta/llama-4-scout-17b-16e-instruct', '@cf/mistralai/mistral-small-3.1-24b-instruct', '@cf/google/gemma-3-12b-it'];
+async function viaWorkersAi(ai, img, falhas) {
+  const url = `data:${img.mime || 'image/jpeg'};base64,${img.data}`;
+  for (const modelo of VISAO_WORKERS) {
+    try {
+      const r = await Promise.race([ai.run(modelo, { messages: [{ role: 'system', content: LER_PRINT }, { role: 'user', content: [{ type: 'text', text: 'Leia este print e devolva o JSON.' }, { type: 'image_url', image_url: { url } }] }], max_tokens: 4096, temperature: 0 }), new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 90000))]);
+      let t = r && (r.response !== undefined ? r.response : (r.result && r.result.response));
+      const j = t && typeof t === 'object' ? t : extrairJson(String(t || ''));
+      if (j && Array.isArray(j.itens)) return j;
+      falhas.push(`${modelo}: resposta sem JSON`);
+    } catch (e) { falhas.push(`${modelo}: ${String((e && (e.code || e.message)) || 'erro').slice(0, 60)}`); }
+  }
+  return null;
 }
 /** #3035: a soma dos itens bate com o total do print? (diferença menor que 1%) */
 function conferir(total, soma) {

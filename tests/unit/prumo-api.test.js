@@ -169,3 +169,16 @@ test('PR10. limpar carteira só com a palavra LIMPAR', async () => {
     assert.equal((await p.agir('u1', { acao: 'carteira_listar' }))[1].itens.length, 0);
   } finally { Object.assign(p.deps, antes); }
 });
+
+test('PR11. print: se as IAs com chave falham, o Workers AI do Cloudflare lê sozinho', async () => {
+  const pedidos = [];
+  const deps = {
+    listFor: () => [],
+    ai: { run: async (m, corpo) => { pedidos.push(m); assert.match(corpo.messages[1].content[1].image_url.url, /^data:image\/png;base64,AAAA/); return { response: { total_print: 500, itens: [{ nome: 'CDB', banco: 'Inter', tipo: 'renda_fixa', valor: 500 }] } }; } },
+    getRouter: () => ({ capabilities: () => ({ available: true, vision: true }), chat: async () => { throw new Error('fora do ar'); } }),
+  };
+  const r = await p.lerPrint([{ mime: 'image/png', data: 'AAAA' }], deps);
+  assert.deepEqual(pedidos, ['@cf/meta/llama-4-scout-17b-16e-instruct']);
+  assert.equal(r.itens.length, 1);
+  assert.equal(r.conferencia[0].confere, true);
+});
