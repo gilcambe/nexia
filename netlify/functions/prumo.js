@@ -116,7 +116,7 @@ function avisosPendentes(listas, agoraISO) {
 }
 
 // ---------- Parte 4: ler print com IA grátis ----------
-const LER_PRINT = `Você lê prints de extratos e carteiras de investimento brasileiros (banco, corretora, previdência, FGTS). Devolva SOMENTE um JSON, sem texto fora dele: {"itens":[{"nome":"","banco":"","tipo":"","valor":0,"data_valor":"AAAA-MM-DD","vencimento":"AAAA-MM-DD ou null","taxa":""}]}. tipo é um destes: ${TIPOS.join(', ')}. Valores em número com ponto decimal (1.234,56 vira 1234.56). Não invente nada que não esteja legível.`;
+const LER_PRINT = `Você lê prints de extratos e carteiras de investimento brasileiros (banco, corretora, previdência, FGTS). Devolva SOMENTE um JSON, sem texto fora dele: {"itens":[{"nome":"","banco":"","tipo":"","valor":0,"data_valor":"AAAA-MM-DD","vencimento":"AAAA-MM-DD ou null","taxa":""}]}. Um item por aplicação/produto que aparece com valor. "banco" é a instituição do print (descubra pelo nome, logo, cores ou app: Inter, Nubank, Itaú, Bradesco, BB, Caixa, XP, Rico, BTG, Multiprev, Brasilprev, FGTS/Caixa etc.). "nome" é o nome do produto (ex.: CDB Inter 110% CDI, Tesouro Selic 2029, PETR4, Saldo FGTS). "valor" é o saldo ATUAL (valor bruto de hoje), em número com ponto decimal (R$ 1.234,56 vira 1234.56). tipo é um destes: ${TIPOS.join(', ')}. data_valor é a data mostrada no print ou null. Se o print mostrar só um total, devolva um item com esse total. Não invente nada que não esteja legível.`;
 /** Primeiro objeto JSON do texto da IA (aceita cerca ```json). */
 function extrairJson(t) {
   const s = String(t || '');
@@ -147,25 +147,66 @@ function lerImagens(lista) {
   }
   return { ok: true, imagens: out };
 }
+// Valor vindo da IA: aceita 1234.56, "1.234,56", "R$ 1.234,56", "1234,56" e "-".
+function valorLido(v) {
+  if (typeof v === 'number') return v;
+  let t = String(v == null ? '' : v).replace(/[^\d.,-]/g, '');
+  if (!t || t === '-') return NaN;
+  if (t.includes(',')) t = t.replace(/\./g, '').replace(',', '.');
+  else if ((t.match(/\./g) || []).length > 1 || /\.\d{3}$/.test(t)) t = t.replace(/\./g, '');
+  return Number(t);
+}
+function dataLida(v) {
+  const t = String(v == null ? '' : v).trim();
+  if (DATA.test(t)) return t;
+  const m = /^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/.exec(t);
+  if (!m) return '';
+  const ano = m[3].length === 2 ? '20' + m[3] : m[3];
+  return `${ano}-${m[2].padStart(2, '0')}-${m[1].padStart(2, '0')}`;
+}
+const APELIDO_TIPO = [[/tesouro/i, 'tesouro'], [/fgts/i, 'fgts'], [/prev|pgbl|vgbl/i, 'previdencia'], [/poupan/i, 'poupanca'],
+  [/cripto|bitcoin|btc|eth/i, 'cripto'], [/a[cç][aã]o|a[cç][oõ]es|fii|bdr|etf|renda vari/i, 'acoes'], [/fundo/i, 'fundos'],
+  [/cdb|lci|lca|cri|cra|deb[eê]nt|renda fixa|lc\b|rdb/i, 'renda_fixa']];
+/** Arruma o que a IA devolveu (tipo, valor, datas) para não descartar item bom por formato. */
+function normalizarLido(b) {
+  if (!b || typeof b !== 'object') return b;
+  const bruto = String(b.tipo || '').trim();
+  const tipo = TIPOS.includes(bruto) ? bruto : ((APELIDO_TIPO.find(([re]) => re.test(`${bruto} ${b.nome || ''}`)) || [])[1] || 'outro');
+  const val = valorLido(b.valor);
+  return { ...b, nome: b.nome || b.banco || '', tipo, valor: Number.isFinite(val) ? Math.abs(val) : b.valor,
+    data_valor: dataLida(b.data_valor) || null, vencimento: dataLida(b.vencimento) || null, banco: b.banco || b.instituicao || '' };
+}
+// Só Gemini tem visão hoje (grátis). Flash-lite primeiro: rápido e sem "pensar", que gastava os tokens da resposta.
+const VISAO = [
+  { provider: 'google', model: 'gemini-2.5-flash-lite' }, { provider: 'google', model: 'gemini-flash-lite-latest' },
+  { provider: 'google', model: 'gemini-2.5-flash' }, { provider: 'google', model: 'gemini-flash-latest' },
+];
 async function lerPrint(imagens, deps) {
   const router = deps.getRouter();
-  const itens = []; const descartados = [];
+  const itens = []; const descartados = []; const falhas = [];
   let algum = false;
-  for (const img of imagens) {
-    let lido = null;
-    for (const d of deps.listFor('fast').filter((x) => x.provider !== 'anthropic')) {
+  const vistos = new Set();
+  const lista = [...VISAO, ...deps.listFor('fast')].filter((d) => d.provider !== 'anthropic' && !vistos.has(d.provider + d.model) && vistos.add(d.provider + d.model));
+  // Os prints são lidos ao mesmo tempo (até 5), cada um tentando os modelos em ordem.
+  const lidos = await Promise.all(imagens.map(async (img) => {
+    for (const d of lista) {
       try {
         const cap = router.capabilities(d);
         if (!cap.available || !cap.vision) continue;
-        const out = await Promise.race([router.chat(d, { system: LER_PRINT, messages: [{ role: 'user', content: 'Leia este print e devolva o JSON.' }], images: [img], maxTokens: 1500 }), new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 15000))]);
+        const out = await Promise.race([router.chat(d, { system: LER_PRINT, messages: [{ role: 'user', content: 'Leia este print e devolva o JSON.' }], images: [img], maxTokens: 8192, temperature: 0, timeoutMs: 40000 }), new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 45000))]);
         const j = extrairJson(out && out.text);
-        if (j && Array.isArray(j.itens)) { lido = j.itens; break; }
-      } catch { /* tenta o próximo modelo */ }
+        if (j && Array.isArray(j.itens)) return j.itens;
+        falhas.push(`${d.model}: resposta sem JSON`);
+      } catch (e) { falhas.push(`${d.model}: ${String((e && (e.code || e.message)) || 'erro').slice(0, 60)}`); }
     }
+    return null;
+  }));
+  for (const lido of lidos) {
     if (!lido) continue;
     algum = true;
-    for (const bruto of lido) { const v = validarItemCarteira(bruto); if (v.ok) itens.push(v.item); else descartados.push({ ...bruto, motivo: v.erro }); }
+    for (const bruto of lido) { const v = validarItemCarteira(normalizarLido(bruto)); if (v.ok) itens.push(v.item); else descartados.push({ ...bruto, motivo: v.erro }); }
   }
+  if (!algum && falhas.length) console.warn('[prumo] ler_print falhou:', falhas.slice(0, 6).join(' | '));
   return algum ? { itens, descartados } : null;
 }
 
@@ -312,4 +353,4 @@ exports.handler = async (event) => {
   }
 };
 
-Object.assign(exports, { validarItemCarteira, validarCartao, validarGasto, resumoMes, validarLista, avisosPendentes, extrairJson, lerImagens, lerPrint, validarObjetivo, progressoObjetivos, resumoHistorico, fotoDoDia, agir, deps, TIPOS, CATEGORIAS });
+Object.assign(exports, { normalizarLido, valorLido, validarItemCarteira, validarCartao, validarGasto, resumoMes, validarLista, avisosPendentes, extrairJson, lerImagens, lerPrint, validarObjetivo, progressoObjetivos, resumoHistorico, fotoDoDia, agir, deps, TIPOS, CATEGORIAS });
