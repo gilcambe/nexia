@@ -14,7 +14,8 @@ function redactSecrets(text) {
 }
 
 const { arquivosProvaveis } = require('./arquivos-provaveis');
-const { LICOES } = require('../cortex/licoes');
+const licoesModule = require('../cortex/licoes');
+const LICOES = licoesModule.LICOES || (licoesModule.lessonStore && licoesModule.lessonStore.getRecentLessons ? licoesModule.lessonStore.getRecentLessons(10).map(l => l.causa || JSON.stringify(l)) : []);
 
 async function montarPacote({ issue = {}, arquivos = [], limiteTokens = 3000 } = {}) {
   let pacote = '';
