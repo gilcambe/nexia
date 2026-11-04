@@ -92,13 +92,15 @@
       });
       if (!escolhidos.length) { apagarRascunho(); return recarregar(); }
       let salvos = 0;
+      // Mesmo banco + mesmo investimento = atualiza (não duplica, nem quando o mesmo item vem em dois prints).
+      const chave = (x) => [x.banco, x.ticker || x.nome].map((v) => String(v || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/\b(s\.?a\.?|ltda)\b/g, '').replace(/[^a-z0-9%]+/g, ' ').trim()).join('|');
+      const existentes = new Map(atuais.map((a) => [chave(a), a]));
       for (const it of escolhidos) {
-        // Mesmo nome + banco = atualiza o valor (não duplica quando o dono manda o print de novo).
-        const igual = atuais.find((a) => String(a.nome).toLowerCase() === String(it.nome).toLowerCase() && String(a.banco || '').toLowerCase() === String(it.banco || '').toLowerCase());
+        const igual = existentes.get(chave(it));
         const dados = { ...it, valor: Number(it.valor) };
         if (igual) { dados.id = igual.id; if (!dados.objetivo_id && igual.objetivo_id) dados.objetivo_id = igual.objetivo_id; }
         if (!dados.objetivo_id) delete dados.objetivo_id;
-        try { await MB.api('carteira_salvar', dados); salvos++; } catch { /* erro já mostrado */ }
+        try { const r = await MB.api('carteira_salvar', dados); salvos++; existentes.set(chave(it), { ...dados, id: (r && r.id) || dados.id }); } catch { /* erro já mostrado */ }
       }
       if (salvos === escolhidos.length) apagarRascunho();
       else MB.mostrarErro(`${escolhidos.length - salvos} item(ns) não foram salvos e continuam guardados para tentar de novo.`);
