@@ -212,8 +212,8 @@ async function fromAssets(assets, url, path, method) {
   if (r.status !== 200) return null;
   const headers = new Headers(r.headers);
   headers.set('X-Content-Type-Options', 'nosniff');
-  const isSw = /(^|\/)(.*sw.*\.js)$/i.test(path) || path.includes('sw.js');
-  const isVersion = /(^|\/)version\.json$/i.test(path);
+  const isSw = /(^|\/)(.*sw.*\.js)$/i.test(path) || path.includes('sw.js') || /sw\.js$/i.test(path);
+  const isVersion = /(^|\/)version\.json$/i.test(path) || path.endsWith('version.json');
   if (isSw || isVersion) {
     headers.set('Cache-Control', 'no-cache');
   } else {
