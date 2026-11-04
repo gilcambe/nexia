@@ -1,4 +1,4 @@
-name: Prumo no Pages (endereço Kernex)
+name: Fortune (Prumo) no Pages (endereço Kernex)
 on:
   workflow_dispatch:
   push:
@@ -8,6 +8,9 @@ permissions:
   contents: read
 jobs:
   pages:
+    strategy:
+      matrix:
+        projeto: [kernex-fortune, kernex-prumo]
     runs-on: ubuntu-latest
     timeout-minutes: 15
     environment: production
@@ -16,18 +19,18 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - name: Publicar kernex-prumo.pages.dev
+      - name: Publicar ${{ matrix.projeto }}.pages.dev
         id: publicar
         working-directory: apps/prumo/pages-proxy
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
         run: |
-          npx -y wrangler@3 pages project create kernex-prumo --production-branch main >/dev/null 2>&1 || true
-          npx -y wrangler@3 pages deploy public --project-name kernex-prumo --branch main
-          SUB=$(curl -s -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/pages/projects/kernex-prumo" | jq -r '.result.subdomain')
+          npx -y wrangler@3 pages project create ${{ matrix.projeto }} --production-branch main >/dev/null 2>&1 || true
+          npx -y wrangler@3 pages deploy public --project-name ${{ matrix.projeto }} --branch main
+          SUB=$(curl -s -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/pages/projects/${{ matrix.projeto }}" | jq -r '.result.subdomain')
           echo "sub=$SUB" >> "$GITHUB_OUTPUT"
-          echo "### Link do Prumo: https://$SUB/prumo/" >> "$GITHUB_STEP_SUMMARY"
+          echo "### Link do Fortune: https://$SUB/prumo/" >> "$GITHUB_STEP_SUMMARY"
       - name: Liberar os endereços no login do Google (Firebase)
         env:
           FIREBASE_SERVICE_ACCOUNT_BASE64: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_BASE64 }}

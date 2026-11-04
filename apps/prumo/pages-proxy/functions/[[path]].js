@@ -1,4 +1,4 @@
-// Prumo com endereço Kernex (kernex-prumo.pages.dev): repassa tudo ao Worker.
+// Fortune (antigo Prumo) com endereço Kernex (kernex-fortune.pages.dev e kernex-prumo.pages.dev): repassa tudo ao Worker.
 // Sem X-Nexia-Proxy de propósito: o login usa o authDomain padrão do Firebase (popup do Google).
 const ORIGEM = 'https://nexia.gcbezerra.workers.dev';
 

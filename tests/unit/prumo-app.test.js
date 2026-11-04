@@ -11,14 +11,14 @@ const ler = (f) => fs.readFileSync(path.join(pasta, f), 'utf8');
 
 test('PA1. manifest: name Prumo, start_url /prumo/, ícone próprio', () => {
   const m = JSON.parse(ler('manifest.webmanifest'));
-  assert.equal(m.name, 'Prumo');
+  assert.equal(m.name, 'Fortune'); // #2923: o app se chama Fortune (pasta e API seguem /prumo)
   assert.equal(m.start_url, '/prumo/');
   assert.ok(m.icons.some((i) => i.src.endsWith('icone.svg')));
 });
 
 test('PA2. ícone é verde com P e sem NEXIA/Kernex', () => {
   const svg = ler('icone.svg');
-  assert.match(svg, />P</);
+  assert.match(svg, />F</);
   assert.match(svg, /#16a34a/);
   assert.doesNotMatch(svg, /nexia|kernex/i);
 });
