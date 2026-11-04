@@ -16,10 +16,12 @@ const p = require('../netlify/functions/prumo.js');
       console.log('texto sem imagem', d.provider, 'OK:', (o.text || '').slice(0, 40));
     } catch (e) { console.log('texto sem imagem', d.provider, 'ERRO', e.code, e.status, String(e.upstream || '').slice(0, 300), String(e.message).slice(0, 300)); }
   }
-  try {
-    await router.chat({ provider: 'google', model: 'gemini-2.5-flash-lite' }, { messages: [{ role: 'user', content: 'Leia' }], images: [{ mime: 'image/jpeg', data }], maxTokens: 500 });
-    console.log('com imagem OK');
-  } catch (e) { console.log('com imagem ERRO', e.code, e.status, String(e.upstream || '').slice(0, 300), JSON.stringify(e).slice(0, 400), String(e.message).slice(0, 300)); }
+  for (const d of p.VISAO) {
+    try {
+      const o = await router.chat(d, { messages: [{ role: 'user', content: 'Leia' }], images: [{ mime: 'image/jpeg', data }], maxTokens: 300 });
+      console.log('com imagem OK', d.provider, d.model, (o.text || '').slice(0, 80).replace(/\n/g, ' '));
+    } catch (e) { const x = e.details || {}; console.log('com imagem ERRO', d.provider, d.model, x.status || e.code, String(x.upstream || e.message).slice(0, 220).replace(/\n/g, ' ')); }
+  }
   const avisos = []; const warn = console.warn; console.warn = (...a) => { avisos.push(a.join(' ')); warn(...a); };
   const t = Date.now();
   const r = await p.lerPrint([{ mime: 'image/jpeg', data }], p.deps);
