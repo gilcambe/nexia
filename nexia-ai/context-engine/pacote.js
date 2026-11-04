@@ -91,11 +91,26 @@ async function montarPacote({ issue = {}, arquivos = [], limiteTokens = 3000 } =
     pacote = pacote.replace(/(api[_-]?key|secret|token|password)['"]?\s*[:=]\s*['"]?[^'\"\s]+['"]?/gi, '[REDIGIDO]');
   }
 
-  // 8. Corta o texto para ficar dentro de limiteTokens (~3000 tokens / aprox 4 chars por token)
+  // 8. Corta o texto para ficar dentro de limiteTokens (~3000 tokens)
+  // Aproximação: 1 token ~ 4 caracteres. Para um corte mais preciso, seria necessário um tokenizer.
   const maxChars = (limiteTokens || 3000) * 4;
   if (pacote.length > maxChars) {
-    pacote = pacote.substring(0, maxChars) + '\n[... cortado por limite de tokens ...]';
+    // Tenta cortar em um limite de linha ou parágrafo anterior para melhor coesão
+    let cutIndex = maxChars;
+    const lastNewline = pacote.lastIndexOf('\n', maxChars);
+    const lastParagraph = pacote.lastIndexOf('\n\n', maxChars);
+
+    if (lastNewline !== -1 && lastNewline > maxChars * 0.8) {
+        cutIndex = lastNewline;
+    } else if (lastParagraph !== -1 && lastParagraph > maxChars * 0.8) {
+        cutIndex = lastParagraph;
+    }
+
+    pacote = pacote.substring(0, cutIndex).trim() + '\n[... cortado por limite de tokens ...]';
   }
+
+  // Testes unitários para validar o comportamento da função e o corte de texto em diferentes cenários são recomendados.
+  // Verificar se dependências como 'arquivos-provaveis.js', 'redactSecrets' e 'licoes.js' estão funcionando corretamente.
 
   return pacote;
 }
