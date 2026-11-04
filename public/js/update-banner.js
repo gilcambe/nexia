@@ -1,7 +1,7 @@
 // #2917: aviso único "Tem atualização nova 🎉 — Toque para atualizar" para todos os apps (PWA).
 // Uso: <script src="/js/update-banner.js" defer></script>. Sem dependências. Grátis.
 (function () {
-  if (window.__kxUpdateBanner || !("serviceWorker" in navigator)) return;
+  if (window.__kxUpdateBanner) return;
   window.__kxUpdateBanner = true;
   var recarregou = false;
   var tinhaControle = !!navigator.serviceWorker.controller; // na 1ª instalação não recarrega
