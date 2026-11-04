@@ -57,7 +57,7 @@
       let falhas = 0;
       for (let i = 0; i < files.length; i += 5) {
         const grupo = files.slice(i, i + 5);
-        el.innerHTML = `<div class="card">📷 Lendo prints ${i + 1} a ${i + grupo.length} de ${files.length}… cada grupo leva até 1 minuto. Não feche o app.</div>`;
+        el.innerHTML = `<div class="card">📷 Lendo prints ${i + 1} a ${i + grupo.length} de ${files.length}… cada grupo leva até 2 minutos. Não feche o app.</div>`;
         try {
           const r = await MB.api('ler_print', { imagens: await Promise.all(grupo.map(reduzir)) });
           lidos.itens.push(...(r.itens || [])); lidos.descartados.push(...(r.descartados || [])); lidos.conferencia.push(...(r.conferencia || []));

@@ -18,7 +18,7 @@
     if (!usuario) { mostrarErro('Entre com sua conta.'); throw new Error('sem login'); }
     let r;
     // Nada pode ficar esperando para sempre: ler print tem até 2 min, o resto até 25 s.
-    const limite = acao === 'ler_print' ? 120000 : 25000;
+    const limite = acao === 'ler_print' ? 180000 : 25000;
     const ctrl = typeof AbortController === 'function' ? new AbortController() : null;
     const relogio = setTimeout(() => { if (ctrl) ctrl.abort(); }, limite);
     try {

@@ -200,13 +200,10 @@ function normalizarLido(b) {
 const VISAO = [
   // Testado ao vivo em 04/11/2026 (scripts/prumo-ler-print-ao-vivo.js): NVIDIA 90B leu banco e valores certos.
   { provider: 'nvidia', model: 'meta/llama-3.2-90b-vision-instruct' },
+  // NVIDIA 11B, llama-4, gemma-3, phi-4 e nemotron-vl saíram do ar (404/410) em 04/11/2026.
   { provider: 'cloudflare', model: '@cf/meta/llama-4-scout-17b-16e-instruct' },
   { provider: 'cloudflare', model: '@cf/mistralai/mistral-small-3.1-24b-instruct' },
   { provider: 'cloudflare', model: '@cf/google/gemma-3-12b-it' },
-  { provider: 'nvidia', model: 'meta/llama-4-scout-17b-16e-instruct' },
-  { provider: 'nvidia', model: 'google/gemma-3-27b-it' },
-  { provider: 'nvidia', model: 'microsoft/phi-4-multimodal-instruct' },
-  { provider: 'nvidia', model: 'nvidia/llama-3.1-nemotron-nano-vl-8b-v1' },
   { provider: 'mistral', model: 'mistral-small-latest' },
   { provider: 'google', model: 'gemini-2.5-flash-lite' }, { provider: 'google', model: 'gemini-flash-lite-latest' },
   { provider: 'google', model: 'gemini-2.5-flash' }, { provider: 'google', model: 'gemini-flash-latest' },
@@ -220,12 +217,19 @@ async function lerPrint(imagens, deps) {
   const vistos = new Set();
   const lista = [...VISAO, ...deps.listFor('fast')].filter((d) => d.provider !== 'anthropic' && !vistos.has(d.provider + d.model) && vistos.add(d.provider + d.model));
   // Os prints são lidos ao mesmo tempo (até 5), cada um tentando os modelos em ordem.
+  const inicio = Date.now();
   const lidos = await Promise.all(imagens.map(async (img) => {
+    let tentou = 0;
     for (const d of lista) {
       try {
         const cap = router.capabilities(d);
         if (!cap.available || !cap.vision) continue;
-        const out = await Promise.race([router.chat(d, { system: LER_PRINT, messages: [{ role: 'user', content: 'Leia este print e devolva o JSON.' }], images: [img], maxTokens: 8192, temperature: 0, timeoutMs: 40000 }), new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 45000))]);
+        // O 1º modelo (o melhor) tem até 100 s, porque um print cheio de ativos gera resposta longa;
+        // os outros têm 30 s. Tudo cabe nos 180 s que o app espera.
+        const resta = 160000 - (Date.now() - inicio);
+        if (resta < 5000) break;
+        const ms = Math.min(tentou++ === 0 ? 100000 : 30000, resta);
+        const out = await Promise.race([router.chat(d, { system: LER_PRINT, messages: [{ role: 'user', content: 'Leia este print e devolva o JSON.' }], images: [img], maxTokens: 8192, temperature: 0, timeoutMs: ms }), new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), ms + 3000))]);
         const j = extrairJson(out && out.text);
         if (j && Array.isArray(j.itens)) return j;
         falhas.push(`${d.model}: resposta sem JSON`);
