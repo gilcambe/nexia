@@ -77,7 +77,7 @@ test('PR6. ler print usa só IA grátis com visão e descarta item inválido', a
     }),
   };
   const r = await p.lerPrint([{ mime: 'image/png', data: 'AAAA' }], deps);
-  assert.deepEqual(usados, ['groq']); // lista própria de visão vem primeiro; nunca anthropic nem modelo sem visão
+  assert.deepEqual(usados, ['nvidia']); // lista própria de visão vem primeiro; nunca anthropic nem modelo sem visão
   assert.equal(r.itens.length, 1);
   assert.equal(r.descartados.length, 1);
 });

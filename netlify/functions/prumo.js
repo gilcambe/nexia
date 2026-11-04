@@ -179,11 +179,10 @@ function normalizarLido(b) {
 // Modelos grátis com visão, do mais rápido ao mais forte. Vários provedores: se a cota de um acabar
 // (o Gemini grátis vive no limite por causa do Cortex), o próximo lê.
 const VISAO = [
-  { provider: 'groq', model: 'meta-llama/llama-4-scout-17b-16e-instruct' },
-  { provider: 'groq', model: 'meta-llama/llama-4-maverick-17b-128e-instruct' },
-  { provider: 'mistral', model: 'mistral-small-latest' },
-  { provider: 'nvidia', model: 'meta/llama-4-maverick-17b-128e-instruct' },
+  // Testado ao vivo em 04/11/2026 (scripts/prumo-ler-print-ao-vivo.js): NVIDIA 90B leu banco e valores certos.
   { provider: 'nvidia', model: 'meta/llama-3.2-90b-vision-instruct' },
+  { provider: 'nvidia', model: 'meta/llama-3.2-11b-vision-instruct' },
+  { provider: 'mistral', model: 'mistral-small-latest' },
   { provider: 'google', model: 'gemini-2.5-flash-lite' }, { provider: 'google', model: 'gemini-flash-lite-latest' },
   { provider: 'google', model: 'gemini-2.5-flash' }, { provider: 'google', model: 'gemini-flash-latest' },
   { provider: 'openrouter', model: 'google/gemma-3-27b-it:free' },
