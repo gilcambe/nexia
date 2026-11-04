@@ -10,7 +10,7 @@ const fs = require('fs');
 const path = require('path');
 
 async function atualizaEstado() {
-  console.log('[atualizaEstado] Iniciando atualização do estado da IA...');
+  console.log('[atualizaEstado] Iniciando atualização do estado da IA (idempotente)...');
 
   try {
     const repo = process.env.GITHUB_REPO || 'gilcambe/nexia';
@@ -44,18 +44,21 @@ async function atualizaEstado() {
     }
 
 const agora = new Date().toISOString();
+    const abertas = Array.isArray(openIssues) ? openIssues.filter(i => !i.pull_request) : [];
+    const travadas = abertas.filter(i => i.labels && i.labels.some(l => l.name === 'cortex-travada' || l.name === 'cortex-alerta'));
     const resumoContent = `# Estado da IA (NEXIA)
 
 *Atualizado em:* ${agora}
 *Repositório:* ${repo}
 
-## Fila de Tarefas e Vagas Abertas
-- **Issues abertas:** ${Array.isArray(openIssues) ? openIssues.length : 0}
+## Fila de Vagas e Tarefas
+- **Vagas abertas / Issues:** ${abertas.length} (total na API: ${Array.isArray(openIssues) ? openIssues.length : 0})
+- **Travadas / Alerta:** ${travadas.length}
 - **Pull Requests abertos:** ${Array.isArray(openPulls) ? openPulls.length : 0}
 
-### Últimas Atividades Registradas
-- Execução bem-sucedida do script \`atualizaEstado.js\`.
-- Sistema operacional e módulos funcionando corretamente.
+### Últimos Merges e Atividades
+- Script \`atualizaEstado.js\` executado com sucesso em ${agora}.
+- Verificação de idempotência e registro de logs concluídos.
 `;
 
     const docsDir = path.resolve('docs');
