@@ -64,10 +64,9 @@ export function calcularRecuperacao(
       // Cada série concluída diminui ~5 pontos
       const pontosDesgaste = numSeries * 5;
       // Recuperação é ~2% por hora, com fator de desaceleração para grupos grandes (ex.: multiplicador 0.8)
-      // Base de 2% por hora, se for grande multiplica por 0.8 (1.6% por hora), senão 2.0% por hora.
       const taxaBase = 2.0;
       const fator = g.grande ? 0.8 : 1.0;
-      const taxaRecuperacaoHora = taxaBase * fator; // 1.6 para grandes, 2.0 para pequenos
+      const taxaRecuperacaoHora = taxaBase * fator;
 
       const recuperado = horasPassadas * taxaRecuperacaoHora;
 
