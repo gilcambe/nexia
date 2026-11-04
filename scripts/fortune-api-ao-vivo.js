@@ -8,7 +8,8 @@ const b64 = (o) => Buffer.from(JSON.stringify(o)).toString('base64url');
   const agora = Math.floor(Date.now() / 1000);
   const corpo = `${b64({ alg: 'RS256', typ: 'JWT' })}.${b64({ iss: sa.client_email, sub: sa.client_email, aud: 'https://identitytoolkit.googleapis.com/google.identity.identitytoolkit.v1.IdentityToolkit', iat: agora, exp: agora + 3600, uid: 'teste-fortune-robo' })}`;
   const tokenCustom = `${corpo}.${crypto.createSign('RSA-SHA256').update(corpo).sign(sa.private_key, 'base64url')}`;
-  const r = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signInWithCustomToken?key=${process.env.FIREBASE_API_KEY}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token: tokenCustom, returnSecureToken: true }) });
+  const chave = process.env.FIREBASE_API_KEY || (await (await fetch(`${BASE}/api/firebase-config`)).json()).apiKey;
+  const r = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signInWithCustomToken?key=${chave}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token: tokenCustom, returnSecureToken: true }) });
   const { idToken, error } = await r.json();
   if (!idToken) { console.error('sem token de teste:', error && error.message); process.exit(1); }
   for (const acao of ['carteira_listar', 'objetivo_listar', 'avisos', 'gasto_listar', 'lista_listar', 'historico_listar']) {
