@@ -20,14 +20,17 @@ function aparar(c) {
     return Promise.all(toDelete.map((k) => c.delete(k)));
   });
 }
-const CACHE = 'body-coach-v7'; // Atualiza versão do cache
-self.addEventListener('install', (e) => { e.waitUntil(caches.open(CACHE).then((c) => c.addAll(['./', './index.html']))); });
-  self.addEventListener('activate', (e) => {
-    e.waitUntil(
-      caches.keys().then((ks) => Promise.all(ks.filter((k) => k !== CACHE).map((k) => caches.delete(k)))
-      ).then(() => self.clients.claim())
-    );
-  });
+const CACHE = 'body-coach-v8'; // Atualiza versão do cache com gerenciamento robusto
+self.addEventListener('install', (e) => { 
+  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(['./', './index.html']))); 
+  // Sem skipWaiting() automático no install
+});
+self.addEventListener('activate', (e) => {
+  e.waitUntil(
+    caches.keys().then((ks) => Promise.all(ks.filter((k) => k !== CACHE).map((k) => caches.delete(k)))
+    ).then(() => self.clients.claim())
+  );
+});
 // Nunca guardado no aparelho: outras origens (Firebase, Google), /api/ e o login do Firebase (/__/auth, /__/firebase).
 function naoGuarda(req, url) {
   return req.method !== 'GET' || url.origin !== self.location.origin || url.pathname.includes('/api/') || url.pathname.includes('/__/');
