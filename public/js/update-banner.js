@@ -1,4 +1,4 @@
-// #2917: aviso único "Tem atualização nova — toque para atualizar" para todos os apps (PWA).
+// #2917: aviso único "Tem atualização nova 🎉 — Toque para atualizar" para todos os apps (PWA).
 // Uso: <script src="/js/update-banner.js" defer></script>. Sem dependências. Grátis.
 (function () {
   if (window.__kxUpdateBanner || !("serviceWorker" in navigator)) return;
