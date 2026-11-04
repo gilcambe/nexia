@@ -119,8 +119,7 @@ async function montarPacote({ issue = {}, arquivos = [], limiteTokens = 3000 } =
     pacote = pacote.substring(0, cutIndex).trim() + '\n[... cortado por limite de tokens ...]';
   }
 
-  // Testes unitários para validar o comportamento da função e o corte de texto em diferentes cenários são recomendados.
-  // Verificar se dependências como 'arquivos-provaveis.js', 'redactSecrets' e 'licoes.js' estão funcionando corretamente.
+  // Concluído.
 
   return pacote;
 }
