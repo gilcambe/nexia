@@ -17,17 +17,23 @@
   async function api(acao, dados) {
     if (!usuario) { mostrarErro('Entre com sua conta.'); throw new Error('sem login'); }
     let r;
+    // Nada pode ficar esperando para sempre: ler print tem até 2 min, o resto até 25 s.
+    const limite = acao === 'ler_print' ? 120000 : 25000;
+    const ctrl = typeof AbortController === 'function' ? new AbortController() : null;
+    const relogio = setTimeout(() => { if (ctrl) ctrl.abort(); }, limite);
     try {
-      const token = await usuario.getIdToken();
+      const token = await Promise.race([usuario.getIdToken(), new Promise((_, n) => setTimeout(() => n(new Error('login demorou')), 15000))]);
       r = await fetch('/api/prumo', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
         body: JSON.stringify(Object.assign({}, dados || {}, { acao })),
+        signal: ctrl ? ctrl.signal : undefined,
       });
     } catch (e) {
-      mostrarErro('Sem internet agora. Tente de novo quando a conexão voltar.');
-      throw e;
-    }
+      const msg = (ctrl && ctrl.signal.aborted) ? 'O servidor demorou para responder. Tente de novo.' : 'Sem internet agora. Tente de novo quando a conexão voltar.';
+      mostrarErro(msg);
+      const err = new Error(msg); err.status = 0; err.mostrar = true; throw err;
+    } finally { clearTimeout(relogio); }
     let j = {};
     try { j = await r.json(); } catch { /* resposta vazia */ }
     if (!r.ok) {
@@ -38,6 +44,7 @@
     return j;
   }
 
+  let abrindo = 0;
   const carregados = {};
   function carregarScript(nome) {
     if (carregados[nome]) return carregados[nome];
@@ -56,14 +63,25 @@
     document.querySelectorAll('#abas button').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.aba === nome)));
     try { localStorage.setItem('prumo-aba', nome); } catch { /* sem armazenamento */ }
     const el = $('conteudo');
+    const vez = ++abrindo;
     el.innerHTML = '<p class="em-breve">Carregando…</p>';
     const ok = await carregarScript(nome);
+    if (vez !== abrindo) return; // a pessoa já tocou em outra aba
     const tela = window.MB.telas[nome];
-    if (!ok || typeof tela !== 'function') { el.innerHTML = '<p class="em-breve">Em breve</p>'; return; }
-    el.innerHTML = '';
-    try { await tela(el); } catch (e) {
+    if (!ok || typeof tela !== 'function') { el.innerHTML = '<p class="em-breve">Não consegui carregar esta aba. Feche e abra o app.</p>'; return; }
+    // Cada abertura desenha num quadro próprio: uma aba antiga que termina tarde não apaga a aba nova.
+    const alvo = document.createElement('div');
+    el.appendChild(alvo);
+    try {
+      // Mantém o "Carregando…" visível até a aba desenhar; no máximo 30 s.
+      await Promise.race([tela(alvo), new Promise((_, n) => setTimeout(() => n(Object.assign(new Error('A aba demorou demais para abrir.'), { mostrar: true })), 30000))]);
+      if (vez !== abrindo) return;
+      if (!alvo.textContent.trim() && !alvo.querySelector('img,svg,canvas,input,button')) throw Object.assign(new Error('A aba abriu vazia.'), { mostrar: true });
+      const aviso = el.querySelector(':scope > .em-breve'); if (aviso) aviso.remove();
+    } catch (e) {
+      if (vez !== abrindo) return;
       // Nunca deixa a aba em branco: mostra o motivo e um botão para tentar de novo.
-      const msg = (e && e.message && e.status) ? e.message : 'Não consegui abrir esta aba agora.';
+      const msg = (e && e.message && (e.status || e.mostrar)) ? e.message : 'Não consegui abrir esta aba agora.';
       el.innerHTML = '<div class="faixa erro" style="margin:0 0 12px"></div><button class="btn" type="button">Tentar de novo</button>';
       el.querySelector('.faixa').textContent = msg;
       el.querySelector('button').onclick = () => abrirAba(nome);
