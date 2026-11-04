@@ -1,0 +1,25 @@
+name: Prumo - teste ao vivo da leitura de print
+on:
+  workflow_dispatch:
+  push:
+    branches: ['nexia/prumo-*']
+    paths: ['netlify/functions/prumo.js', 'scripts/prumo-ler-print-ao-vivo.js', '.github/workflows/prumo-print-ao-vivo.yml']
+permissions:
+  contents: read
+jobs:
+  ler:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Ler o print de exemplo com as IAs grátis
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          MISTRAL_API_KEY: ${{ secrets.MISTRAL_API_KEY }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+        run: node scripts/prumo-ler-print-ao-vivo.js
