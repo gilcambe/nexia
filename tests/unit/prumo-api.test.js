@@ -77,7 +77,7 @@ test('PR6. ler print usa só IA grátis com visão e descarta item inválido', a
     }),
   };
   const r = await p.lerPrint([{ mime: 'image/png', data: 'AAAA' }], deps);
-  assert.deepEqual(usados, ['google']); // Gemini com visão vem primeiro; nunca anthropic nem modelo sem visão
+  assert.deepEqual(usados, ['groq']); // lista própria de visão vem primeiro; nunca anthropic nem modelo sem visão
   assert.equal(r.itens.length, 1);
   assert.equal(r.descartados.length, 1);
 });
@@ -126,4 +126,12 @@ test('PR6b. print: tipo/valor/data em formato livre não descartam o item', () =
   assert.equal(v({ nome: 'PETR4', tipo: 'Ações', valor: 3200, data_valor: null }).item.tipo, 'acoes');
   assert.equal(p.valorLido('12.345'), 12345);
   assert.equal(p.valorLido('1.234.567,8'), 1234567.8);
+});
+
+test('PR6c. visão por modelo: Groq llama-4 lê imagem, outros modelos Groq não', () => {
+  const { createOpenAICompatibleProvider } = require('../../nexia-ai/model-router/providers/openai-compatible');
+  const g = createOpenAICompatibleProvider('groq', { env: { GROQ_API_KEY: 'x' } });
+  assert.equal(g.capabilities('meta-llama/llama-4-scout-17b-16e-instruct').vision, true);
+  assert.equal(g.capabilities('openai/gpt-oss-20b').vision, false);
+  assert.equal(createOpenAICompatibleProvider('google', { env: {} }).capabilities('gemini-2.5-flash').vision, true);
 });

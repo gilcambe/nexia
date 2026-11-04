@@ -176,10 +176,18 @@ function normalizarLido(b) {
   return { ...b, nome: b.nome || b.banco || '', tipo, valor: Number.isFinite(val) ? Math.abs(val) : b.valor,
     data_valor: dataLida(b.data_valor) || null, vencimento: dataLida(b.vencimento) || null, banco: b.banco || b.instituicao || '' };
 }
-// Só Gemini tem visão hoje (grátis). Flash-lite primeiro: rápido e sem "pensar", que gastava os tokens da resposta.
+// Modelos grátis com visão, do mais rápido ao mais forte. Vários provedores: se a cota de um acabar
+// (o Gemini grátis vive no limite por causa do Cortex), o próximo lê.
 const VISAO = [
+  { provider: 'groq', model: 'meta-llama/llama-4-scout-17b-16e-instruct' },
+  { provider: 'groq', model: 'meta-llama/llama-4-maverick-17b-128e-instruct' },
+  { provider: 'mistral', model: 'mistral-small-latest' },
+  { provider: 'nvidia', model: 'meta/llama-4-maverick-17b-128e-instruct' },
+  { provider: 'nvidia', model: 'meta/llama-3.2-90b-vision-instruct' },
   { provider: 'google', model: 'gemini-2.5-flash-lite' }, { provider: 'google', model: 'gemini-flash-lite-latest' },
   { provider: 'google', model: 'gemini-2.5-flash' }, { provider: 'google', model: 'gemini-flash-latest' },
+  { provider: 'openrouter', model: 'google/gemma-3-27b-it:free' },
+  { provider: 'openrouter', model: 'qwen/qwen2.5-vl-72b-instruct:free' },
 ];
 async function lerPrint(imagens, deps) {
   const router = deps.getRouter();
