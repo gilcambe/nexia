@@ -135,3 +135,37 @@ test('PR6c. visão por modelo: Groq llama-4 lê imagem, outros modelos Groq não
   assert.equal(g.capabilities('openai/gpt-oss-20b').vision, false);
   assert.equal(createOpenAICompatibleProvider('google', { env: {} }).capabilities('gemini-2.5-flash').vision, true);
 });
+
+test('PR9. print de corretora: ativo com ticker vira FII/ação, total do print é conferido', async () => {
+  const deps = {
+    listFor: () => [],
+    getRouter: () => ({
+      capabilities: () => ({ available: true, vision: true }),
+      chat: async () => ({ text: '{"total_print":"10.000,00","itens":[{"nome":"MXRF11","ticker":"mxrf11","banco":"XP","tipo":"fii","valor":"6.000,00","quantidade":"600","preco_medio":"9,50"},{"nome":"Petrobras PN","ticker":"PETR4","banco":"XP","tipo":"outro","valor":3000}]}' }),
+    }),
+  };
+  const r = await p.lerPrint([{ mime: 'image/png', data: 'AAAA' }], deps);
+  assert.equal(r.itens.length, 2);
+  assert.equal(r.itens[0].tipo, 'fiis');
+  assert.equal(r.itens[0].ticker, 'MXRF11');
+  assert.equal(r.itens[0].valor, 6000);
+  assert.equal(r.itens[1].tipo, 'acoes');
+  assert.deepEqual(r.conferencia, [{ total_print: 10000, soma_itens: 9000, confere: false }]);
+  assert.equal(p.conferir(1000, 1005).confere, true);
+});
+
+test('PR10. limpar carteira só com a palavra LIMPAR', async () => {
+  const banco = bancoFalso();
+  const antes = { db: p.deps.db, agora: p.deps.agora };
+  p.deps.db = () => banco;
+  p.deps.agora = () => new Date('2026-11-04T12:00:00Z');
+  try {
+    await p.agir('u1', { acao: 'carteira_salvar', nome: 'CDB', tipo: 'renda_fixa', valor: 100 });
+    await p.agir('u1', { acao: 'carteira_salvar', nome: 'MXRF11', ticker: 'MXRF11', tipo: 'fiis', valor: 50, quantidade: 5 });
+    assert.equal((await p.agir('u1', { acao: 'carteira_limpar' }))[0], 400);
+    const r = await p.agir('u1', { acao: 'carteira_limpar', confirmar: 'LIMPAR' });
+    assert.equal(r[0], 200);
+    assert.equal(r[1].apagados, 2);
+    assert.equal((await p.agir('u1', { acao: 'carteira_listar' }))[1].itens.length, 0);
+  } finally { Object.assign(p.deps, antes); }
+});
