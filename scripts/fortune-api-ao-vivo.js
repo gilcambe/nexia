@@ -20,4 +20,12 @@ const b64 = (o) => Buffer.from(JSON.stringify(o)).toString('base64url');
       console.log(acao, x.status, (Date.now() - t) + 'ms', txt.slice(0, 120));
     } catch (e) { console.log(acao, 'ERRO', (Date.now() - t) + 'ms', e.message); }
   }
+  // Leitura de print no ar, só com o print FALSO de exemplo (nunca prints reais de usuário).
+  const t = Date.now();
+  try {
+    const data = require('fs').readFileSync(require('path').join(__dirname, '../tests/fixtures/prumo-print-exemplo.jpg')).toString('base64');
+    const x = await fetch(`${BASE}/api/prumo`, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + idToken }, body: JSON.stringify({ acao: 'ler_print', imagens: [{ mime: 'image/jpeg', data }] }), signal: AbortSignal.timeout(190000) });
+    const txt = await x.text();
+    console.log('ler_print no ar', x.status, (Date.now() - t) + 'ms', txt.slice(0, 600));
+  } catch (e) { console.log('ler_print no ar ERRO', (Date.now() - t) + 'ms', e.message); }
 })();

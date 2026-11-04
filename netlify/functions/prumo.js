@@ -8,7 +8,7 @@
 const { verifyBearerToken, checkRateLimit, makeHeaders } = require('./middleware');
 const extra = require('./prumo-lib/extra');
 
-const TIPOS = ['renda_fixa', 'acoes', 'fundos', 'tesouro', 'cripto', 'previdencia', 'fgts', 'poupanca', 'outro'];
+const TIPOS = ['renda_fixa', 'acoes', 'fiis', 'fundos', 'tesouro', 'cripto', 'previdencia', 'fgts', 'poupanca', 'outro'];
 const CATEGORIAS = ['mercado', 'casa', 'transporte', 'saude', 'lazer', 'educacao', 'restaurante', 'assinaturas', 'outros'];
 const PERFIS = ['conservador', 'moderado', 'arrojado'];
 const DATA = /^\d{4}-\d{2}-\d{2}$/;
@@ -34,6 +34,13 @@ function validarItemCarteira(o) {
   const vencimento = texto(o.vencimento, 10);
   if (vencimento && !DATA.test(vencimento)) return erro('O vencimento precisa estar no formato AAAA-MM-DD.');
   const item = { nome, banco: texto(o.banco, 80), tipo, valor: dinheiro(valor), data_valor, vencimento: vencimento || null, taxa: texto(o.taxa, 60) || null, objetivo_id: texto(o.objetivo_id, 60) || null };
+  // #3035: detalhes opcionais do ativo (renda variável). Inválido vira null, nunca derruba o item.
+  const ticker = texto(o.ticker, 12).toUpperCase().replace(/[^A-Z0-9]/g, '');
+  if (ticker) item.ticker = ticker;
+  for (const k of ['quantidade', 'preco_medio', 'cotacao', 'rentabilidade_pct']) {
+    const n = typeof o[k] === 'number' ? o[k] : (o[k] === undefined || o[k] === null || o[k] === '' ? NaN : numero(String(o[k]).replace(/[^\d.,-]/g, '')));
+    if (Number.isFinite(n)) item[k] = k === 'quantidade' ? Math.round(n * 1e6) / 1e6 : dinheiro(n);
+  }
   return { ok: true, item };
 }
 
@@ -116,7 +123,16 @@ function avisosPendentes(listas, agoraISO) {
 }
 
 // ---------- Parte 4: ler print com IA grátis ----------
-const LER_PRINT = `Você lê prints de extratos e carteiras de investimento brasileiros (banco, corretora, previdência, FGTS). Devolva SOMENTE um JSON, sem texto fora dele: {"itens":[{"nome":"","banco":"","tipo":"","valor":0,"data_valor":"AAAA-MM-DD","vencimento":"AAAA-MM-DD ou null","taxa":""}]}. Um item por aplicação/produto que aparece com valor. "banco" é a instituição do print (descubra pelo nome, logo, cores ou app: Inter, Nubank, Itaú, Bradesco, BB, Caixa, XP, Rico, BTG, Multiprev, Brasilprev, FGTS/Caixa etc.). "nome" é o nome do produto (ex.: CDB Inter 110% CDI, Tesouro Selic 2029, PETR4, Saldo FGTS). "valor" é o saldo ATUAL (valor bruto de hoje), em número com ponto decimal (R$ 1.234,56 vira 1234.56). tipo é um destes: ${TIPOS.join(', ')}. data_valor é a data mostrada no print ou null. Se o print mostrar só um total, devolva um item com esse total. Não invente nada que não esteja legível.`;
+const LER_PRINT = `Você lê prints de apps de banco, corretora, previdência e FGTS do Brasil. Devolva SOMENTE um JSON, sem texto fora dele:
+{"total_print": número ou null, "itens":[{"nome":"","banco":"","tipo":"","ticker":"","quantidade":null,"preco_medio":null,"cotacao":null,"valor":0,"data_valor":"AAAA-MM-DD ou null","vencimento":"AAAA-MM-DD ou null","taxa":""}]}
+Regras:
+1. Um item para CADA ativo/aplicação/plano/conta que aparece com valor (não junte vários num só). Se só existir um total, devolva um item com ele.
+2. "valor" é o valor ATUAL da posição: "Saldo bruto", "Valor atual", "Posição", "Saldo", ou quantidade × cotação. NUNCA use "Preço médio", "Custo médio", "Valor aplicado", "Valor investido" nem rentabilidade como valor.
+3. "total_print" é o total que o próprio print mostra ("Total investido", "Patrimônio", "Saldo total", "TOTAL"), ou null se não houver.
+4. "banco" é a instituição (pelo nome, logo, cores ou app: XP, Inter, Nubank, Itaú, Bradesco, BB, Caixa, Rico, BTG, Clear, Multiprev, Brasilprev, FGTS...).
+5. "ticker" é o código da B3 quando houver (PETR4, MXRF11, BOVA11). Ticker terminado em 11 de fundo imobiliário é tipo "fiis".
+6. tipo é um destes: ${TIPOS.join(', ')}.
+7. Números com ponto decimal (R$ 1.234,56 vira 1234.56). Não invente nada que não esteja legível.`;
 /** Primeiro objeto JSON do texto da IA (aceita cerca ```json). */
 function extrairJson(t) {
   const s = String(t || '');
@@ -171,7 +187,10 @@ const APELIDO_TIPO = [[/tesouro/i, 'tesouro'], [/fgts/i, 'fgts'], [/prev|pgbl|vg
 function normalizarLido(b) {
   if (!b || typeof b !== 'object') return b;
   const bruto = String(b.tipo || '').trim();
-  const tipo = TIPOS.includes(bruto) ? bruto : ((APELIDO_TIPO.find(([re]) => re.test(`${bruto} ${b.nome || ''}`)) || [])[1] || 'outro');
+  const tk = String(b.ticker || '').toUpperCase();
+  let tipo = TIPOS.includes(bruto) ? bruto : ((APELIDO_TIPO.find(([re]) => re.test(`${bruto} ${b.nome || ''}`)) || [])[1] || 'outro');
+  if (/^[A-Z]{4}11$/.test(tk) && (tipo === 'acoes' || tipo === 'outro' || tipo === 'fundos') && /fii|imobili/i.test(`${bruto} ${b.nome || ''}`)) tipo = 'fiis';
+  else if (/^[A-Z]{4}\d{1,2}$/.test(tk) && tipo === 'outro') tipo = /11$/.test(tk) ? 'fiis' : 'acoes';
   const val = valorLido(b.valor);
   return { ...b, nome: b.nome || b.banco || '', tipo, valor: Number.isFinite(val) ? Math.abs(val) : b.valor,
     data_valor: dataLida(b.data_valor) || null, vencimento: dataLida(b.vencimento) || null, banco: b.banco || b.instituicao || '' };
@@ -181,7 +200,8 @@ function normalizarLido(b) {
 const VISAO = [
   // Testado ao vivo em 04/11/2026 (scripts/prumo-ler-print-ao-vivo.js): NVIDIA 90B leu banco e valores certos.
   { provider: 'nvidia', model: 'meta/llama-3.2-90b-vision-instruct' },
-  { provider: 'nvidia', model: 'meta/llama-3.2-11b-vision-instruct' },
+  // NVIDIA 11B, llama-4, gemma-3, phi-4 e nemotron-vl saíram do ar (404/410) em 04/11/2026.
+  // Workers AI entra pela pista do binding (viaWorkersAi), sem chave.
   { provider: 'mistral', model: 'mistral-small-latest' },
   { provider: 'google', model: 'gemini-2.5-flash-lite' }, { provider: 'google', model: 'gemini-flash-lite-latest' },
   { provider: 'google', model: 'gemini-2.5-flash' }, { provider: 'google', model: 'gemini-flash-latest' },
@@ -195,26 +215,65 @@ async function lerPrint(imagens, deps) {
   const vistos = new Set();
   const lista = [...VISAO, ...deps.listFor('fast')].filter((d) => d.provider !== 'anthropic' && !vistos.has(d.provider + d.model) && vistos.add(d.provider + d.model));
   // Os prints são lidos ao mesmo tempo (até 5), cada um tentando os modelos em ordem.
-  const lidos = await Promise.all(imagens.map(async (img) => {
+  const inicio = Date.now();
+  const ai = deps.ai !== undefined ? deps.ai : globalThis.__NEXIA_AI__;
+  // Cada print corre em duas pistas ao mesmo tempo: a lista de IAs grátis e o Workers AI do próprio
+  // Cloudflare (sem chave). Vale a primeira que devolver o JSON certo.
+  const ler = (img) => {
+    const pistas = [viaLista(img)];
+    if (ai && typeof ai.run === 'function') pistas.push(viaWorkersAi(ai, img, falhas));
+    return Promise.any(pistas.map((x) => x.then((j) => j || Promise.reject(new Error('nada'))))).catch(() => null);
+  };
+  const lidos = await Promise.all(imagens.map(ler));
+  async function viaLista(img) {
+    let tentou = 0;
     for (const d of lista) {
       try {
         const cap = router.capabilities(d);
         if (!cap.available || !cap.vision) continue;
-        const out = await Promise.race([router.chat(d, { system: LER_PRINT, messages: [{ role: 'user', content: 'Leia este print e devolva o JSON.' }], images: [img], maxTokens: 8192, temperature: 0, timeoutMs: 40000 }), new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 45000))]);
+        // O 1º modelo (o melhor) tem até 100 s, porque um print cheio de ativos gera resposta longa;
+        // os outros têm 30 s. Tudo cabe nos 180 s que o app espera.
+        const resta = 160000 - (Date.now() - inicio);
+        if (resta < 5000) break;
+        const ms = Math.min(tentou++ === 0 ? 100000 : 30000, resta);
+        const out = await Promise.race([router.chat(d, { system: LER_PRINT, messages: [{ role: 'user', content: 'Leia este print e devolva o JSON.' }], images: [img], maxTokens: 8192, temperature: 0, timeoutMs: ms }), new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), ms + 3000))]);
         const j = extrairJson(out && out.text);
-        if (j && Array.isArray(j.itens)) return j.itens;
+        if (j && Array.isArray(j.itens)) return j;
         falhas.push(`${d.model}: resposta sem JSON`);
       } catch (e) { falhas.push(`${d.model}: ${String((e && (e.code || e.message)) || 'erro').slice(0, 60)}`); }
     }
     return null;
-  }));
+  }
+  const conferencia = [];
   for (const lido of lidos) {
     if (!lido) continue;
     algum = true;
-    for (const bruto of lido) { const v = validarItemCarteira(normalizarLido(bruto)); if (v.ok) itens.push(v.item); else descartados.push({ ...bruto, motivo: v.erro }); }
+    let soma = 0;
+    for (const bruto of lido.itens) { const v = validarItemCarteira(normalizarLido(bruto)); if (v.ok) { itens.push(v.item); soma += v.item.valor; } else descartados.push({ ...bruto, motivo: v.erro }); }
+    conferencia.push(conferir(valorLido(lido.total_print), soma));
   }
   if (!algum && falhas.length) console.warn('[prumo] ler_print falhou:', falhas.slice(0, 6).join(' | '));
-  return algum ? { itens, descartados } : null;
+  return algum ? { itens, descartados, conferencia } : null;
+}
+// Workers AI pelo binding "AI" do Worker (grátis). Modelos que aceitam imagem no formato de chat.
+const VISAO_WORKERS = ['@cf/meta/llama-4-scout-17b-16e-instruct', '@cf/mistralai/mistral-small-3.1-24b-instruct', '@cf/google/gemma-3-12b-it'];
+async function viaWorkersAi(ai, img, falhas) {
+  const url = `data:${img.mime || 'image/jpeg'};base64,${img.data}`;
+  for (const modelo of VISAO_WORKERS) {
+    try {
+      const r = await Promise.race([ai.run(modelo, { messages: [{ role: 'system', content: LER_PRINT }, { role: 'user', content: [{ type: 'text', text: 'Leia este print e devolva o JSON.' }, { type: 'image_url', image_url: { url } }] }], max_tokens: 4096, temperature: 0 }), new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 90000))]);
+      let t = r && (r.response !== undefined ? r.response : (r.result && r.result.response));
+      const j = t && typeof t === 'object' ? t : extrairJson(String(t || ''));
+      if (j && Array.isArray(j.itens)) return j;
+      falhas.push(`${modelo}: resposta sem JSON`);
+    } catch (e) { falhas.push(`${modelo}: ${String((e && (e.code || e.message)) || 'erro').slice(0, 60)}`); }
+  }
+  return null;
+}
+/** #3035: a soma dos itens bate com o total do print? (diferença menor que 1%) */
+function conferir(total, soma) {
+  const t = Number.isFinite(total) && total > 0 ? dinheiro(total) : null;
+  return { total_print: t, soma_itens: dinheiro(soma), confere: t === null ? null : Math.abs(t - soma) <= t * 0.01 };
 }
 
 // ---------- Parte 10: objetivos e histórico ----------
@@ -293,6 +352,14 @@ async function agir(uid, body) {
   switch (body.acao) {
     case 'carteira_listar': return [200, { itens: (await listar(base.collection('carteira'))).sort((a, b) => String(a.nome).localeCompare(String(b.nome), 'pt-BR')) }];
     case 'carteira_salvar': { const r = await salvar('carteira', validarItemCarteira(body)); if (r[0] === 200) await gravarHistorico(base); return r; }
+    case 'carteira_limpar': {
+      // #3037: limpar e refazer. Só a carteira do próprio usuário; objetivos e histórico ficam.
+      if (body.confirmar !== 'LIMPAR') return [400, { error: 'Confirme digitando LIMPAR.' }];
+      const todos = await listar(base.collection('carteira'));
+      for (const it of todos) await base.collection('carteira').doc(it.id).delete();
+      await gravarHistorico(base);
+      return [200, { ok: true, apagados: todos.length }];
+    }
     case 'carteira_apagar': { const r = await apagar('carteira'); if (r[0] === 200) await gravarHistorico(base); return r; }
     case 'cartao_salvar': return salvar('cartoes', validarCartao(body));
     case 'cartao_listar': return [200, { cartoes: await listar(base.collection('cartoes')) }];
@@ -360,4 +427,4 @@ exports.handler = async (event) => {
   }
 };
 
-Object.assign(exports, { VISAO, normalizarLido, valorLido, validarItemCarteira, validarCartao, validarGasto, resumoMes, validarLista, avisosPendentes, extrairJson, lerImagens, lerPrint, validarObjetivo, progressoObjetivos, resumoHistorico, fotoDoDia, agir, deps, TIPOS, CATEGORIAS });
+Object.assign(exports, { conferir, VISAO, LER_PRINT, normalizarLido, valorLido, validarItemCarteira, validarCartao, validarGasto, resumoMes, validarLista, avisosPendentes, extrairJson, lerImagens, lerPrint, validarObjetivo, progressoObjetivos, resumoHistorico, fotoDoDia, agir, deps, TIPOS, CATEGORIAS });

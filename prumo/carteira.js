@@ -23,7 +23,8 @@
       <div class="linha" style="margin-bottom:12px"><button class="btn sec" id="add">✍️ Preencher</button><button class="btn" id="print">📷 Só mandar os prints</button></div>
       <input type="file" id="arq" accept="image/*" multiple hidden>
       ${Object.keys(bancos).length > 1 ? `<div class="card"><div class="fraco">Por banco</div>${Object.entries(bancos).map(([b, v]) => `<div class="item"><span>${esc(b)}</span><span class="v">${brl(v)}</span></div>`).join('')}</div>` : ''}
-      <div class="card">${itens.length ? itens.map((i) => `<div class="item" data-id="${i.id}"><div><div class="n">${esc(i.nome)}</div><div class="fraco">${esc(i.banco || '')} · ${esc(TIPOS[i.tipo] || i.tipo)}${i.objetivo_id && nomeObj[i.objetivo_id] ? ' · 🎯 ' + esc(nomeObj[i.objetivo_id]) : ''} · ${esc(i.data_valor || '')}</div></div><div class="v">${brl(i.valor)}</div></div>`).join('') : '<p class="fraco">Nada ainda. Toque em "Só mandar os prints" e mande os prints do app do banco, da previdência e do FGTS, ou preencha à mão.</p>'}</div>`;
+      <div class="card">${itens.length ? itens.map((i) => `<div class="item" data-id="${i.id}"><div><div class="n">${esc(i.nome)}</div><div class="fraco">${esc(i.banco || '')} · ${esc(TIPOS[i.tipo] || i.tipo)}${i.ticker ? ' · ' + esc(i.ticker) : ''}${i.quantidade ? ' · ' + esc(i.quantidade) + ' cotas' : ''}${i.objetivo_id && nomeObj[i.objetivo_id] ? ' · 🎯 ' + esc(nomeObj[i.objetivo_id]) : ''} · ${esc(i.data_valor || '')}</div></div><div class="v">${brl(i.valor)}</div></div>`).join('') : '<p class="fraco">Nada ainda. Toque em "Só mandar os prints" e mande os prints do app do banco, da previdência e do FGTS, ou preencha à mão.</p>'}</div>
+      ${itens.length ? '<button class="btn sec" id="limpar" style="width:100%">🧹 Limpar e refazer a carteira</button>' : ''}`;
 
     const editar = (i) => formulario(i ? 'Editar investimento' : 'Novo investimento', [
       { nome: 'nome', rotulo: 'Nome (ex.: CDB Inter 2028)', valor: i && i.nome },
@@ -37,6 +38,13 @@
     ], (d) => { const x = { ...d, valor: Number(d.valor), id: i && i.id }; ['objetivo_id', 'vencimento', 'taxa'].forEach((k) => { if (!x[k]) delete x[k]; }); return MB.api('carteira_salvar', x); }, i && (() => MB.api('carteira_apagar', { id: i.id })));
 
     el.querySelector('#add').onclick = () => editar(null);
+    const limpar = el.querySelector('#limpar');
+    if (limpar) limpar.onclick = async () => {
+      const t = prompt('Isso apaga TODOS os investimentos salvos para você mandar os prints de novo. Para confirmar, escreva LIMPAR');
+      if (String(t || '').trim().toUpperCase() !== 'LIMPAR') return;
+      try { const r = await MB.api('carteira_limpar', { confirmar: 'LIMPAR' }); apagarRascunho(); ok(`🧹 ${r.apagados || 0} investimento(s) apagados. Agora mande os prints de novo.`); } catch { /* erro já mostrado */ }
+      recarregar();
+    };
     el.querySelectorAll('.item[data-id]').forEach((n) => { n.onclick = () => editar(itens.find((x) => x.id === n.dataset.id)); });
     const arq = el.querySelector('#arq');
     el.querySelector('#print').onclick = () => arq.click();
@@ -45,14 +53,14 @@
       if (!files.length) return;
       if (arq.files.length > MAX_PRINTS) MB.mostrarErro(`Mandei só os ${MAX_PRINTS} primeiros prints.`);
       // Vários prints de uma vez: vão em grupos de 5, com progresso na tela.
-      const lidos = { itens: [], descartados: [] };
+      const lidos = { itens: [], descartados: [], conferencia: [] };
       let falhas = 0;
       for (let i = 0; i < files.length; i += 5) {
         const grupo = files.slice(i, i + 5);
-        el.innerHTML = `<div class="card">📷 Lendo prints ${i + 1} a ${i + grupo.length} de ${files.length}… cada grupo leva até 1 minuto. Não feche o app.</div>`;
+        el.innerHTML = `<div class="card">📷 Lendo prints ${i + 1} a ${i + grupo.length} de ${files.length}… cada grupo leva até 2 minutos. Não feche o app.</div>`;
         try {
           const r = await MB.api('ler_print', { imagens: await Promise.all(grupo.map(reduzir)) });
-          lidos.itens.push(...(r.itens || [])); lidos.descartados.push(...(r.descartados || []));
+          lidos.itens.push(...(r.itens || [])); lidos.descartados.push(...(r.descartados || [])); lidos.conferencia.push(...(r.conferencia || []));
         } catch { falhas += grupo.length; }
       }
       if (!lidos.itens.length) { if (!falhas) conferir(el, lidos, optObj, itens); else recarregar(); return; }
@@ -71,15 +79,31 @@
   function lerRascunho() { try { const l = JSON.parse(localStorage.getItem(CHAVE) || 'null'); return l && Array.isArray(l.itens) && l.itens.length ? l : null; } catch { return null; } }
   function apagarRascunho() { try { localStorage.removeItem(CHAVE); } catch { /* sem armazenamento */ } }
 
-  function conferir(el, { itens, descartados }, optObj, atuais) {
+  // Mesmo banco + mesmo investimento (ticker ou nome) = mesmo item.
+  const chave = (x) => [x.banco, x.ticker || x.nome].map((v) => String(v || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/\b(s\.?a\.?|ltda)\b/g, '').replace(/[^a-z0-9%]+/g, ' ').trim()).join('|');
+
+  function conferir(el, { itens, descartados, conferencia }, optObj, atuais) {
     if (!itens.length) { el.innerHTML = '<div class="card">Não achei valores nesses prints. Tente um print mais nítido ou preencha à mão.</div><button class="btn sec" id="volta">Voltar</button>'; el.querySelector('#volta').onclick = recarregar; return; }
-    el.innerHTML = `<div class="card"><b>Confira antes de salvar</b><p class="fraco">Corrija o que estiver errado e desmarque o que não quer salvar. Ainda não foi salvo na sua carteira, mas fica guardado neste celular até você salvar ou cancelar.</p>
+    // Situação de cada item: novo, atualiza um que já existe, ou repetido nestes prints.
+    const ja = new Map(atuais.map((a) => [chave(a), a]));
+    const vistos = new Set();
+    const situ = itens.map((i) => {
+      const k = chave(i);
+      if (vistos.has(k)) return { s: 'dup', txt: '⚠️ Repetido nestes prints (não vou salvar duas vezes)' };
+      vistos.add(k);
+      const a = ja.get(k);
+      return a ? { s: 'atu', txt: `🔄 Atualiza: ${brl(a.valor)} → ${brl(i.valor)}` } : { s: 'novo', txt: '🆕 Novo' };
+    });
+    const avisos = (conferencia || []).filter((c) => c && c.confere === false && c.total_print).map((c) => `<p style="color:#f5b041">⚠️ A soma dos itens (${brl(c.soma_itens)}) não bate com o total do print (${brl(c.total_print)}). Confira os valores abaixo.</p>`).join('');
+    el.innerHTML = `<div class="card"><b>Confira antes de salvar</b>${avisos}<p class="fraco">Corrija o que estiver errado e desmarque o que não quer salvar. Ainda não foi salvo na sua carteira, mas fica guardado neste celular até você salvar ou cancelar.</p>
       ${itens.map((i, n) => `<div class="card" data-n="${n}" style="background:#0e1a14">
-        <label><input type="checkbox" checked style="width:auto;min-height:0"> Salvar este</label>
+        <div class="fraco">${situ[n].txt}</div>
+        <label><input type="checkbox"${situ[n].s === 'dup' ? '' : ' checked'} style="width:auto;min-height:0"> Salvar este</label>
         <label>Nome</label><input data-k="nome" value="${esc(i.nome)}">
         <label>Banco</label><input data-k="banco" value="${esc(i.banco)}">
         <label>Tipo</label><select data-k="tipo">${opcoes(TIPOS, i.tipo)}</select>
-        <label>Saldo (R$)</label><input data-k="valor" type="number" step="0.01" value="${i.valor}">
+        ${i.ticker || i.quantidade ? `<div class="fraco">${esc(i.ticker || '')}${i.quantidade ? ' · ' + esc(i.quantidade) + ' cotas' : ''}${i.preco_medio ? ' · preço médio ' + brl(i.preco_medio) : ''}${i.cotacao ? ' · cotação ' + brl(i.cotacao) : ''}</div>` : ''}
+        <label>Saldo atual (R$)</label><input data-k="valor" type="number" step="0.01" value="${i.valor}">
         <label>Objetivo</label><select data-k="objetivo_id">${optObj('')}</select></div>`).join('')}
       ${descartados && descartados.length ? `<p class="fraco">${descartados.length} item(ns) sem valor legível foram ignorados.</p>` : ''}
       <div class="linha"><button class="btn sec" id="cancelar">Cancelar</button><button class="btn" id="salvar">Salvar selecionados</button></div></div>`;
@@ -93,7 +117,6 @@
       if (!escolhidos.length) { apagarRascunho(); return recarregar(); }
       let salvos = 0;
       // Mesmo banco + mesmo investimento = atualiza (não duplica, nem quando o mesmo item vem em dois prints).
-      const chave = (x) => [x.banco, x.ticker || x.nome].map((v) => String(v || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/\b(s\.?a\.?|ltda)\b/g, '').replace(/[^a-z0-9%]+/g, ' ').trim()).join('|');
       const existentes = new Map(atuais.map((a) => [chave(a), a]));
       for (const it of escolhidos) {
         const igual = existentes.get(chave(it));

@@ -24,7 +24,7 @@ dialog{border:0;border-radius:16px;background:var(--cartao);color:var(--texto);w
   const recarregar = () => MB.abrirAba(abaAtual);
   const aba = (nome) => { abaAtual = nome; };
   const ok = (msg) => { const d = document.createElement('div'); d.className = 'toast'; d.textContent = msg; document.body.appendChild(d); setTimeout(() => d.remove(), 2500); };
-  const TIPOS = { renda_fixa: 'Renda fixa', acoes: 'Ações', fundos: 'Fundos', tesouro: 'Tesouro', cripto: 'Cripto', previdencia: 'Previdência', fgts: 'FGTS', poupanca: 'Poupança', outro: 'Outro' };
+  const TIPOS = { renda_fixa: 'Renda fixa', acoes: 'Ações', fiis: 'FIIs', fundos: 'Fundos', tesouro: 'Tesouro', cripto: 'Cripto', previdencia: 'Previdência', fgts: 'FGTS', poupanca: 'Poupança', outro: 'Outro' };
   const CATS = { mercado: 'Mercado', casa: 'Casa', transporte: 'Transporte', saude: 'Saúde', lazer: 'Lazer', educacao: 'Educação', restaurante: 'Restaurante', assinaturas: 'Assinaturas', outros: 'Outros' };
   const hoje = () => new Date().toISOString().slice(0, 10);
   const opcoes = (mapa, sel) => Object.entries(mapa).map(([k, v]) => `<option value="${k}"${k === sel ? ' selected' : ''}>${esc(v)}</option>`).join('');
