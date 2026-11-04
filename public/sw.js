@@ -24,8 +24,6 @@ self.addEventListener("activate", (event) => {
       try {
         await self.registration.unregister();
       } catch (_) {}
-
-
     })()
   );
 });
