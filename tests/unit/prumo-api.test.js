@@ -77,7 +77,7 @@ test('PR6. ler print usa só IA grátis com visão e descarta item inválido', a
     }),
   };
   const r = await p.lerPrint([{ mime: 'image/png', data: 'AAAA' }], deps);
-  assert.deepEqual(usados, ['gemini']);
+  assert.deepEqual(usados, ['google']); // Gemini com visão vem primeiro; nunca anthropic nem modelo sem visão
   assert.equal(r.itens.length, 1);
   assert.equal(r.descartados.length, 1);
 });
@@ -113,4 +113,17 @@ test('PR8. agir: salvar na carteira grava a foto do dia e apagar objetivo solta 
     assert.equal((await p.agir('u1', { acao: 'xyz' }))[0], 400);
     assert.equal((await p.agir('u1', { acao: 'gasto_listar', mes: '11/2026' }))[0], 400);
   } finally { Object.assign(p.deps, antes); }
+});
+
+test('PR6b. print: tipo/valor/data em formato livre não descartam o item', () => {
+  const v = (b) => p.validarItemCarteira(p.normalizarLido(b));
+  const a = v({ nome: 'CDB Inter 110% CDI', banco: 'Inter', tipo: 'CDB', valor: 'R$ 1.234,56', data_valor: '02/11/2026' });
+  assert.equal(a.ok, true);
+  assert.equal(a.item.tipo, 'renda_fixa');
+  assert.equal(a.item.valor, 1234.56);
+  assert.equal(a.item.data_valor, '2026-11-02');
+  assert.equal(v({ nome: 'Saldo FGTS', tipo: 'Fundo de Garantia', valor: '15000.5' }).item.valor, 15000.5);
+  assert.equal(v({ nome: 'PETR4', tipo: 'Ações', valor: 3200, data_valor: null }).item.tipo, 'acoes');
+  assert.equal(p.valorLido('12.345'), 12345);
+  assert.equal(p.valorLido('1.234.567,8'), 1234567.8);
 });
