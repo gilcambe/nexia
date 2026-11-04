@@ -28,7 +28,7 @@ const PROVIDERS = Object.freeze({
                  extraHeaders: env => ({ 'HTTP-Referer': env.NEXIA_APP_URL || 'https://nexia.com.br', 'X-Title': 'NEXIA OS' }) },
   mistral:     { url: 'https://api.mistral.ai/v1/chat/completions', env: 'MISTRAL_API_KEY', max_output: 32768, tools: true, visionModels: /pixtral|mistral-(small|medium)/i },
   // ADR-FREE-05: NVIDIA NIM (build.nvidia.com, grátis com verificação por telefone, 40 pedidos/min) aceita tool_call no formato OpenAI.
-  nvidia:      { url: 'https://integrate.api.nvidia.com/v1/chat/completions', env: 'NVIDIA_API_KEY', max_output: 4096, tools: true, visionModels: /vision|llama-4|-vl/i },
+  nvidia:      { url: 'https://integrate.api.nvidia.com/v1/chat/completions', env: 'NVIDIA_API_KEY', max_output: 4096, tools: true, visionModels: /vision|llama-4|-vl|gemma-3|multimodal/i },
   huggingface: { url: m => `https://router.huggingface.co/hf-inference/models/${m}/v1/chat/completions`, env: 'HF_API_KEY', max_output: 8192, tools: false },
   sambanova:   { url: 'https://api.sambanova.ai/v1/chat/completions', env: 'SAMBANOVA_API_KEY', max_output: 8192, tools: false },
   together:    { url: 'https://api.together.xyz/v1/chat/completions', env: 'TOGETHER_API_KEY', max_output: 8192, tools: true },
@@ -37,7 +37,7 @@ const PROVIDERS = Object.freeze({
   // Desligado pelo GitHub em 30/07/2026; fora da cadeia padrão.
   github:      { url: 'https://models.github.ai/inference/chat/completions', env: 'GITHUB_MODELS_TOKEN', max_output: 4096, max_input: 8000, tools: true },
   cloudflare:  { url: (m, env) => `https://api.cloudflare.com/client/v4/accounts/${encodeURIComponent(env.CLOUDFLARE_AI_ACCOUNT_ID || env.CLOUDFLARE_ACCOUNT_ID || 'sem-conta')}/ai/v1/chat/completions`,
-                 env: 'CLOUDFLARE_AI_TOKEN', max_output: 8192, tools: true },   // + CLOUDFLARE_AI_ACCOUNT_ID
+                 env: 'CLOUDFLARE_AI_TOKEN', max_output: 8192, tools: true, visionModels: /llama-4-scout|mistral-small-3\.1|gemma-3|vision|llava/i },   // + CLOUDFLARE_AI_ACCOUNT_ID
   // Z.ai: GLM Flash grátis (só e-mail, sem cartão; ~1 pedido/seg, ~1.000/dia).
   zai:         { url: 'https://api.z.ai/api/paas/v4/chat/completions', env: 'ZAI_API_KEY', max_output: 16384, tools: true },
   // LLM7.io: sem chave (30/min, 100 mil tokens/dia); LLM7_API_KEY opcional (token grátis por e-mail) aumenta o limite.

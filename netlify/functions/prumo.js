@@ -200,7 +200,13 @@ function normalizarLido(b) {
 const VISAO = [
   // Testado ao vivo em 04/11/2026 (scripts/prumo-ler-print-ao-vivo.js): NVIDIA 90B leu banco e valores certos.
   { provider: 'nvidia', model: 'meta/llama-3.2-90b-vision-instruct' },
-  { provider: 'nvidia', model: 'meta/llama-3.2-11b-vision-instruct' },
+  { provider: 'cloudflare', model: '@cf/meta/llama-4-scout-17b-16e-instruct' },
+  { provider: 'cloudflare', model: '@cf/mistralai/mistral-small-3.1-24b-instruct' },
+  { provider: 'cloudflare', model: '@cf/google/gemma-3-12b-it' },
+  { provider: 'nvidia', model: 'meta/llama-4-scout-17b-16e-instruct' },
+  { provider: 'nvidia', model: 'google/gemma-3-27b-it' },
+  { provider: 'nvidia', model: 'microsoft/phi-4-multimodal-instruct' },
+  { provider: 'nvidia', model: 'nvidia/llama-3.1-nemotron-nano-vl-8b-v1' },
   { provider: 'mistral', model: 'mistral-small-latest' },
   { provider: 'google', model: 'gemini-2.5-flash-lite' }, { provider: 'google', model: 'gemini-flash-lite-latest' },
   { provider: 'google', model: 'gemini-2.5-flash' }, { provider: 'google', model: 'gemini-flash-latest' },
