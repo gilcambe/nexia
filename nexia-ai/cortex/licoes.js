@@ -25,9 +25,14 @@ class LessonStore {
     this.lessons.push(lesson);
     this.avoidCounts[assinatura] = (this.avoidCounts[assinatura] || 0) + 1;
     const Cofre = require('./cofre.js');
-    if (Cofre && typeof Cofre.salvar === 'function') {
-      await Cofre.salvar('lessons', this.lessons);
-      await Cofre.salvar('avoidCounts', this.avoidCounts);
+    if (Cofre) {
+      if (typeof Cofre.salvar === 'function') {
+        await Cofre.salvar('lessons', this.lessons);
+        await Cofre.salvar('avoidCounts', this.avoidCounts);
+      }
+      if (typeof Cofre.sincronizar === 'function') {
+        await Cofre.sincronizar();
+      }
     }
     return lesson;
   }
@@ -44,8 +49,13 @@ class LessonStore {
   async incrementAvoidCount(assinatura) {
     this.avoidCounts[assinatura] = (this.avoidCounts[assinatura] || 0) + 1;
     const Cofre = require('./cofre.js');
-    if (Cofre && typeof Cofre.salvar === 'function') {
-      await Cofre.salvar('avoidCounts', this.avoidCounts);
+    if (Cofre) {
+      if (typeof Cofre.salvar === 'function') {
+        await Cofre.salvar('avoidCounts', this.avoidCounts);
+      }
+      if (typeof Cofre.sincronizar === 'function') {
+        await Cofre.sincronizar();
+      }
     }
     return this.avoidCounts[assinatura];
   }
