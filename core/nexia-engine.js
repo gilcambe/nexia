@@ -589,7 +589,7 @@ const NexiaRuntime = (() => {
       : await NexiaModuleEngine.loadForTenant(tenant.id);
     NexiaEventBus.emit('runtime:modules', { tenant: tenant.id, modules: moduleIds });
 
-    // 4. SW antigo /sw.js aposentado (#2917): parar de registrar /sw.js e desregistrar se existir registro com scope / e script /sw.js.
+    // 4. SW antigo /sw.js aposentado: parar de registrar /sw.js e desregistrar se existir registro com scope / e script /sw.js.
     if ('serviceWorker' in navigator) {
       try {
         const registrations = await navigator.serviceWorker.getRegistrations();
