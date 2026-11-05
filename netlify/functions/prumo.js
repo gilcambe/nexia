@@ -52,7 +52,16 @@ function validarCartao(o) {
   if (!Number.isFinite(limite) || limite < 0) return erro('O limite precisa ser um número igual ou maior que zero.');
   const dia = (v) => Number.isInteger(Number(v)) && Number(v) >= 1 && Number(v) <= 31;
   if (!dia(o.dia_fechamento) || !dia(o.dia_vencimento)) return erro('Os dias de fechamento e vencimento vão de 1 a 31.');
-  return { ok: true, item: { nome, limite: dinheiro(limite), dia_fechamento: Number(o.dia_fechamento), dia_vencimento: Number(o.dia_vencimento), programa_pontos: texto(o.programa_pontos, 60) || null } };
+  const item = { nome, limite: dinheiro(limite), dia_fechamento: Number(o.dia_fechamento), dia_vencimento: Number(o.dia_vencimento), programa_pontos: texto(o.programa_pontos, 60) || null };
+  // Kernex Finance (fase 4): detalhes opcionais do cartão. Vazio ou inválido simplesmente não entra.
+  for (const k of ['bandeira', 'categoria_cartao', 'isencao', 'beneficios', 'adicionais']) { const t = texto(o[k], k === 'beneficios' ? 300 : 80); if (t) item[k] = t; }
+  for (const k of ['anuidade', 'pontos_por_real', 'valor_milheiro', 'cashback_pct']) {
+    if (o[k] === undefined || o[k] === null || o[k] === '') continue;
+    const n = typeof o[k] === 'number' ? o[k] : numero(o[k]);
+    if (!Number.isFinite(n) || n < 0) return erro(`O campo ${k.replace(/_/g, ' ')} precisa ser um número igual ou maior que zero.`);
+    item[k] = dinheiro(n);
+  }
+  return { ok: true, item };
 }
 function validarGasto(o) {
   const cartao_id = texto(o && o.cartao_id, 60);
