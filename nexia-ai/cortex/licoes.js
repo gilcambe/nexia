@@ -21,13 +21,13 @@ class LessonStore {
     try {
       const Cofre = require('./cofre.js');
       if (Cofre && typeof Cofre.recuperar === 'function') {
-        if (typeof globalThis !== 'undefined' && globalThis.__nexia_cofre_data) {
-          if (globalThis.__nexia_cofre_data.lessons) {
-            this.lessons = globalThis.__nexia_cofre_data.lessons;
-          }
-          if (globalThis.__nexia_cofre_data.avoidCounts) {
-            this.avoidCounts = globalThis.__nexia_cofre_data.avoidCounts;
-          }
+        const savedLessons = Cofre.recuperar('lessons');
+        if (savedLessons) {
+          this.lessons = savedLessons;
+        }
+        const savedCounts = Cofre.recuperar('avoidCounts');
+        if (savedCounts) {
+          this.avoidCounts = savedCounts;
         }
       }
     } catch (e) {
