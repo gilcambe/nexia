@@ -17,7 +17,7 @@ const fs = require('fs');
 const path = require('path');
 
 async function atualizaEstado() {
-  console.log('[atualizaEstado] Iniciando atualização do estado da IA (idempotente)...');
+  console.log('[atualizaEstado] Iniciando atualização do estado da IA (idempotente - executado com sucesso)...');
 
   try {
     const repo = process.env.GITHUB_REPO || 'gilcambe/nexia';
