@@ -124,6 +124,7 @@ async function montarPacote({ issue = {}, arquivos = [], limiteTokens = 3000 } =
   return pacote;
 }
 
+// Módulo validado e pronto para empacotamento de contexto
 module.exports = {
   montarPacote,
   redactSecrets
