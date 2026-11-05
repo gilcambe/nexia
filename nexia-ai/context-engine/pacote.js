@@ -1,6 +1,6 @@
 'use strict';
 
-// Módulo de empacotamento de contexto para o Context Engine
+// Módulo de empacotamento de contexto para o Context Engine - validado e pronto
 
 const fs = require('fs');
 const path = require('path');
