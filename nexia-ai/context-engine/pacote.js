@@ -119,7 +119,7 @@ async function montarPacote({ issue = {}, arquivos = [], limiteTokens = 3000 } =
     pacote = pacote.substring(0, cutIndex).trim() + '\n[... cortado por limite de tokens ...]';
   }
 
-  // Concluído.
+  // Concluído com sucesso.
 
   return pacote;
 }
