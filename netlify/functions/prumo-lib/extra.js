@@ -159,6 +159,8 @@ async function agirExtra(acao, body, c) {
   if (doc) return doc;
   const fin = await require('./financas').agirFin(acao, body, c);
   if (fin) return fin;
+  const cart = await require('./cartoes').agirCartoes(acao, body, c);
+  if (cart) return cart;
   const { base, listar, salvar, apagar, deps, agoraIso } = c;
   const lerOrcamento = async () => { const s = await base.collection('orcamento').doc('atual').get(); return s && s.exists ? s.data() : null; };
   const holerites = async () => (await listar(base.collection('holerites'))).sort((a, b) => String(b.mes).localeCompare(String(a.mes)));

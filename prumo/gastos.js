@@ -45,7 +45,14 @@
         { nome: 'dia_fechamento', rotulo: 'Dia que a fatura fecha', tipo: 'number', valor: c && c.dia_fechamento },
         { nome: 'dia_vencimento', rotulo: 'Dia que a fatura vence', tipo: 'number', valor: c && c.dia_vencimento },
         { nome: 'programa_pontos', rotulo: 'Programa de pontos (ex.: Livelo, Smiles)', valor: c && c.programa_pontos },
-      ], (x) => MB.api('cartao_salvar', { ...x, limite: Number(x.limite), dia_fechamento: Number(x.dia_fechamento), dia_vencimento: Number(x.dia_vencimento), id: c && c.id }), c && (() => MB.api('cartao_apagar', { id: c.id }))); };
+        { nome: 'bandeira', rotulo: 'Bandeira (opcional)', valor: c && c.bandeira },
+        { nome: 'anuidade', rotulo: 'Anuidade por ano, R$ (opcional)', tipo: 'number', valor: c && c.anuidade },
+        { nome: 'pontos_por_real', rotulo: 'Pontos por real gasto (opcional)', tipo: 'number', valor: c && c.pontos_por_real },
+        { nome: 'valor_milheiro', rotulo: 'Quanto vale 1.000 pontos, R$ (opcional)', tipo: 'number', valor: c && c.valor_milheiro },
+        { nome: 'cashback_pct', rotulo: 'Cashback % (opcional)', tipo: 'number', valor: c && c.cashback_pct },
+        { nome: 'isencao', rotulo: 'Como isenta a anuidade (opcional)', valor: c && c.isencao },
+        { nome: 'beneficios', rotulo: 'Benefícios (opcional)', valor: c && c.beneficios },
+      ], (x) => { const d = { ...x, limite: Number(x.limite), dia_fechamento: Number(x.dia_fechamento), dia_vencimento: Number(x.dia_vencimento), id: c && c.id }; for (const k of ['anuidade', 'pontos_por_real', 'valor_milheiro', 'cashback_pct']) { if (x[k] === '') delete d[k]; else d[k] = Number(x[k]); } return MB.api('cartao_salvar', d); }, c && (() => MB.api('cartao_apagar', { id: c.id }))); };
       d.querySelector('[data-x=f]').onclick = () => d.close();
       d.querySelector('[data-x=n]').onclick = () => editarC(null);
       d.querySelectorAll('.item[data-id]').forEach((n) => { n.onclick = () => editarC(cartoes.find((c) => c.id === n.dataset.id)); });

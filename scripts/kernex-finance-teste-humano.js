@@ -98,6 +98,20 @@ const LIDO = { tipo_documento: 'fatura', instituicao: 'Nubank', lancamentos: [
   ok(/Saldo disponível/.test(ini2) && /R\$\s?2\.500,00/.test(ini2), 'Início: saldo disponível R$ 2.500,00');
   ok(/perto do limite/.test(ini2), 'Início: alerta de Alimentação perto do limite');
   await p.screenshot({ path: path.join(SAIDA, '7-inicio-com-contas.png') });
+  const cid = await p.evaluate(async () => { const c = await window.MB.api('cartao_salvar', { nome: 'Nubank', limite: 5000, dia_fechamento: 3, dia_vencimento: 7, anuidade: 300, pontos_por_real: 2, valor_milheiro: 20 }); await window.MB.api('gasto_salvar', { cartao_id: c.id, descricao: 'Geladeira', valor: 3000, data: '2026-11-02', categoria: 'casa', parcelas: 10 }); return c.id; });
+  await p.click('[data-aba=cartoes]');
+  await p.waitForSelector('#sim-ir');
+  const cart = await p.textContent('#conteudo');
+  ok(/Limite comprometido/.test(cart) && /R\$\s?3\.000,00/.test(cart), 'Cartões: comprometido R$ 3.000,00 (geladeira em 10x)');
+  ok(/disponível R\$\s?2\.000,00/.test(cart), 'Cartões: disponível R$ 2.000,00');
+  ok(/4% de volta/.test(cart), 'Cartões: Nubank rende 4% (2 pontos x R$ 20 o milheiro)');
+  ok(/Anuidade R\$\s?300,00/.test(cart), 'Cartões: análise da anuidade aparece');
+  await p.fill('#sim-valor', '2500'); await p.fill('#sim-parc', '1'); await p.click('#sim-ir');
+  await p.waitForSelector('#sim-res .card');
+  ok(/Não cabe no limite/.test(await p.textContent('#sim-res')), 'Cartões: simulação de R$ 2.500 diz que não cabe');
+  await p.fill('#sim-valor', '600'); await p.fill('#sim-parc', '3'); await p.click('#sim-ir');
+  await p.waitForFunction(() => document.querySelector('#sim-res').textContent.includes('Cabe no limite'));
+  await p.screenshot({ path: path.join(SAIDA, '8-cartoes.png'), fullPage: false });
   for (const a of ['carteira', 'gastos', 'compras', 'objetivos', 'orcamento', 'consultor', 'pontos']) {
     await p.click(`[data-aba=${a}]`); await p.waitForTimeout(400);
     ok(!/Não consegui carregar|abriu vazia/.test(await p.textContent('#conteudo')) && (await p.textContent('#conteudo')).trim().length > 5, `aba antiga ${a} continua abrindo`);

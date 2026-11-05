@@ -1,6 +1,6 @@
 // Prumo: guarda só a casca do app para abrir sem internet. Respostas da API nunca são guardadas.
-const CACHE = 'prumo-casca-v9-kernexfinance';
-const CASCA = ['/prumo/', '/prumo/index.html', '/prumo/app.js', '/prumo/manifest.webmanifest', '/prumo/icone.svg', '/prumo/ui.js', '/prumo/carteira.js', '/prumo/gastos.js', '/prumo/compras.js', '/prumo/objetivos.js', '/prumo/orcamento.js', '/prumo/consultor.js', '/prumo/pontos.js', '/prumo/instalar.js', '/prumo/privacidade.js', '/prumo/inicio.js', '/prumo/documentos.js', '/prumo/contas.js', '/prumo/landing.html', '/prumo/icone-192.png'];
+const CACHE = 'prumo-casca-v10-kernexfinance';
+const CASCA = ['/prumo/', '/prumo/index.html', '/prumo/app.js', '/prumo/manifest.webmanifest', '/prumo/icone.svg', '/prumo/ui.js', '/prumo/carteira.js', '/prumo/gastos.js', '/prumo/compras.js', '/prumo/objetivos.js', '/prumo/orcamento.js', '/prumo/consultor.js', '/prumo/pontos.js', '/prumo/instalar.js', '/prumo/privacidade.js', '/prumo/inicio.js', '/prumo/documentos.js', '/prumo/contas.js', '/prumo/cartoes.js', '/prumo/landing.html', '/prumo/icone-192.png'];
 
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(CASCA)).then(() => self.skipWaiting()));
