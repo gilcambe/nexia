@@ -20,9 +20,10 @@ function aparar(c) {
     return Promise.all(toDelete.map((k) => c.delete(k)));
   });
 }
-const CACHE = 'body-coach-v12'; // Versão atualizada do cache
+const CACHE = 'body-coach-v13'; // Versão atualizada do cache com gerenciamento de versões e remoção de antigos
 self.addEventListener('install', (e) => { 
-  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(['./', './index.html']))); 
+  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(['./', './index.html'])));
+  // Removido skipWaiting automático; aguarda mensagem de atualização explícita
 });
 self.addEventListener('activate', (e) => {
   e.waitUntil(
