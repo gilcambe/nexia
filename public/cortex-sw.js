@@ -3,15 +3,18 @@
 
 // #2917: a versão nova espera o toque em "Atualizar" (public/js/update-banner.js) e então assume.
 self.addEventListener("message", (e) => { if (e.data && e.data.tipo === "atualizar") self.skipWaiting(); });
-const CACHE = "cortex-v2"; // Atualiza versão do cache
-  self.addEventListener("activate", (e) => {
-    e.waitUntil(
-      caches.keys().then(keys =>
-        Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
-      )
-    );
-    return self.clients.claim();
-  });
+const CACHE = "cortex-v3"; // Atualiza versão do cache
+self.addEventListener("activate", (e) => {
+  e.waitUntil(
+    caches.keys().then(keys =>
+      Promise.all(keys.map(k => {
+        if (k !== CACHE) {
+          return caches.delete(k);
+        }
+      }))
+    ).then(() => self.clients.claim())
+  );
+});
 const guardavel = (res) => res && res.ok && res.type === 'basic';
 self.addEventListener("fetch", (e) => {
   const r = e.request;
