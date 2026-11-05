@@ -71,5 +71,16 @@ test('PA9. modo privacidade: botão, script no service worker e estilo', () => {
   assert.match(ler('index.html'), /id="olho"/);
   assert.match(ler('index.html'), /body\.privado \.valor/);
   assert.match(ler('sw.js'), /privacidade\.js/);
-  assert.match(ler('sw.js'), /v7-kernexfinance/);
+  assert.match(ler('sw.js'), /v8-kernexfinance/);
+});
+
+test('PA10. abas novas do Kernex Finance existem, estão no menu, na lista do app e no service worker', () => {
+  for (const a of ['inicio', 'documentos', 'contas', 'ferramentas']) {
+    assert.ok(fs.existsSync(path.join(pasta, `${a}.js`)), a);
+    assert.match(ler('index.html'), new RegExp(`data-aba="${a}"`));
+    assert.match(ler('app.js'), new RegExp(`'${a}'`));
+    assert.match(ler('sw.js'), new RegExp(`/prumo/${a}\\.js`));
+    assert.match(ler(`${a}.js`), new RegExp(`MB\\.telas\\.${a} = `));
+  }
+  assert.match(ler('app.js'), /if \(!ABAS\.includes\(nome\)\) nome = 'inicio'/);
 });

@@ -219,7 +219,7 @@ async function agirExtra(acao, body, c) {
       const itens = (await listar(base.collection('pontos'))).sort((a, b) => String(a.programa).localeCompare(String(b.programa), 'pt-BR'));
       return [200, { itens, total_estimado: dinheiro(itens.reduce((s, p) => s + (p.saldo / 1000) * (p.valor_milheiro || 0), 0)), vencendo: pontosVencendo(itens, agoraIso) }];
     }
-    default: return null;
+    default: return require('./kf').agirKf(acao, body, c);
   }
 }
 

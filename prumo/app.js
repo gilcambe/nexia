@@ -4,7 +4,7 @@
 (function () {
   'use strict';
   const $ = (id) => document.getElementById(id);
-  const ABAS = ['carteira', 'gastos', 'compras', 'objetivos', 'orcamento', 'consultor', 'pontos'];
+  const ABAS = ['inicio', 'documentos', 'contas', 'ferramentas', 'carteira', 'gastos', 'compras', 'objetivos', 'orcamento', 'consultor', 'pontos'];
   let usuario = null;
 
   function mostrarErro(msg) {
@@ -59,7 +59,7 @@
   }
 
   async function abrirAba(nome) {
-    if (!ABAS.includes(nome)) nome = 'carteira';
+    if (!ABAS.includes(nome)) nome = 'inicio';
     document.querySelectorAll('#abas button').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.aba === nome)));
     try { localStorage.setItem('prumo-aba', nome); } catch { /* sem armazenamento */ }
     const el = $('conteudo');
@@ -151,8 +151,8 @@
       usuario = u;
       mostrar(!!u);
       if (u) {
-        let ultima = 'carteira';
-        try { ultima = localStorage.getItem('prumo-aba') || 'carteira'; } catch { /* sem armazenamento */ }
+        let ultima = 'inicio';
+        try { ultima = localStorage.getItem('prumo-aba') || 'inicio'; } catch { /* sem armazenamento */ }
         abrirAba(ultima);
         verAvisos();
       }

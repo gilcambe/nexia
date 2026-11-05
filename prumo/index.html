@@ -16,7 +16,7 @@
   body { min-height:100vh; padding-bottom:calc(120px + env(safe-area-inset-bottom)); }
   header { display:flex; align-items:center; gap:10px; padding:14px 16px; border-bottom:1px solid var(--borda); position:sticky; top:0; background:var(--fundo); z-index:5; }
   header img { width:32px; height:32px; }
-  header h1 { font-size:20px; margin:0; flex:1; }
+  header h1 { font-size:17px; margin:0; flex:1; white-space:nowrap; }
   header button { background:none; border:1px solid var(--borda); color:var(--fraco); border-radius:10px; padding:8px 12px; font-size:14px; }
   main { padding:16px; max-width:720px; margin:0 auto; }
   .btn { display:block; width:100%; min-height:52px; border:0; border-radius:14px; background:var(--verde); color:#fff; font-size:18px; font-weight:600; cursor:pointer; }
@@ -28,8 +28,8 @@
   .faixa.erro { background:#3a1414; border:1px solid var(--perigo); }
   .faixa.aviso { background:#33260c; border:1px solid var(--aviso); }
   .em-breve { text-align:center; color:var(--fraco); padding:48px 16px; }
-  nav.abas { position:fixed; left:0; right:0; bottom:calc(28px + env(safe-area-inset-bottom)); display:flex; background:var(--cartao); border-top:1px solid var(--borda); z-index:5; }
-  nav.abas button { flex:1; min-width:0; min-height:60px; background:none; border:0; color:var(--fraco); font-size:11px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; }
+  nav.abas { position:fixed; left:0; right:0; bottom:calc(28px + env(safe-area-inset-bottom)); display:flex; overflow-x:auto; background:var(--cartao); border-top:1px solid var(--borda); z-index:5; }
+  nav.abas button { flex:1 0 auto; min-width:76px; min-height:60px; background:none; border:0; color:var(--fraco); font-size:11px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; }
   nav.abas button span { font-size:22px; }
   nav.abas button[aria-selected="true"] { color:var(--verde2); font-weight:600; }
   footer { position:fixed; left:0; right:0; bottom:0; padding:6px 12px calc(6px + env(safe-area-inset-bottom)); text-align:center; font-size:12px; color:var(--fraco); background:var(--fundo); }
@@ -68,13 +68,17 @@
 </main>
 
 <nav id="abas" class="abas" role="tablist" hidden>
-  <button type="button" role="tab" data-aba="carteira" aria-selected="true"><span>💼</span>Carteira</button>
+  <button type="button" role="tab" data-aba="inicio" aria-selected="true"><span>🏠</span>Início</button>
+  <button type="button" role="tab" data-aba="documentos" aria-selected="false"><span>📄</span>Documentos</button>
+  <button type="button" role="tab" data-aba="contas" aria-selected="false"><span>🏦</span>Contas</button>
+  <button type="button" role="tab" data-aba="carteira" aria-selected="false"><span>💼</span>Carteira</button>
   <button type="button" role="tab" data-aba="gastos" aria-selected="false"><span>💳</span>Gastos</button>
   <button type="button" role="tab" data-aba="compras" aria-selected="false"><span>🛒</span>Compras</button>
   <button type="button" role="tab" data-aba="objetivos" aria-selected="false"><span>🎯</span>Objetivos</button>
   <button type="button" role="tab" data-aba="orcamento" aria-selected="false"><span>📅</span>Salário</button>
   <button type="button" role="tab" data-aba="consultor" aria-selected="false"><span>🧭</span>Consultor</button>
   <button type="button" role="tab" data-aba="pontos" aria-selected="false"><span>✈️</span>Milhas</button>
+  <button type="button" role="tab" data-aba="ferramentas" aria-selected="false"><span>🧮</span>Ferramentas</button>
 </nav>
 <div id="dica" class="dica" role="dialog" aria-modal="true" hidden><div>
   <h3>Instalar o Kernex Finance</h3>
