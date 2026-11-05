@@ -1,12 +1,12 @@
 {
-  "name": "Fortune",
-  "short_name": "Fortune",
+  "name": "Kernex Finance",
+  "short_name": "Kernex Fin",
   "id": "/prumo/",
-  "description": "Suas finanças sob controle: investimentos, cartões e compras.",
+  "description": "Sua vida financeira inteira. Uma inteligência.",
   "start_url": "/prumo/",
   "scope": "/prumo/",
   "display": "standalone",
-  "background_color": "#0b1210",
+  "background_color": "#070d1c",
   "theme_color": "#16a34a",
   "lang": "pt-BR",
   "icons": [

@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Kernex Finance — sua vida financeira inteira</title>
+<meta name="description" content="Envie documentos, converse com a IA e veja sua vida financeira inteira num lugar só.">
+<meta name="theme-color" content="#2f6bff">
+<link rel="manifest" href="/prumo/manifest.webmanifest">
+<link rel="icon" href="/prumo/icone.svg" type="image/svg+xml">
+<style>
+  :root { --fundo:#070d1c; --cartao:#0f1a33; --borda:#1c2b4d; --texto:#e8eefc; --fraco:#8ea3cc; --azul:#2f6bff; --azul2:#5b8dff; }
+  * { box-sizing:border-box; }
+  html,body { margin:0; background:var(--fundo); color:var(--texto); font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; }
+  .topo { display:flex; align-items:center; gap:10px; padding:14px 16px; max-width:960px; margin:0 auto; }
+  .topo img { width:32px; height:32px; } .topo b { font-size:18px; flex:1; }
+  .heroi { text-align:center; padding:56px 16px 32px; max-width:720px; margin:0 auto; background:radial-gradient(ellipse at top, rgba(47,107,255,.25), transparent 60%); }
+  .esfera { width:110px; height:110px; border-radius:50%; margin:0 auto 20px; background:radial-gradient(circle at 35% 30%, #bcd0ff, #2f6bff 55%, #1a2a6b); box-shadow:0 0 60px rgba(47,107,255,.55); }
+  h1 { font-size:clamp(28px,6vw,44px); line-height:1.15; margin:0 0 12px; }
+  .heroi p { color:var(--fraco); font-size:18px; margin:0 0 24px; }
+  .btn { display:inline-block; min-height:52px; line-height:52px; padding:0 28px; border-radius:14px; background:var(--azul); color:#fff; font-weight:600; font-size:18px; text-decoration:none; border:0; cursor:pointer; }
+  .btn.sec { background:none; border:1px solid var(--azul); color:var(--azul2); margin-left:8px; line-height:50px; }
+  .grade { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:14px; padding:16px; max-width:960px; margin:0 auto 32px; }
+  .card { background:var(--cartao); border:1px solid var(--borda); border-radius:16px; padding:18px; }
+  .card h3 { margin:0 0 6px; } .card p { margin:0; color:var(--fraco); font-size:15px; }
+  footer { text-align:center; color:var(--fraco); font-size:13px; padding:24px 16px 40px; }
+  .dica { position:fixed; inset:0; background:rgba(0,0,0,.7); display:flex; align-items:flex-end; z-index:20; }
+  .dica div { background:var(--cartao); border-top:1px solid var(--borda); border-radius:18px 18px 0 0; padding:20px 18px; width:100%; }
+  .dica .btn { width:100%; text-align:center; }
+  [hidden] { display:none !important; }
+</style>
+</head>
+<body>
+<div class="topo"><img src="/prumo/icone.svg" alt=""><b>Kernex Finance</b><a class="btn" style="min-height:40px;line-height:40px;padding:0 16px;font-size:15px" href="/prumo/">Entrar</a></div>
+<section class="heroi">
+  <div class="esfera" aria-hidden="true"></div>
+  <h1>Sua vida financeira inteira. Uma inteligência.</h1>
+  <p>Envie fotos, prints, PDFs e extratos. A IA organiza, o sistema calcula e você decide com clareza.</p>
+  <a class="btn" href="/prumo/" data-testid="kf-abrir">Abrir o app</a><button id="instalar" class="btn sec" type="button" hidden>📲 Instalar no celular</button>
+</section>
+<section class="grade">
+  <div class="card"><h3>📄 Leia documentos</h3><p>Fotos, prints, PDFs e extratos viram lançamentos, sem digitar tudo.</p></div>
+  <div class="card"><h3>🧠 Entenda sua vida financeira</h3><p>A IA cruza tudo e mostra o que importa, com os números que sustentam cada resposta.</p></div>
+  <div class="card"><h3>📈 Aumente seu patrimônio</h3><p>Carteira, objetivos e simuladores para planejar o futuro.</p></div>
+  <div class="card"><h3>✈️ Maximize suas milhas</h3><p>Pontos, cartões e custo real do milheiro.</p></div>
+</section>
+<footer>Kernex Finance · seus dados são só seus · o app nunca pede senha de banco.</footer>
+<div id="dica" class="dica" hidden><div><ol id="dica-passos"></ol><button id="dica-ok" type="button" class="btn">Entendi</button></div></div>
+<script src="/prumo/instalar.js"></script>
+</body>
+</html>

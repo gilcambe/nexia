@@ -11,16 +11,16 @@ const ler = (f) => fs.readFileSync(path.join(pasta, f), 'utf8');
 
 test('PA1. manifest: name Prumo, start_url /prumo/, ícone próprio', () => {
   const m = JSON.parse(ler('manifest.webmanifest'));
-  assert.equal(m.name, 'Fortune'); // #2923: o app se chama Fortune (pasta e API seguem /prumo)
+  assert.equal(m.name, 'Kernex Finance'); // o Fortune virou Kernex Finance (pasta e API seguem /prumo)
   assert.equal(m.start_url, '/prumo/');
   assert.ok(m.icons.some((i) => i.src.endsWith('icone.svg')));
 });
 
-test('PA2. ícone é verde com P e sem NEXIA/Kernex', () => {
+test('PA2. ícone é azul com K e sem NEXIA', () => {
   const svg = ler('icone.svg');
-  assert.match(svg, />F</);
-  assert.match(svg, /#16a34a/);
-  assert.doesNotMatch(svg, /nexia|kernex/i);
+  assert.match(svg, />K</);
+  assert.match(svg, /#2f6bff/);
+  assert.doesNotMatch(svg, /nexia/i);
 });
 
 test('PA3. tela mostra Entrar com Google, 3+ abas e o rodapé de privacidade', () => {
@@ -50,4 +50,26 @@ test('PA6. rotas: pasta pública, página /prumo e API', () => {
   assert.ok(PUBLIC_DIRS.includes('prumo'));
   assert.deepEqual(TENANT_PAGES['/prumo'], ['prumo', 'index.html']);
   assert.equal(API_ROUTES['/api/prumo'], 'prumo');
+});
+
+test('PA7. marca Kernex Finance: nenhum texto visível com Nexia ou Fortune', () => {
+  for (const f of ['index.html', 'landing.html', 'manifest.webmanifest', 'instalar.js']) {
+    const t = ler(f).replace(/<style[\s\S]*?<\/style>/g, '').replace(/<script[^>]*src[^>]*><\/script>/g, '');
+    assert.doesNotMatch(t, /nexia|fortune/i, f);
+  }
+  assert.match(ler('index.html'), /<title>Kernex Finance<\/title>/);
+});
+
+test('PA8. landing aponta para o app, e /kernex-finance e /fortune abrem a landing', () => {
+  assert.match(ler('landing.html'), /href="\/prumo\/"/);
+  const { TENANT_PAGES: T } = require('../../lib/routes');
+  assert.deepEqual(T['/kernex-finance'], ['prumo', 'landing.html']);
+  assert.deepEqual(T['/fortune'], ['prumo', 'landing.html']);
+});
+
+test('PA9. modo privacidade: botão, script no service worker e estilo', () => {
+  assert.match(ler('index.html'), /id="olho"/);
+  assert.match(ler('index.html'), /body\.privado \.valor/);
+  assert.match(ler('sw.js'), /privacidade\.js/);
+  assert.match(ler('sw.js'), /v7-kernexfinance/);
 });
