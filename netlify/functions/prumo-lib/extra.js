@@ -161,6 +161,10 @@ async function agirExtra(acao, body, c) {
   if (fin) return fin;
   const cart = await require('./cartoes').agirCartoes(acao, body, c);
   if (cart) return cart;
+  const sau = await require('./saude').agirSaude(acao, body, c);
+  if (sau) return sau;
+  const asst = await require('./assistente').agirAssistente(acao, body, c);
+  if (asst) return asst;
   const { base, listar, salvar, apagar, deps, agoraIso } = c;
   const lerOrcamento = async () => { const s = await base.collection('orcamento').doc('atual').get(); return s && s.exists ? s.data() : null; };
   const holerites = async () => (await listar(base.collection('holerites'))).sort((a, b) => String(b.mes).localeCompare(String(a.mes)));

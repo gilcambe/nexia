@@ -9,7 +9,7 @@
   MB.telas.inicio = async (el) => {
     const { brl, esc, barra, aba } = await carregarUi();
     aba('inicio');
-    const r = await MB.api('inicio_resumo');
+    const [r, sf] = await Promise.all([MB.api('inicio_resumo'), MB.api('saude_financeira')]);
     const nome = (MB.usuario && MB.usuario() && MB.usuario().displayName || '').split(' ')[0];
     const hora = new Date().getHours();
     const saudacao = hora < 12 ? 'Bom dia' : hora < 18 ? 'Boa tarde' : 'Boa noite';
@@ -32,11 +32,17 @@
         <div class="card"><div class="fraco">Gasto</div><div class="n verm">${brl(r.despesas)}</div></div>
         <div class="card"><div class="fraco">Economia</div><div class="n ${r.economia < 0 ? 'verm' : 'verde'}">${brl(r.economia)}</div></div>
       </div>
+      <div class="card"><div class="item" style="padding:0;border:0"><span class="fraco">Saúde financeira</span><span class="grande" style="font-size:28px">${sf.nota === null ? '—' : sf.nota + '<span class="fraco" style="font-size:14px">/100</span>'}</span></div>
+        ${sf.indicadores.map((x) => `<div style="margin:6px 0"><div class="item" style="padding:0;border:0"><span>${esc(x.nome)}</span><span class="fraco">${esc(x.texto)}</span></div>${barra(x.nota, x.nota < 40 ? '#ef4444' : x.nota < 70 ? '#f59e0b' : '')}</div>`).join('')}
+        <div class="fraco" style="margin-top:6px">${esc(sf.aviso)}${sf.nota_mes_anterior !== null && sf.nota !== null ? ' Mês anterior: ' + sf.nota_mes_anterior + '.' : ''}</div></div>
       <div class="card kf-insight"><div class="fraco">💡 Resumo do mês</div><div>${esc(insight)}</div></div>
       <button class="btn" id="kf-doc" type="button">📄 Enviar documento</button>
+      <div class="linha" style="margin-top:8px"><button class="btn sec" id="kf-ia" type="button">🤖 Perguntar à IA</button><button class="btn sec" id="kf-posso" type="button">🛒 Posso comprar?</button></div>
       ${r.vencimentos.length ? `<div class="card" style="margin-top:12px"><div class="fraco">Próximos vencimentos de fatura</div>${r.vencimentos.map((v) => `<div class="item"><span class="n">💳 ${esc(v.cartao)}</span><span>${v.em_dias === 0 ? 'hoje' : 'em ' + v.em_dias + ' dia(s)'} · dia ${v.dia}</span></div>`).join('')}</div>` : ''}
       ${cats.length ? `<div class="card" style="margin-top:12px"><div class="fraco">Gastos por categoria</div>${cats.map(([k, v]) => `<div style="margin:6px 0"><div class="item" style="padding:0;border:0"><span>${esc(NOME_CAT[k] || k)}</span><span>${brl(v)}</span></div>${barra(r.despesas ? (v / r.despesas) * 100 : 0)}</div>`).join('')}</div>` : ''}
       ${r.lacunas.length ? `<div class="card fraco" style="margin-top:12px">Para calcular saldo disponível e saúde financeira ainda faltam: ${r.lacunas.map((l) => esc(LACUNA[l] || l)).join(', ')}. Nada é estimado no lugar.</div>` : ''}`;
     el.querySelector('#kf-doc').onclick = () => MB.abrirAba('documentos');
+    el.querySelector('#kf-ia').onclick = () => MB.abrirAba('assistente');
+    el.querySelector('#kf-posso').onclick = () => MB.abrirAba('assistente');
   };
 })();
