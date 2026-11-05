@@ -22,7 +22,10 @@
     const cats = Object.entries(r.por_categoria || {}).sort((a, b) => b[1] - a[1]);
     el.innerHTML = `
       <p class="fraco" style="margin:0 0 10px">${saudacao}${nome ? ', ' + esc(nome) : ''}</p>
-      <div class="card kf-hero"><div class="fraco">Patrimônio líquido</div><div class="grande">${brl(r.patrimonio.liquido)}</div>
+      ${r.alertas_limite.length ? r.alertas_limite.map((a) => `<div class="aviso-c">${a.status === 'estourado' ? '🔴' : '🟠'} <b>${esc(NOME_CAT[a.categoria] || a.categoria)}</b>: ${brl(a.gasto)} de ${brl(a.limite)} (${String(a.pct).replace('.', ',')}%)${a.status === 'estourado' ? ' — passou do limite' : ' — perto do limite'}.</div>`).join('') : ''}
+      <div class="card kf-hero"><div class="fraco">Saldo disponível</div><div class="grande">${r.saldo_disponivel === null ? '—' : brl(r.saldo_disponivel)}</div>
+        <div class="fraco" style="margin-bottom:10px">${r.saldo_disponivel === null ? 'Cadastre suas contas na aba Contas.' : 'Dinheiro em conta, sem limite de cartão.'}</div>
+        <div class="fraco">Patrimônio líquido</div><div class="n" style="font-size:22px">${brl(r.patrimonio.liquido)}</div>
         <div class="fraco">Investimentos ${brl(r.investimentos)}${r.milhas_estimado ? ' · Milhas ≈ ' + brl(r.milhas_estimado) : ''}</div></div>
       <div class="linha kf-tres">
         <div class="card"><div class="fraco">Receita</div><div class="n verde">${brl(r.receitas)}</div></div>

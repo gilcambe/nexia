@@ -75,6 +75,29 @@ const LIDO = { tipo_documento: 'fatura', instituicao: 'Nubank', lancamentos: [
   await p.waitForTimeout(300);
   ok(await p.evaluate(() => document.body.classList.contains('privado') && getComputedStyle(document.querySelector('#conteudo .valor')).filter.includes('blur')), 'modo privacidade borra os valores');
   await p.screenshot({ path: path.join(SAIDA, '5-privacidade.png') });
+  await p.click('#olho'); // desliga a privacidade
+  await p.click('[data-aba=contas]');
+  await p.waitForSelector('#nova-conta');
+  ok(/—/.test(await p.textContent('#conteudo')), 'Contas: sem conta cadastrada o saldo é traço, não zero inventado');
+  await p.click('#nova-conta');
+  await p.fill('dialog [name=nome]', 'Nubank');
+  await p.fill('dialog [name=saldo]', '2500');
+  await p.click('dialog [data-x=salvar]');
+  await p.waitForSelector('.item[data-id]');
+  ok(/R\$\s?2\.500,00/.test(await p.textContent('#conteudo')), 'Contas: conta salva com saldo R$ 2.500,00');
+  await p.click('#novo-limite');
+  await p.selectOption('dialog [name=categoria]', 'alimentacao');
+  await p.fill('dialog [name=limite]', '110');
+  await p.click('dialog [data-x=salvar]');
+  await p.waitForSelector('[data-cat=alimentacao]');
+  ok(/90,9%/.test(await p.textContent('#conteudo')), 'Contas: limite de Alimentação mostra 90,9% usado');
+  await p.screenshot({ path: path.join(SAIDA, '6-contas.png') });
+  await p.click('[data-aba=inicio]');
+  await p.waitForSelector('#kf-doc');
+  const ini2 = await p.textContent('#conteudo');
+  ok(/Saldo disponível/.test(ini2) && /R\$\s?2\.500,00/.test(ini2), 'Início: saldo disponível R$ 2.500,00');
+  ok(/perto do limite/.test(ini2), 'Início: alerta de Alimentação perto do limite');
+  await p.screenshot({ path: path.join(SAIDA, '7-inicio-com-contas.png') });
   for (const a of ['carteira', 'gastos', 'compras', 'objetivos', 'orcamento', 'consultor', 'pontos']) {
     await p.click(`[data-aba=${a}]`); await p.waitForTimeout(400);
     ok(!/Não consegui carregar|abriu vazia/.test(await p.textContent('#conteudo')) && (await p.textContent('#conteudo')).trim().length > 5, `aba antiga ${a} continua abrindo`);
