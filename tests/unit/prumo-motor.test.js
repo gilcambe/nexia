@@ -40,3 +40,15 @@ test('KF4. custo do milheiro inclui anuidade; sem milhas devolve null', () => {
   assert.equal(custoMilheiro({ preco: 300, milhas: 10000, anuidade: 100 }), 40);
   assert.equal(custoMilheiro({ preco: 300, milhas: 0 }), null);
 });
+
+test('KF5. totais só somam receita e despesa, em centavos, e agrupam despesa por categoria', () => {
+  const { totais } = require('../../netlify/functions/prumo-lib/motor');
+  const t = totais([
+    { tipo: 'receita', valor: 0.1 }, { tipo: 'receita', valor: 0.2 },
+    { tipo: 'despesa', valor: 10.1, categoria: 'lazer' }, { tipo: 'despesa', valor: 5 },
+    { tipo: 'pagamento_fatura', valor: 999 }, { tipo: 'transferencia_propria', valor: 999 },
+  ]);
+  assert.equal(t.receitas, 0.3);
+  assert.equal(t.despesas, 15.1);
+  assert.deepEqual(t.por_categoria, { lazer: 10.1, outros: 5 });
+});

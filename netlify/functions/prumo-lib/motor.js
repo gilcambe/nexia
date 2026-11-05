@@ -48,4 +48,16 @@ function custoMilheiro({ preco, milhas, anuidade = 0 }) {
   return Math.round(((preco + anuidade) / (milhas / 1000)) * 100) / 100;
 }
 
-module.exports = { conciliar, patrimonio, custoMilheiro, chave };
+/** Totais de receita e despesa (e despesa por categoria) só dos tipos que contam; o resto é movimento interno. */
+function totais(lancs) {
+  let r = 0; let d = 0; const cat = {};
+  for (const l of lancs || []) {
+    const c = centavos(l.valor);
+    if (!Number.isFinite(c)) continue;
+    if (l.tipo === 'receita') r += c;
+    else if (l.tipo === 'despesa') { d += c; const k = l.categoria || 'outros'; cat[k] = (cat[k] || 0) + c; }
+  }
+  return { receitas: reais(r), despesas: reais(d), por_categoria: Object.fromEntries(Object.entries(cat).map(([k, v]) => [k, reais(v)])) };
+}
+
+module.exports = { conciliar, patrimonio, custoMilheiro, chave, totais };
