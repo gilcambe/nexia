@@ -177,18 +177,23 @@ async function agirDoc(acao, body, c) {
     case 'inicio_resumo': {
       const mes = texto(body.mes, 7) || agoraIso.slice(0, 7);
       if (!MES.test(mes)) return [400, { error: 'O mês precisa estar no formato AAAA-MM.' }];
-      const [lancs, carteira, pontos, cartoes] = await Promise.all([listar(col), listar(base.collection('carteira')), listar(base.collection('pontos')), listar(base.collection('cartoes'))]);
+      const fin = require('./financas');
+      const [lancs, carteira, pontos, cartoes, contas, limites] = await Promise.all([listar(col), listar(base.collection('carteira')), listar(base.collection('pontos')), listar(base.collection('cartoes')), listar(base.collection('contas')), listar(base.collection('limites'))]);
       const doMes = totais(lancs.filter((x) => String(x.data).startsWith(mes)));
       const anterior = totais(lancs.filter((x) => String(x.data).startsWith(mesAnterior(mes))));
-      const pat = patrimonio({ investimentos: carteira, milhas: [] });
+      const sd = fin.saldoDisponivel(contas);
+      const pat = patrimonio({ contas: contas.filter((k) => (k.moeda || 'BRL') === 'BRL').map((k) => ({ valor: k.saldo })), investimentos: carteira, milhas: [] });
+      const consumo = fin.consumoLimites(limites, doMes.por_categoria);
       const milhas = Math.round(pontos.reduce((s, p) => s + ((p.saldo || 0) / 1000) * (p.valor_milheiro || 0), 0) * 100) / 100;
       const dia = new Date(agoraIso).getUTCDate();
       const vencimentos = cartoes.map((k) => ({ cartao: k.nome, dia: k.dia_vencimento, em_dias: (k.dia_vencimento - dia + 31) % 31 })).filter((v) => v.em_dias <= 7).sort((a, b) => a.em_dias - b.em_dias);
-      const lacunas = ['contas', 'dividas'];
+      const lacunas = ['dividas'];
+      if (!contas.length) lacunas.push('contas');
       if (!lancs.length) lacunas.push('lancamentos');
       return [200, { mes, receitas: doMes.receitas, despesas: doMes.despesas, economia: Math.round((doMes.receitas - doMes.despesas) * 100) / 100,
         despesas_mes_anterior: anterior.despesas, variacao_despesas_pct: pct(doMes.despesas, anterior.despesas), por_categoria: doMes.por_categoria,
-        investimentos: pat.ativos, patrimonio: pat, milhas_estimado: milhas, vencimentos, lacunas, qtd_lancamentos: lancs.length }];
+        saldo_disponivel: sd.saldo, outras_moedas: sd.outras_moedas, limites: consumo, alertas_limite: consumo.filter((x) => x.status !== 'ok'),
+        investimentos: Math.round(carteira.reduce((t, x) => t + Math.round((x.valor || 0) * 100), 0)) / 100, patrimonio: pat, milhas_estimado: milhas, vencimentos, lacunas, qtd_lancamentos: lancs.length }];
     }
     default: return null;
   }
