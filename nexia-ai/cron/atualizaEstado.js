@@ -3,7 +3,6 @@
  * Descrição: Consulta o estado atual do repositório (issues abertas, PRs, etc.),
  * gera um resumo compacto em Markdown e atualiza o arquivo docs/ESTADO-IA.md
  * de forma idempotente, registrando logs de sucesso.
- * (Atualizado conforme especificação e verificação completa)
  */
 
 /**
