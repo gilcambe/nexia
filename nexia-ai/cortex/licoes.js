@@ -21,7 +21,6 @@ class LessonStore {
     try {
       const Cofre = require('./cofre.js');
       if (Cofre && typeof Cofre.recuperar === 'function') {
-        // Inicialização síncrona/assíncrona sutil se possível, mas mantemos o construtor síncrono carregando do cofre se houver dados em memória global do cofre
         if (typeof globalThis !== 'undefined' && globalThis.__nexia_cofre_data) {
           if (globalThis.__nexia_cofre_data.lessons) {
             this.lessons = globalThis.__nexia_cofre_data.lessons;
