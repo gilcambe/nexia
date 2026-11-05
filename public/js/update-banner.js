@@ -43,7 +43,7 @@
   }
 
   navigator.serviceWorker.addEventListener("controllerchange", function () {
-    if (recarregou) return;
+    if (recarregou || !tinhaControle) return; // Na 1ª instalação não recarrega automaticamente
     recarregou = true;
     location.reload();
   });
