@@ -1,4 +1,4 @@
-import React from 'react';
+import React from 'react';\n
 import { getUsage } from './api';
 import { utilBarColor } from './utilBarColor';
 
