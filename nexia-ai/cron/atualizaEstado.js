@@ -1,12 +1,5 @@
 /**
  * Script: nexia-ai/cron/atualizaEstado.js
- * Descrição: Consulta o estado atual do repositório (issues abertas, PRs, etc.),
- * gera um resumo compacto em Markdown e atualiza o arquivo docs/ESTADO-IA.md
- * de forma idempotente, registrando logs de sucesso.
- */
-
-/**
- * Script: nexia-ai/cron/atualizaEstado.js
  * Descrição: Consulta o estado atual do repositório (issues abertas, travadas, PRs, etc.),
  * gera um resumo compacto em Markdown e atualiza o arquivo docs/ESTADO-IA.md
  * de forma idempotente, registrando logs de sucesso.
