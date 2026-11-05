@@ -3,7 +3,10 @@
 
 // #2917: a versão nova espera o toque em "Atualizar" (public/js/update-banner.js) e então assume.
 self.addEventListener("message", (e) => { if (e.data && e.data.tipo === "atualizar") self.skipWaiting(); });
-const CACHE = "central-v4"; // Atualiza versão do cache
+const CACHE = "central-v5"; // Atualiza versão do cache com gerenciamento de versões e remoção de antigos
+self.addEventListener("install", (e) => {
+  // Removido skipWaiting automático; aguarda mensagem de atualização explícita
+});
 self.addEventListener("activate", (e) => {
   e.waitUntil(
     caches.keys().then(keys =>
