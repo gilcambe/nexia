@@ -71,5 +71,13 @@ test('PA9. modo privacidade: botão, script no service worker e estilo', () => {
   assert.match(ler('index.html'), /id="olho"/);
   assert.match(ler('index.html'), /body\.privado \.valor/);
   assert.match(ler('sw.js'), /privacidade\.js/);
-  assert.match(ler('sw.js'), /v7-kernexfinance/);
+  assert.match(ler('sw.js'), /v8-kernexfinance/);
+});
+
+test('PA10. abas Início e Documentos: no menu, no app e no service worker, com os arquivos existindo', () => {
+  const html = ler('index.html');
+  for (const a of ['inicio', 'documentos']) { assert.match(html, new RegExp(`data-aba="${a}"`)); assert.match(ler('app.js'), new RegExp(`'${a}'`)); assert.match(ler('sw.js'), new RegExp(`/prumo/${a}\\.js`)); assert.match(ler(`${a}.js`), new RegExp(`MB\\.telas\\.${a} =`)); }
+  assert.match(ler('documentos.js'), /doc_ler/);
+  assert.match(ler('documentos.js'), /doc_confirmar/);
+  assert.match(ler('inicio.js'), /inicio_resumo/);
 });

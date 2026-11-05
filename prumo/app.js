@@ -4,7 +4,7 @@
 (function () {
   'use strict';
   const $ = (id) => document.getElementById(id);
-  const ABAS = ['carteira', 'gastos', 'compras', 'objetivos', 'orcamento', 'consultor', 'pontos'];
+  const ABAS = ['inicio', 'documentos', 'carteira', 'gastos', 'compras', 'objetivos', 'orcamento', 'consultor', 'pontos'];
   let usuario = null;
 
   function mostrarErro(msg) {
@@ -109,7 +109,7 @@
     if (!logado) $('aviso').hidden = true;
   }
 
-  window.MB = { api, telas: window.MB && window.MB.telas ? window.MB.telas : {}, abrirAba, mostrarErro };
+  window.MB = { api, usuario: () => usuario, telas: window.MB && window.MB.telas ? window.MB.telas : {}, abrirAba, mostrarErro };
 
   // Mostra o motivo real do erro de login (código do Firebase) para ficar fácil de corrigir.
   function msgLogin(e) {
@@ -151,8 +151,8 @@
       usuario = u;
       mostrar(!!u);
       if (u) {
-        let ultima = 'carteira';
-        try { ultima = localStorage.getItem('prumo-aba') || 'carteira'; } catch { /* sem armazenamento */ }
+        let ultima = 'inicio';
+        try { ultima = localStorage.getItem('prumo-aba') || 'inicio'; } catch { /* sem armazenamento */ }
         abrirAba(ultima);
         verAvisos();
       }
