@@ -1,21 +1,5 @@
-// #2917: Service worker aposentado.
-// Não intercepta fetch.
-// No activate, apaga o cache "cortex-cache-v1" e desregistra.
-
-// #2917: Service worker aposentado.
-// Não intercepta fetch.
-// No activate, apaga o cache "cortex-cache-v1" e desregistra.
-
-// #2917: Service worker aposentado.
-// Não intercepta fetch.
-// No activate, apaga o cache "cortex-cache-v1" e desregistra.
-
-// #2917: Service worker aposentado.
-// Não intercepta fetch.
-// No activate, apaga o cache "cortex-cache-v1" e desregistra.
-
 // Service Worker aposentado (#2917)
-// Não intercepta fetch. Apaga caches e se desregistra.
+// Não intercepta fetch, apaga todos os caches (cortex-cache-v1) e desregistra.
 
 self.addEventListener('install', (event) => {
   self.skipWaiting();
@@ -27,9 +11,7 @@ self.addEventListener('activate', (event) => {
       try {
         const cacheNames = await caches.keys();
         for (const name of cacheNames) {
-          if (name === 'cortex-cache-v1' || name.includes('cortex-cache')) {
-            await caches.delete(name);
-          }
+          await caches.delete(name);
         }
       } catch (err) {}
 
