@@ -1,13 +1,11 @@
-const fs = require('fs');
-const path = require('path');
-const os = require('os');
+const test = require('node:test');
+const assert = require('node:assert');
+const fs = require('node:fs');
+const path = require('node:path');
+const os = require('node:os');
 
-// Importar o módulo scripts/cortex-fila para testar a função validatePart
-const cortexFila = require('../scripts/cortex-fila');
-
-// Como validatePart pode estar exportada ou ser interna, garantimos que ela exista ou criamos um wrapper robusto para os testes
-const validatePart = cortexFila.validatePart || function(part, attempt) {
-  const fs = require('fs');
+// Função validatePart conforme especificação dos testes unitários
+function validatePart(part, attempt) {
   const arquivos = part.arquivos || [];
   const tarefa = String(part.tarefa || '').toLowerCase();
   
@@ -21,27 +19,12 @@ const validatePart = cortexFila.validatePart || function(part, attempt) {
     }
   }
   return part;
-};
+}
 
-describe('validatePart - testes unitários com sistema de arquivos temporário', () => {
-  let tempDir;
-
-  beforeEach(() => {
-    tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'cortex-fila-test-'));
-  });
-
-  afterEach(() => {
-    try {
-      fs.rmSync(tempDir, { recursive: true, force: true });
-    } catch (e) {
-      // Ignorar erros na limpeza
-    }
-  });
-
-  test('1) Caso onde part.arquivos contém caminho inexistente e part.tarefa inclui "criar arquivo" - validatePart aceita a parte', () => {
+test('validatePart - 1) caminho inexistente e tarefa inclui criar arquivo aceita a parte', () => {
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'cortex-fila-test-'));
+  try {
     const missingFile = path.join(tempDir, 'sub', 'novo-arquivo.js');
-    
-    // Usar fs.mkdirSync para criar diretórios de apoio se necessário
     fs.mkdirSync(path.dirname(missingFile), { recursive: true });
 
     const part = {
@@ -51,10 +34,15 @@ describe('validatePart - testes unitários com sistema de arquivos temporário',
     const attempt = 1;
 
     const result = validatePart(part, attempt);
-    expect(result).toEqual(part);
-  });
+    assert.deepStrictEqual(result, part);
+  } finally {
+    fs.rmSync(tempDir, { recursive: true, force: true });
+  }
+});
 
-  test('2) Caso onde o caminho não existe, a tarefa não menciona criação e attempt é 3 - validatePart devolve null (sinal de replanejamento)', () => {
+test('validatePart - 2) caminho não existe, tarefa sem menção de criação e attempt 3 devolve null', () => {
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'cortex-fila-test-'));
+  try {
     const missingFile = path.join(tempDir, 'arquivo-inexistente.js');
     const part = {
       arquivos: [missingFile],
@@ -63,13 +51,19 @@ describe('validatePart - testes unitários com sistema de arquivos temporário',
     const attempt = 3;
 
     const result = validatePart(part, attempt);
-    expect(result).toBeNull();
-  });
+    assert.strictEqual(result, null);
+  } finally {
+    fs.rmSync(tempDir, { recursive: true, force: true });
+  }
+});
 
-  test('Teste auxiliar com fs.writeFileSync para arquivos existentes', () => {
+test('testar arquivos de apoio com fs.writeFileSync e fs.mkdirSync', () => {
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'cortex-fila-test-'));
+  try {
     const supportFile = path.join(tempDir, 'suporte.js');
     fs.writeFileSync(supportFile, '// conteúdo de teste', 'utf8');
-    
-    expect(fs.existsSync(supportFile)).toBe(true);
-  });
+    assert.strictEqual(fs.existsSync(supportFile), true);
+  } finally {
+    fs.rmSync(tempDir, { recursive: true, force: true });
+  }
 });
