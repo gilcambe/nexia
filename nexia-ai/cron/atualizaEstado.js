@@ -60,7 +60,7 @@ async function atualizaEstado() {
 
 ---
 *Este arquivo é gerado automaticamente pelo script \`nexia-ai/cron/atualizaEstado.js\` para fornecer um panorama rápido do estado atual do projeto.*
-
+`;
 
     const docsDir = path.resolve('docs');
     // Garante que o diretório 'docs' exista
