@@ -10,6 +10,10 @@
 // Não intercepta fetch.
 // No activate, apaga o cache "cortex-cache-v1" e desregistra.
 
+// #2917: Service worker aposentado.
+// Não intercepta fetch.
+// No activate, apaga o cache "cortex-cache-v1" e desregistra.
+
 self.addEventListener("install", () => {
   self.skipWaiting();
 });
