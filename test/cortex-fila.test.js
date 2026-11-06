@@ -52,13 +52,8 @@ describe('validatePart - testes unitários com sistema de arquivos temporário',
     };
     const attempt = 1;
 
-    if (typeof validatePart === 'function') {
-      const result = validatePart(part, attempt);
-      expect(result).toBeDefined();
-    } else {
-      // Fallback seguro caso a função não seja exportada diretamente com esse nome
-      expect(true).toBe(true);
-    }
+    const result = validatePart(part, attempt);
+    expect(result).toEqual(part);
   });
 
   test('2) Caso onde o caminho não existe, a tarefa não menciona criação e attempt é 3 - validatePart devolve null (sinal de replanejamento)', () => {
@@ -69,12 +64,8 @@ describe('validatePart - testes unitários com sistema de arquivos temporário',
     };
     const attempt = 3;
 
-    if (typeof validatePart === 'function') {
-      const result = validatePart(part, attempt);
-      expect(result).toBeNull();
-    } else {
-      expect(true).toBe(true);
-    }
+    const result = validatePart(part, attempt);
+    expect(result).toBeNull();
   });
 
   test('Teste auxiliar com fs.writeFileSync para arquivos existentes', () => {
