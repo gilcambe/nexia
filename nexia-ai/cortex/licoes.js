@@ -2,7 +2,6 @@
  * Lições do Cortex em CommonJS
  */
 
-
 class LessonStore {
   constructor() {
     this.lessons = [];
