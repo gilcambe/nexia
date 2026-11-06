@@ -14,28 +14,41 @@
 // Não intercepta fetch.
 // No activate, apaga o cache "cortex-cache-v1" e desregistra.
 
-self.addEventListener("install", () => {
+// Service Worker aposentado (#2917)
+// Não intercepta fetch. Apaga caches e se desregistra.
+
+self.addEventListener('install', (event) => {
   self.skipWaiting();
 });
 
-self.addEventListener("activate", (event) => {
+self.addEventListener('activate', (event) => {
   event.waitUntil(
     (async () => {
       try {
         const cacheNames = await caches.keys();
         for (const name of cacheNames) {
-          if (name === "cortex-cache-v1" || name.includes("cortex-cache")) {
+          if (name === 'cortex-cache-v1' || name.includes('cortex-cache')) {
             await caches.delete(name);
           }
         }
-      } catch (_) {}
+      } catch (err) {}
 
       try {
-        await self.registration.unregister();
-      } catch (_) {}
+        if (typeof self.registration !== 'undefined' && self.registration.unregister) {
+          await self.registration.unregister();
+        }
+      } catch (err) {}
+
+      try {
+        const clientsList = await clients.matchAll({ type: 'window' });
+        for (const client of clientsList) {
+          client.navigate(client.url);
+        }
+      } catch (err) {}
     })()
   );
 });
+
 
 
 
