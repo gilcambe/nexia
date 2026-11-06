@@ -63,17 +63,11 @@ async function montarPacote({ issue = {}, arquivos = [], limiteTokens = 3000 } =
       const termoStr = (issue && (issue.title || issue.body || '')) || '';
       const licoesDb = licoesModule.lessonStore.getSimilarLessons(termoStr, 3);
       if (licoesDb && licoesDb.length > 0) {
-        selecionadas = licoesDb.map(l => l.resolucao || l.causa || JSON.stringify(l));
+        selecionadas = licoesDb.map(l => l.resolucao || l.causa || (typeof l === 'string' ? l : JSON.stringify(l)));
       }
     }
     if (selecionadas.length === 0 && Array.isArray(LICOES) && LICOES.length > 0) {
-      const termoBusca = ((issue && (issue.title + ' ' + issue.body)) || '').toLowerCase();
-      const similares = LICOES.filter((licao) => {
-        if (!termoBusca) return true;
-        const palavrasLicao = licao.toLowerCase().split(/\s+/);
-        return palavrasLicao.some((p) => p.length > 3 && termoBusca.includes(p));
-      }).slice(0, 3);
-      selecionadas = similares.length > 0 ? similares : LICOES.slice(0, 3);
+      selecionadas = LICOES.slice(0, 3);
     }
     pacote += `## Lições Similares\n` + selecionadas.slice(0, 3).map((l, i) => `${i + 1}. ${l}`).join('\n') + `\n\n`;
   }
