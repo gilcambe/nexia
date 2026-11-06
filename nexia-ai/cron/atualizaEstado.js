@@ -48,18 +48,23 @@ async function atualizaEstado() {
     const pullsAbertos = Array.isArray(openPulls) ? openPulls : [];
 
     // Construção do resumo compacto focado nas informações solicitadas
-    const resumoContent = `# Estado do Repositório (NEXIA OS)
+    const resumoContent = `# Estado do projeto e memória (para qualquer IA continuar)
 
-*Última atualização:* ${agora}
-*Repositório:* \`${repo}\`
+Atualizado em ${agora}. Complementa \`docs/CONTEXTO-IA.md\` (regras). A Central junta os dois arquivos com a fila do Cortex ao vivo no botão **📦 Continuar em outra IA** (aba 🧠 Cortex). **Nunca coloque chave ou senha aqui.**
 
-## Resumo da Fila de Vagas e Tarefas
+## Foco atual
+- **Body Coach** é o produto para vender agora: https://nexiabodycoach.pages.dev (PWA, nada de dado falso). Play Store: conta paga, esperando verificação do Google; precisa de 12 testadores.
+- **Cortex é de uso INTERNO** (decisão do dono): não vai ser vendido por enquanto. Ele serve para construir de graça os sites, páginas, SaaS e apps dos clientes.
+- Marca pública **Kernex**; nomes internos seguem \`nexia\`.
+
+## Fila de Vagas e Tarefas (Atualizado automaticamente)
+- **Repositório:** \`${repo}\`
 - **Issues Abertas:** ${issuesAbertas.length}
 - **Issues Travadas/Alerta:** ${issuesTravadas.length}
 - **Pull Requests Abertos:** ${pullsAbertos.length}
 
 ---
-*Este arquivo é gerado automaticamente pelo script \`nexia-ai/cron/atualizaEstado.js\` para fornecer um panorama rápido do estado atual do projeto.*
+*Este arquivo é gerado automaticamente e de forma idempotente pelo script \`nexia-ai/cron/atualizaEstado.js\` para fornecer um panorama rápido do estado atual do projeto.*
 `;
 
     const docsDir = path.resolve('docs');
