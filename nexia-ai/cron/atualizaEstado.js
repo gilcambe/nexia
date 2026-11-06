@@ -42,7 +42,11 @@ async function atualizaEstado() {
       console.log('[atualizaEstado] Token do GitHub não fornecido; gerando resumo com base no estado local.');
     }
 
-    const agora = new Date().toLocaleString('pt-BR'); // Formato mais legível
+    const agora = new Date().toLocaleString('pt-BR');
+    
+    // Filtros de vagas abertas e travadas
+    const issuesAbertasList = issuesAbertas.map(i => `- [#${i.number}](${i.html_url}) - ${i.title}`).slice(0, 10).join('\n') || '- Nenhuma vaga/issue aberta no momento.';
+    const issuesTravadasList = issuesTravadas.map(i => `- [#${i.number}](${i.html_url}) - ${i.title}`).slice(0, 10).join('\n') || '- Nenhuma vaga travada ou em alerta.';
     const issuesAbertas = Array.isArray(openIssues) ? openIssues.filter(i => !i.pull_request) : [];
     const issuesTravadas = issuesAbertas.filter(i => i.labels && i.labels.some(l => l.name === 'cortex-travada' || l.name === 'cortex-alerta'));
     const pullsAbertos = Array.isArray(openPulls) ? openPulls : [];
