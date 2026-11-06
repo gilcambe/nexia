@@ -44,12 +44,12 @@ async function atualizaEstado() {
 
     const agora = new Date().toLocaleString('pt-BR');
     
-    // Filtros de vagas abertas e travadas
-    const issuesAbertasList = issuesAbertas.map(i => `- [#${i.number}](${i.html_url}) - ${i.title}`).slice(0, 10).join('\n') || '- Nenhuma vaga/issue aberta no momento.';
-    const issuesTravadasList = issuesTravadas.map(i => `- [#${i.number}](${i.html_url}) - ${i.title}`).slice(0, 10).join('\n') || '- Nenhuma vaga travada ou em alerta.';
     const issuesAbertas = Array.isArray(openIssues) ? openIssues.filter(i => !i.pull_request) : [];
     const issuesTravadas = issuesAbertas.filter(i => i.labels && i.labels.some(l => l.name === 'cortex-travada' || l.name === 'cortex-alerta'));
     const pullsAbertos = Array.isArray(openPulls) ? openPulls : [];
+
+    const issuesAbertasList = issuesAbertas.map(i => `- [#${i.number}](${i.html_url}) - ${i.title}`).slice(0, 10).join('\n') || '- Nenhuma vaga/issue aberta no momento.';
+    const issuesTravadasList = issuesTravadas.map(i => `- [#${i.number}](${i.html_url}) - ${i.title}`).slice(0, 10).join('\n') || '- Nenhuma vaga travada ou em alerta.';
 
     // Construção do resumo compacto focado na fila de vagas (abertas, travadas, últimos merges)
     const ultimosPulls = Array.isArray(openPulls) ? openPulls.slice(0, 5) : [];
