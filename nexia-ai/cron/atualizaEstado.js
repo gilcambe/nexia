@@ -48,7 +48,8 @@ async function atualizaEstado() {
     const pullsAbertos = Array.isArray(openPulls) ? openPulls : [];
 
     // Construção do resumo compacto focado nas informações solicitadas
-    const resumoContent = `# Estado do Repositório (NEXIA OS)\n
+    const resumoContent = `# Estado do Repositório (NEXIA OS)
+
 *Última atualização:* ${agora}
 *Repositório:* \`${repo}\`
 
@@ -58,7 +59,8 @@ async function atualizaEstado() {
 - **Pull Requests Abertos:** ${pullsAbertos.length}
 
 ---
-*Este arquivo é gerado automaticamente pelo script \`nexia-ai/cron/atualizaEstado.js\` para fornecer um panorama rápido do estado atual do projeto.*\n`;
+*Este arquivo é gerado automaticamente pelo script \`nexia-ai/cron/atualizaEstado.js\` para fornecer um panorama rápido do estado atual do projeto.*
+
 
     const docsDir = path.resolve('docs');
     // Garante que o diretório 'docs' exista
