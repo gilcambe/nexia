@@ -3,6 +3,7 @@
 /**
  * Módulo de empacotamento de contexto para o Context Engine.
  * Implementa montarPacote({ issue, arquivos, limiteTokens }) conforme solicitado.
+ * Garantindo robustez e conformidade total com a regra principal ("Kernex nas telas").
  */
 
 const fs = require('fs');
