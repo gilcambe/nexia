@@ -592,17 +592,17 @@ const NexiaRuntime = (() => {
     // 4. SW antigo /sw.js aposentado: parar de registrar /sw.js e desregistrar se existir registro com scope / e script /sw.js.
     if ('serviceWorker' in navigator) {
       try {
-        const registration = await navigator.serviceWorker.getRegistration('/');
-        if (registration) {
-          const scriptURL = registration.active?.scriptURL || registration.waiting?.scriptURL || registration.installing?.scriptURL || '';
-          if (scriptURL.includes('/sw.js')) {
-            await registration.unregister();
+        const exactReg = await navigator.serviceWorker.getRegistration('/');
+        if (exactReg) {
+          const exactScript = exactReg.active?.scriptURL || exactReg.waiting?.scriptURL || exactReg.installing?.scriptURL || '';
+          if (exactScript.includes('/sw.js')) {
+            await exactReg.unregister();
           }
         }
         const registrations = await navigator.serviceWorker.getRegistrations();
         for (const r of registrations) {
           const scriptURL = r.active?.scriptURL || r.waiting?.scriptURL || r.installing?.scriptURL || '';
-          if (scriptURL.endsWith('/sw.js') || (r.scope === window.location.origin + '/' && scriptURL.includes('/sw.js'))) {
+          if (r.scope === window.location.origin + '/' && scriptURL.includes('/sw.js')) {
             await r.unregister();
           }
         }
