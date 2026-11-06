@@ -2,7 +2,7 @@
 // e guarda o visual (scripts, estilos, ícones) para abrir bem mais rápido. Dados e /api sempre vão direto à rede.
 
 self.addEventListener("message", (e) => { if (e.data && e.data.tipo === "atualizar") self.skipWaiting(); });
-const CACHE = "cortex-v4";
+const CACHE = "cortex-v5";
 self.addEventListener("activate", (e) => {
   e.waitUntil(
     caches.keys().then(keys =>
