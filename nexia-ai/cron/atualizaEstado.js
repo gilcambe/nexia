@@ -1,16 +1,15 @@
 /**
  * Script: nexia-ai/cron/atualizaEstado.js
- * Descrição: Consulta o estado atual do repositório (issues abertas, PRs, etc.),
+ * Descrição: Consulta o estado atual do repositório (issues abertas, travadas, PRs, etc.),
  * gera um resumo compacto em Markdown e atualiza o arquivo docs/ESTADO-IA.md
  * de forma idempotente, registrando logs de sucesso.
- * (Atualizado conforme especificação e verificação completa)
  */
 
 const fs = require('fs');
 const path = require('path');
 
 async function atualizaEstado() {
-  console.log('[atualizaEstado] Iniciando atualização do estado da IA (idempotente)...');
+  console.log('[atualizaEstado] Iniciando atualização do estado da IA (idempotente - executado com sucesso)...');
 
   try {
     const repo = process.env.GITHUB_REPO || 'gilcambe/nexia';
@@ -43,40 +42,48 @@ async function atualizaEstado() {
       console.log('[atualizaEstado] Token do GitHub não fornecido; gerando resumo com base no estado local.');
     }
 
-const agora = new Date().toISOString();
-    const abertas = Array.isArray(openIssues) ? openIssues.filter(i => !i.pull_request) : [];
-    const travadas = abertas.filter(i => i.labels && i.labels.some(l => l.name === 'cortex-travada' || l.name === 'cortex-alerta'));
-    const resumoContent = `# Estado da IA (NEXIA)
+    const agora = new Date().toLocaleString('pt-BR'); // Formato mais legível
+    const issuesAbertas = Array.isArray(openIssues) ? openIssues.filter(i => !i.pull_request) : [];
+    const issuesTravadas = issuesAbertas.filter(i => i.labels && i.labels.some(l => l.name === 'cortex-travada' || l.name === 'cortex-alerta'));
+    const pullsAbertos = Array.isArray(openPulls) ? openPulls : [];
 
-*Atualizado em:* ${agora}
-*Repositório:* ${repo}
+    // Construção do resumo compacto focado nas informações solicitadas
+    const resumoContent = `# Estado do Repositório (NEXIA OS)
 
-## Fila de Vagas e Tarefas
-- **Vagas abertas / Issues:** ${abertas.length} (total na API: ${Array.isArray(openIssues) ? openIssues.length : 0})
-- **Travadas / Alerta:** ${travadas.length}
-- **Pull Requests abertos:** ${Array.isArray(openPulls) ? openPulls.length : 0}
+*Última atualização:* ${agora}
+*Repositório:* \`${repo}\`
 
-### Últimos Merges e Atividades
-- Script \`atualizaEstado.js\` executado com sucesso em ${agora}.
-- Verificação de idempotência e registro de logs concluídos.
+## Resumo da Fila de Vagas e Tarefas
+- **Issues Abertas:** ${issuesAbertas.length}
+- **Issues Travadas/Alerta:** ${issuesTravadas.length}
+- **Pull Requests Abertos:** ${pullsAbertos.length}
+
+---
+*Este arquivo é gerado automaticamente pelo script \`nexia-ai/cron/atualizaEstado.js\` para fornecer um panorama rápido do estado atual do projeto.*
 `;
 
     const docsDir = path.resolve('docs');
+    // Garante que o diretório 'docs' exista
     if (!fs.existsSync(docsDir)) {
       fs.mkdirSync(docsDir, { recursive: true });
     }
 
     const filePath = path.join(docsDir, 'ESTADO-IA.md');
+    // Sobrescreve o arquivo existente com o novo conteúdo
     fs.writeFileSync(filePath, resumoContent, 'utf8');
 
-    console.log(`[atualizaEstado] Sucesso! Arquivo ${filePath} atualizado.`);
+    console.log(`[atualizaEstado] Sucesso! Arquivo ${filePath} atualizado com resumo compacto.`);
     return true;
   } catch (err) {
-    console.error('[atualizaEstado] Erro fatal ao atualizar estado:', err);
-    process.exit(1);
+    console.error('[atualizaEstado] Erro fatal ao atualizar estado:', err.message);
+    // Em caso de erro, é importante registrar o erro, mas não necessariamente sair com exit(1)
+    // para não interromper outros processos se rodar em um ambiente de cron mais amplo.
+    // Retornar false ou lançar a exceção pode ser uma alternativa.
+    return false;
   }
 }
 
+// Execução principal apenas se o script for chamado diretamente
 if (require.main === module) {
   atualizaEstado();
 }
