@@ -6,6 +6,7 @@
 const { totais } = require('./motor');
 const cartoes = require('./cartoes');
 const fin = require('./financas');
+const { resumoDividas } = require('./dividas');
 
 const MES = /^\d{4}-\d{2}$/;
 const arred = (n) => Math.round(n * 100) / 100;
@@ -23,7 +24,7 @@ function despesaMensalMedia(lancs, mes) {
 }
 
 /** Indicadores com dados. Cada um: { id, nome, valor, texto, nota } ou lacuna. */
-function saudeFinanceira({ receitas, despesas, saldo, despesaMedia, limiteTotal, comprometido, limites }) {
+function saudeFinanceira({ receitas, despesas, saldo, despesaMedia, limiteTotal, comprometido, limites, dividas }) {
   const ind = []; const lacunas = [];
   if (receitas > 0) {
     const taxa = (receitas - despesas) / receitas;
@@ -41,7 +42,16 @@ function saudeFinanceira({ receitas, despesas, saldo, despesaMedia, limiteTotal,
     const ok = limites.filter((l) => l.status === 'ok').length;
     ind.push({ id: 'orcamento', nome: 'Orçamento respeitado', valor: ok, texto: `${ok} de ${limites.length} limite(s) dentro do combinado`, nota: Math.round((ok / limites.length) * 100) });
   }
-  lacunas.push('dívidas (endividamento e custo dos juros)');
+  if (dividas && dividas.sem) {
+    ind.push({ id: 'endividamento', nome: 'Endividamento', valor: 0, texto: 'sem dívidas (informado por você)', nota: 100 });
+  } else if (dividas && dividas.registradas) {
+    if (receitas > 0) {
+      const pct = Math.round((dividas.parcelas_mes / receitas) * 1000) / 10;
+      ind.push({ id: 'endividamento', nome: 'Renda comprometida com dívidas', valor: pct, texto: `${String(pct).replace('.', ',')}% da renda vai para parcelas`, nota: Math.round(clamp(((45 - pct) / 30) * 100)) });
+      const jp = Math.round((dividas.juros_mes_estimado / receitas) * 1000) / 10;
+      ind.push({ id: 'juros', nome: 'Custo dos juros', valor: jp, texto: `${String(jp).replace('.', ',')}% da renda vira juros`, nota: Math.round(clamp(100 - jp * 10)) });
+    } else lacunas.push('renda do mês (para medir o peso das dívidas)');
+  } else lacunas.push('dívidas (cadastre ou informe que não tem)');
   const nota = ind.length >= 3 ? Math.round(ind.reduce((s, x) => s + x.nota, 0) / ind.length) : null;
   return { nota, indicadores: ind, lacunas, aviso: nota === null ? 'Ainda não há dados suficientes para uma nota (preciso de pelo menos 3 indicadores).' : `Nota calculada só com ${ind.length} indicador(es) que têm dados. O que falta está em "lacunas".` };
 }
@@ -79,14 +89,17 @@ async function agirSaude(acao, body, c) {
   const { base, listar, agoraIso } = c;
   const mes = texto(body.mes, 7) || agoraIso.slice(0, 7);
   if (!MES.test(mes)) return [400, { error: 'O mês precisa estar no formato AAAA-MM.' }];
-  const [lancs, contas, limites, cts, gastos] = await Promise.all(['lancamentos', 'contas', 'limites', 'cartoes', 'gastos'].map((n) => listar(base.collection(n))));
+  const [lancs, contas, limites, cts, gastos, dividasLista] = await Promise.all(['lancamentos', 'contas', 'limites', 'cartoes', 'gastos', 'dividas'].map((n) => listar(base.collection(n))));
+  const cfgDiv = await base.collection('config').doc('dividas').get();
+  const semDividas = !dividasLista.length && !!(cfgDiv && cfgDiv.exists && cfgDiv.data().sem_dividas);
   const doMes = totais(lancs.filter((x) => String(x.data).startsWith(mes)));
   const sd = fin.saldoDisponivel(contas);
   const media = despesaMensalMedia(lancs, mes);
   const consumo = fin.consumoLimites(limites, doMes.por_categoria);
   const lim = cts.map((k) => cartoes.limiteDoCartao(k, gastos, mes));
   const limiteTotal = lim.reduce((s, x) => s + x.limite, 0); const comprometido = lim.reduce((s, x) => s + x.comprometido, 0);
-  const saude = () => saudeFinanceira({ receitas: doMes.receitas, despesas: doMes.despesas, saldo: sd.saldo, despesaMedia: media, limiteTotal, comprometido, limites: consumo });
+  const resDiv = resumoDividas(dividasLista, semDividas, doMes.receitas);
+  const saude = () => saudeFinanceira({ receitas: doMes.receitas, despesas: doMes.despesas, saldo: sd.saldo, despesaMedia: media, limiteTotal, comprometido, limites: consumo, dividas: resDiv });
   switch (acao) {
     case 'saude_financeira': {
       const atual = saude();

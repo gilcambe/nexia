@@ -38,10 +38,12 @@
       <div class="card kf-insight"><div class="fraco">💡 Resumo do mês</div><div>${esc(insight)}</div></div>
       <button class="btn" id="kf-doc" type="button">📄 Enviar documento</button>
       <div class="linha" style="margin-top:8px"><button class="btn sec" id="kf-ia" type="button">🤖 Perguntar à IA</button><button class="btn sec" id="kf-posso" type="button">🛒 Posso comprar?</button></div>
+      ${r.dividas.registradas ? `<div class="card" style="margin-top:12px"><div class="item" style="padding:0;border:0"><span class="fraco">Dívidas</span><span class="n verm">${brl(r.dividas.total)}</span></div><div class="fraco">Parcelas ${brl(r.dividas.parcelas_mes)} por mês${r.dividas.comprometimento_pct !== null ? ' · ' + String(r.dividas.comprometimento_pct).replace('.', ',') + '% da renda' : ''}</div><button class="btn sec mini" id="kf-div" type="button" style="margin-top:8px">Ver plano de quitação</button></div>` : r.dividas.sem ? '' : `<div class="card" style="margin-top:12px"><div class="fraco">Ainda não sei se você tem dívidas. Cadastre ou diga que não tem, e a nota de saúde fica mais completa.</div><button class="btn sec mini" id="kf-div" type="button" style="margin-top:8px">Ir para Dívidas</button></div>`}
       ${r.vencimentos.length ? `<div class="card" style="margin-top:12px"><div class="fraco">Próximos vencimentos de fatura</div>${r.vencimentos.map((v) => `<div class="item"><span class="n">💳 ${esc(v.cartao)}</span><span>${v.em_dias === 0 ? 'hoje' : 'em ' + v.em_dias + ' dia(s)'} · dia ${v.dia}</span></div>`).join('')}</div>` : ''}
       ${cats.length ? `<div class="card" style="margin-top:12px"><div class="fraco">Gastos por categoria</div>${cats.map(([k, v]) => `<div style="margin:6px 0"><div class="item" style="padding:0;border:0"><span>${esc(NOME_CAT[k] || k)}</span><span>${brl(v)}</span></div>${barra(r.despesas ? (v / r.despesas) * 100 : 0)}</div>`).join('')}</div>` : ''}
       ${r.lacunas.length ? `<div class="card fraco" style="margin-top:12px">Para calcular saldo disponível e saúde financeira ainda faltam: ${r.lacunas.map((l) => esc(LACUNA[l] || l)).join(', ')}. Nada é estimado no lugar.</div>` : ''}`;
     el.querySelector('#kf-doc').onclick = () => MB.abrirAba('documentos');
+    const bd = el.querySelector('#kf-div'); if (bd) bd.onclick = () => MB.abrirAba('dividas');
     el.querySelector('#kf-ia').onclick = () => MB.abrirAba('assistente');
     el.querySelector('#kf-posso').onclick = () => MB.abrirAba('assistente');
   };

@@ -71,7 +71,10 @@ function responder(texto, d) {
   }
   if (/quanto (eu )?(devo|tenho (de|em)? ?(fatura|divida)).*cart|fatura/.test(t) || /quanto devo nos cart/.test(t))
     return r(`Seus cartões têm ${fmt(d.comprometido)} comprometidos (estimativa: soma as parcelas do mês em diante, sem saber o que já foi pago).`, 'compras e parcelas lançadas nos cartões', d.temCartao ? [] : ['cartões']);
-  if (/patrimonio/.test(t)) return r(`Seu patrimônio líquido é ${fmt(d.patrimonio)} (contas em reais + investimentos). Dívidas ainda não estão cadastradas, então não foram descontadas.`, 'contas e carteira', ['dividas']);
+  if (/patrimonio/.test(t)) return d.dividasConhecidas
+    ? r(`Seu patrimônio líquido é ${fmt(d.patrimonio)} (contas em reais + investimentos${d.dividaTotal ? ' − dívidas de ' + fmt(d.dividaTotal) : ', sem dívidas'}).`, 'contas, carteira e dívidas')
+    : r(`Seu patrimônio líquido é ${fmt(d.patrimonio)} (contas em reais + investimentos). Dívidas ainda não estão cadastradas, então não foram descontadas.`, 'contas e carteira', ['dividas']);
+  if (/quanto (eu )?devo\b|minhas dividas|divida/.test(t) && !/cart/.test(t)) return d.dividasConhecidas ? r(d.dividaTotal ? `Você deve ${fmt(d.dividaTotal)} em dívidas cadastradas (fora a fatura dos cartões).` : 'Você informou que não tem dívidas.', 'dívidas que você cadastrou') : r('Ainda não sei: você não cadastrou dívidas nem informou que não tem.', 'dívidas', ['dividas']);
   if (/milhas|pontos/.test(t)) return r(`Suas milhas e pontos valem cerca de ${fmt(d.milhas)} pelo valor do milheiro que você informou.`, 'saldos de pontos que você cadastrou');
   if (/quanto (eu )?(recebi|ganhei)/.test(t)) return r(`Você recebeu ${fmt(d.receitas)} em ${d.mes}.`, fonteMes);
   return null;
@@ -89,7 +92,9 @@ async function agirAssistente(acao, body, c) {
     if (cmd && cmd.erro) return [200, { tipo: 'recusa', resposta: cmd.erro }];
     if (cmd) return [200, { tipo: 'proposta', proposta: cmd, resposta: descreve(cmd), precisa_confirmar: true }];
     const mes = agoraIso.slice(0, 7);
-    const [lancs, contas, carteira, pontos, cts, gastos] = await Promise.all(['lancamentos', 'contas', 'carteira', 'pontos', 'cartoes', 'gastos'].map((n) => listar(base.collection(n))));
+    const [lancs, contas, carteira, pontos, cts, gastos, dividas] = await Promise.all(['lancamentos', 'contas', 'carteira', 'pontos', 'cartoes', 'gastos', 'dividas'].map((n) => listar(base.collection(n))));
+    const cfgDiv = await base.collection('config').doc('dividas').get();
+    const dividaTotal = dividas.reduce((s, x) => s + Math.round(x.saldo * 100), 0) / 100;
     const doMes = lancs.filter((x) => String(x.data).startsWith(mes));
     const tot = totais(doMes);
     const sd = fin.saldoDisponivel(contas);
@@ -97,7 +102,7 @@ async function agirAssistente(acao, body, c) {
     const comprometido = cts.reduce((s, k) => s + Math.round(cartoes.limiteDoCartao(k, gastos, mes).comprometido * 100), 0) / 100;
     const inv = carteira.reduce((s, x) => s + Math.round((x.valor || 0) * 100), 0) / 100;
     const brl = contas.filter((k) => (k.moeda || 'BRL') === 'BRL').reduce((s, k) => s + Math.round((k.saldo || 0) * 100), 0) / 100;
-    const out = responder(texto, { mes, agoraIso, saldo: sd.saldo, por_categoria: tot.por_categoria, qtd: doMes.length, maior: desp[0], comprometido, temCartao: cts.length > 0, patrimonio: Math.round((brl + inv) * 100) / 100,
+    const out = responder(texto, { mes, agoraIso, saldo: sd.saldo, por_categoria: tot.por_categoria, qtd: doMes.length, maior: desp[0], comprometido, temCartao: cts.length > 0, patrimonio: Math.round((brl + inv - dividaTotal * 1) * 100) / 100, dividaTotal, dividasConhecidas: dividas.length > 0 || !!(cfgDiv && cfgDiv.exists && cfgDiv.data().sem_dividas),
       milhas: Math.round(pontos.reduce((s, p) => s + ((p.saldo || 0) / 1000) * (p.valor_milheiro || 0), 0) * 100) / 100, receitas: tot.receitas });
     return [200, out ? { tipo: 'resposta', ...out } : { tipo: 'nao_entendi', resposta: 'Não entendi esse pedido e prefiro não chutar um número. ' + AJUDA }];
   }
