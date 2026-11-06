@@ -47,24 +47,24 @@ async function atualizaEstado() {
     const issuesTravadas = issuesAbertas.filter(i => i.labels && i.labels.some(l => l.name === 'cortex-travada' || l.name === 'cortex-alerta'));
     const pullsAbertos = Array.isArray(openPulls) ? openPulls : [];
 
-    // Construção do resumo compacto focado nas informações solicitadas
-    const resumoContent = `# Estado do projeto e memória (para qualquer IA continuar)
+    // Construção do resumo compacto focado na fila de vagas (abertas, travadas, últimos merges)
+    const ultimosPulls = Array.isArray(openPulls) ? openPulls.slice(0, 5) : [];
+    
+    const resumoContent = `# Estado da Fila e Vagas da IA (Gerado Automaticamente)
 
-Atualizado em ${agora}. Complementa \`docs/CONTEXTO-IA.md\` (regras). A Central junta os dois arquivos com a fila do Cortex ao vivo no botão **📦 Continuar em outra IA** (aba 🧠 Cortex). **Nunca coloque chave ou senha aqui.**
+Atualizado em ${agora}. Este arquivo é atualizado de forma idempotente pelo script \`nexia-ai/cron/atualizaEstado.js\`.
 
-## Foco atual
-- **Body Coach** é o produto para vender agora: https://nexiabodycoach.pages.dev (PWA, nada de dado falso). Play Store: conta paga, esperando verificação do Google; precisa de 12 testadores.
-- **Cortex é de uso INTERNO** (decisão do dono): não vai ser vendido por enquanto. Ele serve para construir de graça os sites, páginas, SaaS e apps dos clientes.
-- Marca pública **Kernex**; nomes internos seguem \`nexia\`.
-
-## Fila de Vagas e Tarefas (Atualizado automaticamente)
+## Resumo da Fila e Vagas
 - **Repositório:** \`${repo}\`
-- **Issues Abertas:** ${issuesAbertas.length}
+- **Issues/Vagas Abertas:** ${issuesAbertas.length}
 - **Issues Travadas/Alerta:** ${issuesTravadas.length}
 - **Pull Requests Abertos:** ${pullsAbertos.length}
 
+## Últimos Pull Requests / Merges Recentes
+${ultimosPulls.length > 0 ? ultimosPulls.map(pr => `- [#${pr.number}](${pr.html_url}) - ${pr.title} (${pr.state})`).join('\n') : '- Nenhum PR recente listado ou sem acesso à API do GitHub.'}
+
 ---
-*Este arquivo é gerado automaticamente e de forma idempotente pelo script \`nexia-ai/cron/atualizaEstado.js\` para fornecer um panorama rápido do estado atual do projeto.*
+*Script: nexia-ai/cron/atualizaEstado.js*
 `;
 
     const docsDir = path.resolve('docs');
