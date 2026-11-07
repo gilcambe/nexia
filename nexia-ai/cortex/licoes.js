@@ -57,5 +57,4 @@ class LessonStore {
   }
 }
 
-const lessonStore = new LessonStore();
-module.exports = { LessonStore, lessonStore };
+module.exports = { LessonStore };
