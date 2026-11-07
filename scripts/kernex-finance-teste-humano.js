@@ -176,6 +176,15 @@ const LIDO = { tipo_documento: 'fatura', instituicao: 'Nubank', lancamentos: [
   ok(/Dívidas/.test(ini3) && /R\$\s?2\.500,00/.test(ini3) && /Ver plano de quitação/.test(ini3), 'Início: card de dívidas com total e atalho para o plano');
   ok(/Renda comprometida com dívidas/.test(ini3), 'Início: a nota de saúde passou a medir a renda comprometida com dívidas');
   await p.screenshot({ path: path.join(SAIDA, '12-inicio-dividas.png') });
+  await p.click('[data-aba=investimentos]');
+  await p.waitForSelector('#si-ir');
+  await p.fill('#si-ini', '1000'); await p.fill('#si-ap', '100'); await p.fill('#si-tx', '1'); await p.fill('#si-an', '1');
+  await p.click('#si-ir');
+  await p.waitForSelector('#si-res .card');
+  const sim = await p.textContent('#si-res');
+  ok(/2\.395,07/.test(sim) && /não é recomendação/.test(sim), 'Investir: simulador dá R$ 2.395,07 e mostra aviso de que não é recomendação');
+  ok(/Próximos 60 dias/.test(await p.textContent('#conteudo')), 'Investir: calendário de vencimentos e proventos aparece');
+  await p.screenshot({ path: path.join(SAIDA, '13-investir.png') });
   for (const a of ['carteira', 'gastos', 'compras', 'objetivos', 'orcamento', 'consultor', 'pontos']) {
     await p.click(`[data-aba=${a}]`); await p.waitForTimeout(400);
     ok(!/Não consegui carregar|abriu vazia/.test(await p.textContent('#conteudo')) && (await p.textContent('#conteudo')).trim().length > 5, `aba antiga ${a} continua abrindo`);

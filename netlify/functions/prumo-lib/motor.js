@@ -119,4 +119,45 @@ function renegociar({ saldo, parcela_atual, juros_mes_atual, nova_taxa_mes, praz
     economia: atual.nunca ? null : Math.round((atual.juros_pagos - reais(custoNovo)) * 100) / 100, compensa: atual.nunca ? true : atual.juros_pagos > reais(custoNovo) };
 }
 
-module.exports = { conciliar, patrimonio, custoMilheiro, chave, totais, simularQuitacao, compararEstrategias, quitacaoAntecipada, renegociar };
+/** Juros compostos com aportes mensais (aporte no fim de cada mês). Tudo em centavos inteiros; arredonda a cada mês. */
+function jurosCompostos({ inicial = 0, aporte = 0, taxa_mes = 0, meses = 0 }) {
+  let saldo = centavos(inicial); const ap = centavos(aporte); const i = Number(taxa_mes) / 100;
+  const n = Math.max(0, Math.floor(Number(meses) || 0));
+  const serie = [];
+  let investido = saldo;
+  for (let m = 1; m <= n; m++) {
+    saldo = Math.round(saldo * (1 + i)) + ap; investido += ap;
+    if (m % 12 === 0 || m === n) serie.push({ mes: m, saldo: reais(saldo), investido: reais(investido) });
+  }
+  return { meses: n, investido: reais(investido), final: reais(saldo), rendimento: reais(saldo - investido), serie };
+}
+
+/** Concentração por tipo e por ativo; avisa quando um só pesa demais. Sem itens, devolve lacuna, não zero. */
+function concentracao(itens, limitePct = 40) {
+  const lista = (itens || []).map((x) => ({ nome: x.nome, tipo: x.tipo || 'outro', c: centavos(x.valor) })).filter((x) => x.c > 0);
+  const total = lista.reduce((s, x) => s + x.c, 0);
+  if (!total) return { total: null, por_tipo: [], por_ativo: [], alertas: [], lacuna: 'Carteira vazia: nada para analisar.' };
+  const agr = (chaveFn) => { const m = new Map(); for (const x of lista) m.set(chaveFn(x), (m.get(chaveFn(x)) || 0) + x.c); return [...m].map(([nome, c]) => ({ nome, valor: reais(c), pct: Math.round((c / total) * 1000) / 10 })).sort((a, b) => b.valor - a.valor); };
+  const por_tipo = agr((x) => x.tipo); const por_ativo = agr((x) => x.nome);
+  const alertas = [];
+  if (por_ativo[0].pct > limitePct) alertas.push(`"${por_ativo[0].nome}" é ${por_ativo[0].pct}% da carteira (acima de ${limitePct}%).`);
+  if (por_tipo[0].pct > 70) alertas.push(`${por_tipo[0].pct}% está em um só tipo (${por_tipo[0].nome}).`);
+  return { total: reais(total), por_tipo, por_ativo, alertas, diversificacao: por_tipo.length };
+}
+
+/** Rentabilidade simples: (valor atual - custo) / custo. Sem custo conhecido devolve null. */
+function rentabilidade(custo, atual) {
+  const c = centavos(custo); const a = centavos(atual);
+  if (!Number.isFinite(c) || c <= 0 || !Number.isFinite(a)) return null;
+  return { ganho: reais(a - c), pct: Math.round(((a - c) / c) * 10000) / 100 };
+}
+
+/** Cotação só vale com fonte e data/hora; passou de maxDias (ou sem data) => desatualizada. */
+function cotacaoStatus(cot, agoraISO, maxDias = 3) {
+  if (!cot || !cot.fonte || !cot.data_hora || !Number.isFinite(Number(cot.preco))) return { valida: false, desatualizada: true, motivo: 'sem fonte ou data' };
+  const dias = (Date.parse(agoraISO) - Date.parse(cot.data_hora)) / 86400000;
+  if (!Number.isFinite(dias)) return { valida: false, desatualizada: true, motivo: 'data inválida' };
+  return { valida: true, desatualizada: dias > maxDias, dias: Math.max(0, Math.floor(dias)) };
+}
+
+module.exports = { jurosCompostos, concentracao, rentabilidade, cotacaoStatus, conciliar, patrimonio, custoMilheiro, chave, totais, simularQuitacao, compararEstrategias, quitacaoAntecipada, renegociar };
