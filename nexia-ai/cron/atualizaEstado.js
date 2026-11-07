@@ -48,27 +48,27 @@ async function atualizaEstado() {
     const pullsAbertos = Array.isArray(openPulls) ? openPulls : [];
 
     let closedPulls = [];
-        let mergedPulls = [];
+    let ultimosMerges = [];
 
-        if (token) {
-          try {
-            const headers = {
-              'Authorization': `Bearer ${token}`,
-              'Accept': 'application/vnd.github+json',
-              'User-Agent': 'Nexia-AI-AtualizaEstado'
-            };
+    if (token) {
+      try {
+        const headers = {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/vnd.github+json',
+          'User-Agent': 'Nexia-AI-AtualizaEstado'
+        };
 
-            const closedPullsRes = await fetch(`https://api.github.com/repos/${repo}/pulls?state=closed&per_page=15`, { headers });
-            if (closedPullsRes.ok) {
-              closedPulls = await closedPullsRes.json();
-              mergedPulls = closedPulls.filter(p => p.merged_at !== null);
-            }
-          } catch (mErr) {
-            console.warn('[atualizaEstado] Aviso ao consultar pulls fechados/merged:', mErr.message);
-          }
+        const closedPullsRes = await fetch(`https://api.github.com/repos/${repo}/pulls?state=closed&per_page=15`, { headers });
+        if (closedPullsRes.ok) {
+          closedPulls = await closedPullsRes.json();
+          ultimosMerges = closedPulls.filter(p => p.merged_at !== null);
         }
+      } catch (mErr) {
+        console.warn('[atualizaEstado] Aviso ao consultar pulls fechados/merged:', mErr.message);
+      }
+    }
 
-        const resumoContent = `# Fila de Vagas e Estado do Cortex
+    const resumoContent = `# Fila de Vagas e Estado do Cortex
 
 Atualizado em ${agora}. Gerado por \`nexia-ai/cron/atualizaEstado.js\`.
 
