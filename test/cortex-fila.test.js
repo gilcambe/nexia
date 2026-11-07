@@ -34,7 +34,7 @@ describe('validatePart - cortex-fila unit tests', () => {
 
     expect(validatePart).toBeDefined();
     const result = validatePart(part, 1);
-    expect(result).not.toBeNull();
+    expect(result).toBe(true);
   });
 
   test('Caso 2: caminho não existe, a tarefa não menciona criação e attempt é 3 - validatePart devolve null', () => {
