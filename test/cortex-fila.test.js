@@ -32,16 +32,9 @@ describe('validatePart - cortex-fila unit tests', () => {
       tarefa: 'criar arquivo de teste'
     };
 
-    if (validatePart) {
-      const result = validatePart(part, 1);
-      expect(result).not.toBeNull();
-    } else {
-      // Simulação caso validatePart não seja exportada diretamente
-      const criaArquivo = /criar arquivo/i.test(part.tarefa);
-      const exists = fs.existsSync(nonexistentPath);
-      const valid = exists || criaArquivo;
-      expect(valid).toBe(true);
-    }
+    expect(validatePart).toBeDefined();
+    const result = validatePart(part, 1);
+    expect(result).not.toBeNull();
   });
 
   test('Caso 2: caminho não existe, a tarefa não menciona criação e attempt é 3 - validatePart devolve null', () => {
@@ -51,20 +44,8 @@ describe('validatePart - cortex-fila unit tests', () => {
       tarefa: 'atualizar sistema'
     };
 
-    if (validatePart) {
-      const result = validatePart(part, 3);
-      expect(result).toBeNull();
-    } else {
-      const criaArquivo = /criar arquivo/i.test(part.tarefa);
-      const attempt = 3;
-      const exists = fs.existsSync(nonexistentPath);
-      let result = part;
-      for (const f of part.arquivos) {
-        if (!exists && !criaArquivo && attempt >= 3) {
-          result = null;
-        }
-      }
-      expect(result).toBeNull();
-    }
+    expect(validatePart).toBeDefined();
+    const result = validatePart(part, 3);
+    expect(result).toBeNull();
   });
 });
