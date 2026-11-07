@@ -86,11 +86,14 @@
     if (!itens.length) { el.innerHTML = '<div class="card">Não achei valores nesses prints. Tente um print mais nítido ou preencha à mão.</div><button class="btn sec" id="volta">Voltar</button>'; el.querySelector('#volta').onclick = recarregar; return; }
     // Situação de cada item: novo, atualiza um que já existe, ou repetido nestes prints.
     const ja = new Map(atuais.map((a) => [chave(a), a]));
-    const vistos = new Set();
+    const vistos = new Map();
     const situ = itens.map((i) => {
-      const k = chave(i);
+      let k = chave(i);
+      // Mesmo nome com valor diferente = outra linha do mesmo plano: renomeia para não sobrescrever ao salvar.
+      if (!i.ticker && vistos.has(k) && vistos.get(k) !== Number(i.valor)) { let n = 2; while (vistos.has(chave({ ...i, nome: `${i.nome} (linha ${n})` }))) n++; i.nome = `${i.nome} (linha ${n})`; k = chave(i); }
+      // Depois disso, mesma chave = mesma posição repetida (o mesmo print mandado duas vezes).
       if (vistos.has(k)) return { s: 'dup', txt: '⚠️ Repetido nestes prints (não vou salvar duas vezes)' };
-      vistos.add(k);
+      vistos.set(k, Number(i.valor));
       const a = ja.get(k);
       return a ? { s: 'atu', txt: `🔄 Atualiza: ${brl(a.valor)} → ${brl(i.valor)}` } : { s: 'novo', txt: '🆕 Novo' };
     });
