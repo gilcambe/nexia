@@ -5,9 +5,7 @@ self.addEventListener('install', (event) => {
   self.skipWaiting();
 });
 
-self.addEventListener('fetch', (event) => {
-  // SW aposentado: não intercepta fetch (não chama event.respondWith), deixa o browser buscar normalmente.
-});
+
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
