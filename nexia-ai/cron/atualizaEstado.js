@@ -5,7 +5,7 @@
  * de forma idempotente, registrando logs de sucesso.
  */
 
-const fs = require('fs');
+/**\n * Script: nexia-ai/cron/atualizaEstado.js\n * Descrição: Consulta o estado atual do repositório (issues abertas, travadas, PRs, etc.),\n * gera um resumo compacto em Markdown e atualiza o arquivo docs/ESTADO-IA.md\n * de forma idempotente, registrando logs de sucesso.\n */\n\nconst fs = require('fs');
 const path = require('path');
 
 async function atualizaEstado() {
