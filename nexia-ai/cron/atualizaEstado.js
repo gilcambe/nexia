@@ -9,7 +9,7 @@ const fs = require('fs');
 const path = require('path');
 
 async function atualizaEstado() {
-  console.log('[atualizaEstado] Iniciando atualização do estado da IA (idempotente - executado com sucesso)...');
+  console.log('[atualizaEstado] Iniciando atualização do estado da IA (idempotente)...');
 
   try {
     const repo = process.env.GITHUB_REPO || 'gilcambe/nexia';
@@ -39,60 +39,49 @@ async function atualizaEstado() {
         console.warn('[atualizaEstado] Aviso ao consultar GitHub API:', apiErr.message);
       }
     } else {
-      console.log('[atualizaEstado] Token do GitHub não fornecido; gerando resumo com base no estado local.');
+      console.log('[atualizaEstado] Token do GitHub não fornecido; gerando resumo com base no estado padrão.');
     }
 
     const agora = new Date().toLocaleString('pt-BR');
-    
     const issuesAbertas = Array.isArray(openIssues) ? openIssues.filter(i => !i.pull_request) : [];
     const issuesTravadas = issuesAbertas.filter(i => i.labels && i.labels.some(l => l.name === 'cortex-travada' || l.name === 'cortex-alerta'));
     const pullsAbertos = Array.isArray(openPulls) ? openPulls : [];
 
-    const issuesAbertasList = issuesAbertas.map(i => `- [#${i.number}](${i.html_url}) - ${i.title}`).slice(0, 10).join('\n') || '- Nenhuma vaga/issue aberta no momento.';
-    const issuesTravadasList = issuesTravadas.map(i => `- [#${i.number}](${i.html_url}) - ${i.title}`).slice(0, 10).join('\n') || '- Nenhuma vaga travada ou em alerta.';
+    const resumoContent = `# Estado do projeto e memória (para qualquer IA continuar)
 
-    // Construção do resumo compacto focado na fila de vagas (abertas, travadas, últimos merges)
-    const ultimosPulls = Array.isArray(openPulls) ? openPulls.slice(0, 5) : [];
-    
-    const resumoContent = `# Estado da Fila e Vagas da IA (Gerado Automaticamente)
+Atualizado em ${agora}. Complementa \`docs/CONTEXTO-IA.md\` (regras). A Central junta os dois arquivos com a fila do Cortex ao vivo no botão **📦 Continuar em outra IA** (aba 🧠 Cortex). **Nunca coloque chave ou senha aqui.**
 
-Atualizado em ${agora}. Este arquivo é atualizado de forma idempotente pelo script \`nexia-ai/cron/atualizaEstado.js\`.
+## Foco atual
+- **Body Coach** é o produto para vender agora: https://nexiabodycoach.pages.dev (PWA, nada de dado falso). Play Store: conta paga, esperando verificação do Google; precisa de 12 testadores.
+- **Cortex é de uso INTERNO** (decisão do dono): não vai ser vendido por enquanto. Ele serve para construir de graça os sites, páginas, SaaS e apps dos clientes.
+- Marca pública **Kernex**; nomes internos seguem \`nexia\`.
 
-## Resumo da Fila e Vagas
+## Fila de Vagas e Tarefas (Atualizado automaticamente)
 - **Repositório:** \`${repo}\`
-- **Issues/Vagas Abertas:** ${issuesAbertas.length}
+- **Issues Abertas:** ${issuesAbertas.length}
 - **Issues Travadas/Alerta:** ${issuesTravadas.length}
 - **Pull Requests Abertos:** ${pullsAbertos.length}
 
-## Últimos Pull Requests / Merges Recentes
-${ultimosPulls.length > 0 ? ultimosPulls.map(pr => `- [#${pr.number}](${pr.html_url}) - ${pr.title} (${pr.state})`).join('\n') : '- Nenhum PR recente listado ou sem acesso à API do GitHub.'}
-
 ---
-*Script: nexia-ai/cron/atualizaEstado.js*
+*Este arquivo é gerado automaticamente e de forma idempotente pelo script \`nexia-ai/cron/atualizaEstado.js\` para fornecer um panorama rápido do estado atual do projeto.*
 `;
 
     const docsDir = path.resolve('docs');
-    // Garante que o diretório 'docs' exista
     if (!fs.existsSync(docsDir)) {
       fs.mkdirSync(docsDir, { recursive: true });
     }
 
     const filePath = path.join(docsDir, 'ESTADO-IA.md');
-    // Sobrescreve o arquivo existente com o novo conteúdo
     fs.writeFileSync(filePath, resumoContent, 'utf8');
 
     console.log(`[atualizaEstado] Sucesso! Arquivo ${filePath} atualizado com resumo compacto.`);
     return true;
   } catch (err) {
     console.error('[atualizaEstado] Erro fatal ao atualizar estado:', err.message);
-    // Em caso de erro, é importante registrar o erro, mas não necessariamente sair com exit(1)
-    // para não interromper outros processos se rodar em um ambiente de cron mais amplo.
-    // Retornar false ou lançar a exceção pode ser uma alternativa.
     return false;
   }
 }
 
-// Execução principal apenas se o script for chamado diretamente
 if (require.main === module) {
   atualizaEstado();
 }
