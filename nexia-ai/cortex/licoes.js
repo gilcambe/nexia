@@ -2,54 +2,26 @@
  * Lições do Cortex em CommonJS
  */
 
-const LICOES = [
-  "modelos grátis ignoram especificação longa, quebre em passos pequenos",
-  "use arquivos novos em vez de editar trechos",
-  "sempre await em funções assíncronas",
-  "não invente funções que não existem, leia o arquivo antes",
-  "cite só caminhos que existem"
-];
-
-function licoesParaPrompt() {
-  return LICOES.map((licao, index) => `${index + 1}. ${licao}`).join('\n');
-}
+const cofreInstance = require('./cofre.js');
 
 class LessonStore {
   constructor() {
     this.lessons = [];
     this.avoidCounts = {};
-    try {
-      const Cofre = require('./cofre.js');
-      if (Cofre && typeof Cofre.recuperar === 'function') {
-        // Inicialização síncrona/assíncrona sutil se possível, mas mantemos o construtor síncrono carregando do cofre se houver dados em memória global do cofre
-        if (typeof globalThis !== 'undefined' && globalThis.__nexia_cofre_data) {
-          if (globalThis.__nexia_cofre_data.lessons) {
-            this.lessons = globalThis.__nexia_cofre_data.lessons;
-          }
-          if (globalThis.__nexia_cofre_data.avoidCounts) {
-            this.avoidCounts = globalThis.__nexia_cofre_data.avoidCounts;
-          }
-        }
-      }
-    } catch (e) {
-      // Ignorar
-    }
+    // Construtor síncrono que inicializa com dados vazios se necessário; a persistência é assíncrona
+    this.lessons = [];
+    this.avoidCounts = {};
   }
 
   async addLesson({ assinatura, causa, resolucao, issue }) {
     const lesson = { assinatura, causa, resolucao, issue, createdAt: new Date().toISOString() };
     this.lessons.push(lesson);
     this.avoidCounts[assinatura] = (this.avoidCounts[assinatura] || 0) + 1;
-    const Cofre = require('./cofre.js');
-    if (Cofre) {
-      if (typeof Cofre.salvar === 'function') {
-        await Cofre.salvar('lessons', this.lessons);
-        await Cofre.salvar('avoidCounts', this.avoidCounts);
-      }
-      if (typeof Cofre.sincronizar === 'function') {
-        await Cofre.sincronizar();
-      }
-    }
+
+    await cofreInstance.salvar('lessons', this.lessons);
+    await cofreInstance.salvar('avoidCounts', this.avoidCounts);
+    await cofreInstance.sincronizar();
+
     return lesson;
   }
 
@@ -64,15 +36,10 @@ class LessonStore {
 
   async incrementAvoidCount(assinatura) {
     this.avoidCounts[assinatura] = (this.avoidCounts[assinatura] || 0) + 1;
-    const Cofre = require('./cofre.js');
-    if (Cofre) {
-      if (typeof Cofre.salvar === 'function') {
-        await Cofre.salvar('avoidCounts', this.avoidCounts);
-      }
-      if (typeof Cofre.sincronizar === 'function') {
-        await Cofre.sincronizar();
-      }
-    }
+
+    await cofreInstance.salvar('avoidCounts', this.avoidCounts);
+    await cofreInstance.sincronizar();
+
     return this.avoidCounts[assinatura];
   }
 
@@ -85,4 +52,4 @@ class LessonStore {
   }
 }
 
-module.exports = { LessonStore, lessonStore: new LessonStore(), LICOES, licoesParaPrompt };
+module.exports = { LessonStore };
