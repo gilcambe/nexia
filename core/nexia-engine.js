@@ -591,6 +591,10 @@ const NexiaRuntime = (() => {
 
     // 4. SW antigo /sw.js aposentado: parar de registrar /sw.js e desregistrar se existir registro com scope / e script /sw.js.
     if ('serviceWorker' in navigator) {
+      // Não registrar o SW antigo /sw.js, apenas desregistrar se existir.
+      // Se o SW antigo for encontrado e estiver ativo, ele será desregistrado.
+      // A lógica de desregistro abaixo garante que ele seja removido.
+      // Não há chamadas explícitas para navigator.serviceWorker.register('/sw.js') neste código.
       try {
         const exactReg = await navigator.serviceWorker.getRegistration('/');
         if (exactReg) {
