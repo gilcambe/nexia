@@ -8,9 +8,6 @@ class LessonStore {
   constructor() {
     this.lessons = [];
     this.avoidCounts = {};
-    // Construtor síncrono que inicializa com dados vazios se necessário; a persistência é assíncrona
-    this.lessons = [];
-    this.avoidCounts = {};
   }
 
   async addLesson({ assinatura, causa, resolucao, issue }) {
