@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
   push:
     branches: ['nexia/prumo-*']
-    paths: ['netlify/functions/prumo.js', 'netlify/functions/prumo-lib/documentos.js', 'scripts/kf-bateria-prints.js', 'tests/fixtures/kf-prints/**', 'scripts/prumo-ler-print-ao-vivo.js', 'scripts/fortune-api-ao-vivo.js', '.github/workflows/prumo-print-ao-vivo.yml']
+    paths: ['netlify/functions/prumo.js', 'netlify/functions/prumo-lib/documentos.js', 'scripts/kf-bateria-prints.js', 'scripts/kf-bateria-ao-vivo.js', 'tests/fixtures/kf-prints/**', 'scripts/prumo-ler-print-ao-vivo.js', 'scripts/fortune-api-ao-vivo.js', '.github/workflows/prumo-print-ao-vivo.yml']
 permissions:
   contents: read
 jobs:
@@ -37,6 +37,7 @@ jobs:
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
           CLOUDFLARE_AI_TOKEN: ${{ secrets.CLOUDFLARE_AI_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+        continue-on-error: true  # aqui só há as chaves do GitHub (sem Workers AI); quem decide é a bateria NO AR
         run: node scripts/kf-bateria-prints.js
       - name: Medir a API no ar (usuário de teste)
         if: always()
@@ -44,3 +45,9 @@ jobs:
           FIREBASE_SERVICE_ACCOUNT_BASE64: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_BASE64 }}
           FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
         run: node scripts/fortune-api-ao-vivo.js
+      - name: Bateria NO AR (API publicada, prints falsos e robôs de consultoria)
+        if: always()
+        env:
+          FIREBASE_SERVICE_ACCOUNT_BASE64: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_BASE64 }}
+          FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
+        run: node scripts/kf-bateria-ao-vivo.js

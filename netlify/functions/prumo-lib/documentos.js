@@ -24,7 +24,8 @@ Regras:
 2. Pagamento da fatura do cartão é "pagamento_fatura". Transferência entre contas da própria pessoa é "transferencia_propria". Nenhum dos dois é despesa nem receita.
 3. Números com ponto decimal (R$ 1.234,56 vira 1234.56). Datas como AAAA-MM-DD; se faltar o ano, use o ano do documento.
 4. "confianca" baixa (menos de 0.8) quando o texto estiver borrado, cortado ou você estiver adivinhando.
-5. Não invente nada que não esteja legível. Se não houver lançamentos, devolva lista vazia.`;
+5. Conta de consumo (luz, água, gás, internet, telefone), boleto ou fatura AINDA A PAGAR: devolva UM lançamento "despesa" com o total a pagar, "data" = vencimento e "vencimento" preenchido. Nunca devolva lista vazia só porque ainda não foi paga.
+6. Não invente nada que não esteja legível. Se não houver lançamentos, devolva lista vazia.`;
 
 function valorLido(v) {
   if (typeof v === 'number') return v;
