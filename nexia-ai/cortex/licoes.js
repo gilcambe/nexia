@@ -2,24 +2,22 @@
  * Lições do Cortex em CommonJS
  */
 
+// Importa a classe Cofre do módulo cofre.js
+const Cofre = require('./cofre.js');
+const cofreInstance = new Cofre();
+
 class LessonStore {
   constructor() {
     this.lessons = [];
     this.avoidCounts = {};
-    try {
-      const Cofre = require('./cofre.js');
-      if (Cofre && typeof Cofre.recuperar === 'function') {
-        const savedLessons = Cofre.recuperar('lessons');
-        if (savedLessons) {
-          this.lessons = savedLessons;
-        }
-        const savedCounts = Cofre.recuperar('avoidCounts');
-        if (savedCounts) {
-          this.avoidCounts = savedCounts;
-        }
-      }
-    } catch (e) {
-      // Ignorar
+    // Carrega dados do Cofre ao inicializar
+    const savedLessons = cofreInstance.recuperar('lessons');
+    if (savedLessons) {
+      this.lessons = savedLessons;
+    }
+    const savedCounts = cofreInstance.recuperar('avoidCounts');
+    if (savedCounts) {
+      this.avoidCounts = savedCounts;
     }
   }
 
@@ -27,16 +25,12 @@ class LessonStore {
     const lesson = { assinatura, causa, resolucao, issue, createdAt: new Date().toISOString() };
     this.lessons.push(lesson);
     this.avoidCounts[assinatura] = (this.avoidCounts[assinatura] || 0) + 1;
-    const Cofre = require('./cofre.js');
-    if (Cofre) {
-      if (typeof Cofre.salvar === 'function') {
-        await Cofre.salvar('lessons', this.lessons);
-        await Cofre.salvar('avoidCounts', this.avoidCounts);
-      }
-      if (typeof Cofre.sincronizar === 'function') {
-        await Cofre.sincronizar();
-      }
-    }
+
+    // Salva no Cofre
+    await cofreInstance.salvar('lessons', this.lessons);
+    await cofreInstance.salvar('avoidCounts', this.avoidCounts);
+    await cofreInstance.sincronizar(); // Garante que os dados estão sincronizados
+
     return lesson;
   }
 
@@ -51,15 +45,11 @@ class LessonStore {
 
   async incrementAvoidCount(assinatura) {
     this.avoidCounts[assinatura] = (this.avoidCounts[assinatura] || 0) + 1;
-    const Cofre = require('./cofre.js');
-    if (Cofre) {
-      if (typeof Cofre.salvar === 'function') {
-        await Cofre.salvar('avoidCounts', this.avoidCounts);
-      }
-      if (typeof Cofre.sincronizar === 'function') {
-        await Cofre.sincronizar();
-      }
-    }
+
+    // Salva no Cofre
+    await cofreInstance.salvar('avoidCounts', this.avoidCounts);
+    await cofreInstance.sincronizar(); // Garante que os dados estão sincronizados
+
     return this.avoidCounts[assinatura];
   }
 
@@ -72,4 +62,6 @@ class LessonStore {
   }
 }
 
-module.exports = { LessonStore, lessonStore: new LessonStore() };
+// Exporta a instância da LessonStore já configurada com o Cofre
+const lessonStore = new LessonStore();
+module.exports = { LessonStore, lessonStore };
