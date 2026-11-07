@@ -1,6 +1,6 @@
 // Versão do cache: suba a cada mudança deste arquivo (o activate apaga os caches antigos).
 // Regras: HTML e API sempre pela rede primeiro; /api/ e o login do Firebase (/__/) nunca vão para o cache.
-const CACHE = 'body-coach-v5';
+
 // Abertura instantânea: sem resposta da rede neste tempo, abre a casca guardada e a rede atualiza depois.
 const ESPERA_REDE_MS = 3500;
 const MAX_ITENS = 120;
@@ -20,8 +20,17 @@ function aparar(c) {
     return Promise.all(toDelete.map((k) => c.delete(k)));
   });
 }
-self.addEventListener('install', (e) => { e.waitUntil(caches.open(CACHE).then((c) => c.addAll(['./', './index.html'])).then(() => self.skipWaiting())); });
-self.addEventListener('activate', (e) => { e.waitUntil(caches.keys().then((ks) => Promise.all(ks.filter((k) => k !== CACHE).map((k) => caches.delete(k)))).then(() => self.clients.claim())); });
+const CACHE = 'body-coach-v14'; // Versão atualizada do cache com gerenciamento de versões e remoção de antigos
+self.addEventListener('install', (e) => { 
+  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(['./', './index.html'])));
+  // Removido skipWaiting automático; aguarda mensagem de atualização explícita
+});
+self.addEventListener('activate', (e) => {
+  e.waitUntil(
+    caches.keys().then((ks) => Promise.all(ks.filter((k) => k !== CACHE).map((k) => caches.delete(k)))
+    ).then(() => self.clients.claim())
+  );
+});
 // Nunca guardado no aparelho: outras origens (Firebase, Google), /api/ e o login do Firebase (/__/auth, /__/firebase).
 function naoGuarda(req, url) {
   return req.method !== 'GET' || url.origin !== self.location.origin || url.pathname.includes('/api/') || url.pathname.includes('/__/');
@@ -54,8 +63,8 @@ self.addEventListener('fetch', (e) => {
     e.waitUntil(rede.catch(() => undefined));
     return;
   }
-  // Manifesto e arquivos sem versão no nome: rede primeiro, cache só sem internet.
-  if (!url.pathname.includes('/assets/') && /\.(webmanifest|json|html)$/i.test(url.pathname)) {
+  // Scripts/estilos sem hash e arquivos estáticos sem versão: rede primeiro, cache offline.
+  if (!url.pathname.includes('/assets/') && /\.(webmanifest|json|html|js|css)$/i.test(url.pathname)) {
     e.respondWith(fetch(req).then((res) => {
       if (guardavel(res)) { const copy = res.clone(); caches.open(CACHE).then((c) => c.put(req, copy)); }
       return res;
@@ -96,6 +105,10 @@ self.addEventListener('notificationclick', (e) => {
 // Fim do descanso com a tela bloqueada ou em outro app: a página pede, o service worker avisa na hora certa.
 let descanso = 0;
 self.addEventListener('message', (e) => {
+  if (e.data && e.data.tipo === 'atualizar') {
+    self.skipWaiting();
+    return;
+  }
   const m = e.data || {};
   if (m.tipo === 'descanso_cancelar') { descanso += 1; self.registration.getNotifications({ tag: 'descanso' }).then((ns) => ns.forEach((n) => n.close())); return; }
   if (m.tipo !== 'descanso') return;
