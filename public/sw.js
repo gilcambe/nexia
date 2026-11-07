@@ -5,7 +5,9 @@ self.addEventListener('install', (event) => {
   self.skipWaiting();
 });
 
-self.addEventListener('fetch', (event) => {\n  // SW aposentado: não intercepta fetch, deixa o browser buscar normalmente.\n});\n\nself.addEventListener('activate', (event) => {
+self.addEventListener('fetch', (event) => {
+  // SW aposentado: não intercepta fetch, deixa o browser buscar normalmente.
+});\n\nself.addEventListener('activate', (event) => {
   event.waitUntil(
     (async () => {
       try {
