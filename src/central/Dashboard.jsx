@@ -1,14 +1,1 @@
-import React from 'react';
-import DailySpendCard from './DailySpendCard';
-
-const Dashboard = () => {
-  return (
-    <div className="p-6 space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <DailySpendCard />
-      </div>
-    </div>
-  );
-};
-
-export default Dashboard;
+import React from 'react';\nimport DailySpendCard from './DailySpendCard';\n\nconst Dashboard = () => {\n  return (\n    <div className=\"p-6 space-y-6\">\n      <div className=\"grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6\">\n        <DailySpendCard />\n      </div>\n    </div>\n  );\n};\n\nexport default Dashboard;\n
