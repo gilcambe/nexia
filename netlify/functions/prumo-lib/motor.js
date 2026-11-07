@@ -168,4 +168,40 @@ function resgateMilhas({ milhas, preco_dinheiro, taxas = 0, referencia }) {
   return { valor_milheiro_resgate: valor, referencia, compensa: valor >= referencia, diferenca: Math.round((valor - referencia) * 100) / 100 };
 }
 
-module.exports = { resgateMilhas, jurosCompostos, concentracao, rentabilidade, cotacaoStatus, conciliar, patrimonio, custoMilheiro, chave, totais, simularQuitacao, compararEstrategias, quitacaoAntecipada, renegociar };
+/**
+ * Patrimônio futuro com inflação e imposto. Fórmula fechada, arredondada UMA vez (centavos):
+ * taxa anual → mensal equivalente; aportes no fim do mês; imposto sobre o rendimento no fim; valor real = líquido deflacionado.
+ */
+function projecaoReal({ inicial = 0, aporte = 0, taxa_ano = 0, inflacao_ano = 0, imposto_pct = 0, anos = 0 }) {
+  const n = Math.round(Number(anos) * 12);
+  const i = Math.pow(1 + Number(taxa_ano) / 100, 1 / 12) - 1;
+  const fator = Math.pow(1 + i, n);
+  const bruto = centavos(inicial) * fator + centavos(aporte) * (i > 0 ? (fator - 1) / i : n);
+  const bruto_c = Math.round(bruto);
+  const investido_c = centavos(inicial) + centavos(aporte) * n;
+  const rend = Math.max(0, bruto_c - investido_c);
+  const imposto_c = Math.round(rend * Number(imposto_pct) / 100);
+  const liquido_c = bruto_c - imposto_c;
+  const real_c = Math.round(liquido_c / Math.pow(1 + Number(inflacao_ano) / 100, n / 12));
+  return { meses: n, investido: reais(investido_c), bruto: reais(bruto_c), rendimento: reais(rend), imposto: reais(imposto_c), liquido: reais(liquido_c), real: reais(real_c) };
+}
+
+/** Meses até chegar na meta (juros reais, aporte mensal). null se não chega em 100 anos. */
+function mesesParaMeta({ atual = 0, meta, aporte = 0, taxa_real_ano = 0 }) {
+  let s = centavos(atual); const alvo = centavos(meta); const ap = centavos(aporte);
+  if (s >= alvo) return 0;
+  const i = Math.pow(1 + Number(taxa_real_ano) / 100, 1 / 12) - 1;
+  for (let m = 1; m <= 1200; m++) { s = Math.round(s * (1 + i)) + ap; if (s >= alvo) return m; }
+  return null;
+}
+
+/** Independência financeira: patrimônio que sustenta o gasto com a taxa de retirada informada (padrão 4% ao ano, real). */
+function independenciaFinanceira({ gasto_mensal, retirada_pct = 4, atual = 0, aporte = 0, taxa_ano = 0, inflacao_ano = 0 }) {
+  if (!(gasto_mensal > 0) || !(retirada_pct > 0)) return null;
+  const alvo = Math.round((centavos(gasto_mensal) * 12) / (Number(retirada_pct) / 100)) / 100;
+  const taxa_real = ((1 + Number(taxa_ano) / 100) / (1 + Number(inflacao_ano) / 100) - 1) * 100;
+  const meses = mesesParaMeta({ atual, meta: alvo, aporte, taxa_real_ano: taxa_real });
+  return { alvo, taxa_real_ano: Math.round(taxa_real * 100) / 100, meses, anos: meses === null ? null : Math.round((meses / 12) * 10) / 10, falta: Math.max(0, reais(centavos(alvo) - centavos(atual))) };
+}
+
+module.exports = { projecaoReal, mesesParaMeta, independenciaFinanceira, resgateMilhas, jurosCompostos, concentracao, rentabilidade, cotacaoStatus, conciliar, patrimonio, custoMilheiro, chave, totais, simularQuitacao, compararEstrategias, quitacaoAntecipada, renegociar };
