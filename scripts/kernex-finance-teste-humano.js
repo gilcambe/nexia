@@ -193,6 +193,17 @@ const LIDO = { tipo_documento: 'fatura', instituicao: 'Nubank', lancamentos: [
   ok(/28,00/.test(await p.textContent('#rg-res')), 'Milhas: resgate de 50.000 milhas por R$ 1.500 com R$ 100 de taxas dá R$ 28,00 o milheiro');
   ok(/não invento promoções/.test(await p.textContent('#conteudo')), 'Milhas: sem promoção registrada o app diz que não inventa');
   await p.screenshot({ path: path.join(SAIDA, '14-milhas.png') });
+  await p.click('[data-aba=economizar]');
+  await p.waitForSelector('#perfil');
+  await p.click('#perfil');
+  await p.fill('dialog [name=habilidades]', 'design, ensino');
+  await p.fill('dialog [name=horas_semana]', '6');
+  await p.fill('dialog [name=capital]', '0');
+  await p.click('dialog [data-x=salvar]');
+  await p.waitForFunction(() => /Ideias de renda extra/.test(document.body.textContent) && /Freelancer/.test(document.body.textContent));
+  const eco = await p.textContent('#conteudo');
+  ok(/Não prometo renda/.test(eco) && /pode ser zero/.test(eco), 'Economizar: ideias de renda mostram aviso e nunca prometem ganho');
+  await p.screenshot({ path: path.join(SAIDA, '15-economizar.png') });
   for (const a of ['carteira', 'gastos', 'compras', 'objetivos', 'orcamento', 'consultor', 'pontos']) {
     await p.click(`[data-aba=${a}]`); await p.waitForTimeout(400);
     ok(!/Não consegui carregar|abriu vazia/.test(await p.textContent('#conteudo')) && (await p.textContent('#conteudo')).trim().length > 5, `aba antiga ${a} continua abrindo`);
