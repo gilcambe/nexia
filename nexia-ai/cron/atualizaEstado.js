@@ -68,13 +68,13 @@ async function atualizaEstado() {
       }
     }
 
-    const resumoContent = `# Fila de Vagas e Estado do Cortex
+    const resumoContent = `# Estado da IA e Fila de Vagas (Cortex)
 
-Atualizado em ${agora}. Gerado por \`nexia-ai/cron/atualizaEstado.js\`.
+Atualizado em ${agora}. Gerado automaticamente por \`nexia-ai/cron/atualizaEstado.js\`.
 
-## Fila de Vagas
+## Visão Geral da Fila
 - **Repositório:** \`${repo}\`
-- **Issues Abertas:** ${issuesAbertas.length}
+- **Total de Issues Abertas:** ${issuesAbertas.length}
 - **Issues Travadas / Alerta:** ${issuesTravadas.length}
 - **Pull Requests Abertos:** ${pullsAbertos.length}
 
