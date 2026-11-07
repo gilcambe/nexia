@@ -1,0 +1,48 @@
+{
+  "fatura-cartao": {
+    "modo": "doc",
+    "tipo": "fatura",
+    "lancamentos": 5,
+    "despesas": 1018.4
+  },
+  "extrato-banco": {
+    "modo": "doc",
+    "tipo": "extrato",
+    "lancamentos": 5,
+    "receitas": 6500,
+    "despesas": 1380.75
+  },
+  "comprovante-pix": {
+    "modo": "doc",
+    "tipo": "comprovante",
+    "lancamentos": 1,
+    "despesas": 89.9
+  },
+  "cupom-mercado": {
+    "modo": "doc",
+    "tipo": "nota",
+    "lancamentos": 1,
+    "despesas": 147.35
+  },
+  "conta-luz": {
+    "modo": "doc",
+    "tipo": "conta",
+    "lancamentos": 1,
+    "despesas": 236.48
+  },
+  "previdencia-duas-linhas": {
+    "modo": "carteira",
+    "itens": 2,
+    "soma": 112509.84
+  },
+  "corretora-carteira": {
+    "modo": "carteira",
+    "itens": 4,
+    "soma": 25430.5
+  },
+  "banco-saldos": {
+    "modo": "carteira",
+    "itens": 3,
+    "soma": 18320.4
+  }
+}

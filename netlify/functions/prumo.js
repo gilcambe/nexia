@@ -286,14 +286,15 @@ async function lerPrint(imagens, deps) {
 }
 // Workers AI pelo binding "AI" do Worker (grátis). Modelos que aceitam imagem no formato de chat.
 const VISAO_WORKERS = ['@cf/meta/llama-4-scout-17b-16e-instruct', '@cf/mistralai/mistral-small-3.1-24b-instruct', '@cf/google/gemma-3-12b-it'];
-async function viaWorkersAi(ai, img, falhas) {
+/** Pista Workers AI (grátis, sem chave). Serve para print da carteira (LER_PRINT/itens) e para documentos (LER_DOC/lancamentos). */
+async function viaWorkersAi(ai, img, falhas, system = LER_PRINT, campo = 'itens', pedido = 'Leia este print e devolva o JSON.') {
   const url = `data:${img.mime || 'image/jpeg'};base64,${img.data}`;
   for (const modelo of VISAO_WORKERS) {
     try {
-      const r = await Promise.race([ai.run(modelo, { messages: [{ role: 'system', content: LER_PRINT }, { role: 'user', content: [{ type: 'text', text: 'Leia este print e devolva o JSON.' }, { type: 'image_url', image_url: { url } }] }], max_tokens: 4096, temperature: 0 }), new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 90000))]);
+      const r = await Promise.race([ai.run(modelo, { messages: [{ role: 'system', content: system }, { role: 'user', content: [{ type: 'text', text: pedido }, { type: 'image_url', image_url: { url } }] }], max_tokens: 4096, temperature: 0 }), new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 90000))]);
       let t = r && (r.response !== undefined ? r.response : (r.result && r.result.response));
       const j = t && typeof t === 'object' ? t : extrairJson(String(t || ''));
-      if (j && Array.isArray(j.itens)) return j;
+      if (j && Array.isArray(j[campo])) return j;
       falhas.push(`${modelo}: resposta sem JSON`);
     } catch (e) { falhas.push(`${modelo}: ${String((e && (e.code || e.message)) || 'erro').slice(0, 60)}`); }
   }
@@ -456,4 +457,4 @@ exports.handler = async (event) => {
   }
 };
 
-Object.assign(exports, { separarLinhasIguais, conferir, VISAO, LER_PRINT, normalizarLido, valorLido, validarItemCarteira, validarCartao, validarGasto, resumoMes, validarLista, avisosPendentes, extrairJson, lerImagens, lerPrint, validarObjetivo, progressoObjetivos, resumoHistorico, fotoDoDia, agir, deps, TIPOS, CATEGORIAS });
+Object.assign(exports, { viaWorkersAi, separarLinhasIguais, conferir, VISAO, LER_PRINT, normalizarLido, valorLido, validarItemCarteira, validarCartao, validarGasto, resumoMes, validarLista, avisosPendentes, extrairJson, lerImagens, lerPrint, validarObjetivo, progressoObjetivos, resumoHistorico, fotoDoDia, agir, deps, TIPOS, CATEGORIAS });
