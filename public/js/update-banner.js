@@ -48,4 +48,20 @@
     location.reload();
   });
   navigator.serviceWorker.ready.then(function () { return navigator.serviceWorker.getRegistration(); }).then(vigiar).catch(function () {});
+
+  // Extra: verificação opcional de /version.json se o SW não estiver ativo ou não cobrir
+  if (!navigator.serviceWorker.controller) {
+    fetch("/version.json?t=" + Date.now()).then(function(res) {
+      if (!res.ok) return;
+      return res.json();
+    }).then(function(data) {
+      if (!data || !data.version) return;
+      var chave = "kx_ver";
+      var atual = localStorage.getItem(chave);
+      if (atual && atual !== data.version) {
+        mostrar(null);
+      }
+      localStorage.setItem(chave, data.version);
+    }).catch(function() {});
+  }
 })();
