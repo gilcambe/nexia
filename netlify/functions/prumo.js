@@ -133,7 +133,7 @@ function avisosPendentes(listas, agoraISO) {
 
 // ---------- Parte 4: ler print com IA grátis ----------
 const LER_PRINT = `Você lê prints de apps de banco, corretora, previdência e FGTS do Brasil. Devolva SOMENTE um JSON, sem texto fora dele:
-{"total_print": número ou null, "itens":[{"nome":"","banco":"","tipo":"","ticker":"","quantidade":null,"preco_medio":null,"cotacao":null,"valor":0,"data_valor":"AAAA-MM-DD ou null","vencimento":"AAAA-MM-DD ou null","taxa":""}]}
+{"total_print": número ou null, "itens":[{"nome":"","banco":"","tipo":"","ticker":"","quantidade":null,"preco_medio":null,"cotacao":null,"conta":"","valor":0,"data_valor":"AAAA-MM-DD ou null","vencimento":"AAAA-MM-DD ou null","taxa":""}]}
 Regras:
 1. Um item para CADA ativo/aplicação/plano/conta que aparece com valor (não junte vários num só). Se só existir um total, devolva um item com ele.
 2. "valor" é o valor ATUAL da posição: "Saldo bruto", "Valor atual", "Posição", "Saldo", ou quantidade × cotação. NUNCA use "Preço médio", "Custo médio", "Valor aplicado", "Valor investido" nem rentabilidade como valor.
@@ -141,7 +141,23 @@ Regras:
 4. "banco" é a instituição (pelo nome, logo, cores ou app: XP, Inter, Nubank, Itaú, Bradesco, BB, Caixa, Rico, BTG, Clear, Multiprev, Brasilprev, FGTS...).
 5. "ticker" é o código da B3 quando houver (PETR4, MXRF11, BOVA11). Ticker terminado em 11 de fundo imobiliário é tipo "fiis".
 6. tipo é um destes: ${TIPOS.join(', ')}.
-7. Números com ponto decimal (R$ 1.234,56 vira 1234.56). Não invente nada que não esteja legível.`;
+7. Mesmo plano/fundo em VÁRIAS linhas (ex.: previdência com conta "Participante" e "Patrocinadora", ou "Básica" e "Adicional") = um item POR LINHA, cada um com seu valor, e o nome da linha em "conta". Nunca devolva só a primeira linha.
+8. Números com ponto decimal (R$ 1.234,56 vira 1234.56). Não invente nada que não esteja legível.`;
+/** No MESMO print, duas linhas com mesmo banco e nome mas valores diferentes são posições diferentes
+ *  (ex.: previdência Participante e Patrocinadora). Numera a 2ª em diante para o app não tratar como repetida. */
+function separarLinhasIguais(itens) {
+  const lista = Array.isArray(itens) ? itens : [];
+  const k = (x) => `${String((x && x.banco) || '').toLowerCase().trim()}|${String((x && (x.ticker || x.nome)) || '').toLowerCase().trim()}|${String((x && x.conta) || '').toLowerCase().trim()}`;
+  const vistos = new Map();
+  return lista.map((x) => {
+    if (!x || typeof x !== 'object') return x;
+    const key = k(x); const valores = vistos.get(key) || [];
+    const v = valorLido(x.valor);
+    vistos.set(key, valores.concat(v));
+    if (!valores.length || valores.includes(v) || x.ticker) return x;
+    return { ...x, nome: `${x.nome || x.banco || ''} (linha ${valores.length + 1})` };
+  });
+}
 /** Primeiro objeto JSON do texto da IA (aceita cerca ```json). */
 function extrairJson(t) {
   const s = String(t || '');
@@ -201,7 +217,11 @@ function normalizarLido(b) {
   if (/^[A-Z]{4}11$/.test(tk) && (tipo === 'acoes' || tipo === 'outro' || tipo === 'fundos') && /fii|imobili/i.test(`${bruto} ${b.nome || ''}`)) tipo = 'fiis';
   else if (/^[A-Z]{4}\d{1,2}$/.test(tk) && tipo === 'outro') tipo = /11$/.test(tk) ? 'fiis' : 'acoes';
   const val = valorLido(b.valor);
-  return { ...b, nome: b.nome || b.banco || '', tipo, valor: Number.isFinite(val) ? Math.abs(val) : b.valor,
+  // "conta" separa linhas do mesmo plano (Participante x Patrocinadora) para não virar "repetido".
+  const conta = String(b.conta || '').trim();
+  let nome = String(b.nome || b.banco || '');
+  if (conta && !nome.toLowerCase().includes(conta.toLowerCase())) nome = `${nome} — ${conta}`;
+  return { ...b, nome, tipo, valor: Number.isFinite(val) ? Math.abs(val) : b.valor,
     data_valor: dataLida(b.data_valor) || null, vencimento: dataLida(b.vencimento) || null, banco: b.banco || b.instituicao || '' };
 }
 // Modelos grátis com visão, do mais rápido ao mais forte. Vários provedores: se a cota de um acabar
@@ -258,7 +278,7 @@ async function lerPrint(imagens, deps) {
     if (!lido) continue;
     algum = true;
     let soma = 0;
-    for (const bruto of lido.itens) { const v = validarItemCarteira(normalizarLido(bruto)); if (v.ok) { itens.push(v.item); soma += v.item.valor; } else descartados.push({ ...bruto, motivo: v.erro }); }
+    for (const bruto of separarLinhasIguais(lido.itens)) { const v = validarItemCarteira(normalizarLido(bruto)); if (v.ok) { itens.push(v.item); soma += v.item.valor; } else descartados.push({ ...bruto, motivo: v.erro }); }
     conferencia.push(conferir(valorLido(lido.total_print), soma));
   }
   if (!algum && falhas.length) console.warn('[prumo] ler_print falhou:', falhas.slice(0, 6).join(' | '));
@@ -436,4 +456,4 @@ exports.handler = async (event) => {
   }
 };
 
-Object.assign(exports, { conferir, VISAO, LER_PRINT, normalizarLido, valorLido, validarItemCarteira, validarCartao, validarGasto, resumoMes, validarLista, avisosPendentes, extrairJson, lerImagens, lerPrint, validarObjetivo, progressoObjetivos, resumoHistorico, fotoDoDia, agir, deps, TIPOS, CATEGORIAS });
+Object.assign(exports, { separarLinhasIguais, conferir, VISAO, LER_PRINT, normalizarLido, valorLido, validarItemCarteira, validarCartao, validarGasto, resumoMes, validarLista, avisosPendentes, extrairJson, lerImagens, lerPrint, validarObjetivo, progressoObjetivos, resumoHistorico, fotoDoDia, agir, deps, TIPOS, CATEGORIAS });
