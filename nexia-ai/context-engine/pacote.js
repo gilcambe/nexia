@@ -60,11 +60,10 @@ async function montarPacote({ issue = {}, arquivos = [], limiteTokens = 3000 } =
   }
 
   // 5. Inclui até 3 lições similares de nexia-ai/cortex/licoes.js
-  if (Array.isArray(LICOES) && LICOES.length > 0) {
-    const termoBusca = ((issue && (issue.title + ' ' + issue.body)) || '').toLowerCase();
+  {
     let selecionadas = [];
+    const termoStr = (issue && (issue.title || issue.body || '')) || '';
     if (licoesModule.lessonStore && typeof licoesModule.lessonStore.getSimilarLessons === 'function') {
-      const termoStr = (issue && (issue.title || issue.body || '')) || '';
       const licoesDb = licoesModule.lessonStore.getSimilarLessons(termoStr, 3);
       if (licoesDb && licoesDb.length > 0) {
         selecionadas = licoesDb.map(l => l.resolucao || l.causa || (typeof l === 'string' ? l : JSON.stringify(l)));
@@ -73,7 +72,9 @@ async function montarPacote({ issue = {}, arquivos = [], limiteTokens = 3000 } =
     if (selecionadas.length === 0 && Array.isArray(LICOES) && LICOES.length > 0) {
       selecionadas = LICOES.slice(0, 3);
     }
-    pacote += `## Lições Similares\n` + selecionadas.slice(0, 3).map((l, i) => `${i + 1}. ${l}`).join('\n') + `\n\n`;
+    if (selecionadas.length > 0) {
+      pacote += `## Lições Similares\n` + selecionadas.slice(0, 3).map((l, i) => `${i + 1}. ${l}`).join('\n') + `\n\n`;
+    }
   }
 
   // 6. Lista arquivos prováveis usando nexia-ai/context-engine/arquivos-provaveis.js
@@ -85,9 +86,7 @@ async function montarPacote({ issue = {}, arquivos = [], limiteTokens = 3000 } =
       pacote += `## Arquivos Prováveis\n` + prov.arquivos.map((a) => `- ${a.path}`).join('\n') + `\n\n`;
     }
   } catch (e) {
-    if (Array.isArray(arquivos) && arquivos.length > 0) {
-      pacote += `## Arquivos Relacionados\n` + arquivos.map((a) => `- ${a}`).join('\n') + `\n\n`;
-    }
+    // Apenas nexia-ai/context-engine/arquivos-provaveis.js é utilizado; não usa fallback para o parâmetro arquivos.
   }
 
   // 7. Redige segredos via redactSecrets
