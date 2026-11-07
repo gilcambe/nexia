@@ -13,63 +13,62 @@ const path = require('node:path');
 
 // Funções de teste usando node:test nativo
 
-test.describe('validatePart tests', () => {
-  const tmpDir = path.join(__dirname, 'tmp-test-dir');
+test.describe = test.describe || ((name, fn) => fn());
+test.beforeEach = test.beforeEach || ((fn) => {});
+test.afterEach = test.afterEach || ((fn) => {});
 
-  test.beforeEach(() => {
-    if (!fs.existsSync(tmpDir)) {
-      fs.mkdirSync(tmpDir, { recursive: true });
-    }
-  });
+const tmpDir = path.join(__dirname, 'tmp-test-dir');
 
-  test.afterEach(() => {
-    if (fs.existsSync(tmpDir)) {
-      fs.rmSync(tmpDir, { recursive: true, force: true });
-    }
-  });
+if (!fs.existsSync(tmpDir)) {
+  fs.mkdirSync(tmpDir, { recursive: true });
+}
 
-  test('Caso 1: part.arquivos contém caminho inexistente e part.tarefa inclui "criar arquivo" - validatePart aceita a parte', () => {
-    const nonexistentPath = path.join(tmpDir, 'novo-arquivo.js');
-    const part = {
-      arquivos: [nonexistentPath],
-      tarefa: 'criar arquivo novo para teste'
-    };
-    
-    // Função de simulação ou importação de validatePart
-    const validatePart = (p, attempt = 1) => {
-      const { arquivos = [], tarefa = '' } = p;
-      const criaArquivo = /criar arquivo|novo arquivo|adicionar arquivo/i.test(tarefa);
-      for (const f of arquivos) {
-        if (!fs.existsSync(f) && !criaArquivo && attempt >= 3) {
-          return null;
-        }
+test('Caso 1: part.arquivos contém caminho inexistente e part.tarefa inclui "criar arquivo" - validatePart aceita a parte', () => {
+  if (!fs.existsSync(tmpDir)) {
+    fs.mkdirSync(tmpDir, { recursive: true });
+  }
+  const nonexistentPath = path.join(tmpDir, 'novo-arquivo.js');
+  const part = {
+    arquivos: [nonexistentPath],
+    tarefa: 'criar arquivo novo para teste'
+  };
+  
+  const validatePart = (p, attempt = 1) => {
+    const { arquivos = [], tarefa = '' } = p;
+    const criaArquivo = /criar arquivo|novo arquivo|adicionar arquivo/i.test(tarefa);
+    for (const f of arquivos) {
+      if (!fs.existsSync(f) && !criaArquivo && attempt >= 3) {
+        return null;
       }
-      return p;
-    };
+    }
+    return p;
+  };
 
-    const result = validatePart(part, 3);
-    assert.strictEqual(result, part);
-  });
+  const result = validatePart(part, 3);
+  assert.strictEqual(result, part);
+});
 
-  test('Caso 2: caminho não existe, a tarefa não menciona criação e attempt é 3 - validatePart devolve null', () => {
-    const nonexistentPath = path.join(tmpDir, 'arquivo-inexistente.js');
-    const part = {
-      arquivos: [nonexistentPath],
-      tarefa: 'atualizar sistema sem criar'
-    };
+test('Caso 2: caminho não existe, a tarefa não menciona criação e attempt é 3 - validatePart devolve null', () => {
+  if (!fs.existsSync(tmpDir)) {
+    fs.mkdirSync(tmpDir, { recursive: true });
+  }
+  const nonexistentPath = path.join(tmpDir, 'arquivo-inexistente.js');
+  const part = {
+    arquivos: [nonexistentPath],
+    tarefa: 'atualizar sistema sem criar'
+  };
 
-    const validatePart = (p, attempt = 1) => {
-      const { arquivos = [], tarefa = `́` } = p;
-      const criaArquivo = /criar arquivo|novo arquivo|adicionar arquivo/i.test(tarefa);
-      for (const f of arquivos) {
-        if (!fs.existsSync(f) && !criaArquivo && attempt >= 3) {
-          return null;
-        }
+  const validatePart = (p, attempt = 1) => {
+    const { arquivos = [], tarefa = '' } = p;
+    const criaArquivo = /criar arquivo|novo arquivo|adicionar arquivo/i.test(tarefa);
+    for (const f of arquivos) {
+      if (!fs.existsSync(f) && !criaArquivo && attempt >= 3) {
+        return null;
       }
-      return p;
-    };
+    }
+    return p;
+  };
 
-    const result = validatePart(part, 3);
-    assert.strictEqual(result, null);
-  });
+  const result = validatePart(part, 3);
+  assert.strictEqual(result, null);
 });
