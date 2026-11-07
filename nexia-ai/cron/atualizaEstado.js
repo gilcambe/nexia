@@ -42,7 +42,7 @@ async function atualizaEstado() {
       console.log('[atualizaEstado] Token do GitHub não fornecido; gerando resumo com base no estado padrão.');
     }
 
-    const agora = new Date().toLocaleString('pt-BR');
+    const agora = new Date().toLocaleDateString('pt-BR');
     const issuesAbertas = Array.isArray(openIssues) ? openIssues.filter(i => !i.pull_request) : [];
     const issuesTravadas = issuesAbertas.filter(i => i.labels && i.labels.some(l => l.name === 'cortex-travada' || l.name === 'cortex-alerta'));
     const pullsAbertos = Array.isArray(openPulls) ? openPulls : [];
