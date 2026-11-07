@@ -1,1 +1,1 @@
-# Removidos
+// REMOVED: VagasTable component is no longer used in any screen.

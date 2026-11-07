@@ -1,1 +1,1 @@
-# Removidos
+// REMOVED: VagaRow component is no longer used in any screen.
