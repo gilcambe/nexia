@@ -1,7 +1,6 @@
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
-// Importando validatePart diretamente de scripts/cortex-fila.js conforme solicitado
 const { validatePart } = require('../scripts/cortex-fila.js');
 
 describe('validatePart - testes unitários com sistema de arquivos temporário', () => {
@@ -22,7 +21,6 @@ describe('validatePart - testes unitários com sistema de arquivos temporário',
   test('1) Caso onde part.arquivos contém caminho inexistente e part.tarefa inclui "criar arquivo" - validatePart aceita a parte', () => {
     const missingFile = path.join(tempDir, 'sub', 'novo-arquivo.js');
     
-    // Usar fs.mkdirSync para criar diretórios de apoio
     fs.mkdirSync(path.dirname(missingFile), { recursive: true });
 
     const part = {
