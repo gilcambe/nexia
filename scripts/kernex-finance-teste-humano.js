@@ -211,6 +211,16 @@ const LIDO = { tipo_documento: 'fatura', instituicao: 'Nubank', lancamentos: [
   await p.waitForSelector('#ms-res .card');
   ok(/1\.033,33/.test(await p.textContent('#ms-res')), 'Metas: simulador com inflação e imposto dá valor real R$ 1.033,33');
   await p.screenshot({ path: path.join(SAIDA, '16-metas.png') });
+  await p.click('[data-aba=familia]');
+  await p.waitForSelector('#fam-criar');
+  ok(/Ninguém vê nada seu/.test(await p.textContent('#conteudo')), 'Família: sem grupo, o app diz que ninguém vê nada até você compartilhar');
+  await p.click('#fam-criar');
+  await p.fill('dialog [name=nome]', 'Casa');
+  await p.click('dialog [data-x=salvar]');
+  await p.waitForSelector('#fam-convidar');
+  ok(/O que você compartilha/.test(await p.textContent('#conteudo')) && !(await p.isChecked('[data-sec=patrimonio]')), 'Família: depois de criar o grupo nada vem marcado para compartilhar');
+  ok(/Pessoa física e empresa ficam separadas/.test(await p.textContent('#conteudo')), 'Autônomo: PF e PJ separados');
+  await p.screenshot({ path: path.join(SAIDA, '17-familia.png') });
   for (const a of ['carteira', 'gastos', 'compras', 'objetivos', 'orcamento', 'consultor', 'pontos']) {
     await p.click(`[data-aba=${a}]`); await p.waitForTimeout(400);
     ok(!/Não consegui carregar|abriu vazia/.test(await p.textContent('#conteudo')) && (await p.textContent('#conteudo')).trim().length > 5, `aba antiga ${a} continua abrindo`);

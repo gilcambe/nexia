@@ -66,6 +66,7 @@ function normalizarLancamento(b, doc) {
     instituicao: texto(b.instituicao, 80) || texto(doc && doc.instituicao, 80) || null, conta_ou_cartao: texto(b.conta_ou_cartao, 60) || null,
     parcela: num(b.parcela), parcelas_total: num(b.parcelas_total), vencimento: dataLida(b.vencimento) || null, tipo,
     documento: texto(b.documento, 40) || texto(doc && doc.tipo_documento, 40) || 'outro',
+    perfil: b.perfil === 'pj' ? 'pj' : 'pf',
   };
   const conf = Number(b.confianca);
   if (Number.isFinite(conf)) item.confianca = Math.max(0, Math.min(1, conf));
@@ -166,7 +167,8 @@ async function agirDoc(acao, body, c) {
     case 'lanc_listar': {
       const mes = texto(body.mes, 7);
       if (mes && !MES.test(mes)) return [400, { error: 'O mês precisa estar no formato AAAA-MM.' }];
-      const todos = (await listar(col)).filter((x) => !mes || String(x.data).startsWith(mes)).sort((a, b) => String(b.data).localeCompare(String(a.data)));
+      const perfilPedido = body.perfil === 'pj' ? 'pj' : 'pf'; // totais de PF e PJ nunca se misturam
+      const todos = (await listar(col)).filter((x) => (x.perfil === 'pj' ? 'pj' : 'pf') === perfilPedido).filter((x) => !mes || String(x.data).startsWith(mes)).sort((a, b) => String(b.data).localeCompare(String(a.data)));
       return [200, { lancamentos: todos.slice(0, 300), total: todos.length, ...totais(todos) }];
     }
     case 'lanc_apagar': {
@@ -179,7 +181,8 @@ async function agirDoc(acao, body, c) {
       const mes = texto(body.mes, 7) || agoraIso.slice(0, 7);
       if (!MES.test(mes)) return [400, { error: 'O mês precisa estar no formato AAAA-MM.' }];
       const fin = require('./financas');
-      const [lancs, carteira, pontos, cartoes, contas, limites, dividas] = await Promise.all([listar(col), listar(base.collection('carteira')), listar(base.collection('pontos')), listar(base.collection('cartoes')), listar(base.collection('contas')), listar(base.collection('limites')), listar(base.collection('dividas'))]);
+      const [lancsTodos, carteira, pontos, cartoes, contas, limites, dividas] = await Promise.all([listar(col), listar(base.collection('carteira')), listar(base.collection('pontos')), listar(base.collection('cartoes')), listar(base.collection('contas')), listar(base.collection('limites')), listar(base.collection('dividas'))]);
+      const lancs = lancsTodos.filter((x) => x.perfil !== 'pj'); // PJ nunca entra nos totais pessoais
       const cfgDiv = await base.collection('config').doc('dividas').get();
       const resDiv = require('./dividas').resumoDividas(dividas, !!(cfgDiv && cfgDiv.exists && cfgDiv.data().sem_dividas), doMesReceitas(lancs, mes));
       const doMes = totais(lancs.filter((x) => String(x.data).startsWith(mes)));
