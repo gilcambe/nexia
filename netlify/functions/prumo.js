@@ -357,7 +357,7 @@ async function agir(uid, body) {
   const apagar = async (colecao) => { if (!id) return [400, { error: 'Diga qual item apagar.' }]; await base.collection(colecao).doc(id).delete(); return [200, { ok: true }]; };
 
   // Fases 2 a 4 (holerite, orçamento, consultor, milhas) ficam em prumo-lib/extra.js.
-  const ctx = { base, listar, salvar, apagar, deps, agoraIso, lerImagens, extrairJson, resumoMes, progressoObjetivos, resumoHistorico };
+  const ctx = { uid, base, listar, salvar, apagar, deps, agoraIso, lerImagens, extrairJson, resumoMes, progressoObjetivos, resumoHistorico };
   switch (body.acao) {
     case 'carteira_listar': return [200, { itens: (await listar(base.collection('carteira'))).sort((a, b) => String(a.nome).localeCompare(String(b.nome), 'pt-BR')) }];
     case 'carteira_salvar': { const r = await salvar('carteira', validarItemCarteira(body)); if (r[0] === 200) await gravarHistorico(base); return r; }
