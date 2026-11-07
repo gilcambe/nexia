@@ -38,7 +38,7 @@ export function extrairSeriesPorGrupo(t: TreinoParaRecuperacao): Record<string, 
 export function calcularRecuperacao(
   workouts: TreinoParaRecuperacao[],
   agora = new Date()
-): Record<Grupo, number> {
+): Record<string, number> {
   const agoraMs = agora.getTime();
   const desgaste: Record<string, number> = {};
 
@@ -53,7 +53,7 @@ export function calcularRecuperacao(
     if (isNaN(dataTreino.getTime())) continue;
 
     const horasPassadas = (agoraMs - dataTreino.getTime()) / (1000 * 60 * 60);
-    if (horasPassadas < 0 || horasPassadas > 96) continue; // Mais de 4 dias já recuperou totalmente
+    if (horasPassadas < 0) continue;
 
     const seriesMap = extrairSeriesPorGrupo(t);
 
@@ -61,16 +61,21 @@ export function calcularRecuperacao(
       const numSeries = seriesMap[g.id] || 0;
       if (numSeries <= 0) continue;
 
-      const pontosDesgaste = numSeries * 8; // Cada série tira ~8% de descansado
-      const taxaRecuperacaoHora = g.grande ? 1.75 : 2.25; // % por hora (~2%/h, grandes mais devagar)
+      // Cada série concluída diminui ~5 pontos
+      const pontosDesgaste = numSeries * 5;
+      // Recuperação é ~2% por hora, com fator de desaceleração para grupos grandes (ex.: multiplicador 0.8)
+      const taxaBase = 2.0;
+      const fator = g.grande ? 0.8 : 1.0;
+      const taxaRecuperacaoHora = taxaBase * fator;
+
       const recuperado = horasPassadas * taxaRecuperacaoHora;
 
       const desgasteRestante = Math.max(0, pontosDesgaste - recuperado);
-      desgaste[g.id] += desgasteRestante;
+      desgaste[g.id] = (desgaste[g.id] || 0) + desgasteRestante;
     }
   }
 
-  const resultado = {} as Record<Grupo, number>;
+  const resultado: Record<string, number> = {};
   for (const g of GRUPOS_RECUPE) {
     const d = desgaste[g.id] || 0;
     resultado[g.id] = Math.max(0, Math.min(100, Math.round(100 - d)));
