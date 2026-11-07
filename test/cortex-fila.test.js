@@ -13,16 +13,16 @@ const path = require('node:path');
 
 // Funções de teste usando node:test nativo
 
-describe('validatePart tests', () => {
+test.describe('validatePart tests', () => {
   const tmpDir = path.join(__dirname, 'tmp-test-dir');
 
-  beforeEach(() => {
+  test.beforeEach(() => {
     if (!fs.existsSync(tmpDir)) {
       fs.mkdirSync(tmpDir, { recursive: true });
     }
   });
 
-  afterEach(() => {
+  test.afterEach(() => {
     if (fs.existsSync(tmpDir)) {
       fs.rmSync(tmpDir, { recursive: true, force: true });
     }
@@ -59,7 +59,7 @@ describe('validatePart tests', () => {
     };
 
     const validatePart = (p, attempt = 1) => {
-      const { arquivos = [], tarefa = '' } = p;
+      const { arquivos = [], tarefa = `́` } = p;
       const criaArquivo = /criar arquivo|novo arquivo|adicionar arquivo/i.test(tarefa);
       for (const f of arquivos) {
         if (!fs.existsSync(f) && !criaArquivo && attempt >= 3) {
