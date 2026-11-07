@@ -11,7 +11,7 @@ const path = require('node:path');
 // Vamos criar o arquivo de teste utilizando Jest ou node:test conforme solicitado.
 // O pedido especifica: "Criar test/cortex-fila.test.js com testes unitários (usando Jest) que simulam um sistema de arquivos temporário."
 
-const { describe, beforeEach, afterEach } = require('node:test');
+// Funções de teste usando node:test nativo
 
 describe('validatePart tests', () => {
   const tmpDir = path.join(__dirname, 'tmp-test-dir');
