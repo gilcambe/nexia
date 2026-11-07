@@ -39,56 +39,65 @@ async function atualizaEstado() {
         console.warn('[atualizaEstado] Aviso ao consultar GitHub API:', apiErr.message);
       }
     } else {
-      console.log('[atualizaEstado] Token do GitHub não fornecido; gerando resumo com base no estado local.');
+      console.log('[atualizaEstado] Token do GitHub não fornecido; gerando resumo com base no estado padrão.');
     }
 
-    const agora = new Date().toLocaleString('pt-BR'); // Formato mais legível
+    const agora = new Date().toLocaleDateString('pt-BR');
     const issuesAbertas = Array.isArray(openIssues) ? openIssues.filter(i => !i.pull_request) : [];
     const issuesTravadas = issuesAbertas.filter(i => i.labels && i.labels.some(l => l.name === 'cortex-travada' || l.name === 'cortex-alerta'));
     const pullsAbertos = Array.isArray(openPulls) ? openPulls : [];
 
-    // Construção do resumo compacto focado nas informações solicitadas
-    const resumoContent = `# Estado do projeto e memória (para qualquer IA continuar)
+    let closedPulls = [];
+    let ultimosMerges = [];
 
-Atualizado em ${agora}. Complementa \`docs/CONTEXTO-IA.md\` (regras). A Central junta os dois arquivos com a fila do Cortex ao vivo no botão **📦 Continuar em outra IA** (aba 🧠 Cortex). **Nunca coloque chave ou senha aqui.**
+    if (token) {
+      try {
+        const headers = {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/vnd.github+json',
+          'User-Agent': 'Nexia-AI-AtualizaEstado'
+        };
 
-## Foco atual
-- **Body Coach** é o produto para vender agora: https://nexiabodycoach.pages.dev (PWA, nada de dado falso). Play Store: conta paga, esperando verificação do Google; precisa de 12 testadores.
-- **Cortex é de uso INTERNO** (decisão do dono): não vai ser vendido por enquanto. Ele serve para construir de graça os sites, páginas, SaaS e apps dos clientes.
-- Marca pública **Kernex**; nomes internos seguem \`nexia\`.
+        const closedPullsRes = await fetch(`https://api.github.com/repos/${repo}/pulls?state=closed&per_page=15`, { headers });
+        if (closedPullsRes.ok) {
+          closedPulls = await closedPullsRes.json();
+          ultimosMerges = closedPulls.filter(p => p.merged_at !== null);
+        }
+      } catch (mErr) {
+        console.warn('[atualizaEstado] Aviso ao consultar pulls fechados/merged:', mErr.message);
+      }
+    }
 
-## Fila de Vagas e Tarefas (Atualizado automaticamente)
+    const resumoContent = `# Fila de Vagas e Estado do Cortex
+
+Atualizado em ${agora}. Gerado por \`nexia-ai/cron/atualizaEstado.js\`.
+
+## Fila de Vagas
 - **Repositório:** \`${repo}\`
 - **Issues Abertas:** ${issuesAbertas.length}
-- **Issues Travadas/Alerta:** ${issuesTravadas.length}
+- **Issues Travadas / Alerta:** ${issuesTravadas.length}
 - **Pull Requests Abertos:** ${pullsAbertos.length}
 
----
-*Este arquivo é gerado automaticamente e de forma idempotente pelo script \`nexia-ai/cron/atualizaEstado.js\` para fornecer um panorama rápido do estado atual do projeto.*
+## Últimos Merges
+${ultimosMerges.length > 0 ? ultimosMerges.map(m => `- PR #${m.number}: ${m.title} (mesclado em ${m.merged_at})`).join('\n') : '- Nenhum merge recente listado ou API indisponível.'}
 `;
 
     const docsDir = path.resolve('docs');
-    // Garante que o diretório 'docs' exista
     if (!fs.existsSync(docsDir)) {
       fs.mkdirSync(docsDir, { recursive: true });
     }
 
     const filePath = path.join(docsDir, 'ESTADO-IA.md');
-    // Sobrescreve o arquivo existente com o novo conteúdo
     fs.writeFileSync(filePath, resumoContent, 'utf8');
 
     console.log(`[atualizaEstado] Sucesso! Arquivo ${filePath} atualizado com resumo compacto.`);
     return true;
   } catch (err) {
     console.error('[atualizaEstado] Erro fatal ao atualizar estado:', err.message);
-    // Em caso de erro, é importante registrar o erro, mas não necessariamente sair com exit(1)
-    // para não interromper outros processos se rodar em um ambiente de cron mais amplo.
-    // Retornar false ou lançar a exceção pode ser uma alternativa.
     return false;
   }
 }
 
-// Execução principal apenas se o script for chamado diretamente
 if (require.main === module) {
   atualizaEstado();
 }
