@@ -221,6 +221,12 @@ const LIDO = { tipo_documento: 'fatura', instituicao: 'Nubank', lancamentos: [
   ok(/O que você compartilha/.test(await p.textContent('#conteudo')) && !(await p.isChecked('[data-sec=patrimonio]')), 'Família: depois de criar o grupo nada vem marcado para compartilhar');
   ok(/Pessoa física e empresa ficam separadas/.test(await p.textContent('#conteudo')), 'Autônomo: PF e PJ separados');
   await p.screenshot({ path: path.join(SAIDA, '17-familia.png') });
+  await p.click('[data-aba=impostos]');
+  await p.waitForSelector('#im-csv');
+  ok(/Não transmite declaração/.test(await p.textContent('#conteudo')) && /o contador decide/.test(await p.textContent('#conteudo')), 'Impostos: pasta anual avisa que não transmite declaração e que o contador decide');
+  const [dl] = await Promise.all([p.waitForEvent('download'), p.click('#im-csv')]);
+  ok(/kernex-contador-\d{4}-pf\.csv/.test(dl.suggestedFilename()), 'Impostos: baixa o relatório CSV para o contador');
+  await p.screenshot({ path: path.join(SAIDA, '18-impostos.png') });
   for (const a of ['carteira', 'gastos', 'compras', 'objetivos', 'orcamento', 'consultor', 'pontos']) {
     await p.click(`[data-aba=${a}]`); await p.waitForTimeout(400);
     ok(!/Não consegui carregar|abriu vazia/.test(await p.textContent('#conteudo')) && (await p.textContent('#conteudo')).trim().length > 5, `aba antiga ${a} continua abrindo`);
