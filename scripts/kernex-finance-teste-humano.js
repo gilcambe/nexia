@@ -185,6 +185,14 @@ const LIDO = { tipo_documento: 'fatura', instituicao: 'Nubank', lancamentos: [
   ok(/2\.395,07/.test(sim) && /não é recomendação/.test(sim), 'Investir: simulador dá R$ 2.395,07 e mostra aviso de que não é recomendação');
   ok(/Próximos 60 dias/.test(await p.textContent('#conteudo')), 'Investir: calendário de vencimentos e proventos aparece');
   await p.screenshot({ path: path.join(SAIDA, '13-investir.png') });
+  await p.click('[data-aba=pontos]');
+  await p.waitForSelector('#rg-ir');
+  await p.fill('#rg-prog', 'Smiles'); await p.fill('#rg-mi', '50000'); await p.fill('#rg-pr', '1500'); await p.fill('#rg-tx', '100');
+  await p.click('#rg-ir');
+  await p.waitForSelector('#rg-res .card');
+  ok(/28,00/.test(await p.textContent('#rg-res')), 'Milhas: resgate de 50.000 milhas por R$ 1.500 com R$ 100 de taxas dá R$ 28,00 o milheiro');
+  ok(/não invento promoções/.test(await p.textContent('#conteudo')), 'Milhas: sem promoção registrada o app diz que não inventa');
+  await p.screenshot({ path: path.join(SAIDA, '14-milhas.png') });
   for (const a of ['carteira', 'gastos', 'compras', 'objetivos', 'orcamento', 'consultor', 'pontos']) {
     await p.click(`[data-aba=${a}]`); await p.waitForTimeout(400);
     ok(!/Não consegui carregar|abriu vazia/.test(await p.textContent('#conteudo')) && (await p.textContent('#conteudo')).trim().length > 5, `aba antiga ${a} continua abrindo`);

@@ -160,4 +160,12 @@ function cotacaoStatus(cot, agoraISO, maxDias = 3) {
   return { valida: true, desatualizada: dias > maxDias, dias: Math.max(0, Math.floor(dias)) };
 }
 
-module.exports = { jurosCompostos, concentracao, rentabilidade, cotacaoStatus, conciliar, patrimonio, custoMilheiro, chave, totais, simularQuitacao, compararEstrategias, quitacaoAntecipada, renegociar };
+/** Resgate de milhas compensa? valor por milheiro do resgate = (preço em dinheiro − taxas) / (milhas/1000), contra uma referência. */
+function resgateMilhas({ milhas, preco_dinheiro, taxas = 0, referencia }) {
+  if (!(milhas > 0) || !(preco_dinheiro > 0)) return null;
+  const valor = Math.round(((centavos(preco_dinheiro) - centavos(taxas)) / (milhas / 1000))) / 100;
+  if (!(referencia > 0)) return { valor_milheiro_resgate: valor, referencia: null, compensa: null, motivo: 'faltam compras ou valor do milheiro para comparar' };
+  return { valor_milheiro_resgate: valor, referencia, compensa: valor >= referencia, diferenca: Math.round((valor - referencia) * 100) / 100 };
+}
+
+module.exports = { resgateMilhas, jurosCompostos, concentracao, rentabilidade, cotacaoStatus, conciliar, patrimonio, custoMilheiro, chave, totais, simularQuitacao, compararEstrategias, quitacaoAntecipada, renegociar };
