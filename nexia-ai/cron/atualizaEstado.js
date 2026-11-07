@@ -68,11 +68,6 @@ async function atualizaEstado() {
           }
         }
 
-        const issuesAbertas = Array.isArray(openIssues) ? openIssues.filter(i => !i.pull_request) : [];
-        const issuesTravadas = issuesAbertas.filter(i => i.labels && i.labels.some(l => l.name === 'cortex-travada' || l.name === 'cortex-alerta'));
-        const pullsAbertos = Array.isArray(openPulls) ? openPulls : [];
-        const ultimosMerges = Array.isArray(mergedPulls) ? mergedPulls.slice(0, 5) : [];
-
         const resumoContent = `# Fila de Vagas e Estado do Cortex
 
 Atualizado em ${agora}. Gerado por \`nexia-ai/cron/atualizaEstado.js\`.
@@ -84,7 +79,7 @@ Atualizado em ${agora}. Gerado por \`nexia-ai/cron/atualizaEstado.js\`.
 - **Pull Requests Abertos:** ${pullsAbertos.length}
 
 ## Últimos Merges
-${ultimosMerges.length > 0 ? ultimosMerges.p(m => `- PR #${m.number}: ${m.title} (mesclado em ${m.merged_at})`).join('\n') : '- Nenhum merge recente listado ou API indisponível.'}
+${ultimosMerges.length > 0 ? ultimosMerges.map(m => `- PR #${m.number}: ${m.title} (mesclado em ${m.merged_at})`).join('\n') : '- Nenhum merge recente listado ou API indisponível.'}
 `;
 
     const docsDir = path.resolve('docs');
