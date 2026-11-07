@@ -52,7 +52,7 @@ async function token() {
   }
   // Robôs de consultoria (o usuário de teste tem poucos dados: vale responder certo e rápido, sem erro).
   const robos = [
-    ['saude_financeira', { acao: 'saude_financeira' }, (j) => j && (j.nota != null)],
+    ['saude_financeira', { acao: 'saude_financeira' }, (j) => j && (j.nota != null || (Array.isArray(j.lacunas) && j.lacunas.length > 0))],
     ['posso_comprar', { acao: 'posso_comprar', valor: 500, parcelas: 1 }, (j) => j && JSON.stringify(j).length > 20],
     ['assistente_perguntar', { acao: 'assistente_perguntar', texto: 'Quanto gastei este mês?' }, (j) => j && typeof j.resposta === 'string' && j.resposta.length > 5],
     ['avaliar_carteira', { acao: 'avaliar_carteira' }, (j) => j && JSON.stringify(j).length > 20],

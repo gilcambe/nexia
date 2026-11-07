@@ -60,6 +60,9 @@ function responder(texto, d) {
   let m;
   if (/\bsaldo\b|\bdinheiro disponivel\b|^quanto (eu )?tenho( disponivel)?( hoje)?( em conta)?\??$/.test(t) && !/milha|ponto|investi|patrimonio/.test(t))
     return d.saldo === null ? r('Ainda não sei: você não cadastrou nenhuma conta.', 'contas', ['contas']) : r(`Você tem ${fmt(d.saldo)} disponíveis em conta (só reais; limite de cartão não conta).`, 'saldos das contas que você cadastrou');
+  // "Quanto gastei este mês?" / "quanto gastei?" / "total de gastos": soma de todas as despesas do mês.
+  if (/^quanto (eu )?gastei( (este|neste|nesse|no|esse) mes| ao todo| no total| ate agora)?\??$|total (de|dos) (gastos|despesas)|quanto (eu )?gastei (este|neste|nesse|no) mes/.test(t))
+    return r(`Você gastou ${fmt(d.despesas || 0)} em ${d.mes} (despesas confirmadas; pagamento de fatura e transferência entre suas contas não contam).`, fonteMes, d.qtd ? [] : ['lançamentos (envie uma fatura ou extrato)']);
   if ((m = /quanto (eu )?gastei (com|em|no|na|de)\s+(.+?)(?:\s+(este|neste|nesse|no)\s+mes)?\??$/.exec(t))) {
     const c = categoriaDe(m[3]);
     if (!c) return r(`Não reconheci a categoria "${m[3]}". As categorias são: ${Object.values(NOME).join(', ')}.`, 'categorias do Kernex Finance');
@@ -80,7 +83,7 @@ function responder(texto, d) {
   return null;
 }
 
-const AJUDA = 'Posso responder: "Quanto tenho disponível?", "Quanto gastei com alimentação?", "Qual foi minha maior despesa?", "Quanto devo nos cartões?", "Qual o meu patrimônio?" e "Quanto tenho em milhas?". Também registro uma despesa ou crio um limite, sempre pedindo sua confirmação.';
+const AJUDA = 'Posso responder: "Quanto gastei este mês?", "Quanto tenho disponível?", "Quanto gastei com alimentação?", "Qual foi minha maior despesa?", "Quanto devo nos cartões?", "Qual o meu patrimônio?" e "Quanto tenho em milhas?". Também registro uma despesa ou crio um limite, sempre pedindo sua confirmação.';
 
 async function agirAssistente(acao, body, c) {
   if (!['assistente_perguntar', 'assistente_confirmar'].includes(acao)) return null;
@@ -103,7 +106,7 @@ async function agirAssistente(acao, body, c) {
     const inv = carteira.reduce((s, x) => s + Math.round((x.valor || 0) * 100), 0) / 100;
     const brl = contas.filter((k) => (k.moeda || 'BRL') === 'BRL').reduce((s, k) => s + Math.round((k.saldo || 0) * 100), 0) / 100;
     const out = responder(texto, { mes, agoraIso, saldo: sd.saldo, por_categoria: tot.por_categoria, qtd: doMes.length, maior: desp[0], comprometido, temCartao: cts.length > 0, patrimonio: Math.round((brl + inv - dividaTotal * 1) * 100) / 100, dividaTotal, dividasConhecidas: dividas.length > 0 || !!(cfgDiv && cfgDiv.exists && cfgDiv.data().sem_dividas),
-      milhas: Math.round(pontos.reduce((s, p) => s + ((p.saldo || 0) / 1000) * (p.valor_milheiro || 0), 0) * 100) / 100, receitas: tot.receitas });
+      milhas: Math.round(pontos.reduce((s, p) => s + ((p.saldo || 0) / 1000) * (p.valor_milheiro || 0), 0) * 100) / 100, receitas: tot.receitas, despesas: tot.despesas });
     return [200, out ? { tipo: 'resposta', ...out } : { tipo: 'nao_entendi', resposta: 'Não entendi esse pedido e prefiro não chutar um número. ' + AJUDA }];
   }
   // assistente_confirmar: só grava o que a pessoa confirmou na tela

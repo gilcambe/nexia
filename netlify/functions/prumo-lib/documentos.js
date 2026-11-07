@@ -21,7 +21,7 @@ Devolva SOMENTE um JSON, sem texto fora dele:
 {"tipo_documento":"fatura|extrato|comprovante|nota|boleto|recibo|conta|corretora|milhas|outro","instituicao":"banco ou loja","total_documento":número ou null,"lancamentos":[{"data":"AAAA-MM-DD","data_processamento":"AAAA-MM-DD ou null","descricao":"texto","estabelecimento":"nome","valor":número positivo,"moeda":"BRL","categoria":"uma de: ${CATEGORIAS_KF.join(', ')}","subcategoria":"texto curto ou null","conta_ou_cartao":"final 1234 ou nome","parcela":número ou null,"parcelas_total":número ou null,"vencimento":"AAAA-MM-DD ou null","tipo":"despesa|receita|transferencia_propria|pagamento_fatura","confianca":número de 0 a 1}]}
 Regras:
 1. "valor" é sempre positivo; o sentido está em "tipo". Compra, débito, boleto pago e saque são "despesa". Salário, Pix recebido, rendimento e reembolso são "receita".
-2. Pagamento da fatura do cartão é "pagamento_fatura". Transferência entre contas da própria pessoa é "transferencia_propria". Nenhum dos dois é despesa nem receita.
+2. Pagamento da fatura do cartão é "pagamento_fatura". Transferência entre contas da própria pessoa (mesmo nome/titularidade, "minha poupança") é "transferencia_propria". Pix ou TED enviado para OUTRA pessoa ou empresa é "despesa". Nenhum dos dois é despesa nem receita.
 3. Números com ponto decimal (R$ 1.234,56 vira 1234.56). Datas como AAAA-MM-DD; se faltar o ano, use o ano do documento.
 4. "confianca" baixa (menos de 0.8) quando o texto estiver borrado, cortado ou você estiver adivinhando.
 5. Conta de consumo (luz, água, gás, internet, telefone), boleto ou fatura AINDA A PAGAR: devolva UM lançamento "despesa" com o total a pagar, "data" = vencimento e "vencimento" preenchido. Nunca devolva lista vazia só porque ainda não foi paga.
@@ -86,7 +86,8 @@ function comPrazo(promessa, ms) {
 
 /** Lê as imagens com IA grátis que enxerga. Cada imagem corre separada; devolve [{json}|null]. */
 async function lerComVisao(imagens, deps) {
-  const { VISAO, extrairJson } = require('../prumo');
+  const { VISAO, extrairJson, viaWorkersAi } = require('../prumo');
+  const ai = deps.ai !== undefined ? deps.ai : globalThis.__NEXIA_AI__;
   const router = deps.getRouter();
   const vistos = new Set();
   const lista = [...VISAO, ...deps.listFor('fast')].filter((d) => d.provider !== 'anthropic' && !vistos.has(d.provider + d.model) && vistos.add(d.provider + d.model));
@@ -107,7 +108,14 @@ async function lerComVisao(imagens, deps) {
     }
     return null;
   };
-  return Promise.all(imagens.map(uma));
+  // Duas pistas ao mesmo tempo, como no print da carteira: a lista de IAs grátis e o Workers AI do Cloudflare.
+  // Sem o Workers AI, documentos davam 503 quando o Gemini estava sem cota e a NVIDIA demorava.
+  const ler = (img) => {
+    const pistas = [uma(img)];
+    if (ai && typeof ai.run === 'function') pistas.push(viaWorkersAi(ai, img, [], LER_DOC, 'lancamentos', 'Leia este documento e devolva o JSON.'));
+    return Promise.any(pistas.map((x) => x.then((j) => j || Promise.reject(new Error('nada'))))).catch(() => null);
+  };
+  return Promise.all(imagens.map(ler));
 }
 
 const doMesReceitas = (lancs, mes) => totais(lancs.filter((x) => String(x.data).startsWith(mes))).receitas;
