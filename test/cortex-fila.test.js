@@ -1,12 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
-
-// Importando a função validatePart diretamente do módulo original scripts/cortex-fila.js
-// ou simulando com testes integrados à implementação real.
-// Como scripts/cortex-fila.js exporta funções e utilitários, vamos carregar o módulo
-// ou testar a lógica exata utilizada pelo Cortex.
-const cortexFilaPath = path.resolve(__dirname, '../scripts/cortex-fila.js');
+const { validatePart } = require('../scripts/cortex-fila.js');
 
 describe('validatePart - testes unitários com sistema de arquivos temporário', () => {
   let tempDir;
@@ -23,7 +18,7 @@ describe('validatePart - testes unitários com sistema de arquivos temporário',
     }
   });
 
-  test('1) Caso onde part.arquivos contém caminho inexistente e part.tarefa inclui \"criar arquivo\" - validatePart aceita a parte', () => {
+  test('1) Caso onde part.arquivos contém caminho inexistente e part.tarefa inclui "criar arquivo" - validatePart aceita a parte', () => {
     const missingFile = path.join(tempDir, 'sub', 'novo-arquivo.js');
     
     // Usar fs.mkdirSync para criar diretórios de apoio
@@ -35,40 +30,7 @@ describe('validatePart - testes unitários com sistema de arquivos temporário',
     };
     const attempt = 1;
 
-    // Importando validatePart real do script cortex-fila.js ou fallback se não exportado diretamente
-    let validatePartFn;
-    try {
-      const cortexFilaMod = require(cortexFilaPath);
-      validatePartFn = cortexFilaMod.validatePart || ((p, att) => {
-        const arquivos = p.arquivos || [];
-        const tarefa = String(p.tarefa || '').toLowerCase();
-        for (const arq of arquivos) {
-          if (!fs.existsSync(arq)) {
-            const mencionaCriacao = tarefa.includes('criar arquivo') || tarefa.includes('criar') || tarefa.includes('novo');
-            if (!mencionaCriacao && att >= 3) {
-              return null;
-            }
-          }
-        }
-        return p;
-      });
-    } catch (e) {
-      validatePartFn = (p, att) => {
-        const arquivos = p.arquivos || [];
-        const tarefa = String(p.tarefa || '').toLowerCase();
-        for (const arq of arquivos) {
-          if (!fs.existsSync(arq)) {
-            const mencionaCriacao = tarefa.includes('criar arquivo') || tarefa.includes('criar') || tarefa.includes('novo');
-            if (!mencionaCriacao && att >= 3) {
-              return null;
-            }
-          }
-        }
-        return p;
-      };
-    }
-
-    const result = validatePartFn(part, attempt);
+    const result = validatePart(part, attempt);
     expect(result).toEqual(part);
   });
 
@@ -80,39 +42,7 @@ describe('validatePart - testes unitários com sistema de arquivos temporário',
     };
     const attempt = 3;
 
-    let validatePartFn;
-    try {
-      const cortexFilaMod = require(cortexFilaPath);
-      validatePartFn = cortexFilaMod.validatePart || ((p, att) => {
-        const arquivos = p.arquivos || [];
-        const tarefa = String(p.tarefa || '').toLowerCase();
-        for (const arq of arquivos) {
-          if (!fs.existsSync(arq)) {
-            const mencionaCriacao = tarefa.includes('criar arquivo') || tarefa.includes('criar') || tarefa.includes('novo');
-            if (!mencionaCriacao && att >= 3) {
-              return null;
-            }
-          }
-        }
-        return p;
-      });
-    } catch (e) {
-      validatePartFn = (p, att) => {
-        const arquivos = p.arquivos || [];
-        const tarefa = String(p.tarefa || '').toLowerCase();
-        for (const arq of arquivos) {
-          if (!fs.existsSync(arq)) {
-            const mencionaCriacao = tarefa.includes('criar arquivo') || tarefa.includes('criar') || tarefa.includes('novo');
-            if (!mencionaCriacao && att >= 3) {
-              return null;
-            }
-          }
-        }
-        return p;
-      };
-    }
-
-    const result = validatePartFn(part, attempt);
+    const result = validatePart(part, attempt);
     expect(result).toBeNull();
   });
 
