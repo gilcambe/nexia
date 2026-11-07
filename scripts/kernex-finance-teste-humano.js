@@ -204,6 +204,13 @@ const LIDO = { tipo_documento: 'fatura', instituicao: 'Nubank', lancamentos: [
   const eco = await p.textContent('#conteudo');
   ok(/Não prometo renda/.test(eco) && /pode ser zero/.test(eco), 'Economizar: ideias de renda mostram aviso e nunca prometem ganho');
   await p.screenshot({ path: path.join(SAIDA, '15-economizar.png') });
+  await p.click('[data-aba=metas]');
+  await p.waitForSelector('#ms-ir');
+  await p.fill('#ms-ini', '1000'); await p.fill('#ms-tx', '10'); await p.fill('#ms-in', '5'); await p.fill('#ms-im', '15'); await p.fill('#ms-an', '1');
+  await p.click('#ms-ir');
+  await p.waitForSelector('#ms-res .card');
+  ok(/1\.033,33/.test(await p.textContent('#ms-res')), 'Metas: simulador com inflação e imposto dá valor real R$ 1.033,33');
+  await p.screenshot({ path: path.join(SAIDA, '16-metas.png') });
   for (const a of ['carteira', 'gastos', 'compras', 'objetivos', 'orcamento', 'consultor', 'pontos']) {
     await p.click(`[data-aba=${a}]`); await p.waitForTimeout(400);
     ok(!/Não consegui carregar|abriu vazia/.test(await p.textContent('#conteudo')) && (await p.textContent('#conteudo')).trim().length > 5, `aba antiga ${a} continua abrindo`);
