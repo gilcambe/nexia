@@ -9,11 +9,15 @@ class LessonStore {
     this.lessons = [];
     this.avoidCounts = {};
     const savedLessons = cofreInstance.recuperar('lessons');
-    if (savedLessons) {
+    if (savedLessons && typeof savedLessons.then === 'function') {
+      // se for async/promessa, não faremos await no construtor (construtor síncrono)
+    }
+    // Como a recuperação no cofre é síncrona nos dados em memória ou tratada, vamos garantir atribuição segura
+    if (savedLessons && !savedLessons.then) {
       this.lessons = savedLessons;
     }
     const savedCounts = cofreInstance.recuperar('avoidCounts');
-    if (savedCounts) {
+    if (savedCounts && !savedCounts.then) {
       this.avoidCounts = savedCounts;
     }
   }
