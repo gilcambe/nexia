@@ -113,3 +113,11 @@ test('KD6. id do lançamento é igual para a mesma compra escrita de jeitos dife
   assert.equal(idDe({ data: '2026-11-02', valor: 100, estabelecimento: 'Mercado Zé' }), idDe({ data: '2026-11-02', valor: 100, estabelecimento: 'MERCADO ZE' }));
   assert.notEqual(idDe({ data: '2026-11-02', valor: 100, estabelecimento: 'A' }), idDe({ data: '2026-11-03', valor: 100, estabelecimento: 'A' }));
 });
+
+test('conta de consumo só com vencimento não é descartada (usa o vencimento como data)', () => {
+  const d = require('../../netlify/functions/prumo-lib/documentos');
+  const r = d.normalizarLancamento({ descricao: 'Energia elétrica', valor: '236,48', vencimento: '25/10/2026', tipo: 'despesa', categoria: 'moradia' }, { tipo_documento: 'conta' });
+  assert.equal(r.ok, true);
+  assert.equal(r.item.data, '2026-10-25');
+  assert.equal(r.item.valor, 236.48);
+});

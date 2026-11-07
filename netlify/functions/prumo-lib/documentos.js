@@ -50,7 +50,8 @@ function normalizarLancamento(b, doc) {
   if (!b || typeof b !== 'object') return { ok: false, motivo: 'lançamento inválido' };
   const valor = valorLido(b.valor);
   if (!Number.isFinite(valor) || valor === 0) return { ok: false, motivo: 'valor ilegível' };
-  const data = dataLida(b.data);
+  // Conta de luz, boleto e similares às vezes só mostram o vencimento: usa ele como data em vez de jogar fora.
+  const data = dataLida(b.data) || dataLida(b.data_processamento) || dataLida(b.vencimento);
   if (!data) return { ok: false, motivo: 'data ilegível' };
   const bruto = sem(b.tipo);
   const tipo = TIPOS_LANC.includes(bruto) ? bruto : ((APELIDO_TIPO.find(([re]) => re.test(bruto)) || [])[1] || null);
@@ -206,4 +207,4 @@ async function agirDoc(acao, body, c) {
   }
 }
 
-module.exports = { agirDoc, normalizarLancamento, idDe, LER_DOC, CATEGORIAS_KF, TIPOS_LANC };
+module.exports = { agirDoc, lerComVisao, normalizarLancamento, idDe, LER_DOC, CATEGORIAS_KF, TIPOS_LANC };
