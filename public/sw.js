@@ -6,7 +6,7 @@ self.addEventListener('install', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // SW aposentado: não intercepta fetch, deixa o browser buscar normalmente.
+  // SW aposentado: não intercepta fetch (não chama event.respondWith), deixa o browser buscar normalmente.
 });
 
 self.addEventListener('activate', (event) => {
