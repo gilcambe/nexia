@@ -179,6 +179,8 @@ async function agirExtra(acao, body, c) {
   if (fam) return fam;
   const imp = await require('./impostos').agirImpostos(acao, body, c);
   if (imp) return imp;
+  const ale = await require('./alertas').agirAlertas(acao, body, c);
+  if (ale) return ale;
   const { base, listar, salvar, apagar, deps, agoraIso } = c;
   const lerOrcamento = async () => { const s = await base.collection('orcamento').doc('atual').get(); return s && s.exists ? s.data() : null; };
   const holerites = async () => (await listar(base.collection('holerites'))).sort((a, b) => String(b.mes).localeCompare(String(a.mes)));
