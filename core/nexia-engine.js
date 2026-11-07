@@ -595,7 +595,7 @@ const NexiaRuntime = (() => {
         const registrations = await navigator.serviceWorker.getRegistrations();
         for (const r of registrations) {
           const scriptURL = r.active?.scriptURL || r.waiting?.scriptURL || r.installing?.scriptURL || '';
-          if (r.scope === window.location.origin + '/' && (scriptURL.includes('/sw.js') || r.active || r.waiting || r.installing)) {
+          if (scriptURL.includes('/sw.js') || r.scope.endsWith('/')) {
             await r.unregister();
           }
         }
