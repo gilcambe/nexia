@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
+// Importando validatePart diretamente de scripts/cortex-fila.js conforme solicitado
 const { validatePart } = require('../scripts/cortex-fila.js');
 
 describe('validatePart - testes unitários com sistema de arquivos temporário', () => {
