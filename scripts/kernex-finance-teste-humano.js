@@ -227,6 +227,15 @@ const LIDO = { tipo_documento: 'fatura', instituicao: 'Nubank', lancamentos: [
   const [dl] = await Promise.all([p.waitForEvent('download'), p.click('#im-csv')]);
   ok(/kernex-contador-\d{4}-pf\.csv/.test(dl.suggestedFilename()), 'Impostos: baixa o relatório CSV para o contador');
   await p.screenshot({ path: path.join(SAIDA, '18-impostos.png') });
+  await p.click('[data-aba=alertas]');
+  await p.waitForSelector('#al-salvar');
+  ok(/Precisam de atenção/.test(await p.textContent('#conteudo')) && /Autorizo avisos por WhatsApp/.test(await p.textContent('#conteudo')), 'Alertas: tela mostra o que precisa de atenção e o consentimento do WhatsApp');
+  ok(!(await p.isChecked('#al-email')) && !(await p.isChecked('#al-wa')), 'Alertas: e-mail e WhatsApp começam desligados');
+  await p.click('[data-tipo-cfg=conta_vencer]');
+  await p.click('#al-salvar');
+  await p.waitForFunction(() => !document.querySelector('[data-tipo-cfg=conta_vencer]') || !document.querySelector('[data-tipo-cfg=conta_vencer]').checked);
+  ok(!(await p.isChecked('[data-tipo-cfg=conta_vencer]')), 'Alertas: tipo desligado continua desligado depois de salvar');
+  await p.screenshot({ path: path.join(SAIDA, '19-alertas.png') });
   for (const a of ['carteira', 'gastos', 'compras', 'objetivos', 'orcamento', 'consultor', 'pontos']) {
     await p.click(`[data-aba=${a}]`); await p.waitForTimeout(400);
     ok(!/Não consegui carregar|abriu vazia/.test(await p.textContent('#conteudo')) && (await p.textContent('#conteudo')).trim().length > 5, `aba antiga ${a} continua abrindo`);
