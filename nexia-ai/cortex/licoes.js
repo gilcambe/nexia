@@ -2,15 +2,12 @@
  * Lições do Cortex em CommonJS
  */
 
-// Importa a classe Cofre do módulo cofre.js
-const Cofre = require('./cofre.js');
-const cofreInstance = new Cofre();
+const cofreInstance = require('./cofre.js');
 
 class LessonStore {
   constructor() {
     this.lessons = [];
     this.avoidCounts = {};
-    // Carrega dados do Cofre ao inicializar
     const savedLessons = cofreInstance.recuperar('lessons');
     if (savedLessons) {
       this.lessons = savedLessons;
@@ -26,10 +23,9 @@ class LessonStore {
     this.lessons.push(lesson);
     this.avoidCounts[assinatura] = (this.avoidCounts[assinatura] || 0) + 1;
 
-    // Salva no Cofre
     await cofreInstance.salvar('lessons', this.lessons);
     await cofreInstance.salvar('avoidCounts', this.avoidCounts);
-    await cofreInstance.sincronizar(); // Garante que os dados estão sincronizados
+    await cofreInstance.sincronizar();
 
     return lesson;
   }
@@ -46,9 +42,8 @@ class LessonStore {
   async incrementAvoidCount(assinatura) {
     this.avoidCounts[assinatura] = (this.avoidCounts[assinatura] || 0) + 1;
 
-    // Salva no Cofre
     await cofreInstance.salvar('avoidCounts', this.avoidCounts);
-    await cofreInstance.sincronizar(); // Garante que os dados estão sincronizados
+    await cofreInstance.sincronizar();
 
     return this.avoidCounts[assinatura];
   }
@@ -62,6 +57,5 @@ class LessonStore {
   }
 }
 
-// Exporta a instância da LessonStore já configurada com o Cofre
 const lessonStore = new LessonStore();
 module.exports = { LessonStore, lessonStore };
