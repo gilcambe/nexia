@@ -17,7 +17,7 @@ function redactSecrets(text) {
     .replace(/sk-[a-zA-Z0-9]{20,}/g, '[REDIGIDO]');
 }
 
-const { arquivosProvaveis } = require('./arquivos-provaveis');\n/** Import atualizado do arquivo */
+const { arquivosProvaveis } = require('./arquivos-provaveis');
 const licoesModule = require('../cortex/licoes');
 const LICOES = licoesModule.LICOES || (licoesModule.lessonStore && licoesModule.lessonStore.getRecentLessons ? licoesModule.lessonStore.getRecentLessons(10).map(l => l.causa || JSON.stringify(l)) : []);
 
