@@ -1,5 +1,5 @@
 {
-  "rodizio": 53,
+  "rodizio": 54,
   "feitos": [
     "body-coach-01",
     "body-coach-02",
@@ -9,23 +9,6 @@
     "body-coach-06"
   ],
   "historico": [
-    {
-      "quando": "2026-10-14T08:23:20.362Z",
-      "id": "body-coach-01",
-      "cliente": "body-coach",
-      "resultados": [
-        {
-          "canal": "facebook",
-          "ok": false,
-          "erro": "Facebook: Invalid OAuth access token - Cannot parse access token"
-        },
-        {
-          "canal": "instagram",
-          "ok": false,
-          "erro": "Instagram mídia: Invalid OAuth access token - Cannot parse access token"
-        }
-      ]
-    },
     {
       "quando": "2026-10-14T08:31:51.059Z",
       "id": "body-coach-01",
@@ -1086,6 +1069,25 @@
       ],
       "formato": "reel",
       "serie": "mito-verdade"
+    },
+    {
+      "quando": "2026-11-07T16:27:48.134Z",
+      "id": null,
+      "cliente": "body-coach",
+      "resultados": [
+        {
+          "canal": "facebook",
+          "ok": true,
+          "ref": "1380111745183159_122109824955518156"
+        },
+        {
+          "canal": "instagram",
+          "ok": true,
+          "ref": "18123101969067336"
+        }
+      ],
+      "formato": "foto",
+      "serie": "bastidores"
     }
   ],
   "seguidores": [
@@ -1159,6 +1161,10 @@
     },
     {
       "dia": "2026-11-06",
+      "total": 3
+    },
+    {
+      "dia": "2026-11-07",
       "total": 3
     }
   ]
