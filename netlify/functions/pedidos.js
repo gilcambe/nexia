@@ -7,6 +7,21 @@ const { agir } = require('./central/pedidos-acoes');
 //   POST /api/pedidos {acao:'pedir', texto} | {acao:'comentar', n, texto} | {acao:'tentar', n}
 //                     {acao:'cancelar', n} | {acao:'reabrir', n} | {acao:'juntar', pr}
 
+// #3133: GET /api/pedidos?ias=1 → { ias, resumo, conferidoEm }. Mesma fonte da Central (estado-tarefas).
+async function iasAgoraComResumo(gh) {
+  const { REPO } = require('./central/pedidos-gh');
+  const { estadoTarefas, resumoDia } = require('./central/estado-tarefas');
+  const hoje = new Date(Date.now() - 3 * 36e5).toISOString().slice(0, 10); // dia em Brasília
+  const q = (x) => gh('/search/issues?per_page=100&q=' + encodeURIComponent('repo:' + REPO + ' is:issue label:cortex-fila ' + x)).then((r) => r.items || []).catch(() => []);
+  const [ias, abertas, fechadasHoje] = await Promise.all([
+    require('./central/ias-agora').carregar(gh, REPO),
+    q('is:open'),
+    q('is:closed closed:>=' + hoje),
+  ]);
+  const c = estadoTarefas(abertas.concat(fechadasHoje));
+  return { ias, resumo: resumoDia(c, ias), contagens: c, conferidoEm: new Date().toISOString(), origem: 'issues do GitHub com rótulo cortex-fila' };
+}
+
 function createHandler(deps = {}) {
   const getMw = deps.getMw || (() => require('./middleware'));
   const getPedidos = deps.getPedidos || (() => {
@@ -31,6 +46,7 @@ function createHandler(deps = {}) {
         const qs = event.queryStringParameters || {};
         if (qs.deploy) return res(200, await require('./central/pedidos-publicar').situacao(p.gh));
         if (qs.n) return res(200, await p.detalhe(qs.n));
+        if (qs.ias) return res(200, await (deps.iasAgora || iasAgoraComResumo)(p.gh));
         return res(200, await p.lista({ q: qs.q, estado: qs.estado, pagina: qs.pagina }));
       }
       let b = {};
