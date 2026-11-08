@@ -64,7 +64,7 @@ function criarPedidos(env = process.env, fetchFn = fetch) {
     if (estado === 'andamento') {
       itens = itens.filter((item) => item.estado === 'andamento');
     } else if (estado === 'travadas') {
-      itens = itens.filter((item) => item.estado === 'travada');
+      itens = itens.filter((item) => item.estado === 'travada' && !item.precisaVoce);
     } else if (estado === 'concluidas') {
       itens = itens.filter((item) => item.estado === 'concluida');
     } else if (estado === 'precisa') {

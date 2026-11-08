@@ -138,12 +138,13 @@ function resumoDia(contagens = {}, ias = []) {
   const andamento = Number(contagens.andamento || 0);
   const travadas = Number(contagens.travada || contagens.travadas || 0);
   const concluidas = Number(contagens.concluida || contagens.concluidas || 0);
+  const precisa = Number(contagens.precisaVoce || 0);
 
   const listaIas = Array.isArray(ias) ? ias : [];
   const ativas = listaIas.filter((i) => i && (i.ativa || i.ligada || i.online)).length;
   const totalIas = listaIas.length;
 
-  return `Hoje: ${andamento} em andamento, ${travadas} travada${travadas === 1 ? '' : 's'}, ${concluidas} concluída${concluidas === 1 ? '' : 's'}. IAs ativas: ${ativas} de ${totalIas}.`;
+  return `Hoje: ${andamento} em andamento, ${travadas} travada${travadas === 1 ? '' : 's'}, ${concluidas} concluída${concluidas === 1 ? '' : 's'}${precisa ? `, ${precisa} precisa${precisa === 1 ? '' : 'm'} de você` : ''}. IAs ativas: ${ativas} de ${totalIas}.`;
 }
 
 /**
@@ -165,11 +166,12 @@ function estadoTarefas(issues = [], agora = Date.now(), cfg = {}) {
     if (issue.pull_request) continue;
     contagens.total++;
     const info = estadoTarefa(issue, agora, cfg);
-    if (contagens[info.estado] !== undefined) {
-      contagens[info.estado]++;
-    }
+    // 08/11 (dono): tarefa que já precisa de você conta só em "precisa de você", não em "travadas".
+    // Assim os dois números não se somam duas vezes na Central e no /cortex.
     if (info.precisaVoce) {
       contagens.precisaVoce++;
+    } else if (contagens[info.estado] !== undefined) {
+      contagens[info.estado]++;
     }
   }
 
