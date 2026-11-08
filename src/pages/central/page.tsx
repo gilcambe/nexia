@@ -18,6 +18,7 @@ import { Icone } from "./icones";
 import InstalarApp from "./InstalarApp";
 import { BotaoAvisar } from "./Painel";
 import { Compacto, Grupo, useCelular } from "./celular";
+import CascaKernex from "./kernex/Casca";
 
 // Central Kernex: painel de controle de toda a Kernex. No computador, menu lateral + cabeçalho; no celular, app com barra de abas embaixo e uma tela por assunto.
 const ABAS: { id: Aba; nome: string; frase: string; icone: string }[] = [
@@ -167,6 +168,9 @@ export default function CentralPage() {
       </div>
     </nav>
   );
+
+  // #3219: protótipo da Central nova em /central?nova=1 (a antiga continua igual até o dono aprovar).
+  if (user && new URLSearchParams(location.search).get("nova") === "1") return <CascaKernex />;
 
   return (
     <div className={`${claro ? "central-claro bg-slate-50 text-slate-900" : "bg-[#0a0a0f] text-slate-100"} min-h-screen font-display antialiased pb-[calc(5.5rem+env(safe-area-inset-bottom))] lg:pb-0`}>
