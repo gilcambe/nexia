@@ -57,7 +57,6 @@ function createHandler(deps = {}) {
       const acao = body.acao || '';
       if (!acao) return res(400, { error: 'Ação não informada.' });
 
-      const acao = body.acao || '';
       let result = {};
 
       // Implementação das rotas internas de gerenciamento
