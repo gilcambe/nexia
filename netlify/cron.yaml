@@ -1,0 +1,5 @@
+# Netlify Scheduled Functions Configuration
+# Executa rotina de backup diário de Kernex Finance (Prumo)
+# Roda diariamente às 03:00 UTC (00:00 BRT)
+- schedule: "0 3 * * *"
+  function: "prumo-backup"
