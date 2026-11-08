@@ -1,11 +1,9 @@
-# Recuperação de Falha – Kernex Finance
+# Recuperação do Serviço - Kernex Finance
 
 ## Como saber se está fora do ar
-
-- Verifique se há uma issue aberta no repositório indicando indisponibilidade.
-- Teste o endpoint: faça uma requisição `GET /api/prumo`. Respostas com erro 5xx, timeout ou falha na resposta indicam que o serviço está fora do ar.
+- **Verificar Issues**: Acesse o repositório no GitHub e verifique se há issue aberta reportando indisponibilidade.
+- **Testar Endpoint**: Faça uma requisição para `/api/prumo`. Se falhar (erro 5xx ou timeout), o serviço está fora do ar.
 
 ## Como voltar à versão anterior
-
-- **Rollback do deployment**: Acesse o painel da plataforma de hospedagem (Cloudflare Pages/Workers ou provedor de deploy) na seção de *Deployments* e faça o rollback para a versão estável anterior.
-- **Reverter commit**: Reverta o commit problemático na branch principal através de um commit de reversão (`git revert`) ou abra um Pull Request revertendo a alteração que causou a falha.
+- **Rollback do Deployment**: Faça o rollback para o deployment estável anterior no painel de hospedagem.
+- **Reverter Commit**: Reverta o commit problemático no repositório e envie para atualizar a branch.
