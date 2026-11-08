@@ -17,8 +17,11 @@ function situacao(i) {
   return 'fila';
 }
 
+const { estadoTarefa } = require('./estado-tarefas');
+
 const resumo = (i) => ({
   numero: i.number, titulo: String(i.title || '').slice(0, 160), situacao: situacao(i),
+  ...estadoTarefa(i),
   criado: i.created_at, quando: i.updated_at, comentarios: i.comments || 0, tentativas: tentativas(i), link: i.html_url,
 });
 
@@ -41,14 +44,31 @@ function criarPedidos(env = process.env, fetchFn = fetch) {
   async function lista({ q = '', estado = 'todos', pagina = 1 } = {}) {
     const p = Math.max(1, Math.min(30, Number(pagina) || 1));
     let filtro = 'repo:' + REPO + ' is:issue label:cortex-fila';
-    if (estado === 'abertos') filtro += ' is:open -label:cortex-travado';
-    if (estado === 'travados') filtro += ' is:open label:cortex-travado';
-    if (estado === 'feitos') filtro += ' is:closed';
+    if (estado === 'abertos' || estado === 'andamento') filtro += ' is:open';
+    else if (estado === 'travadas' || estado === 'travados') filtro += ' is:open label:cortex-travado';
+    else if (estado === 'concluidas' || estado === 'feitos' || estado === 'concluida') filtro += ' is:closed';
+    else if (estado === 'precisa') filtro += ' is:open';
+    else if (estado === 'fila') filtro += ' is:open';
+    
     const termo = frase(q);
     if (termo) filtro += ' ' + termo;
     const r = await busca(filtro, '&sort=created&order=desc&page=' + p);
-    const total = r.total_count || 0;
-    return { total, pagina: p, temMais: p * 30 < total, itens: (r.items || []).map(resumo) };
+    
+    let itens = (r.items || []).map(resumo);
+    if (estado === 'andamento') {
+      itens = itens.filter(i => i.estado === 'andamento');
+    } else if (estado === 'travadas' || estado === 'travados') {
+      itens = itens.filter(i => i.estado === 'travada');
+    } else if (estado === 'concluidas' || estado === 'feitos' || estado === 'concluida') {
+      itens = itens.filter(i => i.estado === 'concluida');
+    } else if (estado === 'precisa') {
+      itens = itens.filter(i => i.precisaVoce);
+    } else if (estado === 'fila') {
+      itens = itens.filter(i => i.estado === 'fila');
+    }
+    
+    const total = itens.length;
+    return { total, pagina: p, temMais: p * 30 < total, itens };
   }
 
   async function githubRequest(caminho, init = {}) {
