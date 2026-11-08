@@ -117,6 +117,32 @@ function createHandler(deps = {}) {
 
       const parte = String((event.queryStringParameters || {}).parte || 'lista');
       if (parte === 'lista') return res(200, { produtos: PRODUTOS, links: LINKS });
+      if (parte === 'servicos') {
+        const h = getHistorico();
+        const db = deps.getHistoricoDb ? deps.getHistoricoDb() : h.abrirBanco(env);
+        let ultimo = null;
+        if (db) {
+          try {
+            ultimo = await new Promise((resolve) => {
+              db.get("SELECT * FROM saude_servicos ORDER BY id DESC LIMIT 1", [], (err, row) => {
+                resolve(row || null);
+              });
+            });
+          } catch (e) {
+            ultimo = null;
+          }
+        }
+        if (!ultimo) {
+          return res(200, { timestamp: null, status: {}, ok: true });
+        }
+        let statusObj = {};
+        try {
+          statusObj = JSON.parse(ultimo.status || '{}');
+        } catch {
+          statusObj = {};
+        }
+        return res(200, { timestamp: ultimo.timestamp || ultimo.em || null, status: statusObj });
+      }
       if (parte === 'saude') {
         // O Worker não consegue abrir o próprio endereço dentro de um pedido (o Cloudflare barra o laço) e dava
         // "fora do ar" falso para Cortex, CES, Viajante Pro e Splash. Esses usam a medição de hora em hora do cron.
