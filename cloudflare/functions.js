@@ -55,6 +55,7 @@ const LOADERS = {
   'viajante-pro': () => require('../netlify/functions/viajante-pro.js'),
   'prumo': () => require('../netlify/functions/prumo.js'),
   'prumo-admin': () => require('../netlify/functions/prumo-admin.js'),
+  'prumo-backup': () => require('../netlify/functions/prumo-backup.js'),
   'whatsapp-business': () => require('../netlify/functions/whatsapp-business.js'),
   'central': () => require('../netlify/functions/central.js'),
   'conheca': () => require('../netlify/functions/conheca.js'),
