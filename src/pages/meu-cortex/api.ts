@@ -5,11 +5,14 @@ import { apiPath } from "@/config/env";
 // Cortex no celular: conversa com /api/pedidos (só o dono). Os pedidos são as issues da fila do Cortex.
 
 export type Situacao = "fila" | "fazendo" | "travado" | "dividido" | "feito" | "fechado";
-export interface Resumo { numero: number; titulo: string; situacao: Situacao; criado: string; quando: string; comentarios: number; tentativas: number; link: string }
+export interface Resumo { numero: number; titulo: string; situacao: Situacao; criado: string; quando: string; comentarios: number; tentativas: number; link: string;
+  // #3128: estado único (6 estados) vindo de estado-tarefas.js
+  estado?: "fila" | "andamento" | "aguardando-ia" | "travada" | "concluida" | "falhou"; texto?: string; icone?: string; cor?: string; ia?: string | null; motivo?: string; precisaVoce?: boolean }
+export interface Passo { quando: string; icone: string; texto: string; link?: string }
 export interface Lista { total: number; pagina: number; temMais: boolean; itens: Resumo[] }
 export interface Fala { quem: string; quando: string; texto: string }
 export interface PR { numero: number; titulo: string; link: string; ramo: string; estado: "aberto" | "rascunho" | "juntado" | "fechado"; ci: string | null; automerge: boolean; quando: string }
-export interface Detalhe extends Resumo { rotulos: string[]; conversa: Fala[]; prs: PR[] }
+export interface Detalhe extends Resumo { rotulos: string[]; conversa: Fala[]; prs: PR[]; linha?: Passo[] }
 export interface Deploy { mudancas: number; titulos: string[]; ultimoDeploy: { quando: string; link: string } | null; emAndamento: boolean; falhou: boolean }
 export type Filtro = "todos" | "abertos" | "travados" | "feitos" | "andamento" | "travadas" | "precisa" | "concluidas";
 

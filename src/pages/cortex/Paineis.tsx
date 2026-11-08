@@ -42,13 +42,14 @@ export function Conexoes({ email }: { email: string }) {
 function ListaPedidos({ itens, abrir, fazer }: { itens: Resumo[]; abrir: (n: number) => void; fazer?: (corpo: Record<string, unknown>) => Promise<void> | void }) {
   return (
     <ul className="space-y-2">{itens.map((t) => (
-      <li key={t.numero} className="flex items-center gap-2 rounded-xl border border-[var(--cx-line)] bg-[var(--cx-card)] px-4 py-3 hover:border-[var(--cx-ac)]">
-        <button onClick={() => abrir(t.numero)} className="flex-1 text-left" data-testid="cx-linha">
-          <span className="text-xs text-[var(--cx-mut)]">#{t.numero} · {NOME_SITUACAO[t.situacao]} · {haQuanto(t.quando)}</span>
+      <li key={t.numero} className="flex flex-wrap items-center gap-2 rounded-xl border border-[var(--cx-line)] bg-[var(--cx-card)] px-4 py-3 hover:border-[var(--cx-ac)]">
+        <button onClick={() => abrir(t.numero)} className="flex-1 min-w-[60%] text-left" data-testid="cx-linha">
+          <span className="text-xs text-[var(--cx-mut)] flex flex-wrap items-center gap-1.5">{t.texto ? <span className="px-2 py-0.5 rounded-full text-white font-semibold" style={{ background: COR_SELO[t.cor || "cinza"] }} data-testid="cx-selo">{t.icone} {t.texto}</span> : NOME_SITUACAO[t.situacao]} #{t.numero}{t.ia ? ` · ${t.ia}` : ""} · última atividade {haQuanto(t.quando)}</span>
+          {t.estado === "travada" && t.motivo && <span className="block text-xs text-amber-500 mt-0.5">⚠️ {t.motivo}</span>}
           <span className="block break-words mt-0.5">{t.titulo}</span>
         </button>
         {fazer && (
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex flex-wrap items-center gap-2 max-w-full">
             {(t.situacao === "travado" || t.situacao === "fila" || t.situacao === "dividido") && (
               <button type="button" onClick={(e) => { e.stopPropagation(); if (confirm(`Mandar o pedido #${t.numero} para o Jules? Ele abre o PR sozinho (sem juntar).`)) fazer({ acao: "jules", n: t.numero }); }} className="h-8 px-2.5 rounded-lg border border-[var(--cx-ac)] text-xs font-semibold" data-testid="cx-lista-jules">Mandar para o Jules</button>
             )}
@@ -70,11 +71,50 @@ function ListaPedidos({ itens, abrir, fazer }: { itens: Resumo[]; abrir: (n: num
   );
 }
 
-const FILTROS: { id: Filtro; nome: string }[] = [{ id: "todos", nome: "Todas" }, { id: "abertos", nome: "Andando" }, { id: "travados", nome: "Travadas" }, { id: "feitos", nome: "Feitas" }];
+// #3136: abas com os estados reais. Concluídas saem da aba padrão.
+const FILTROS: { id: Filtro; nome: string }[] = [{ id: "andamento", nome: "Em andamento" }, { id: "travadas", nome: "Travadas" }, { id: "precisa", nome: "Precisa de você" }, { id: "concluidas", nome: "Concluídas" }, { id: "todos", nome: "Todas" }];
+const COR_SELO: Record<string, string> = { cinza: "#64748b", azul: "#3b82f6", roxo: "#8b5cf6", laranja: "#f59e0b", verde: "#22c55e", vermelho: "#ef4444" };
+
+// #3138: avisa quando um pedido terminou ou travou (compara com o último estado visto neste aparelho).
+function avisarMudancas(itens: Resumo[]) {
+  let antes: Record<string, string> = {};
+  try { antes = JSON.parse(localStorage.getItem("cx:estados") || "{}"); } catch { antes = {}; }
+  const agora: Record<string, string> = { ...antes };
+  const avisos: string[] = [];
+  for (const t of itens) {
+    if (!t.estado) continue;
+    const k = String(t.numero);
+    if (antes[k] && antes[k] !== t.estado && (t.estado === "concluida" || t.estado === "travada")) avisos.push(t.estado === "concluida" ? `Pedido #${t.numero} concluído` : `Pedido #${t.numero} travou: ${t.motivo || ""}`);
+    agora[k] = t.estado;
+  }
+  try { localStorage.setItem("cx:estados", JSON.stringify(agora)); } catch { /* sem espaço: segue */ }
+  if (avisos.length && typeof Notification !== "undefined" && Notification.permission === "granted") for (const a of avisos.slice(0, 3)) { try { new Notification(a); } catch { /* sem suporte */ } }
+  return avisos;
+}
+
+// #3138: painel "IAs trabalhando agora" + resumo de 1 frase (mesma fonte da Central).
+function IasAgora() {
+  const { ias } = usePedidos();
+  const [d, setD] = useState<{ ias: { nome: string; situacao: string; texto: string }[]; resumo: string; conferidoEm: string } | null>(null);
+  useEffect(() => { const ler = () => ias<NonNullable<typeof d>>().then(setD).catch(() => undefined); ler(); const t = setInterval(ler, 30000); return () => clearInterval(t); }, [ias]);
+  if (!d) return null;
+  const cor: Record<string, string> = { ativa: "#22c55e", ociosa: "#64748b", "sem-cota": "#f59e0b", erro: "#ef4444" };
+  const nome: Record<string, string> = { ativa: "trabalhando", ociosa: "parada", "sem-cota": "sem cota", erro: "com erro" };
+  return (
+    <div className="rounded-2xl border border-[var(--cx-line)] bg-[var(--cx-card)] p-4 mb-4" data-testid="cx-ias-agora">
+      <p className="font-semibold text-lg" data-testid="cx-resumo">{d.resumo}</p>
+      <ul className="mt-3 space-y-1.5 text-sm">{d.ias.slice(0, 8).map((x) => (
+        <li key={x.nome} className="flex items-center gap-2"><span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: cor[x.situacao] || "#64748b" }} /><b>{x.nome}</b><span className="text-[var(--cx-mut)]">{nome[x.situacao] || x.situacao} · {x.texto}</span></li>
+      ))}</ul>
+      <p className="text-xs text-[var(--cx-mut)] mt-2">Conferido às {new Date(d.conferidoEm).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</p>
+    </div>
+  );
+}
 
 export function Tarefas({ abrir }: { abrir: (n: number) => void }) {
   const { listar, agir } = usePedidos();
-  const [f, setF] = useState<Filtro>("abertos");
+  const [f, setF] = useState<Filtro>("andamento");
+  const [avisos, setAvisos] = useState<string[]>([]);
   const [busca, setBusca] = useState("");
   const [buscaDebounced, setBuscaDebounced] = useState("");
   const [itens, setItens] = useState<Resumo[]>([]);
@@ -95,7 +135,7 @@ export function Tarefas({ abrir }: { abrir: (n: number) => void }) {
 
   const carregar = useCallback(() => {
     setErro(undefined);
-    listar(buscaDebounced, f, 1).then((r) => setItens(r.itens)).catch((e: Error) => setErro(e.message));
+    listar(buscaDebounced, f, 1).then((r) => { setItens(r.itens); const a = avisarMudancas(r.itens); if (a.length) setAvisos(a); }).catch((e: Error) => setErro(e.message));
   }, [listar, buscaDebounced, f]);
 
   useEffect(() => { carregar(); }, [carregar]);
@@ -143,9 +183,9 @@ export function Tarefas({ abrir }: { abrir: (n: number) => void }) {
     setSocorroLinks([]);
     setSocorroStatus(null);
     try {
-      const data = (await agir({ acao: "socorro", jules })) as unknown as { total: number; ias: number; jules: number; travadas: number; links: { numero: number; titulo: string }[] };
+      const data = (await agir({ acao: "socorro", jules })) as unknown as { total: number; ias: number; jules: number; travadas: number; links: { numero: number; titulo: string }[]; assumiu?: { ia: string; numero: number; titulo?: string }[] };
       setSocorroMsg(data.total ? `Mandei ${data.total} tarefa(s): ${data.ias} para as IAs conectadas e ${data.jules} para o Jules.` : "Nenhuma tarefa travada precisava de ajuda agora.");
-      setSocorroLinks(data.links || []);
+      setSocorroLinks(data.assumiu ? data.assumiu.map((a) => ({ numero: a.numero, titulo: `${a.ia} pegou: ${a.titulo || ''}` })) : data.links || []);
       setSocorroStatus(`Travadas olhadas: ${data.travadas}.`);
     } catch (e) {
       setErro((e as Error).message);
@@ -161,6 +201,8 @@ export function Tarefas({ abrir }: { abrir: (n: number) => void }) {
   return (
     <div className="max-w-3xl mx-auto p-6">
       <Titulo t="Tarefas" s="A fila do Cortex, do jeito que ele enxerga." />
+      <IasAgora />
+      {avisos.length > 0 && <div className="rounded-xl bg-[var(--cx-ac)] text-black p-3 mb-4 text-sm font-semibold" role="status" data-testid="cx-avisos">{avisos.join(" · ")}</div>}
       <div className="mb-4">
         <input type="text" value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Pesquisar tarefas..." data-testid="cx-tarefas-busca"
           className="w-full h-10 px-4 rounded-xl border border-[var(--cx-line)] bg-[var(--cx-card)] text-sm text-[var(--cx-txt)] outline-none focus:border-[var(--cx-ac)]" />
@@ -168,11 +210,11 @@ export function Tarefas({ abrir }: { abrir: (n: number) => void }) {
       <div className="flex items-center justify-between gap-2 mb-4 overflow-x-auto">
         <div className="flex gap-2">{FILTROS.map((x) => (
           <button key={x.id} onClick={() => setF(x.id)} data-testid={`cx-filtro-${x.id}`}
-            className={`px-4 h-10 rounded-full text-sm border ${f === x.id ? "bg-[var(--cx-ac)] text-black border-transparent font-semibold" : "border-[var(--cx-line)]"}`}>{x.nome}</button>))}</div>
+            className={`px-4 h-10 rounded-full text-sm border whitespace-nowrap ${f === x.id ? "bg-[var(--cx-ac)] text-black border-transparent font-semibold" : "border-[var(--cx-line)]"}`}>{x.nome}</button>))}</div>
         <button type="button" onClick={tentarAlgumas} data-testid="cx-tentar-algumas"
           className="h-10 px-4 rounded-xl bg-[var(--cx-ac)] text-black text-xs font-semibold shrink-0">Tentar travadas</button>
       </div>
-      {f === "travados" && itens.some((t) => t.situacao === "travado") && (
+      {f === "travadas" && itens.length > 0 && (
         <button type="button" onClick={tentarAlgumas} data-testid="cx-tentar-travadas"
           className="w-full mb-4 h-11 rounded-xl bg-[var(--cx-ac)] text-black font-semibold text-sm flex items-center justify-center gap-2">
           Tentar novamente todas as travadas
@@ -181,7 +223,7 @@ export function Tarefas({ abrir }: { abrir: (n: number) => void }) {
       <Cartao testid="cx-socorro">
         <p className="font-medium">Socorro</p>
         <button onClick={socorro} className="mt-3 w-full h-11 rounded-xl bg-[var(--cx-ac)] text-black font-semibold text-sm flex items-center justify-center gap-2">
-          ▶️ IAs grátis: continuar tudo agora
+          ⚡ Ativar ajuda das IAs
         </button>
         <div className="flex items-center gap-2 mt-3">
           <label className="text-sm">Incluir o Jules</label>
