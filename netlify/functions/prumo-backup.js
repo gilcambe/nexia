@@ -7,8 +7,9 @@
  * Regras:
  * - Nunca grava em disco (sem fs.writeFileSync / require dinâmico).
  * - Usuário comum só exporta/apaga os seus próprios dados.
- * - Administrador master pode exportar ou rodar backup de usuários.
- * - Suporta chamadas diretas ou via agendamento cron do Netlify.
+ * - Ninguém, nem o administrador master, lê, apaga ou restaura dados de outra pessoa
+ *   (regra Kernex Finance: o painel do administrador nunca vê documentos nem valores).
+ * - O backup geral só roda para o master e só devolve contagens, sem dados.
  */
 
 const COLECOES_PRUMO = [
@@ -140,14 +141,14 @@ async function executarBackupDiario(db) {
     try {
       const exportacao = await exportarDadosUsuario(db, d.id);
       const qtdItens = Object.values(exportacao.colecoes).reduce((acc, c) => acc + c.length, 0);
-      resultados.push({ uid: d.id, itens: qtdItens, ok: true });
+      resultados.push({ itens: qtdItens, ok: true });
     } catch (err) {
-      console.warn(`[prumo-backup] Falha ao exportar uid ${d.id}:`, err && err.message);
-      resultados.push({ uid: d.id, ok: false, erro: err && err.message });
+      console.warn('[prumo-backup] Falha ao conferir um usuário:', err && err.message);
+      resultados.push({ ok: false });
     }
   }
 
-  console.log(`[prumo-backup] Backup diário concluído com sucesso. Processados: ${resultados.length}.`);
+  console.log(`[prumo-backup] Conferência concluída. Processados: ${resultados.length}.`);
   return {
     ok: true,
     totalUsuarios: resultados.length,
@@ -176,14 +177,6 @@ function createHandler(deps = {}) {
 
     if (method === 'OPTIONS') return { statusCode: 204, headers: cors, body: '' };
 
-    // Netlify scheduled functions / Cron
-    const isCron = headers['x-netlify-event'] === 'schedule' || headers['x-nexia-cron'];
-    if (isCron) {
-      const db = getDb();
-      const resultado = await executarBackupDiario(db);
-      return res(200, resultado);
-    }
-
     if (method !== 'GET' && method !== 'POST') return res(405, { error: 'Method Not Allowed' });
 
     let body = {};
@@ -207,8 +200,8 @@ function createHandler(deps = {}) {
     const isMaster = auth.role === 'master';
     const targetUid = body.uid || q.uid || auth.uid;
 
-    // Usuário comum só pode acessar seus próprios dados
-    if (!isMaster && targetUid !== auth.uid) {
+    // Cada pessoa só mexe nos próprios dados. O master também (sem acesso a valores de ninguém).
+    if (targetUid !== auth.uid) {
       return res(403, { error: 'Acesso não autorizado aos dados de outro usuário.' });
     }
 

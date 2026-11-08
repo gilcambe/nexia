@@ -181,6 +181,8 @@ async function agirExtra(acao, body, c) {
   if (imp) return imp;
   const ale = await require('./alertas').agirAlertas(acao, body, c);
   if (ale) return ale;
+  const aju = await require('./ajuda').agirAjuda(acao, body, c);
+  if (aju) return aju;
   const opf = await require('./openfinance').agirOpenFinance(acao, body, c);
   if (opf) return opf;
   const { base, listar, salvar, apagar, deps, agoraIso } = c;

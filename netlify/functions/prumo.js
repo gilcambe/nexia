@@ -419,6 +419,9 @@ async function agir(uid, body) {
     case 'ler_print': {
       const im = lerImagens(body.imagens);
       if (!im.ok) return [400, { error: im.erro }];
+      const aj = require('./prumo-lib/ajuda');
+      const lim = await aj.contarLeitura(base, agoraIso, im.imagens.length);
+      if (!lim.ok) return [429, { error: aj.msgLimite(lim) }];
       const r = await lerPrint(im.imagens, deps);
       return r ? [200, r] : [503, { error: 'Não consegui ler agora. Tente de novo ou digite os valores.' }];
     }

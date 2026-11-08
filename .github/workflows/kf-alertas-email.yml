@@ -1,0 +1,24 @@
+name: Kernex Finance - e-mail diário de alertas
+on:
+  schedule:
+    - cron: '0 11 * * *'  # 8h da manhã no horário de Brasília
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  enviar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Mandar os alertas do dia
+        env:
+          FIREBASE_SERVICE_ACCOUNT_BASE64: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_BASE64 }}
+          BREVO_API_KEY: ${{ secrets.BREVO_API_KEY1 || secrets.BREVO_API_KEY }}
+          BREVO_SENDER: ${{ secrets.BREVO_SENDER || vars.BREVO_SENDER }}
+        run: node scripts/kf-alertas-email-diario.js

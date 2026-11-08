@@ -111,4 +111,27 @@ async function agirAlertas(acao, body, c) {
   }
 }
 
-module.exports = { agirAlertas, gerar, mesclar, validarConfig, TIPOS };
+// E-mail diário: passa por cada pessoa que LIGOU o e-mail e informou o endereço. Manda no máximo 1 por dia,
+// só se houver alerta ligado precisando de atenção. Sem provedor de e-mail configurado não finge que mandou.
+async function enviarDiario(db, agoraIso, deps = {}) {
+  const listar = async (col) => { const s = await col.get(); return s.docs.map((d) => ({ id: d.id, ...d.data() })); };
+  const dia = agoraIso.slice(0, 10);
+  const r = { pessoas: 0, enviados: 0, sem_alerta: 0, ja_hoje: 0, falhas: 0, motivo: null };
+  for (const u of await listar(db.collection('prumo_users'))) {
+    const base = db.collection('prumo_users').doc(u.id);
+    const snap = await base.collection('config').doc('alertas').get();
+    const cfg = mesclar(snap && snap.exists ? snap.data() : null);
+    if (!cfg.canais.email || !cfg.email_para) continue;
+    r.pessoas++;
+    const marca = await base.collection('config').doc('alertas_email').get();
+    if (marca && marca.exists && marca.data() && marca.data().dia === dia) { r.ja_hoje++; continue; }
+    const [cartoes, dividas, lancs, limites, pontos] = await Promise.all(['cartoes', 'dividas', 'lancamentos', 'limites', 'pontos'].map((k) => listar(base.collection(k))));
+    const alertas = gerar(cfg, { cartoes, dividas, lancs, limites, pontos }, agoraIso);
+    if (!alertas.length) { r.sem_alerta++; continue; }
+    const e = await enviarEmail(deps, { to: cfg.email_para, assunto: `Kernex Finance: ${alertas.length} alerta(s) de hoje`, texto: alertas.map((a) => '• ' + a.texto).join('\n') + '\n\nVocê controla esses alertas no app, aba Alertas.' });
+    if (e.ok) { r.enviados++; await base.collection('config').doc('alertas_email').set({ dia, em: agoraIso, alertas: alertas.length }); } else { r.falhas++; r.motivo = e.motivo; }
+  }
+  return r;
+}
+
+module.exports = { enviarDiario, agirAlertas, gerar, mesclar, validarConfig, TIPOS };

@@ -130,6 +130,9 @@ async function agirDoc(acao, body, c) {
     case 'doc_ler': {
       const im = c.lerImagens(body.imagens);
       if (!im.ok) return [400, { error: im.erro }];
+      const aj = require('./ajuda');
+      const lim = await aj.contarLeitura(base, agoraIso, im.imagens.length);
+      if (!lim.ok) return [429, { error: aj.msgLimite(lim) }];
       const lidos = await lerComVisao(im.imagens, deps);
       if (!lidos.some(Boolean)) return [503, { error: 'Não consegui ler agora. Tente de novo com uma foto mais nítida.' }];
       const existentes = new Set((await listar(col)).map((x) => x.id));
