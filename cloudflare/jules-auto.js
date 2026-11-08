@@ -12,6 +12,37 @@ const REPO = '/repos/gilcambe/nexia';
 // passou disso, volta ao Cortex (pode ir ao Jules de novo depois).
 const ESPERA_JULES_H = 1;
 const IGNORAR = ['cortex-dividido', 'cortex-alerta', 'so-humano', 'vez-do-claude'];
+// Pedido do dono (07/11): repositórios PRIVADOS de outros produtos com issues cortex-fila próprias. O código deles
+// não pode vir para este repo público, então o Jules trabalha direto lá (base main). 1 envio por repo a cada 15 min.
+const reposExtras = (env) => String(env.JULES_REPOS_EXTRA == null ? 'gilcambe/avaya-gsd' : env.JULES_REPOS_EXTRA)
+  .split(',').map(s => s.trim()).filter(s => /^[\w.-]+\/[\w.-]+$/.test(s));
+
+// Próxima issue do repo extra: cortex-fila aberta, sem jules-enviado e sem PR aberto que cite #N (função pura, testada).
+function proximaExtra(issues, prs, nomes) {
+  const prDe = (n) => prs.some(p => new RegExp(`#${n}(?!\\d)`).test(`${p.title || ''}\n${p.body || ''}`));
+  const i = (issues || []).filter(x => !x.pull_request && nomes(x).includes('cortex-fila') && !nomes(x).includes('jules-enviado') && !prDe(x.number))
+    .sort((a, b) => a.number - b.number)[0];
+  return i ? i.number : null;
+}
+
+async function rodarExtras(p, env, fetchFn, nomes, mandarParaJules) {
+  const out = [];
+  for (const repo of reposExtras(env)) {
+    try {
+      const issues = await p.gh(`/repos/${repo}/issues?state=open&labels=cortex-fila&per_page=20`);
+      const prs = await p.gh(`/repos/${repo}/pulls?state=open&per_page=50`);
+      const n = proximaExtra(Array.isArray(issues) ? issues : [], Array.isArray(prs) ? prs : [], nomes);
+      if (!n) { out.push({ repo, enviados: 0 }); continue; }
+      const r = await mandarParaJules(p, n, 'o robô (automático, repo privado)', { env, fetchFn, repo, base: 'main' });
+      if (r.status !== 200) console.warn(`[jules-auto] ${repo}#${n}: ${r.corpo.error || r.status}` + (/40[34]/.test(String(r.corpo.error)) ? ' (o Jules ainda não tem acesso a esse repositório?)' : ''));
+      out.push({ repo, issue: n, status: r.status, ...(r.status === 200 ? { link: r.corpo.link } : { erro: r.corpo.error }) });
+    } catch (e) {
+      console.warn(`[jules-auto] ${repo}: a chave do GitHub não vê esse repositório ou ele falhou:`, e && e.message);
+      out.push({ repo, erro: String(e && e.message || e).slice(0, 200) });
+    }
+  }
+  return out;
+}
 
 // Decide o que fazer com as issues travadas (função pura, testada).
 function decidir(issues, prs, agora, nomes) {
@@ -76,7 +107,9 @@ async function rodar(at, { env = process.env, fetchFn = fetch } = {}) {
     const r = await mandarParaJules(p, d.enviar, 'o robô (automático, tarefa travada)', { env, fetchFn });
     Object.assign(out, { issue: d.enviar, status: r.status, ...(r.status === 200 ? { link: r.corpo.link } : { erro: r.corpo.error }) });
   } else out.enviados = 0;
+  const extras = (await rodarExtras(p, env, fetchFn, nomes, mandarParaJules)).filter(x => x.enviados !== 0);
+  if (extras.length) out.extras = extras;
   return out;
 }
 
-module.exports = { rodar, decidir, ESPERA_JULES_H };
+module.exports = { rodar, decidir, proximaExtra, reposExtras, ESPERA_JULES_H };
