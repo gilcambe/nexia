@@ -28,38 +28,4 @@ jobs:
           EMAIL_API_KEY: ${{ secrets.EMAIL_API_KEY }}
           FIREBASE_SERVICE_ACCOUNT_BASE64: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_BASE64 }}
           FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
-        run: |
-          node - <<'JS'
-          'use strict';
-          const key = process.env.BREVO_API_KEY || process.env.EMAIL_API_KEY;
-          if (!key) {
-            console.log('sem segredo, pulei');
-            process.exit(0);
-          }
-
-          // Invocação da rotina de alertas da Fase 14
-          (async () => {
-            const p = require('./netlify/functions/prumo');
-            console.log('Chave configurada. Processando alertas da Fase 14...');
-
-            // Se as credenciais do banco não estiverem presentes no runner, executa conferência dos alertas
-            if (!process.env.FIREBASE_SERVICE_ACCOUNT_BASE64 && !process.env.FIREBASE_SERVICE_ACCOUNT) {
-              const a = require('./netlify/functions/prumo-lib/alertas');
-              const cfg = a.mesclar(null);
-              const alertas = a.gerar(cfg, { cartoes: [], dividas: [], lancs: [], limites: [], pontos: [] }, new Date().toISOString());
-              console.log(`Alertas computados (${alertas.length}). Mensagem de sucesso registrada.`);
-              process.exit(0);
-            }
-
-            // Quando as credenciais existem, aciona a ação oficial alertas_enviar_email
-            const [status, res] = await p.agir('master', { acao: 'alertas_enviar_email' }).catch(err => [500, { error: err.message }]);
-            if (status >= 400 && res && res.error && !res.error.includes('desligado')) {
-              console.warn('Aviso ao enviar alertas:', res.error);
-            } else {
-              console.log('Alerta diário por e-mail executado com sucesso.', res && res.mensagem ? res.mensagem : '');
-            }
-          })().catch((err) => {
-            console.error('Erro na rotina de alertas:', err && err.message ? err.message : err);
-            process.exit(1);
-          });
-          JS
+        run: node scripts/kernex-finance-alerta-diario.js
