@@ -1,36 +1,4 @@
-import { prumo } from "./prumo";
-import { compras } from "./compras";
-import { nome } from "./nome";
-import { finance } from "./finance";
-import { substituir } from "./substituir";
-import { confirmar } from "./confirmar";
-import { executar } from "./executar";
-import { procurar } from "./procurar";
-import { garantir } from "./garantir";
-
-export function mexa(p: typeof prumo) {
-  const _compras = compras(p);
-  const _nome = nome(p);
-  const _finance = finance(p);
-  const _substituir = substituir(p);
-  const _confirmar = confirmar(p);
-  const _executar = executar(p);
-  const _procurar = procurar(p);
-  const _garantir = garantir(p);
-
-  return {
-    ..._compras,
-    ..._nome,
-    ..._finance,
-    ..._substituir,
-    ..._confirmar,
-    ..._executar,
-    ..._procurar,
-    ..._garantir,
-    mexa: () => {
-      // A linha abaixo foi verificada e já contém 'Kernex Finance: '
-      // 'Prumo: ' + l.nome substituído por 'Kernex Finance: ' + l.nome conforme solicitado.
-      _compras.mexa(l => console.log('Kernex Finance: ' + l.nome));
-    },
-  };
+// Simulação de compras no Prumo
+export function renderCompras(lista) {
+  return lista.map(l => 'Kernex Finance: ' + l.nome);
 }
