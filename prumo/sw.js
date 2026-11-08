@@ -1,5 +1,5 @@
 // Prumo: guarda só a casca do app para abrir sem internet. Respostas da API nunca são guardadas.
-const CACHE = 'prumo-casca-v24-kernexfinance';
+const CACHE = 'prumo-casca-v25-kernexfinance';
 const CASCA = ['/prumo/', '/prumo/index.html', '/prumo/app.js', '/prumo/manifest.webmanifest', '/prumo/icone.svg', '/prumo/ui.js', '/prumo/carteira.js', '/prumo/gastos.js', '/prumo/compras.js', '/prumo/objetivos.js', '/prumo/orcamento.js', '/prumo/consultor.js', '/prumo/pontos.js', '/prumo/instalar.js', '/prumo/privacidade.js', '/prumo/inicio.js', '/prumo/documentos.js', '/prumo/contas.js', '/prumo/cartoes.js', '/prumo/assistente.js', '/prumo/dividas.js', '/prumo/investimentos.js', '/prumo/economizar.js', '/prumo/metas.js', '/prumo/familia.js', '/prumo/impostos.js', '/prumo/alertas.js', '/prumo/landing.html', '/prumo/icone-192.png', '/prumo/pdfRenderer.js'];
 
 self.addEventListener('install', (e) => {
