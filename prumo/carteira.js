@@ -20,8 +20,8 @@
       <div class="card"><div class="fraco">Patrimônio total</div><div class="grande">${brl(total)}</div>
         ${tipos.map(([t, v]) => `<div style="margin-top:8px"><div class="item" style="padding:0;border:0"><span>${esc(TIPOS[t] || t)}</span><span>${brl(v)}</span></div>${barra(total ? (v / total) * 100 : 0)}</div>`).join('')}
       </div>
-      <div class="linha" style="margin-bottom:12px"><button class="btn sec" id="add">✍️ Preencher</button><button class="btn" id="print">📷 Só mandar os prints</button></div>
-      <input type="file" id="arq" accept="image/*" multiple hidden>
+      <div class="linha" style="margin-bottom:12px"><button class="btn sec" id="add">✍️ Preencher</button><button class="btn" id="print">📷 Só mandar os prints ou PDF</button></div>
+      <input type="file" id="arq" accept="image/*,application/pdf" multiple hidden>
       ${Object.keys(bancos).length > 1 ? `<div class="card"><div class="fraco">Por banco</div>${Object.entries(bancos).map(([b, v]) => `<div class="item"><span>${esc(b)}</span><span class="v">${brl(v)}</span></div>`).join('')}</div>` : ''}
       <div class="card">${itens.length ? itens.map((i) => `<div class="item" data-id="${i.id}"><div><div class="n">${esc(i.nome)}</div><div class="fraco">${esc(i.banco || '')} · ${esc(TIPOS[i.tipo] || i.tipo)}${i.ticker ? ' · ' + esc(i.ticker) : ''}${i.quantidade ? ' · ' + esc(i.quantidade) + ' cotas' : ''}${i.objetivo_id && nomeObj[i.objetivo_id] ? ' · 🎯 ' + esc(nomeObj[i.objetivo_id]) : ''} · ${esc(i.data_valor || '')}</div></div><div class="v">${brl(i.valor)}</div></div>`).join('') : '<p class="fraco">Nada ainda. Toque em "Só mandar os prints" e mande os prints do app do banco, da previdência e do FGTS, ou preencha à mão.</p>'}</div>
       ${itens.length ? '<button class="btn sec" id="limpar" style="width:100%">🧹 Limpar e refazer a carteira</button>' : ''}`;
@@ -51,15 +51,41 @@
     arq.onchange = async () => {
       const files = [...arq.files].slice(0, MAX_PRINTS);
       if (!files.length) return;
-      if (arq.files.length > MAX_PRINTS) MB.mostrarErro(`Mandei só os ${MAX_PRINTS} primeiros prints.`);
-      // Vários prints de uma vez: vão em grupos de 5, com progresso na tela.
+      if (arq.files.length > MAX_PRINTS) MB.mostrarErro(`Mandei só os ${MAX_PRINTS} primeiros arquivos.`);
+      // Vários prints ou PDFs de uma vez: vão em grupos de 5, com progresso na tela.
       const lidos = { itens: [], descartados: [], conferencia: [] };
       let falhas = 0;
-      for (let i = 0; i < files.length; i += 5) {
-        const grupo = files.slice(i, i + 5);
-        el.innerHTML = `<div class="card">📷 Lendo prints ${i + 1} a ${i + grupo.length} de ${files.length}… cada grupo leva até 2 minutos. Não feche o app.</div>`;
+      let totalPaginas = 0;
+      const imagensProcessadas = [];
+      for (const a of files) {
         try {
-          const r = await MB.api('ler_print', { imagens: await Promise.all(grupo.map(reduzir)) });
+          if (a.type === 'application/pdf' || a.name.toLowerCase().endsWith('.pdf')) {
+            if (!window.pdfRenderer || typeof window.pdfRenderer.renderPdf !== 'function') {
+              throw new Error('Leitor de PDF não disponível.');
+            }
+            const pags = await window.pdfRenderer.renderPdf(a);
+            totalPaginas += pags.length;
+            if (totalPaginas > 5) {
+              MB.mostrarErro('O limite total é de até 5 páginas de PDF.');
+            }
+            for (const p of pags) {
+              imagensProcessadas.push(p);
+            }
+          } else {
+            totalPaginas += 1;
+            imagensProcessadas.push(await reduzir(a));
+          }
+        } catch (err) {
+          falhas++;
+          const msgErr = err && err.message ? err.message : 'Erro ao abrir o arquivo PDF ou imagem.';
+          MB.mostrarErro(msgErr);
+        }
+      }
+      for (let i = 0; i < imagensProcessadas.length; i += 5) {
+        const grupo = imagensProcessadas.slice(i, i + 5);
+        el.innerHTML = `<div class="card">📷 Lendo documentos ${i + 1} a ${i + grupo.length} de ${imagensProcessadas.length}… cada grupo leva até 2 minutos. Não feche o app.</div>`;
+        try {
+          const r = await MB.api('ler_print', { imagens: grupo });
           lidos.itens.push(...(r.itens || [])); lidos.descartados.push(...(r.descartados || [])); lidos.conferencia.push(...(r.conferencia || []));
         } catch { falhas += grupo.length; }
       }
