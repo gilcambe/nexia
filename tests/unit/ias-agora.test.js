@@ -25,3 +25,32 @@ test('ias agora: ativa, ociosa, sem cota e erro', () => {
   assert.ok(!r.some((x) => x.nome.startsWith('Vaga 4')));
   assert.ok(!JSON.stringify(r).includes('IA_VAGA'));
 });
+
+test('carregar busca vagas e issues e devolve formato iasAgora', async () => {
+  const chamadas = [];
+  const gh = async (path) => {
+    chamadas.push(path);
+    if (path.includes('/actions/secrets')) return { secrets: [{ name: 'IA_VAGA_1' }] };
+    if (path.includes('/actions/variables')) return { value: JSON.stringify({ pausadas: [], ordem: [] }) };
+    if (path.includes('ia-vagas-estado')) return [];
+    if (path.includes('/pulls')) return [];
+    if (path.includes('labels=jules-enviado')) return [];
+    if (path.includes('labels=cortex-rodando')) {
+      return [{ number: 99, title: 'ajuste header', updated_at: new Date().toISOString(), labels: [{ name: 'cortex-rodando' }] }];
+    }
+    return [];
+  };
+
+  const { carregar } = require('../../netlify/functions/central/ias-agora');
+  const lista = await carregar(gh, { JULES_API_KEY: 'test-key' });
+  assert.ok(Array.isArray(lista));
+  const cortex = lista.find((x) => x.nome === 'Cortex');
+  const jules = lista.find((x) => x.nome === 'Jules');
+  assert.ok(cortex);
+  assert.ok(jules);
+  assert.strictEqual(cortex.situacao, 'ativa');
+  assert.strictEqual(cortex.tarefa.numero, 99);
+  assert.strictEqual(jules.situacao, 'ociosa');
+  assert.strictEqual(jules.texto, 'Parado, sem tarefa');
+  assert.ok(!JSON.stringify(lista).includes('test-key'));
+});

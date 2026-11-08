@@ -52,3 +52,22 @@ test('PED5. aprovar PR só vale para ramo nexia/', async () => {
   const r = await createHandler({ getMw: () => master, getPedidos: () => falso([], resp) })(post({ acao: 'juntar', pr: 9 }));
   assert.strictEqual(r.statusCode, 400);
 });
+
+test('PED8. GET /api/pedidos?ias=1 retorna ias e resumo', async () => {
+  const iasMock = [
+    { nome: 'Cortex', situacao: 'ativa', ativa: true, texto: 'Trabalhando no #1', tarefa: { numero: 1, titulo: 't' }, desde: new Date().toISOString() },
+    { nome: 'Jules', situacao: 'ociosa', ativa: false, texto: 'Parado, sem tarefa', tarefa: null, desde: null },
+  ];
+  const h = createHandler({
+    getMw: () => master,
+    getPedidos: () => falso([]),
+    iasAgora: async () => ({ ias: iasMock, resumo: { ativas: 1, paradas: 1 }, contagens: {}, conferidoEm: new Date().toISOString(), origem: 'test' }),
+  });
+  const r = await h(ev({ queryStringParameters: { ias: '1' } }));
+  assert.strictEqual(r.statusCode, 200);
+  const body = JSON.parse(r.body);
+  assert.ok(Array.isArray(body.ias));
+  assert.strictEqual(body.ias.length, 2);
+  assert.strictEqual(body.resumo.ativas, 1);
+  assert.ok(!JSON.stringify(body).includes('SECRET'));
+});

@@ -38,7 +38,17 @@ function iasAgora({ vagas = [], julesEstado = null, abertas = [], agora = Date.n
   return out;
 }
 
-async function carregar(gh, repo, env = process.env) {
+async function carregar(gh, repo, env) {
+  // Suporta tanto carregar(gh, repo, env) quanto carregar(gh, env)
+  if (repo && typeof repo === 'object') {
+    env = repo;
+    repo = process.env.GITHUB_REPOSITORY || 'gilcambe/nexia';
+  } else {
+    env = env || process.env;
+    if (!repo || typeof repo !== 'string') {
+      repo = process.env.GITHUB_REPOSITORY || 'gilcambe/nexia';
+    }
+  }
   const ghRepo = (c, init) => gh('/repos/' + repo + c, init);
   const busca = (labels) => gh('/repos/' + repo + '/issues?state=open&per_page=100&labels=' + encodeURIComponent(labels)).catch(() => []);
   const [est, ...listas] = await Promise.all([
