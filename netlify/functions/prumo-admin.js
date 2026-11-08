@@ -54,23 +54,23 @@ function createHandler(deps = {}) {
           em: new Date(now()).toISOString(),
         });
       } else if (parte === 'users') {
-        result = { ok: true, users: [], count: 0, summary: 'Gerenciamento de usuários master' };
+        result = { ok: true, users: [], count: 0, summary: 'Gerenciamento de usuários' };
       } else if (parte === 'plans') {
         result = { ok: true, plans: [], summary: 'Gerenciamento de planos' };
       } else if (parte === 'ia_consumption' || parte === 'consumption') {
-        result = { ok: true, consumption: { total_tokens: 0, requests: 0 }, summary: 'Consumo de IA' };
+        result = { ok: true, consumption: { requests: 0 }, summary: 'Consumo IA' };
       } else if (parte === 'ocr_limits' || parte === 'limits') {
-        result = { ok: true, limits: { daily_max: 1000, used: 0 }, summary: 'Limites OCR' };
+        result = { ok: true, limits: { used: 0 }, summary: 'Limites OCR' };
       } else if (parte === 'providers') {
-        result = { ok: true, providers: [{ name: 'anthropic', active: true }, { name: 'openai', active: true }], summary: 'Provedores IA' };
+        result = { ok: true, providers: [{ name: 'anthropic' }, { name: 'openai' }], summary: 'Provedores' };
       } else if (parte === 'errors') {
-        result = { ok: true, errors: [], count: 0, summary: 'Logs de erros' };
+        result = { ok: true, errors: [], count: 0, summary: 'Erros' };
       } else if (parte === 'support') {
-        result = { ok: true, tickets: [], count: 0, summary: 'Suporte técnico' };
+        result = { ok: true, tickets: [], count: 0, summary: 'Suporte' };
       } else if (parte === 'tech_logs' || parte === 'logs') {
-        result = { ok: true, logs: [], summary: 'Logs técnicos do sistema' };
+        result = { ok: true, logs: [], summary: 'Logs técnicos' };
       } else if (parte === 'availability') {
-        result = { ok: true, availability: { status: 'operational', uptime: '99.9%' }, summary: 'Disponibilidade de serviços' };
+        result = { ok: true, availability: { status: 'operational' }, summary: 'Disponibilidade' };
       } else {
         return res(400, { error: `Endpoint desconhecido: ${parte}` });
       }
