@@ -95,21 +95,6 @@ function createHandler(deps = {}) {
       return res(200, { ...result, received_at: new Date(now()).toISOString() });
     }
 
-    // Se chegou aqui, é um método não suportado ou GET sem 'parte'
-    if (method === 'GET') {
-      const parte = q.parte || 'status';
-      if (parte === 'status') {
-        return res(200, {
-          ok: true,
-          admin: true,
-          service: 'prumo-admin',
-          timestamp: new Date(now()).toISOString(),
-        });
-      }
-      // Caso GET com outra 'parte' que não seja 'status' e não seja tratada
-      return res(404, { ok: false, message: `Parte '${parte}' não encontrada.` });
-    }
-
     return res(400, { error: 'Ação ou método desconhecido.' });
   };
 }
