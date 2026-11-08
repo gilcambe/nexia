@@ -62,7 +62,7 @@
       listas.forEach((l) => {
         if (l.lembrete && l.faltam && !avisadas.has(l.id) && Date.parse(l.lembrete) <= agora && agora - Date.parse(l.lembrete) < 120000) {
           avisadas.add(l.id);
-          try { new Notification('Prumo: ' + l.nome, { body: `Faltam ${l.faltam} itens na sua lista.`, icon: '/prumo/icone.svg' }); } catch { /* sem notificação */ }
+          try { new Notification('Kernex Finance: ' + l.nome, { body: `Faltam ${l.faltam} itens na sua lista.`, icon: '/prumo/icone.svg' }); } catch { /* sem notificação */ }
         }
       });
     }, 60000);
