@@ -4,7 +4,7 @@
 const { enviarDiario } = require('../netlify/functions/prumo-lib/alertas.js');
 (async () => {
   if (!process.env.FIREBASE_SERVICE_ACCOUNT_BASE64 && !process.env.FIREBASE_SERVICE_ACCOUNT) { console.log('PULEI: falta a chave do banco no GitHub.'); return; }
-  if (!process.env.BREVO_API_KEY || !process.env.BREVO_SENDER) { console.log('PULEI: o envio de e-mail não está configurado (BREVO_API_KEY/BREVO_SENDER). Nenhum e-mail saiu.'); return; }
+  if (!process.env.BREVO_API_KEY) { console.log('PULEI: o envio de e-mail não está configurado (BREVO_API_KEY). Nenhum e-mail saiu.'); return; }
   const { db } = require('../netlify/functions/firebase-init.js');
   const r = await enviarDiario(db, new Date().toISOString());
   console.log(`Pessoas com e-mail ligado: ${r.pessoas}. Enviados: ${r.enviados}. Sem alerta hoje: ${r.sem_alerta}. Já enviados hoje: ${r.ja_hoje}. Falhas: ${r.falhas}.`);

@@ -74,10 +74,27 @@ function validarConfig(b, atual) {
   return { ok: true, cfg };
 }
 
+// Remetente: BREVO_SENDER, ou o primeiro remetente confirmado na conta Brevo (mesmo jeito do Viajante Pro).
+let remetenteCache = null;
+async function remetente(key) {
+  if (process.env.BREVO_SENDER) return String(process.env.BREVO_SENDER).trim();
+  if (remetenteCache) return remetenteCache;
+  try {
+    const r = await fetch('https://api.brevo.com/v3/senders', { headers: { accept: 'application/json', 'api-key': key } });
+    if (!r.ok) return null;
+    const j = await r.json();
+    const ativo = (j && Array.isArray(j.senders) ? j.senders : []).find((x) => x && x.active && x.email);
+    remetenteCache = ativo ? ativo.email : null;
+    return remetenteCache;
+  } catch { return null; }
+}
+
 async function enviarEmail(deps, { to, assunto, texto: corpo }) {
   if (typeof deps.enviarEmail === 'function') return deps.enviarEmail({ to, assunto, texto: corpo });
-  const key = process.env.BREVO_API_KEY; const de = process.env.BREVO_SENDER;
-  if (!key || !de) return { ok: false, motivo: 'O envio de e-mail ainda não está configurado.' };
+  const key = process.env.BREVO_API_KEY;
+  if (!key) return { ok: false, motivo: 'O envio de e-mail ainda não está configurado.' };
+  const de = await remetente(key);
+  if (!de) return { ok: false, motivo: 'Nenhum remetente confirmado no provedor de e-mail.' };
   try {
     const r = await fetch('https://api.brevo.com/v3/smtp/email', { method: 'POST', headers: { accept: 'application/json', 'api-key': key, 'content-type': 'application/json' },
       body: JSON.stringify({ sender: { name: 'Kernex Finance', email: de }, to: [{ email: to }], subject: assunto, textContent: corpo }) });
