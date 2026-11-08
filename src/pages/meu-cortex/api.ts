@@ -11,7 +11,7 @@ export interface Fala { quem: string; quando: string; texto: string }
 export interface PR { numero: number; titulo: string; link: string; ramo: string; estado: "aberto" | "rascunho" | "juntado" | "fechado"; ci: string | null; automerge: boolean; quando: string }
 export interface Detalhe extends Resumo { rotulos: string[]; conversa: Fala[]; prs: PR[] }
 export interface Deploy { mudancas: number; titulos: string[]; ultimoDeploy: { quando: string; link: string } | null; emAndamento: boolean; falhou: boolean }
-export type Filtro = "todos" | "abertos" | "travados" | "feitos";
+export type Filtro = "todos" | "abertos" | "travados" | "feitos" | "andamento" | "travadas" | "precisa" | "concluidas";
 
 export const NOME_SITUACAO: Record<Situacao, string> = {
   fila: "⏳ Na fila", fazendo: "⚙️ Fazendo", travado: "🛑 Travado", dividido: "🧩 Em partes", feito: "✅ Feito", fechado: "✖️ Cancelado",
@@ -40,6 +40,8 @@ export function usePedidos() {
     chamar<Lista>(`?estado=${estado}&pagina=${pagina}&q=${encodeURIComponent(q)}`), [chamar]);
   const abrir = useCallback((n: number) => chamar<Detalhe>(`?n=${n}`), [chamar]);
   const deploy = useCallback(() => chamar<Deploy>("?deploy=1"), [chamar]);
+  // #3133: painel "IAs trabalhando agora" + resumo do dia (mesma fonte da Central).
+  const ias = useCallback(<T,>() => chamar<T>("?ias=1"), [chamar]);
   const agir = useCallback((corpo: Record<string, unknown>) => chamar<{ ok: boolean; mensagem: string; numero?: number; caminho?: string }>("", corpo), [chamar]);
-  return { listar, abrir, agir, deploy };
+  return { listar, abrir, agir, deploy, ias };
 }

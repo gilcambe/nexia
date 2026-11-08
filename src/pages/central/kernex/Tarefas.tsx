@@ -1,0 +1,101 @@
+import { useCallback, useEffect, useState } from "react";
+import { usePedidos, type Filtro } from "../../meu-cortex/api";
+import Bloco from "./Bloco";
+import { CHIPS, COR_ESTADO, haQuanto, hora } from "./regras";
+
+// #3219 parte 3: Tarefas. Lista com chips à esquerda, história da tarefa à direita, ações em lote.
+interface Item { numero: number; titulo: string; estado?: string; texto?: string; icone?: string; cor?: string; ia?: string | null; motivo?: string; quando: string; link: string }
+interface Passo { quando: string; icone: string; texto: string; link?: string }
+interface Detalhe extends Item { linha?: Passo[]; prs?: { numero: number; link: string; estado: string }[] }
+
+export function Selo({ t }: { t: Pick<Item, "texto" | "icone" | "cor"> }) {
+  if (!t.texto) return null;
+  return <span className="kx-selo" data-testid="kx-selo" style={{ background: COR_ESTADO[t.cor || "cinza"] || "#64748b" }}>{t.icone} {t.texto}</span>;
+}
+
+export default function Tarefas() {
+  const { listar, abrir, agir } = usePedidos();
+  const [chip, setChip] = useState<Filtro>("andamento");
+  const [q, setQ] = useState("");
+  const [itens, setItens] = useState<Item[] | null>(null);
+  const [em, setEm] = useState<string | null>(null);
+  const [aberto, setAberto] = useState<Detalhe | null>(null);
+  const [marcadas, setMarcadas] = useState<number[]>([]);
+  const [msg, setMsg] = useState<string | null>(null);
+
+  const carregar = useCallback(async () => {
+    try {
+      const r = await listar(q, chip, 1);
+      setItens(r.itens as unknown as Item[]);
+      setEm(new Date().toISOString());
+    } catch (e) { setMsg((e as Error).message); setItens([]); }
+  }, [listar, q, chip]);
+  useEffect(() => { const t = setTimeout(carregar, 300); const i = setInterval(carregar, 60000); return () => { clearTimeout(t); clearInterval(i); }; }, [carregar]);
+
+  const ver = async (n: number) => { try { setAberto((await abrir(n)) as unknown as Detalhe); } catch (e) { setMsg((e as Error).message); } };
+  const fazer = async (acao: string, ns: number[]) => {
+    setMsg("Fazendo…");
+    const res = await Promise.allSettled(ns.map((n) => agir({ acao, n })));
+    const ok = res.filter((r) => r.status === "fulfilled").length;
+    setMsg(`${ok} de ${ns.length} feitas.` + (ok < ns.length ? " Algumas deram erro." : ""));
+    setMarcadas([]);
+    carregar();
+    if (aberto) ver(aberto.numero);
+  };
+  const marcar = (n: number) => setMarcadas((m) => (m.includes(n) ? m.filter((x) => x !== n) : [...m, n]));
+
+  return (
+    <div className="kx-grade" style={{ gridTemplateColumns: "minmax(320px,2fr) 3fr" }}>
+      <Bloco titulo="Tarefas" ajuda="Escolha um filtro. Clique numa tarefa para ver a história dela ao lado." fonte={itens ? "issues do GitHub (fila do Cortex)" : null} atualizadoEm={em}>
+        <div className="kx-chips" style={{ marginBottom: 8 }}>
+          {CHIPS.map((c) => <button key={c.id} type="button" className="kx-chip" aria-pressed={chip === c.id} onClick={() => setChip(c.id as Filtro)} data-testid={"kx-chip-" + c.id}>{c.nome}</button>)}
+        </div>
+        <input className="kx-busca" style={{ width: "100%", maxWidth: "none", marginBottom: 8 }} placeholder="Procurar tarefa" value={q} onChange={(e) => setQ(e.target.value)} />
+        {marcadas.length > 0 && (
+          <div className="kx-chips" style={{ marginBottom: 8 }} data-testid="kx-lote">
+            <b>{marcadas.length} marcadas:</b>
+            <button type="button" className="kx-btn forte" onClick={() => fazer("tentar", marcadas)}>Tentar de novo</button>
+            <button type="button" className="kx-btn" onClick={() => fazer("reserva", marcadas)}>Ajuda das IAs</button>
+            <button type="button" className="kx-btn" onClick={() => { if (confirm("Cancelar as tarefas marcadas?")) fazer("cancelar", marcadas); }}>Cancelar</button>
+          </div>
+        )}
+        {msg && <p className="kx-mut" style={{ whiteSpace: "normal" }}>{msg}</p>}
+        <ul className="kx-lista" data-testid="kx-tarefas">
+          {(itens || []).slice(0, 14).map((t) => (
+            <li key={t.numero}>
+              <input type="checkbox" aria-label={"Marcar #" + t.numero} checked={marcadas.includes(t.numero)} onChange={() => marcar(t.numero)} style={{ width: 18, height: 18 }} />
+              <button type="button" className="kx-linha-tarefa" aria-current={aberto?.numero === t.numero} onClick={() => ver(t.numero)}>
+                <Selo t={t} /><span className="kx-titulo">#{t.numero} {t.titulo}</span><span className="kx-mut">{t.ia ? t.ia + " · " : ""}{haQuanto(t.quando)}</span>
+              </button>
+            </li>
+          ))}
+          {itens && itens.length === 0 && <li>Nenhuma tarefa aqui.</li>}
+        </ul>
+      </Bloco>
+      <Bloco titulo={aberto ? `Tarefa #${aberto.numero}` : "História da tarefa"} ajuda="Quando entrou, qual IA pegou, tentativas, PR e como está agora." fonte={aberto ? "issue e timeline do GitHub" : null} atualizadoEm={aberto ? new Date().toISOString() : null}>
+        {aberto && (
+          <div data-testid="kx-detalhe" style={{ display: "flex", flexDirection: "column", gap: 8, height: "100%" }}>
+            <div style={{ display: "flex", gap: 8, alignItems: "center" }}><Selo t={aberto} /><b className="kx-titulo">{aberto.titulo}</b><a className="kx-btn" href={aberto.link} target="_blank" rel="noreferrer">Abrir no GitHub</a></div>
+            {aberto.estado === "travada" && (
+              <div className="kx-caixa-travada" data-testid="kx-travada">
+                <p style={{ margin: "0 0 6px" }}>⚠️ {aberto.motivo || "Travou."}</p>
+                <div className="kx-chips">
+                  <button type="button" className="kx-btn forte" onClick={() => fazer("tentar", [aberto.numero])}>Tentar de novo</button>
+                  <button type="button" className="kx-btn" onClick={() => fazer("reserva", [aberto.numero])}>Passar para as IAs grátis</button>
+                  <button type="button" className="kx-btn" onClick={() => fazer("jules", [aberto.numero])}>Passar para o Jules</button>
+                  <button type="button" className="kx-btn" onClick={() => { if (confirm("Cancelar esta tarefa?")) fazer("cancelar", [aberto.numero]); }}>Cancelar</button>
+                </div>
+              </div>
+            )}
+            <ol className="kx-tempo" data-testid="kx-linha">
+              {(aberto.linha || []).slice(-10).map((p, i) => (
+                <li key={i}><span aria-hidden>{p.icone}</span> <span className="kx-mut">{hora(p.quando)}</span> {p.link ? <a href={p.link} target="_blank" rel="noreferrer" style={{ color: "#93c5fd" }}>{p.texto}</a> : p.texto}</li>
+              ))}
+              {(!aberto.linha || aberto.linha.length === 0) && <li className="kx-mut">Ainda sem história para mostrar.</li>}
+            </ol>
+          </div>
+        )}
+      </Bloco>
+    </div>
+  );
+}
