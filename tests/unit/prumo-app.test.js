@@ -71,7 +71,7 @@ test('PA9. modo privacidade: botão, script no service worker e estilo', () => {
   assert.match(ler('index.html'), /id="olho"/);
   assert.match(ler('index.html'), /body\.privado \.valor/);
   assert.match(ler('sw.js'), /privacidade\.js/);
-  assert.match(ler('sw.js'), /v23-kernexfinance/);
+  assert.match(ler('sw.js'), /v24-kernexfinance/);
 });
 
 test('PA10. abas Início e Documentos: no menu, no app e no service worker, com os arquivos existindo', () => {
