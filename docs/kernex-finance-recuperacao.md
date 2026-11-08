@@ -3,11 +3,9 @@
 ## Como saber se está fora do ar
 
 - Verifique se há uma issue aberta no repositório indicando indisponibilidade.
-- Teste o endpoint de health: `GET https://<SEU_DOMÍNIO>/api/prumo`. Qualquer erro (5xx, timeout ou código diferente de 200) indica que o serviço está fora do ar.
+- Teste o endpoint: faça uma requisição `GET /api/prumo`. Respostas com erro 5xx, timeout ou falha na resposta indicam que o serviço está fora do ar.
 
 ## Como voltar à versão anterior
 
-- **Rollback do deployment**: no painel da Cloudflare → *Workers* → *Deployments*, selecione a última versão estável e clique em **Rollback**.
-- **Reverter commit**: no GitHub, identifique o SHA do commit problemático e execute `git revert <SHA>`; abra PR para mesclar a reversão na branch padrão.
-
-Após a restauração, teste novamente o endpoint `/api/prumo` para confirmar que o serviço está ativo.
+- **Rollback do deployment**: Acesse o painel da plataforma de hospedagem (Cloudflare Pages/Workers ou provedor de deploy) na seção de *Deployments* e faça o rollback para a versão estável anterior.
+- **Reverter commit**: Reverta o commit problemático na branch principal através de um commit de reversão (`git revert`) ou abra um Pull Request revertendo a alteração que causou a falha.
