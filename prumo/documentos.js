@@ -3,6 +3,7 @@
 // Nada duvidoso vira lançamento sem a pessoa confirmar.
 (function () {
   const MB = window.MB;
+  const carregarPdf = () => MB.pdf ? Promise.resolve(MB.pdf) : new Promise((ok, falha) => { const s = document.createElement('script'); s.src = '/prumo/pdf.js'; s.onload = () => ok(MB.pdf); s.onerror = falha; document.body.appendChild(s); });
   const carregarUi = () => MB.ui ? Promise.resolve(MB.ui) : new Promise((ok, falha) => { const s = document.createElement('script'); s.src = '/prumo/ui.js'; s.onload = () => ok(MB.ui); s.onerror = falha; document.body.appendChild(s); });
   const TIPO = { despesa: 'Gasto', receita: 'Entrada', transferencia_propria: 'Transferência própria', pagamento_fatura: 'Pagamento de fatura' };
   const DOC = { fatura: 'Fatura de cartão', extrato: 'Extrato', comprovante: 'Comprovante', nota: 'Nota fiscal', boleto: 'Boleto', recibo: 'Recibo', conta: 'Conta de consumo', corretora: 'Extrato de corretora', milhas: 'Extrato de milhas', outro: 'Documento' };
@@ -15,8 +16,8 @@
     const rec = await MB.api('lanc_listar', { mes });
     el.innerHTML = `
       <div class="card"><h3 style="margin:0 0 6px">📄 Enviar documento</h3>
-        <div class="fraco">Foto ou print de fatura, extrato, comprovante Pix, nota, boleto ou recibo (até 5 imagens, JPG ou PNG). PDF em breve: por enquanto tire um print das páginas.</div>
-        <input type="file" id="kf-arq" accept="image/*" multiple style="margin-top:10px">
+        <div class="fraco">Fatura, extrato, comprovante Pix, nota, boleto ou recibo: foto, print ou PDF (até 5 páginas por vez).</div>
+        <input type="file" id="kf-arq" accept="image/*,application/pdf,.pdf" multiple style="margin-top:10px">
         <button class="btn" id="kf-ler" type="button" style="margin-top:10px">Ler documento</button></div>
       <div id="kf-res"></div>
       <div class="card"><div class="fraco">Lançamentos de ${mes.slice(5)}/${mes.slice(0, 4)} · entradas ${brl(rec.receitas)} · gastos ${brl(rec.despesas)}</div>
@@ -26,15 +27,16 @@
     const res = el.querySelector('#kf-res');
     el.querySelector('#kf-ler').onclick = async (ev) => {
       const arqs = [...el.querySelector('#kf-arq').files];
-      if (!arqs.length) { res.innerHTML = '<div class="aviso-c">Escolha pelo menos uma imagem.</div>'; return; }
-      if (arqs.length > 5) { res.innerHTML = '<div class="aviso-c">Envie no máximo 5 imagens por vez.</div>'; return; }
+      if (!arqs.length) { res.innerHTML = '<div class="aviso-c">Escolha pelo menos uma foto, print ou PDF.</div>'; return; }
+      if (arqs.length > 5) { res.innerHTML = '<div class="aviso-c">Envie no máximo 5 arquivos por vez.</div>'; return; }
       const btn = ev.currentTarget; btn.disabled = true; btn.textContent = 'Lendo… pode levar até 2 minutos';
       res.innerHTML = '';
       try {
-        const imagens = [];
-        for (const a of arqs) imagens.push(await reduzir(a));
+        const pdf = await carregarPdf();
+        const { imagens, cortou } = await pdf.paraImagens(arqs, reduzir);
         const r = await MB.api('doc_ler', { imagens });
         mostrarLeitura(r);
+        if (cortou) res.insertAdjacentHTML('afterbegin', '<div class="aviso-c">Li as 5 primeiras páginas. Para o resto, mande de novo só as outras páginas.</div>');
       } catch (e) {
         res.innerHTML = `<div class="aviso-c">${esc(e && e.message || 'Não consegui ler agora.')} Tente de novo com uma foto mais nítida.</div>`;
       } finally { btn.disabled = false; btn.textContent = 'Ler documento'; }
