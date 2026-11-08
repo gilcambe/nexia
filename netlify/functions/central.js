@@ -8,6 +8,7 @@ const { PRODUTOS, NO_AR, LINKS, ROBOS, BASE } = require('../../central/produtos'
 const { FORNECEDORES } = require('../../central/fornecedores');
 const empresa = require('./central/empresa');
 const vagas = require('./central/ia-vagas');
+const saudeServicos = require('./saude-servicos');
 
 async function medir(url, fetchFn, ms = 6000) {
   const t0 = Date.now();
@@ -142,6 +143,14 @@ function createHandler(deps = {}) {
           statusObj = {};
         }
         return res(200, { timestamp: ultimo.timestamp || ultimo.em || null, status: statusObj });
+      }
+      if (parte === 'cron-servicos') {
+        try {
+          await saudeServicos.executarCron(env, fetchFn);
+          return res(200, { ok: true, mensagem: 'Checagem de serviços executada com sucesso.' });
+        } catch (e) {
+          return res(502, { error: 'Erro ao executar cron de serviços: ' + String(e.message || e) });
+        }
       }
       if (parte === 'saude') {
         // O Worker não consegue abrir o próprio endereço dentro de um pedido (o Cloudflare barra o laço) e dava
