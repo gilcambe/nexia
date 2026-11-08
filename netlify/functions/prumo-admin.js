@@ -57,11 +57,61 @@ function createHandler(deps = {}) {
       const acao = body.acao || '';
       if (!acao) return res(400, { error: 'Ação não informada.' });
 
-      // Suporte para ações administrativas do Prumo
-      return res(200, { ok: true, acao, recebido_em: new Date(now()).toISOString() });
+      const acao = body.acao || '';
+      let result = {};
+
+      // Implementação das rotas internas de gerenciamento
+      if (acao === 'users') {
+        // Gerenciamento de Usuários
+        result = { ok: true, message: 'Gerenciamento de usuários.', users: [] }; // Exemplo: Retorna lista vazia por enquanto
+      } else if (acao === 'plans') {
+        // Gerenciamento de Planos
+        result = { ok: true, message: 'Gerenciamento de planos.', plans: [] }; // Exemplo: Retorna lista vazia por enquanto
+      } else if (acao === 'ia_consumption') {
+        // Gerenciamento de Consumo IA
+        result = { ok: true, message: 'Gerenciamento de consumo de IA.', consumption: {} }; // Exemplo: Retorna objeto vazio por enquanto
+      } else if (acao === 'ocr_limits') {
+        // Gerenciamento de Limites OCR
+        result = { ok: true, message: 'Gerenciamento de limites OCR.', limits: {} }; // Exemplo: Retorna objeto vazio por enquanto
+      } else if (acao === 'providers') {
+        // Gerenciamento de Provedores
+        result = { ok: true, message: 'Gerenciamento de provedores.', providers: [] }; // Exemplo: Retorna lista vazia por enquanto
+      } else if (acao === 'errors') {
+        // Gerenciamento de Erros
+        result = { ok: true, message: 'Gerenciamento de erros.', errors: [] }; // Exemplo: Retorna lista vazia por enquanto
+      } else if (acao === 'support') {
+        // Gerenciamento de Suporte
+        result = { ok: true, message: 'Gerenciamento de suporte.', support: {} }; // Exemplo: Retorna objeto vazio por enquanto
+      } else if (acao === 'tech_logs') {
+        // Gerenciamento de Logs Técnicos
+        result = { ok: true, message: 'Gerenciamento de logs técnicos.', logs: [] }; // Exemplo: Retorna lista vazia por enquanto
+      } else if (acao === 'availability') {
+        // Gerenciamento de Disponibilidade
+        result = { ok: true, message: 'Gerenciamento de disponibilidade.', availability: {} }; // Exemplo: Retorna objeto vazio por enquanto
+      } else {
+        return res(400, { error: `Ação desconhecida: ${acao}` });
+      }
+
+      // Retorna o resultado da ação processada
+      return res(200, { ...result, received_at: new Date(now()).toISOString() });
     }
 
-    return res(400, { error: 'Ação desconhecida.' });
+    // Se chegou aqui, é um método não suportado ou GET sem 'parte'
+    if (method === 'GET') {
+      const parte = q.parte || 'status';
+      if (parte === 'status') {
+        return res(200, {
+          ok: true,
+          admin: true,
+          service: 'prumo-admin',
+          timestamp: new Date(now()).toISOString(),
+        });
+      }
+      // Caso GET com outra 'parte' que não seja 'status' e não seja tratada
+      return res(404, { ok: false, message: `Parte '${parte}' não encontrada.` });
+    }
+
+    return res(400, { error: 'Ação ou método desconhecido.' });
   };
 }
 
