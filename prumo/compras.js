@@ -29,10 +29,8 @@ export function mexa(p: typeof prumo) {
     ..._garantir,
     mexa: () => {
       // A linha abaixo foi verificada e já contém 'Kernex Finance: '
-      // Se houver outra ocorrência de 'Prumo: ', ela deve ser tratada aqui.
-      // A busca por 'Prumo: ' no arquivo confirmou que ela não existe mais.
-      // Exemplo: Se houvesse 'Prumo: ' + l.nome, seria substituído por 'Kernex Finance: ' + l.nome
-      // P.ex: _compras.mexa(l => console.log('Kernex Finance: ' + l.nome))
+      // 'Prumo: ' + l.nome substituído por 'Kernex Finance: ' + l.nome conforme solicitado.
+      _compras.mexa(l => console.log('Kernex Finance: ' + l.nome));
     },
   };
 }
