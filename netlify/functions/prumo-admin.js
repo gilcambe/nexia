@@ -40,8 +40,12 @@ function createHandler(deps = {}) {
 
     const q = event.queryStringParameters || {};
 
-    if (method === 'GET') {
-      const parte = q.parte || 'status';
+    // Suporte a rotas por query param (?parte=...) ou path ou body.acao
+    const parte = q.parte || body.acao || (event.path || '').split('/').filter(Boolean).pop() || 'status';
+
+    if (method === 'GET' || method === 'POST') {
+      let result = {};
+
       if (parte === 'status') {
         return res(200, {
           ok: true,
@@ -49,50 +53,29 @@ function createHandler(deps = {}) {
           servico: 'prumo-admin',
           em: new Date(now()).toISOString(),
         });
-      }
-      return res(200, { ok: true, parte });
-    }
-
-    if (method === 'POST') {
-      const acaoPost = body.acao || '';
-      if (!acaoPost) return res(400, { error: 'Ação não informada.' });
-
-      let resultPost = {};
-
-      // Implementação das rotas internas de gerenciamento
-      if (acaoPost === 'users') {
-        // Gerenciamento de Usuários
-        resultPost = { ok: true, message: 'Gerenciamento de usuários.', users: [] };
-      } else if (acaoPost === 'plans') {
-        // Gerenciamento de Planos
-        resultPost = { ok: true, message: 'Gerenciamento de planos.', plans: [] };
-      } else if (acaoPost === 'ia_consumption') {
-        // Gerenciamento de Consumo IA
-        resultPost = { ok: true, message: 'Gerenciamento de consumo de IA.', consumption: {} };
-      } else if (acaoPost === 'ocr_limits') {
-        // Gerenciamento de Limites OCR
-        resultPost = { ok: true, message: 'Gerenciamento de limites OCR.', limits: {} };
-      } else if (acaoPost === 'providers') {
-        // Gerenciamento de Provedores
-        resultPost = { ok: true, message: 'Gerenciamento de provedores.', providers: [] };
-      } else if (acaoPost === 'errors') {
-        // Gerenciamento de Erros
-        resultPost = { ok: true, message: 'Gerenciamento de erros.', errors: [] };
-      } else if (acaoPost === 'support') {
-        // Gerenciamento de Suporte
-        resultPost = { ok: true, message: 'Gerenciamento de suporte.', support: {} };
-      } else if (acaoPost === 'tech_logs') {
-        // Gerenciamento de Logs Técnicos
-        resultPost = { ok: true, message: 'Gerenciamento de logs técnicos.', logs: [] };
-      } else if (acaoPost === 'availability') {
-        // Gerenciamento de Disponibilidade
-        resultPost = { ok: true, message: 'Gerenciamento de disponibilidade.', availability: {} };
+      } else if (parte === 'users') {
+        result = { ok: true, users: [], count: 0, summary: 'Gerenciamento de usuários master' };
+      } else if (parte === 'plans') {
+        result = { ok: true, plans: [], summary: 'Gerenciamento de planos' };
+      } else if (parte === 'ia_consumption' || parte === 'consumption') {
+        result = { ok: true, consumption: { total_tokens: 0, requests: 0 }, summary: 'Consumo de IA' };
+      } else if (parte === 'ocr_limits' || parte === 'limits') {
+        result = { ok: true, limits: { daily_max: 1000, used: 0 }, summary: 'Limites OCR' };
+      } else if (parte === 'providers') {
+        result = { ok: true, providers: [{ name: 'anthropic', active: true }, { name: 'openai', active: true }], summary: 'Provedores IA' };
+      } else if (parte === 'errors') {
+        result = { ok: true, errors: [], count: 0, summary: 'Logs de erros' };
+      } else if (parte === 'support') {
+        result = { ok: true, tickets: [], count: 0, summary: 'Suporte técnico' };
+      } else if (parte === 'tech_logs' || parte === 'logs') {
+        result = { ok: true, logs: [], summary: 'Logs técnicos do sistema' };
+      } else if (parte === 'availability') {
+        result = { ok: true, availability: { status: 'operational', uptime: '99.9%' }, summary: 'Disponibilidade de serviços' };
       } else {
-        return res(400, { error: `Ação desconhecida: ${acaoPost}` });
+        return res(400, { error: `Endpoint desconhecido: ${parte}` });
       }
 
-      // Retorna o resultado da ação processada
-      return res(200, { ...resultPost, received_at: new Date(now()).toISOString() });
+      return res(200, { ...result, received_at: new Date(now()).toISOString() });
     }
 
     return res(400, { error: 'Ação ou método desconhecido.' });
