@@ -24,6 +24,8 @@ test('PED7. lista e detalhe usam a busca do GitHub e juntam os PRs', async () =>
   const p = criarPedidos({ NEXIA_JOBS_TOKEN: 't' }, fetchFn);
   const l = await p.lista({ estado: 'travados' });
   assert.strictEqual(l.itens[0].situacao, 'fila');
+  assert.strictEqual(l.itens[0].estado, 'fila');
+  assert.strictEqual(typeof l.itens[0].precisaVoce, 'boolean');
   assert.ok(decodeURIComponent(urls[0]).includes('label:cortex-travado'));
   const d = await criarDetalhe(p.gh)(1);
   assert.strictEqual(d.conversa.length, 2); assert.strictEqual(d.conversa[1].texto, 'ok');
