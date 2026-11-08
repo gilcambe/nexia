@@ -51,10 +51,10 @@ export default function Conversa({ n, voltar }: { n: number; voltar: () => void 
           <h2 className="font-semibold truncate" data-testid="cx-titulo">{d.titulo}</h2>
           <p className="text-xs text-[var(--cx-mut)] flex items-center gap-2">
             <span className={`inline-block w-2 h-2 rounded-full ${e.vivo ? "animate-pulse" : ""}`} style={{ background: e.cor }} />
-            <span data-testid="cx-estado">{e.nome}</span> · #{d.numero}{d.tentativas > 1 ? ` · ${d.tentativas} tentativas` : ""} · {haQuanto(d.quando)}
+            <span data-testid="cx-estado">{d.texto ? `${d.icone} ${d.texto}` : e.nome}</span>{d.ia ? ` · ${d.ia}` : ""} · #{d.numero}{d.tentativas > 1 ? ` · ${d.tentativas} tentativas` : ""} · {haQuanto(d.quando)}
           </p>
         </div>
-        {d.situacao === "travado" && <button onClick={() => fazer({ acao: "tentar", n })} className="h-10 px-3 rounded-xl bg-[var(--cx-ac)] text-black text-sm font-semibold">Tentar de novo</button>}
+        {(d.situacao === "travado" || d.estado === "travada") && <button onClick={() => fazer({ acao: "tentar", n })} className="h-10 px-3 rounded-xl bg-[var(--cx-ac)] text-black text-sm font-semibold">Tentar de novo</button>}
         {d.situacao !== "feito" && d.situacao !== "fechado"
           ? <button onClick={() => confirm("Cancelar este pedido?") && fazer({ acao: "cancelar", n })} className="h-10 px-3 rounded-xl border border-[var(--cx-line)] text-sm">Cancelar</button>
           : <button onClick={() => fazer({ acao: "reabrir", n })} className="h-10 px-3 rounded-xl border border-[var(--cx-line)] text-sm">Reabrir</button>}
@@ -62,6 +62,28 @@ export default function Conversa({ n, voltar }: { n: number; voltar: () => void 
 
       <div className="flex-1 overflow-y-auto px-4 py-6">
         <div className="max-w-3xl mx-auto space-y-5">
+          {d.estado === "travada" && (
+            <div className="rounded-2xl border border-amber-400 p-4" data-testid="cx-travada">
+              <p className="font-medium">⚠️ Travou: {d.motivo || "sem motivo informado."}</p>
+              <div className="flex flex-wrap gap-2 mt-3">
+                <button onClick={() => fazer({ acao: "tentar", n })} className="h-11 px-4 rounded-xl bg-[var(--cx-ac)] text-black text-sm font-semibold">Tentar de novo</button>
+                <button onClick={() => fazer({ acao: "outra-ia", n })} className="h-11 px-4 rounded-xl border border-[var(--cx-line)] text-sm">Passar para outra IA</button>
+                <button onClick={() => confirm("Cancelar este pedido?") && fazer({ acao: "cancelar", n })} className="h-11 px-4 rounded-xl border border-[var(--cx-line)] text-sm">Cancelar</button>
+                <button onClick={() => fazer({ acao: "resolvida", n })} className="h-11 px-4 rounded-xl border border-[var(--cx-line)] text-sm">Marcar como resolvida</button>
+              </div>
+            </div>
+          )}
+          {d.linha && d.linha.length > 0 && (
+            <details className="rounded-2xl border border-[var(--cx-line)] bg-[var(--cx-card)] p-4" open data-testid="cx-linha-tempo">
+              <summary className="font-medium cursor-pointer">História da tarefa</summary>
+              <ol className="mt-3 space-y-2 border-l-2 border-[var(--cx-line)] pl-3 text-sm">
+                {d.linha.map((p, k) => (
+                  <li key={k}><span aria-hidden>{p.icone}</span> <span className="text-[var(--cx-mut)]">{new Date(p.quando).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}</span>{" "}
+                    {p.link ? <a href={p.link} target="_blank" rel="noreferrer" className="text-[var(--cx-ac)] underline">{p.texto}</a> : p.texto}</li>
+                ))}
+              </ol>
+            </details>
+          )}
           {d.conversa.map((c, k) => bot(c.quem) ? (
             <div key={k} className="flex gap-3" data-testid="cx-fala">
               <Logo tamanho={32} />
