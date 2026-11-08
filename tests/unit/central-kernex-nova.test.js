@@ -64,3 +64,30 @@ test('KX6. cota nunca diz ilimitado; deploy tem 4 textos', async () => {
   assert.match(textoDeploy({ mudancas: 2 }), /2 mudança/);
   assert.match(textoDeploy({}), /no ar/);
 });
+
+test('KX7. busca acha tela sem acento; relatório conta por dia e IA', async () => {
+  const { buscarTelas, porDiaEIa } = await regras();
+  assert.equal(buscarTelas('tare')[0].nome, 'Tarefas');
+  assert.equal(buscarTelas('configuracoes')[0].nome, 'Configurações');
+  assert.deepEqual(buscarTelas('  '), []);
+  const agora = Date.parse('2026-11-08T20:00:00Z');
+  const r = porDiaEIa([{ quando: '2026-11-08T15:00:00Z', ia: 'Jules' }, { quando: '2026-11-08T16:00:00Z' }, { quando: '2026-10-01T10:00:00Z' }], agora);
+  assert.equal(r.dias[0].n, 2);
+  assert.deepEqual(r.ias.map((x) => x.ia).sort(), ['Cortex', 'Jules']);
+});
+
+test('KX8. projetos: % só com prova; roteiro não definido', () => {
+  const { percentual } = require('../../netlify/functions/central/projetos');
+  const md = '# X\n- [x] A (peso 10) evidencia: PR #12\n- [x] B (peso 10)\n- [ ] C (peso 20) quem: Cortex\n';
+  const p = percentual(md);
+  assert.equal(p.pct, 25);
+  assert.equal(p.faltam.length, 2);
+  assert.equal(p.faltam[1].quem, 'Cortex');
+  assert.equal(percentual('# Y\nstatus: ainda-nao-definido\n').definido, false);
+});
+
+test('KX9. cofre devolve só nome e data', async () => {
+  const { cofre } = require('../../netlify/functions/pedidos');
+  const r = await cofre(async () => ({ secrets: [{ name: 'A', updated_at: '2026-01-01T00:00:00Z', valor: 'xx', visibility: 'all' }] }));
+  assert.deepEqual(r.segredos, [{ name: 'A', updated_at: '2026-01-01T00:00:00Z' }]);
+});

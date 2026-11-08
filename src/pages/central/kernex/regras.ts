@@ -56,3 +56,21 @@ export function textoDeploy(d?: { emAndamento?: boolean; falhou?: boolean; mudan
   if (d.mudancas) return `🟡 ${d.mudancas} mudança(s) ainda não estão no ar.`;
   return "🟢 Tudo o que entrou já está no ar.";
 }
+
+// Relatório: concluídas nos últimos 7 dias, por dia (Brasília) e por IA.
+export function porDiaEIa(itens: { quando: string; ia?: string | null }[], agora = Date.now()) {
+  const dia = (ms: number) => new Date(ms - 3 * 36e5).toISOString().slice(0, 10);
+  const dias = Array.from({ length: 7 }, (_, i) => ({ dia: dia(agora - i * 864e5), n: 0 }));
+  const ias: Record<string, number> = {};
+  for (const t of itens) {
+    const d = dias.find((x) => x.dia === dia(Date.parse(t.quando)));
+    if (!d) continue;
+    d.n++;
+    const ia = t.ia || "Cortex";
+    ias[ia] = (ias[ia] || 0) + 1;
+  }
+  return { dias, ias: Object.entries(ias).map(([ia, n]) => ({ ia, n })).sort((a, b) => b.n - a.n) };
+}
+
+const semAcento = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+export const buscarTelas = (q: string) => (q.trim() ? TELAS.filter((t) => semAcento(t.nome).includes(semAcento(q.trim()))) : []);
