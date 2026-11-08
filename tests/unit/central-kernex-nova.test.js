@@ -54,3 +54,13 @@ test('KX5. auditor: todo Bloco tem fonte e hora; nada de status fixo', () => {
     assert.doesNotMatch(src, />\s*\d+%\s*</, `${f}: porcentagem fixa`);
   }
 });
+
+test('KX6. cota nunca diz ilimitado; deploy tem 4 textos', async () => {
+  const { textoCota, textoDeploy } = await regras();
+  for (const s of ['ativa', 'ociosa', 'sem-cota', 'erro', undefined]) assert.doesNotMatch(textoCota(s), /ilimitad/i);
+  assert.equal(textoCota(undefined), 'não informado pelo provedor');
+  assert.match(textoDeploy({ emAndamento: true }), /Publicando/);
+  assert.match(textoDeploy({ falhou: true }), /falhou/);
+  assert.match(textoDeploy({ mudancas: 2 }), /2 mudança/);
+  assert.match(textoDeploy({}), /no ar/);
+});
