@@ -21,7 +21,7 @@ function falso(issues, prs = []) {
   return { fetchFn, chamadas };
 }
 
-test('JULES-AUTO1: manda só a 1ª travada ainda não enviada, uma por batida', async () => {
+test('JULES-AUTO1: manda as travadas ainda não enviadas (até 3 por batida, vigia 08/11)', async () => {
   const issues = [
     { number: 1, state: 'open', title: 'já foi', labels: [{ name: 'cortex-travado' }, { name: 'jules-enviado' }] },
     { number: 2, state: 'open', title: 'pai dividido', labels: [{ name: 'cortex-travado' }, { name: 'cortex-dividido' }] },
@@ -30,9 +30,8 @@ test('JULES-AUTO1: manda só a 1ª travada ainda não enviada, uma por batida', 
   ];
   const f = falso(issues);
   const r = await rodar(AS_20, { env, fetchFn: f.fetchFn });
-  assert.strictEqual(r.issue, 3);
-  assert.strictEqual(r.status, 200);
-  assert.strictEqual(f.chamadas.filter(c => c.url.includes('jules.googleapis.com')).length, 1);
+  assert.deepStrictEqual(r.enviados.map(e => [e.issue, e.status]), [[3, 200], [4, 200]]);
+  assert.strictEqual(f.chamadas.filter(c => c.url.includes('jules.googleapis.com')).length, 2);
   const rot = f.chamadas.find(c => c.url.endsWith('/issues/3/labels'));
   assert.match(rot.body, /jules-enviado/);
 });
@@ -44,7 +43,7 @@ test('JULES-AUTO2: fora da batida, sem chave ou desligado não faz nada', async 
   assert.ok((await rodar(AS_20, { env: { ...env, JULES_AUTO: '0' }, fetchFn: f.fetchFn })).skipped);
   assert.strictEqual(f.chamadas.length, 0);
   const vazio = falso([]);
-  assert.deepStrictEqual(await rodar(AS_20, { env, fetchFn: vazio.fetchFn }), { retomadas: [], reserva: [], humano: [], enviados: 0 });
+  assert.deepStrictEqual(await rodar(AS_20, { env, fetchFn: vazio.fetchFn }), { retomadas: [], reserva: [], humano: [], revolta: [], precisa: [], enviados: 0 });
 });
 
 const L = (...n) => n.map(name => ({ name }));
@@ -68,7 +67,7 @@ test('JULES-AUTO3: escada: Jules sem PR no tempo volta ao Cortex do zero; 2ª ve
   const prs = [{ title: 'fix', body: 'Refs #13' }, { title: 'outro', body: 'Refs #130' }, { title: 'x', body: 'Fecha #15', labels: L('revisor-recusou') }];
   const d = decidir(issues, prs, agora, nomes);
   // #1958: 2ª volta sem PR → IAs conectadas (reserva); reserva também sem PR → Claude.
-  assert.deepStrictEqual(d, { enviar: null, retomar: [10, 15], reserva: [11], humano: [17] });
+  assert.deepStrictEqual(d, { enviar: null, enviarLista: [], retomar: [10, 15], reserva: [11], humano: [17], revolta: [], precisa: [] });
 });
 
 test('JULES-AUTO4: retomada tira travado, jules-enviado e tentativas e põe cortex-retomada', async () => {
@@ -82,11 +81,63 @@ test('JULES-AUTO4: retomada tira travado, jules-enviado e tentativas e põe cort
   assert.strictEqual(f.chamadas.filter(c => c.url.includes('jules.googleapis.com')).length, 0);
 });
 
-test('JULES-AUTO-PLANO: parte grande do plano (cortex-jules) vai antes das travadas', () => {
+test('JULES-AUTO-PLANO: travada vai antes da parte grande do plano (lição 08/11: planejadas deixavam travadas sem Jules)', () => {
   const nomes = i => i.labels.map(l => l.name);
   const issues = [
     { number: 5, labels: [{ name: 'cortex-travado' }] },
     { number: 9, labels: [{ name: 'cortex-fila' }, { name: 'cortex-parte' }, { name: 'cortex-jules' }] },
   ];
-  assert.equal(decidir(issues, [], Date.now(), nomes).enviar, 9);
+  const d = decidir(issues, [], Date.now(), nomes);
+  assert.equal(d.enviar, 5);
+  assert.deepStrictEqual(d.enviarLista, [5, 9]);
+});
+
+test('VIGIA1: no máximo 3 envios ao Jules por batida', () => {
+  const nomes = i => i.labels.map(l => l.name);
+  const issues = [1, 2, 3, 4, 5].map(number => ({ number, labels: [{ name: 'cortex-travado' }] }));
+  assert.deepStrictEqual(decidir(issues, [], Date.now(), nomes).enviarLista, [1, 2, 3]);
+});
+
+test('VIGIA2: Claude desligado: vez-do-claude parada volta ao Cortex; workflow ou 2 voltas vai para "Precisa de você"', () => {
+  const agora = Date.UTC(2026, 10, 8, 18, 0);
+  const velho = new Date(agora - 30 * 6e4).toISOString(), novo = new Date(agora - 5 * 6e4).toISOString();
+  const vez = [
+    { number: 30, title: 'tela', labels: L('cortex-travado', 'vez-do-claude'), updated_at: velho },
+    { number: 31, title: 'criar .github/workflows/x.yml', labels: L('cortex-travado', 'vez-do-claude'), updated_at: velho },
+    { number: 32, title: 'outra', labels: L('cortex-travado', 'vez-do-claude', 'vigia-volta-1', 'vigia-volta-2'), updated_at: velho },
+    { number: 33, title: 'recente', labels: L('cortex-travado', 'vez-do-claude'), updated_at: novo },
+  ];
+  const d = decidir([], [], agora, nomes, { claudeLigado: false, vezDoClaude: vez });
+  assert.deepStrictEqual(d.revolta, [30]);
+  assert.deepStrictEqual(d.precisa, [31, 32]);
+  // Claude ligado: nada muda (degrau 3 continua com o Claude).
+  const e = decidir([], [], agora, nomes, { claudeLigado: true, vezDoClaude: vez });
+  assert.deepStrictEqual([e.revolta, e.precisa], [[], []]);
+});
+
+test('VIGIA3: humano da escada com Claude desligado volta ao Cortex em vez de vez-do-claude', () => {
+  const agora = Date.UTC(2026, 10, 8, 18, 0);
+  const velho = new Date(agora - 3 * H).toISOString();
+  const issues = [{ number: 40, title: 't', labels: L('cortex-travado', 'jules-enviado', 'cortex-retomada', 'reserva-tentou'), updated_at: velho }];
+  const d = decidir(issues, [], agora, nomes, { claudeLigado: false });
+  assert.deepStrictEqual([d.humano, d.revolta], [[], [40]]);
+});
+
+test('VIGIA4: rodar com Claude desligado tira vez-do-claude e devolve à fila com vigia-volta-1', async () => {
+  const velho = new Date(AS_20 - 2 * H).toISOString();
+  const vez = [{ number: 50, state: 'open', title: 'x', updated_at: velho, labels: L('cortex-fila', 'cortex-travado', 'vez-do-claude', 'reserva-tentou', 'tentativa-12') }];
+  const chamadas = [];
+  const fetchFn = async (url, init = {}) => {
+    const u = String(url); chamadas.push({ url: u, method: init.method || 'GET', body: init.body });
+    const ok = (d) => ({ ok: true, status: 200, json: async () => d });
+    if (/labels=vez-do-claude/.test(u)) return ok(vez);
+    if (/issues\/2036$/.test(u)) return ok({ state: 'closed' });
+    if (/issues\?|\/pulls\?/.test(u)) return ok([]);
+    return ok({});
+  };
+  const r = await rodar(AS_20, { env, fetchFn });
+  assert.deepStrictEqual(r.revolta, [50]);
+  const apagados = chamadas.filter(c => c.method === 'DELETE' && /issues\/50\//.test(c.url)).map(c => decodeURIComponent(c.url.split('/labels/')[1])).sort();
+  assert.deepStrictEqual(apagados, ['cortex-travado', 'reserva-tentou', 'tentativa-12', 'vez-do-claude']);
+  assert.ok(chamadas.some(c => c.url.endsWith('/issues/50/labels') && /vigia-volta-1/.test(c.body) && /cortex-retomada/.test(c.body)));
 });
