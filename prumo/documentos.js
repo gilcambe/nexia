@@ -15,8 +15,8 @@
     const rec = await MB.api('lanc_listar', { mes });
     el.innerHTML = `
       <div class="card"><h3 style="margin:0 0 6px">📄 Enviar documento</h3>
-        <div class="fraco">Foto ou print de fatura, extrato, comprovante Pix, nota, boleto ou recibo (até 5 imagens, JPG ou PNG). PDF em breve: por enquanto tire um print das páginas.</div>
-        <input type="file" id="kf-arq" accept="image/*" multiple style="margin-top:10px">
+        <div class="fraco">Foto, print ou PDF (até 5 páginas).</div>
+        <input type="file" id="kf-arq" accept="image/*,application/pdf" multiple style="margin-top:10px">
         <button class="btn" id="kf-ler" type="button" style="margin-top:10px">Ler documento</button></div>
       <div id="kf-res"></div>
       <div class="card"><div class="fraco">Lançamentos de ${mes.slice(5)}/${mes.slice(0, 4)} · entradas ${brl(rec.receitas)} · gastos ${brl(rec.despesas)}</div>
@@ -32,11 +32,26 @@
       res.innerHTML = '';
       try {
         const imagens = [];
-        for (const a of arqs) imagens.push(await reduzir(a));
+        for (const a of arqs) {
+          if (a.type === 'application/pdf' || a.name.toLowerCase().endsWith('.pdf')) {
+            if (!window.pdfRenderer || typeof window.pdfRenderer.renderPdf !== 'function') {
+              throw new Error('Leitor de PDF não disponível.');
+            }
+            const paginas = await window.pdfRenderer.renderPdf(a);
+            for (const p of paginas) {
+              imagens.push(p);
+            }
+          } else {
+            imagens.push(await reduzir(a));
+          }
+        }
+        if (imagens.length > 5) {
+          throw new Error('O total de páginas ou imagens excede o limite de 5.');
+        }
         const r = await MB.api('doc_ler', { imagens });
         mostrarLeitura(r);
       } catch (e) {
-        res.innerHTML = `<div class="aviso-c">${esc(e && e.message || 'Não consegui ler agora.')} Tente de novo com uma foto mais nítida.</div>`;
+        res.innerHTML = `<div class="aviso-c">${esc(e && e.message || 'Não consegui ler agora.')} Tente de novo com uma foto mais nítida ou PDF válido.</div>`;
       } finally { btn.disabled = false; btn.textContent = 'Ler documento'; }
     };
 
