@@ -1,0 +1,252 @@
+{
+  "spec": {
+    "kind": "system",
+    "name": "Prumo Admin",
+    "tagline": "Painel central de gestão de mensagens, usuários e logs",
+    "photo_theme": "",
+    "description": "Painel central de gestão de mensagens, usuários e logs",
+    "folder": "demos/prumo-admin",
+    "fonts": {
+      "heading": "Sora",
+      "body": "Inter"
+    },
+    "palette": {
+      "primary": "#2f68c5",
+      "accent": "#10b981",
+      "bg": "#fbfaf7",
+      "surface": "#ffffff",
+      "text": "#1d2426",
+      "muted": "#5d6b6e",
+      "dark": "#0f172a"
+    },
+    "style": "modern",
+    "contact": {
+      "whatsapp": "",
+      "phone": "",
+      "email": "suporte@prumo.com.br",
+      "address": "",
+      "city": "",
+      "hours": "",
+      "instagram": "",
+      "facebook": "",
+      "youtube": "",
+      "tiktok": "",
+      "linkedin": ""
+    },
+    "logo": "",
+    "logo_scrolled": "",
+    "favicon": "",
+    "brand_text": false,
+    "selo": {
+      "label": "Feito com Kernex",
+      "url": "https://kernex.com.br/?utm_source=prumo-admin&utm_medium=selo&utm_campaign=clientes"
+    },
+    "leads_origem": "",
+    "entities": [
+      {
+        "key": "mensagens",
+        "label": "Mensagens",
+        "singular": "Mensagem",
+        "fields": [
+          {
+            "key": "entidade",
+            "label": "Entidade",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "usuario",
+            "label": "Usuário",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "conteudo",
+            "label": "Conteúdo",
+            "type": "textarea",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "data",
+            "label": "Data",
+            "type": "date",
+            "options": [],
+            "required": true
+          }
+        ],
+        "sample": [
+          {
+            "entidade": "Login",
+            "usuario": "Ana Costa",
+            "conteudo": "Acesso realizado com sucesso.",
+            "data": "2024-05-20"
+          },
+          {
+            "entidade": "Erro",
+            "usuario": "Sistema",
+            "conteudo": "Timeout na API externa.",
+            "data": "2024-05-21"
+          },
+          {
+            "entidade": "Novo Usuário",
+            "usuario": "Bruno Alves",
+            "conteudo": "Cadastro novo efetuado.",
+            "data": "2024-05-22"
+          },
+          {
+            "entidade": "Logout",
+            "usuario": "Ana Costa",
+            "conteudo": "Sessão encerrada.",
+            "data": "2024-05-22"
+          },
+          {
+            "entidade": "Alerta",
+            "usuario": "Ops",
+            "conteudo": "Alta de CPU detectada.",
+            "data": "2024-05-23"
+          }
+        ]
+      },
+      {
+        "key": "usuarios",
+        "label": "Usuários",
+        "singular": "Usuário",
+        "fields": [
+          {
+            "key": "nome",
+            "label": "Nome",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "email",
+            "label": "E-mail",
+            "type": "email",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "papel",
+            "label": "Papel",
+            "type": "select",
+            "options": [
+              "Admin",
+              "Editor",
+              "Leitor"
+            ],
+            "required": true
+          },
+          {
+            "key": "ativo",
+            "label": "Ativo",
+            "type": "text",
+            "options": [],
+            "required": true
+          }
+        ],
+        "sample": [
+          {
+            "nome": "Administrador Lote",
+            "email": "admin@prumo.com",
+            "papel": "Admin",
+            "ativo": "Sim"
+          },
+          {
+            "nome": "Paulo Silva",
+            "email": "paulo@prumo.com",
+            "papel": "Editor",
+            "ativo": "Sim"
+          },
+          {
+            "nome": "Maria Lima",
+            "email": "maria@prumo.com",
+            "papel": "Leitor",
+            "ativo": "Não"
+          },
+          {
+            "nome": "João Pedro",
+            "email": "joao@prumo.com",
+            "papel": "Editor",
+            "ativo": "Sim"
+          }
+        ]
+      },
+      {
+        "key": "logs",
+        "label": "Logs",
+        "singular": "Log",
+        "fields": [
+          {
+            "key": "nivel",
+            "label": "Nível",
+            "type": "select",
+            "options": [
+              "INFO",
+              "WARN",
+              "ERROR"
+            ],
+            "required": true
+          },
+          {
+            "key": "mensagem",
+            "label": "Mensagem",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "modulo",
+            "label": "Módulo",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "horario",
+            "label": "Horário",
+            "type": "text",
+            "options": [],
+            "required": true
+          }
+        ],
+        "sample": [
+          {
+            "nivel": "INFO",
+            "mensagem": "Sistema iniciado",
+            "modulo": "core",
+            "horario": "08:00:12"
+          },
+          {
+            "nivel": "WARN",
+            "mensagem": "Cache desatualizado",
+            "modulo": "config",
+            "horario": "08:15:44"
+          },
+          {
+            "nivel": "ERROR",
+            "mensagem": "Falha ao gravar log",
+            "modulo": "storage",
+            "horario": "09:22:10"
+          },
+          {
+            "nivel": "INFO",
+            "mensagem": "Backup concluído",
+            "modulo": "ops",
+            "horario": "12:00:01"
+          }
+        ]
+      }
+    ],
+    "modules": [
+      "Mensagens",
+      "Usuários",
+      "Planos",
+      "Logs"
+    ]
+  },
+  "media": {}
+}
