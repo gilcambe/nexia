@@ -33,3 +33,17 @@ test('AD1. só manda para quem ligou o e-mail, uma vez por dia, e não finge suc
   assert.equal(de_novo.ja_hoje, 1);
   assert.equal(mandados.length, 1);
 });
+
+test('AD2. sem BREVO_SENDER usa o remetente confirmado da conta Brevo', async () => {
+  const antes = { ...process.env }; const fetchAntes = global.fetch;
+  process.env.BREVO_API_KEY = 'k'; delete process.env.BREVO_SENDER;
+  const chamadas = [];
+  global.fetch = async (url, op) => { chamadas.push({ url, op }); return url.endsWith('/senders') ? { ok: true, json: async () => ({ senders: [{ email: 'x@y.com', active: false }, { email: 'ok@kernex.com', active: true }] }) } : { ok: true }; };
+  try {
+    const db = bancoFalso({ ana12345: { config: cfgEmail, cartoes: vencendo } });
+    const r = await enviarDiario(db, '2026-11-08T11:00:00.000Z');
+    assert.equal(r.enviados, 1);
+    const envio = chamadas.find((c) => c.url.endsWith('/smtp/email'));
+    assert.equal(JSON.parse(envio.op.body).sender.email, 'ok@kernex.com');
+  } finally { process.env = antes; global.fetch = fetchAntes; }
+});
