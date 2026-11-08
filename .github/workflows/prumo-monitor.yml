@@ -1,0 +1,35 @@
+# Monitoramento da saúde do Kernex Finance (Prumo) (#3134 / #3170)
+# A cada 30 minutos faz GET em /prumo/ e em /api/prumo.
+# Ao detectar duas falhas consecutivas, abre issue "Kernex Finance fora do ar" com rótulo "cortex-alerta".
+# Ao restaurar a saúde, a issue é fechada automaticamente.
+name: Prumo Monitor
+
+on:
+  schedule:
+    - cron: '*/30 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+  actions: read
+
+concurrency:
+  group: prumo-monitor
+  cancel-in-progress: false
+
+jobs:
+  monitor:
+    name: Checar saúde do Prumo
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 20
+      - name: Executar monitoramento
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: node .github/scripts/prumo-monitor.js
