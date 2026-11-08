@@ -45,10 +45,11 @@ function criarPedidos(env = process.env, fetchFn = fetch) {
     const p = Math.max(1, Math.min(30, Number(pagina) || 1));
     let filtro = 'repo:' + REPO + ' is:issue label:cortex-fila';
     if (estado === 'abertos' || estado === 'andamento') filtro += ' is:open';
-    else if (estado === 'travadas' || estado === 'travados') filtro += ' is:open label:cortex-travado';
+    else if (estado === 'travadas' || estado === 'travados') filtro += ' is:open';
     else if (estado === 'concluidas' || estado === 'feitos' || estado === 'concluida') filtro += ' is:closed';
     else if (estado === 'precisa') filtro += ' is:open';
     else if (estado === 'fila') filtro += ' is:open';
+    else if (estado === 'todas' || estado === 'todos') filtro += '';
     
     const termo = frase(q);
     if (termo) filtro += ' ' + termo;
