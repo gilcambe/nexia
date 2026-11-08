@@ -1,4 +1,4 @@
-// Prumo - Compras e Lembretes
+// Kernex Finance - Compras e Lembretes
 (function() {
   if (typeof MB === 'undefined') window.MB = {};
   if (!MB.telas) MB.telas = {};
