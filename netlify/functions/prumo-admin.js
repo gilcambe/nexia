@@ -57,42 +57,42 @@ function createHandler(deps = {}) {
       const acaoPost = body.acao || '';
       if (!acaoPost) return res(400, { error: 'Ação não informada.' });
 
-      let result = {};
+      let resultPost = {};
 
       // Implementação das rotas internas de gerenciamento
       if (acaoPost === 'users') {
         // Gerenciamento de Usuários
-        result = { ok: true, message: 'Gerenciamento de usuários.', users: [] };
+        resultPost = { ok: true, message: 'Gerenciamento de usuários.', users: [] };
       } else if (acaoPost === 'plans') {
         // Gerenciamento de Planos
-        result = { ok: true, message: 'Gerenciamento de planos.', plans: [] };
+        resultPost = { ok: true, message: 'Gerenciamento de planos.', plans: [] };
       } else if (acaoPost === 'ia_consumption') {
         // Gerenciamento de Consumo IA
-        result = { ok: true, message: 'Gerenciamento de consumo de IA.', consumption: {} };
+        resultPost = { ok: true, message: 'Gerenciamento de consumo de IA.', consumption: {} };
       } else if (acaoPost === 'ocr_limits') {
         // Gerenciamento de Limites OCR
-        result = { ok: true, message: 'Gerenciamento de limites OCR.', limits: {} };
+        resultPost = { ok: true, message: 'Gerenciamento de limites OCR.', limits: {} };
       } else if (acaoPost === 'providers') {
         // Gerenciamento de Provedores
-        result = { ok: true, message: 'Gerenciamento de provedores.', providers: [] };
+        resultPost = { ok: true, message: 'Gerenciamento de provedores.', providers: [] };
       } else if (acaoPost === 'errors') {
         // Gerenciamento de Erros
-        result = { ok: true, message: 'Gerenciamento de erros.', errors: [] };
+        resultPost = { ok: true, message: 'Gerenciamento de erros.', errors: [] };
       } else if (acaoPost === 'support') {
         // Gerenciamento de Suporte
-        result = { ok: true, message: 'Gerenciamento de suporte.', support: {} };
+        resultPost = { ok: true, message: 'Gerenciamento de suporte.', support: {} };
       } else if (acaoPost === 'tech_logs') {
         // Gerenciamento de Logs Técnicos
-        result = { ok: true, message: 'Gerenciamento de logs técnicos.', logs: [] };
+        resultPost = { ok: true, message: 'Gerenciamento de logs técnicos.', logs: [] };
       } else if (acaoPost === 'availability') {
         // Gerenciamento de Disponibilidade
-        result = { ok: true, message: 'Gerenciamento de disponibilidade.', availability: {} };
+        resultPost = { ok: true, message: 'Gerenciamento de disponibilidade.', availability: {} };
       } else {
         return res(400, { error: `Ação desconhecida: ${acaoPost}` });
       }
 
       // Retorna o resultado da ação processada
-      return res(200, { ...result, received_at: new Date(now()).toISOString() });
+      return res(200, { ...resultPost, received_at: new Date(now()).toISOString() });
     }
 
     return res(400, { error: 'Ação ou método desconhecido.' });
