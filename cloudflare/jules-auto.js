@@ -151,10 +151,25 @@ async function rodar(at, { env = process.env, fetchFn = fetch } = {}) {
     out.precisa.push(n);
   }
   out.enviados = [];
+  out.semCotaJules = [];
+  // Regra do dono (08/11): cota do Jules acabou → a tarefa vai NA HORA para as IAs conectadas na Central (Cortex Reserva),
+  // nunca espera a cota voltar. Arquivo de workflow fica com o Jules (só ele e o Claude podem mexer).
+  let julesSemCota = false;
+  const paraReserva = async (n, motivo) => {
+    const i = todas.find(x => x.number === n) || {};
+    if (mexeEmWorkflow(i) || nomes(i).includes('reserva-tentou')) return false;
+    const ok = await p.gh(`${REPO}/actions/workflows/cortex-reserva.yml/dispatches`, { method: 'POST', body: JSON.stringify({ ref: 'develop', inputs: { numero: String(n) } }) }).then(() => true).catch(() => false);
+    if (!ok) return false;
+    await por(n, ['reserva-tentou']);
+    await comentar(n, `🔁 ${motivo} Mandei na hora para as IAs conectadas na Central (Cortex Reserva), sem esperar a cota voltar.`);
+    out.semCotaJules.push(n);
+    return true;
+  };
   for (const n of d.enviarLista) {
+    if (julesSemCota) { await paraReserva(n, 'O Jules está sem cota hoje.'); continue; }
     const r = await mandarParaJules(p, n, 'o robô (automático, tarefa travada)', { env, fetchFn });
     out.enviados.push({ issue: n, status: r.status, ...(r.status === 200 ? { link: r.corpo.link } : { erro: r.corpo.error }) });
-    if (r.status !== 200 && /\(429\)|Limite/.test(String(r.corpo.error))) break; // cota do Jules acabou: não insiste nas outras
+    if (r.status === 502) { julesSemCota = /\(429\)|Limite/.test(String(r.corpo.error)); await paraReserva(n, julesSemCota ? 'O Jules está sem cota hoje.' : 'O Jules recusou a tarefa.'); }
   }
   if (!out.enviados.length) out.enviados = 0;
   const extras = (await rodarExtras(p, env, fetchFn, nomes, mandarParaJules)).filter(x => x.enviados !== 0);

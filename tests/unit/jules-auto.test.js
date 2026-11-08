@@ -43,7 +43,7 @@ test('JULES-AUTO2: fora da batida, sem chave ou desligado não faz nada', async 
   assert.ok((await rodar(AS_20, { env: { ...env, JULES_AUTO: '0' }, fetchFn: f.fetchFn })).skipped);
   assert.strictEqual(f.chamadas.length, 0);
   const vazio = falso([]);
-  assert.deepStrictEqual(await rodar(AS_20, { env, fetchFn: vazio.fetchFn }), { retomadas: [], reserva: [], humano: [], revolta: [], precisa: [], enviados: 0 });
+  assert.deepStrictEqual(await rodar(AS_20, { env, fetchFn: vazio.fetchFn }), { retomadas: [], reserva: [], humano: [], revolta: [], precisa: [], enviados: 0, semCotaJules: [] });
 });
 
 const L = (...n) => n.map(name => ({ name }));
@@ -140,4 +140,28 @@ test('VIGIA4: rodar com Claude desligado tira vez-do-claude e devolve à fila co
   const apagados = chamadas.filter(c => c.method === 'DELETE' && /issues\/50\//.test(c.url)).map(c => decodeURIComponent(c.url.split('/labels/')[1])).sort();
   assert.deepStrictEqual(apagados, ['cortex-travado', 'reserva-tentou', 'tentativa-12', 'vez-do-claude']);
   assert.ok(chamadas.some(c => c.url.endsWith('/issues/50/labels') && /vigia-volta-1/.test(c.body) && /cortex-retomada/.test(c.body)));
+});
+
+test('VIGIA5: Jules sem cota (429) → a tarefa vai na hora para o Cortex Reserva; workflow fica com o Jules', async () => {
+  const issues = [
+    { number: 60, state: 'open', title: 'tela', labels: L('cortex-travado') },
+    { number: 61, state: 'open', title: 'outra', labels: L('cortex-travado') },
+    { number: 62, state: 'open', title: 'mexe em .github/workflows/a.yml', labels: L('cortex-travado') },
+  ];
+  const chamadas = [];
+  const fetchFn = async (url, init = {}) => {
+    const u = String(url); chamadas.push({ url: u, method: init.method || 'GET', body: init.body });
+    const res = (status, d) => ({ ok: status < 400, status, json: async () => d });
+    if (u.includes('jules.googleapis.com')) return res(429, { error: { message: 'quota' } });
+    if (/labels=cortex-travado/.test(u)) return res(200, issues);
+    if (/issues\?|\/pulls\?/.test(u)) return res(200, []);
+    const n = Number((/issues\/(\d+)$/.exec(u) || [])[1]);
+    if (n) return res(200, issues.find(i => i.number === n) || { state: 'closed' });
+    return res(200, {});
+  };
+  const r = await rodar(AS_20, { env, fetchFn });
+  assert.deepStrictEqual(r.semCotaJules, [60, 61]);
+  assert.strictEqual(chamadas.filter(c => c.url.includes('jules.googleapis.com')).length, 1);
+  const disparos = chamadas.filter(c => /cortex-reserva\.yml\/dispatches/.test(c.url)).map(c => JSON.parse(c.body).inputs.numero);
+  assert.deepStrictEqual(disparos, ['60', '61']);
 });
