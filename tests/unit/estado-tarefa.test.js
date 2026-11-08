@@ -161,7 +161,21 @@ test('EST5. estadoTarefas agrega contagens de lista de issues', () => {
   assert.strictEqual(res.total, 4);
   assert.strictEqual(res.fila, 1);
   assert.strictEqual(res.andamento, 1);
-  assert.strictEqual(res.travada, 1);
+  // A travada com 3 tentativas já precisa do dono: conta só em precisaVoce, não em travada (dono, 08/11).
+  assert.strictEqual(res.travada, 0);
   assert.strictEqual(res.concluida, 1);
   assert.strictEqual(res.precisaVoce, 1);
+});
+
+test('EST6. travada que precisa de você não conta duas vezes; resumo cita as duas', () => {
+  const agora = Date.now();
+  const issues = [
+    { state: 'open', labels: [{ name: 'cortex-travado' }, { name: 'tentativa-1' }] },
+    { state: 'open', labels: [{ name: 'cortex-travado' }, { name: 'tentativa-5' }] },
+    { state: 'open', labels: [{ name: 'cortex-travado' }, { name: 'vez-do-dono' }] },
+  ];
+  const res = estadoTarefas(issues, agora);
+  assert.strictEqual(res.travada, 1);
+  assert.strictEqual(res.precisaVoce, 2);
+  assert.strictEqual(resumoDia(res, []), 'Hoje: 0 em andamento, 1 travada, 0 concluídas, 2 precisam de você. IAs ativas: 0 de 0.');
 });
