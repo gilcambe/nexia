@@ -1,7 +1,3 @@
 functions:
   - path: /api/prumo-backup
     schedule: "0 2 * * *"
-  - path: /api/prumo-admin/export
-    schedule: ""
-  - path: /api/prumo-admin/delete
-    schedule: ""
