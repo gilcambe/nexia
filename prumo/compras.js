@@ -1,5 +1,5 @@
 'use strict';
-// Prumo: aba compras. Usa window.MB (casca em app.js) e as peças de /prumo/ui.js.
+// Kernex Finance: aba compras. Usa window.MB (casca em app.js) e as peças de /prumo/ui.js.
 (function () {
   const MB = window.MB;
   let brl, esc, TIPOS, CATS, hoje, opcoes, barra, formulario, reduzir, recarregar, ok;
