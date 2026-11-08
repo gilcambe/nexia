@@ -1,5 +1,5 @@
 'use strict';
-// Prumo: aba compras. Usa window.MB (casca em app.js) e as peças de /prumo/ui.js.
+// Kernex Finance: aba compras. Usa window.MB (casca em app.js) e as peças de /prumo/ui.js.
 (function () {
   const MB = window.MB;
   let brl, esc, TIPOS, CATS, hoje, opcoes, barra, formulario, reduzir, recarregar, ok;
@@ -62,7 +62,7 @@
       listas.forEach((l) => {
         if (l.lembrete && l.faltam && !avisadas.has(l.id) && Date.parse(l.lembrete) <= agora && agora - Date.parse(l.lembrete) < 120000) {
           avisadas.add(l.id);
-          try { new Notification('Prumo: ' + l.nome, { body: `Faltam ${l.faltam} itens na sua lista.`, icon: '/prumo/icone.svg' }); } catch { /* sem notificação */ }
+          try { new Notification('Kernex Finance: ' + l.nome, { body: `Faltam ${l.faltam} itens na sua lista.`, icon: '/prumo/icone.svg' }); } catch { /* sem notificação */ }
         }
       });
     }, 60000);
