@@ -52,10 +52,52 @@ async function agir(p, b, quem) {
   // #2718: AJUDA AO CORTEX. Socorro geral, botão de emergência e pedir ajuda às IAs conectadas numa tarefa.
   if (b.acao === 'socorro') { const x = await socorro(p, { jules: !!b.jules }); return r(200, x); }
   if (b.acao === 'pausar-fila' || b.acao === 'voltar-fila') return pausa(p, b.acao === 'pausar-fila', quem);
+  // #3222: ações em lote (máx. 20), cada número pela ação normal.
+  if (b.acao === 'lote') {
+    const tipo = String(b.tipo || '');
+    if (!['tentar', 'outra-ia', 'cancelar', 'priorizar', 'resolvida', 'reserva'].includes(tipo)) return r(400, { error: 'Ação de lote desconhecida.' });
+    const ns = (Array.isArray(b.ns) ? b.ns : []).map(Number).filter((x) => x > 0).slice(0, 20);
+    const feitos = [], erros = [];
+    for (const x of ns) {
+      try {
+        const res = tipo === 'priorizar'
+          ? (await p.gh(issue(x) + '/labels', { method: 'POST', body: JSON.stringify({ labels: ['cortex-prioridade'] }) }), r(200, {}))
+          : await agir(p, { acao: tipo, n: x }, quem);
+        if (res.status === 200) feitos.push(x); else erros.push({ n: x, erro: (res.corpo && res.corpo.error) || 'erro' });
+      } catch (e) { erros.push({ n: x, erro: e.message }); }
+    }
+    return r(200, { ok: erros.length === 0, feitos, erros, mensagem: feitos.length + ' de ' + ns.length + ' feitas.' });
+  }
   if (!n && b.acao !== 'juntar') return r(400, { error: 'Falta o número do pedido.' });
   if (b.acao === 'reserva') {
     await disparar(p, 'cortex-reserva.yml', { numero: String(n) });
-    return r(200, { ok: true, mensagem: 'Pedi às IAs conectadas na Central para fazer o pedido #' + n + '. Elas abrem o PR sozinhas.' });
+    return r(200, { ok: true, mensagem: 'Pedi às IAs conectadas na Central para fazer o pedido #' + n + '. Elas abrem o PR sozinhas.', assumiu: [{ ia: 'IAs grátis', numero: n, fazendo: 'Vai fazer e abrir o PR' }] });
+  }
+  // #3135: passar para a próxima IA da escada (Cortex → IAs grátis → Jules → Cortex).
+  if (b.acao === 'outra-ia') {
+    const i = await p.gh(issue(n));
+    const ls = (i.labels || []).map((l) => l.name || l);
+    const tirar = ls.filter((l) => ['cortex-travado', 'cortex-rodando', 'cortex-reserva-sem-cota'].includes(l) || /^pista-\d+$/.test(l));
+    const noJules = ls.includes('jules-enviado') || ls.includes('cortex-jules');
+    const nasGratis = ls.includes('reserva-tentou');
+    if (noJules) tirar.push(...ls.filter((l) => ['jules-enviado', 'cortex-jules'].includes(l) || /^tentativa-\d+$/.test(l)));
+    for (const l of tirar) await p.gh(issue(n) + '/labels/' + encodeURIComponent(l), { method: 'DELETE' }).catch(() => null);
+    let ia;
+    if (noJules) ia = 'Cortex';
+    else if (nasGratis) {
+      const x = await mandarParaJules(p, n, quem);
+      if (x.status !== 200) return r(x.status, x.corpo);
+      ia = 'Jules';
+    } else { await disparar(p, 'cortex-reserva.yml', { numero: String(n) }); ia = 'IAs grátis'; }
+    await p.gh(issue(n) + '/comments', { method: 'POST', body: JSON.stringify({ body: 'Passada para ' + ia + ' pelo dono.' }) }).catch(() => null);
+    return r(200, { ok: true, ia, mensagem: 'O pedido #' + n + ' passou para ' + ia + '.', assumiu: [{ ia, numero: n, fazendo: 'Vai tentar de novo' }] });
+  }
+  // #3135: o dono marca como resolvida (fecha como feita).
+  if (b.acao === 'resolvida') {
+    await p.gh(issue(n) + '/labels', { method: 'POST', body: JSON.stringify({ labels: ['cortex-feito'] }) });
+    await p.gh(issue(n), { method: 'PATCH', body: JSON.stringify({ state: 'closed', state_reason: 'completed' }) });
+    await p.gh(issue(n) + '/comments', { method: 'POST', body: JSON.stringify({ body: 'Marcada como resolvida pelo dono.' }) }).catch(() => null);
+    return r(200, { ok: true, mensagem: 'Pedido #' + n + ' marcado como resolvido.' });
   }
   // Cortex → Jules (grátis): manda a tarefa travada para o Jules resolver e abrir o PR.
   if (b.acao === 'jules') { const x = await require('./pedidos-jules').mandarParaJules(p, n, quem); return r(x.status, x.corpo); }
@@ -109,6 +151,7 @@ async function socorro(p, { jules }) {
   return {
     total: resultado.length, ias: resultado.filter((x) => x.para === 'reserva').length, jules: resultado.filter((x) => x.para === 'jules').length,
     travadas: issues.length, links: resultado.map((x) => ({ numero: x.numero, titulo: x.titulo })), ultimaExecucao: new Date().toISOString(), resultado,
+    assumiu: resultado.map((x) => ({ ia: x.para === 'jules' ? 'Jules' : 'IAs grátis', numero: x.numero, titulo: x.titulo, fazendo: 'Vai fazer e abrir o PR' })),
   };
 }
 

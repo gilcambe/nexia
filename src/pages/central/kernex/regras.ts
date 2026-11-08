@@ -44,3 +44,15 @@ export const CHIPS = [
 ] as const;
 
 export const COR_ESTADO: Record<string, string> = { cinza: "#64748b", azul: "#3b82f6", roxo: "#8b5cf6", laranja: "#f59e0b", verde: "#22c55e", vermelho: "#ef4444" };
+
+// Cota: nunca "ilimitado"; sem dado do provedor, diz isso.
+export const textoCota = (situacao?: string | null) =>
+  situacao === "sem-cota" ? "Acabou a cota de hoje; volta amanhã" : situacao === "erro" ? "Chave com erro" : situacao === "ativa" || situacao === "ociosa" ? "Com cota (o provedor não informa quanto)" : "não informado pelo provedor";
+
+export function textoDeploy(d?: { emAndamento?: boolean; falhou?: boolean; mudancas?: number } | null) {
+  if (!d) return "sem dados";
+  if (d.emAndamento) return "⏳ Publicando agora…";
+  if (d.falhou) return "🔴 A última publicação falhou.";
+  if (d.mudancas) return `🟡 ${d.mudancas} mudança(s) ainda não estão no ar.`;
+  return "🟢 Tudo o que entrou já está no ar.";
+}

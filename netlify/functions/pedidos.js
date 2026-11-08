@@ -22,6 +22,18 @@ async function iasAgoraComResumo(gh) {
   return { ias, resumo: resumoDia(c, ias), contagens: c, conferidoEm: new Date().toISOString(), origem: 'issues do GitHub com rótulo cortex-fila' };
 }
 
+// #3225: PRs abertos para a tela Publicações (sem segredo; automerge = vai entrar sozinho).
+async function prsAbertos(gh) {
+  const { REPO } = require('./central/pedidos-gh');
+  const lista = await gh('/repos/' + REPO + '/pulls?state=open&per_page=40&sort=updated&direction=desc');
+  const prs = (Array.isArray(lista) ? lista : []).map((x) => ({
+    numero: x.number, titulo: String(x.title || '').slice(0, 120), link: x.html_url, ramo: x.head && x.head.ref,
+    doCortex: String((x.head && x.head.ref) || '').startsWith('nexia/'), automerge: (x.labels || []).some((l) => l.name === 'automerge'),
+    rascunho: !!x.draft, quando: x.updated_at,
+  }));
+  return { prs, conferidoEm: new Date().toISOString(), origem: 'PRs abertos no GitHub (gilcambe/nexia)' };
+}
+
 function createHandler(deps = {}) {
   const getMw = deps.getMw || (() => require('./middleware'));
   const getPedidos = deps.getPedidos || (() => {
@@ -46,6 +58,7 @@ function createHandler(deps = {}) {
         const qs = event.queryStringParameters || {};
         if (qs.deploy) return res(200, await require('./central/pedidos-publicar').situacao(p.gh));
         if (qs.n) return res(200, await p.detalhe(qs.n));
+        if (qs.prs) return res(200, await prsAbertos(p.gh));
         if (qs.ias) return res(200, await (deps.iasAgora || iasAgoraComResumo)(p.gh));
         return res(200, await p.lista({ q: qs.q, estado: qs.estado, pagina: qs.pagina }));
       }

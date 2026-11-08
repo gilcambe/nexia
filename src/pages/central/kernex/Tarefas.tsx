@@ -35,9 +35,10 @@ export default function Tarefas() {
   const ver = async (n: number) => { try { setAberto((await abrir(n)) as unknown as Detalhe); } catch (e) { setMsg((e as Error).message); } };
   const fazer = async (acao: string, ns: number[]) => {
     setMsg("Fazendo…");
-    const res = await Promise.allSettled(ns.map((n) => agir({ acao, n })));
-    const ok = res.filter((r) => r.status === "fulfilled").length;
-    setMsg(`${ok} de ${ns.length} feitas.` + (ok < ns.length ? " Algumas deram erro." : ""));
+    try {
+      const r = ns.length > 1 ? await agir({ acao: "lote", tipo: acao, ns }) : await agir({ acao, n: ns[0] });
+      setMsg(r.mensagem + (r.assumiu && r.assumiu.length ? " " + r.assumiu.map((a) => `${a.ia} pegou #${a.numero}.`).join(" ") : ""));
+    } catch (e) { setMsg((e as Error).message); }
     setMarcadas([]);
     carregar();
     if (aberto) ver(aberto.numero);
@@ -55,7 +56,8 @@ export default function Tarefas() {
           <div className="kx-chips" style={{ marginBottom: 8 }} data-testid="kx-lote">
             <b>{marcadas.length} marcadas:</b>
             <button type="button" className="kx-btn forte" onClick={() => fazer("tentar", marcadas)}>Tentar de novo</button>
-            <button type="button" className="kx-btn" onClick={() => fazer("reserva", marcadas)}>Ajuda das IAs</button>
+            <button type="button" className="kx-btn" onClick={() => fazer("outra-ia", marcadas)}>Passar para outra IA</button>
+            <button type="button" className="kx-btn" onClick={() => fazer("priorizar", marcadas)}>Priorizar</button>
             <button type="button" className="kx-btn" onClick={() => { if (confirm("Cancelar as tarefas marcadas?")) fazer("cancelar", marcadas); }}>Cancelar</button>
           </div>
         )}
@@ -81,9 +83,9 @@ export default function Tarefas() {
                 <p style={{ margin: "0 0 6px" }}>⚠️ {aberto.motivo || "Travou."}</p>
                 <div className="kx-chips">
                   <button type="button" className="kx-btn forte" onClick={() => fazer("tentar", [aberto.numero])}>Tentar de novo</button>
-                  <button type="button" className="kx-btn" onClick={() => fazer("reserva", [aberto.numero])}>Passar para as IAs grátis</button>
-                  <button type="button" className="kx-btn" onClick={() => fazer("jules", [aberto.numero])}>Passar para o Jules</button>
+                  <button type="button" className="kx-btn" onClick={() => fazer("outra-ia", [aberto.numero])}>Passar para outra IA</button>
                   <button type="button" className="kx-btn" onClick={() => { if (confirm("Cancelar esta tarefa?")) fazer("cancelar", [aberto.numero]); }}>Cancelar</button>
+                  <button type="button" className="kx-btn" onClick={() => fazer("resolvida", [aberto.numero])}>Marcar como resolvida</button>
                 </div>
               </div>
             )}

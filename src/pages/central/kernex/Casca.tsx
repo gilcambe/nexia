@@ -4,6 +4,8 @@ import { CSS } from "./tema";
 import Bloco from "./Bloco";
 import Inicio from "./Inicio";
 import Tarefas from "./Tarefas";
+import IaCortex from "./IaCortex";
+import Publicacoes from "./Publicacoes";
 
 // #3219 parte 1: casca da Central nova. Menu lateral (no celular, embaixo), 1 clique por tela, sem rolagem.
 const NO_CELULAR: TelaId[] = ["inicio", "tarefas", "ia", "projetos", "config"];
@@ -47,7 +49,7 @@ export default function Casca() {
       </nav>
       <main className="kx-area">
         <p className="kx-serve" data-testid="kx-serve"><b>{atual.nome}:</b> {atual.serve}</p>
-        {tela === "inicio" ? <Inicio irPara={ir} /> : tela === "tarefas" ? <Tarefas /> : <EmBreve nome={atual.nome} />}
+        {tela === "inicio" ? <Inicio irPara={ir} /> : tela === "tarefas" ? <Tarefas /> : tela === "ia" ? <IaCortex /> : tela === "publicacoes" ? <Publicacoes /> : <EmBreve nome={atual.nome} />}
       </main>
     </div>
   );
