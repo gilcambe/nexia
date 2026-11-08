@@ -5,7 +5,10 @@
 // Limites do plano grátis: 15 sessões por dia e 3 ao mesmo tempo. Quando passa, a API recusa e a mensagem volta clara.
 
 const URL_JULES = 'https://jules.googleapis.com/v1alpha/sessions';
-const FONTE = 'sources/github/gilcambe/nexia';
+const REPO_PADRAO = 'gilcambe/nexia';
+const FONTE = 'sources/github/' + REPO_PADRAO;
+// Repositório PRIVADO de outro produto (ex.: gilcambe/avaya-gsd): o Jules lê só esse repo e abre o PR lá.
+const REGRAS_PRIVADO = 'Leia primeiro AGENTS.md e CLAUDE.md DESTE repositório (base main). Ele é PRIVADO: não copie nada dele para outro lugar. Responda em português do Brasil, simples e objetivo.';
 const MAX_CORPO = 30000;
 
 const REGRAS = [
@@ -27,9 +30,10 @@ const REGRAS = [
 const nomes = (i) => (i.labels || []).map((l) => l.name || l);
 const limpar = (s) => String(s || '').replace(/AIza[0-9A-Za-z_-]{20,}/g, '[oculto]').replace(/gh[pousr]_[0-9A-Za-z]{20,}/g, '[oculto]').replace(/sk-[0-9A-Za-z_-]{20,}/g, '[oculto]');
 
-function montarPrompt(i, n) {
+function montarPrompt(i, n, repo = REPO_PADRAO) {
   const corpo = String(i.body || '').slice(0, MAX_CORPO);
-  return REGRAS + '\n\nTAREFA (issue #' + n + '): ' + String(i.title || '') + '\n\nTexto do pedido do Cortex (pode estar errado, veja as regras):\n' + corpo + '\n\nNo PR use "Refs #' + n + '".';
+  const regras = repo === REPO_PADRAO ? REGRAS : REGRAS.replace(/^.*\n/, REGRAS_PRIVADO + '\n').replace(/develop/g, 'main');
+  return regras + '\n\nTAREFA (issue #' + n + '): ' + String(i.title || '') + '\n\nTexto do pedido do Cortex (pode estar errado, veja as regras):\n' + corpo + '\n\nNo PR use "Refs #' + n + '".';
 }
 
 async function chamarJules(chave, corpo, fetchFn) {
@@ -39,18 +43,18 @@ async function chamarJules(chave, corpo, fetchFn) {
 }
 
 // p = { gh } (mesma ajuda dos outros pedidos). env e fetchFn podem ser trocados nos testes.
-async function mandarParaJules(p, n, quem, { env = process.env, fetchFn = fetch } = {}) {
+async function mandarParaJules(p, n, quem, { env = process.env, fetchFn = fetch, repo = REPO_PADRAO, base = 'develop' } = {}) {
   const chaves = [env.JULES_API_KEY, env.JULES_API_KEY1].filter(Boolean);
   if (!chaves.length) return { status: 500, corpo: { error: 'Falta a chave do Jules (JULES_API_KEY) no servidor.' } };
-  const caminho = '/repos/gilcambe/nexia/issues/' + n;
+  const caminho = '/repos/' + repo + '/issues/' + n;
   const i = await p.gh(caminho);
   if (i.state !== 'open') return { status: 400, corpo: { error: 'O pedido #' + n + ' está fechado. Reabra antes de mandar para o Jules.' } };
   if (nomes(i).includes('jules-enviado')) return { status: 409, corpo: { error: 'O pedido #' + n + ' já foi enviado ao Jules. Veja o PR dele no GitHub.' } };
 
   const pedido = {
-    prompt: montarPrompt(i, n),
+    prompt: montarPrompt(i, n, repo),
     title: ('#' + n + ' ' + String(i.title || '')).slice(0, 90),
-    sourceContext: { source: FONTE, githubRepoContext: { startingBranch: 'develop' } },
+    sourceContext: { source: 'sources/github/' + repo, githubRepoContext: { startingBranch: base } },
     automationMode: 'AUTO_CREATE_PR',
   };
 
@@ -72,10 +76,11 @@ async function mandarParaJules(p, n, quem, { env = process.env, fetchFn = fetch 
   // Tarefa "na fila": o Cortex ainda a pegaria sozinho e as duas IAs fariam o mesmo trabalho. Trava para ele.
   const ls = nomes(i);
   const rotulos = ['jules-enviado'];
-  if (!ls.includes('cortex-travado') && !ls.includes('cortex-dividido')) rotulos.push('cortex-travado');
+  // Repo privado não tem fila do Cortex: só marca jules-enviado.
+  if (repo === REPO_PADRAO && !ls.includes('cortex-travado') && !ls.includes('cortex-dividido')) rotulos.push('cortex-travado');
   await p.gh(caminho + '/labels', { method: 'POST', body: JSON.stringify({ labels: rotulos }) }).catch(() => null);
   await p.gh(caminho + '/comments', { method: 'POST', body: JSON.stringify({ body: 'Enviado ao Jules por ' + quem + '. Sessão: ' + link + '\nO Jules abre o PR sozinho (sem automerge). Confira o CI antes de juntar.' }) }).catch(() => null);
   return { status: 200, corpo: { ok: true, sessao: id, link, mensagem: 'Pedido #' + n + ' enviado ao Jules. Ele abre o PR sozinho; confira o CI antes de juntar.' } };
 }
 
-module.exports = { mandarParaJules, montarPrompt, REGRAS };
+module.exports = { mandarParaJules, montarPrompt, REGRAS, FONTE };
