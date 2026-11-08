@@ -18,7 +18,7 @@
           <h2 class="text-2xl font-bold mb-4">Lista de Compras</h2>
           <div class="bg-white rounded-lg shadow p-4">
             <ul class="divide-y divide-gray-200">
-              ${lembretes.map(l => `<li class="py-3 flex justify-between items-center"><span>${'Prumo: ' + l.nome}</span></li>`).join('')}
+              ${lembretes.map(l => `<li class="py-3 flex justify-between items-center"><span>${'Kernex Finance: ' + l.nome}</span></li>`).join('')}
             </ul>
           </div>
         </div>
