@@ -43,6 +43,8 @@ export function usePedidos() {
   // #3133: painel "IAs trabalhando agora" + resumo do dia (mesma fonte da Central).
   const ias = useCallback(<T,>() => chamar<T>("?ias=1"), [chamar]);
   const prs = useCallback(<T,>() => chamar<T>("?prs=1"), [chamar]);
+  const projetos = useCallback(<T,>() => chamar<T>("?projetos=1"), [chamar]);
+  const cofre = useCallback(<T,>() => chamar<T>("?cofre=1"), [chamar]);
   const agir = useCallback((corpo: Record<string, unknown>) => chamar<{ ok: boolean; mensagem: string; numero?: number; caminho?: string; assumiu?: { ia: string; numero: number; titulo?: string; fazendo: string }[]; feitos?: number[] }>("", corpo), [chamar]);
-  return { listar, abrir, agir, deploy, ias, prs };
+  return { listar, abrir, agir, deploy, ias, prs, projetos, cofre };
 }

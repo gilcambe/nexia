@@ -34,6 +34,14 @@ async function prsAbertos(gh) {
   return { prs, conferidoEm: new Date().toISOString(), origem: 'PRs abertos no GitHub (gilcambe/nexia)' };
 }
 
+// #3227: Cofre. Só NOME e data de troca dos segredos; o GitHub nem devolve o valor.
+async function cofre(gh) {
+  const { REPO } = require('./central/pedidos-gh');
+  const r = await gh('/repos/' + REPO + '/actions/secrets?per_page=100');
+  const segredos = ((r && r.secrets) || []).map((x) => ({ name: x.name, updated_at: x.updated_at }));
+  return { segredos, conferidoEm: new Date().toISOString(), origem: 'nomes dos segredos do repositório no GitHub' };
+}
+
 function createHandler(deps = {}) {
   const getMw = deps.getMw || (() => require('./middleware'));
   const getPedidos = deps.getPedidos || (() => {
@@ -58,6 +66,8 @@ function createHandler(deps = {}) {
         const qs = event.queryStringParameters || {};
         if (qs.deploy) return res(200, await require('./central/pedidos-publicar').situacao(p.gh));
         if (qs.n) return res(200, await p.detalhe(qs.n));
+        if (qs.projetos) return res(200, await require('./central/projetos').carregar(p.gh, require('./central/pedidos-gh').REPO));
+        if (qs.cofre) return res(200, await cofre(p.gh));
         if (qs.prs) return res(200, await prsAbertos(p.gh));
         if (qs.ias) return res(200, await (deps.iasAgora || iasAgoraComResumo)(p.gh));
         return res(200, await p.lista({ q: qs.q, estado: qs.estado, pagina: qs.pagina }));
@@ -79,4 +89,5 @@ function createHandler(deps = {}) {
 }
 
 exports.createHandler = createHandler;
+exports.cofre = cofre;
 exports.handler = createHandler();
