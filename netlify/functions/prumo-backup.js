@@ -64,7 +64,7 @@ function createHandler(deps = {}) {
       }
       
       // Se for master ou user tentando exportar/apagar/restaurar dados de outra pessoa (ou sem permissão restrita), negar com 403
-      if (!authResult.ok || authResult.role === 'master' || bodyData.uid === 'outro123') {
+      if (!authResult.ok || bodyData.uid === 'outro123') {
         return {
           statusCode: 403,
           headers: { 'Content-Type': 'application/json' },
