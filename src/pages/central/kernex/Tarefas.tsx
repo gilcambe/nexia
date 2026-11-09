@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { usePedidos, type Filtro } from "../../meu-cortex/api";
 import Bloco from "./Bloco";
+import Kpi from "./Kpi";
+import type { Painel } from "./Inicio";
 import { CHIPS, COR_ESTADO, haQuanto, hora } from "./regras";
 
 // #3219 parte 3: Tarefas. Lista com chips à esquerda, história da tarefa à direita, ações em lote.
@@ -13,7 +15,7 @@ export function Selo({ t }: { t: Pick<Item, "texto" | "icone" | "cor"> }) {
   return <span className="kx-selo" data-testid="kx-selo" style={{ background: COR_ESTADO[t.cor || "cinza"] || "#64748b" }}>{t.icone} {t.texto}</span>;
 }
 
-export default function Tarefas() {
+export default function Tarefas({ painel }: { painel?: Painel }) {
   const { listar, abrir, agir } = usePedidos();
   const [chip, setChip] = useState<Filtro>("andamento");
   const [q, setQ] = useState("");
@@ -45,9 +47,17 @@ export default function Tarefas() {
   };
   const marcar = (n: number) => setMarcadas((m) => (m.includes(n) ? m.filter((x) => x !== n) : [...m, n]));
 
+  const c = painel?.ias?.contagens;
   return (
+    <div className="kx-tela">
+    <div className="kx-kpis" data-testid="kx-kpis-tarefas">
+      <Kpi cor="az" icone="lista" valor={c ? (c.andamento || 0) + (c["aguardando-ia"] || 0) : null} rotulo="Em andamento" sub="toque para ver" ativo={chip === "andamento"} onClick={() => setChip("andamento")} />
+      <Kpi cor="rx" icone="raio" valor={c ? c.travada || 0 : null} rotulo="Travadas" sub="as IAs tentam de novo" ativo={chip === "travadas"} onClick={() => setChip("travadas")} />
+      <Kpi cor="vm" icone="sino" valor={c ? c.precisaVoce || 0 : null} rotulo="Precisam de você" sub="só você resolve" ativo={chip === "precisa"} onClick={() => setChip("precisa")} />
+      <Kpi cor="vd" icone="check" valor={c ? c.concluida || 0 : null} rotulo="Concluídas hoje" ativo={chip === "concluidas"} onClick={() => setChip("concluidas")} />
+    </div>
     <div className="kx-grade" style={{ gridTemplateColumns: "minmax(320px,2fr) 3fr" }}>
-      <Bloco titulo="Tarefas" ajuda="Escolha um filtro. Clique numa tarefa para ver a história dela ao lado." fonte={itens ? "issues do GitHub (fila do Cortex)" : null} atualizadoEm={em}>
+      <Bloco icone="lista" corIcone="#fb923c" titulo="Tarefas" ajuda="Escolha um filtro. Clique numa tarefa para ver a história dela ao lado." fonte={itens ? "issues do GitHub (fila do Cortex)" : null} atualizadoEm={em}>
         <div className="kx-chips" style={{ marginBottom: 8 }}>
           {CHIPS.map((c) => <button key={c.id} type="button" className="kx-chip" aria-pressed={chip === c.id} onClick={() => setChip(c.id as Filtro)} data-testid={"kx-chip-" + c.id}>{c.nome}</button>)}
         </div>
@@ -74,7 +84,7 @@ export default function Tarefas() {
           {itens && itens.length === 0 && <li>Nenhuma tarefa aqui.</li>}
         </ul>
       </Bloco>
-      <Bloco titulo={aberto ? `Tarefa #${aberto.numero}` : "História da tarefa"} ajuda="Quando entrou, qual IA pegou, tentativas, PR e como está agora." fonte={aberto ? "issue e timeline do GitHub" : null} atualizadoEm={aberto ? new Date().toISOString() : null}>
+      <Bloco icone="relogio" titulo={aberto ? `Tarefa #${aberto.numero}` : "História da tarefa"} ajuda="Quando entrou, qual IA pegou, tentativas, PR e como está agora." fonte={aberto ? "issue e timeline do GitHub" : null} atualizadoEm={aberto ? new Date().toISOString() : null}>
         {aberto && (
           <div data-testid="kx-detalhe" style={{ display: "flex", flexDirection: "column", gap: 8, height: "100%" }}>
             <div style={{ display: "flex", gap: 8, alignItems: "center" }}><Selo t={aberto} /><b className="kx-titulo">{aberto.titulo}</b><a className="kx-btn" href={aberto.link} target="_blank" rel="noreferrer">Abrir no GitHub</a></div>
@@ -98,6 +108,7 @@ export default function Tarefas() {
           </div>
         )}
       </Bloco>
+    </div>
     </div>
   );
 }
