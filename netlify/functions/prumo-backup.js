@@ -76,10 +76,31 @@ exports.handler = async function(event, context) {
     }
   }
 
-  // Endpoint /prumo-admin/delete (LGPD Delete / Esquerda)
+  // Endpoint /prumo-admin/delete (LGPD Delete / Esquerda) com validação robusta de admin/token
   if (path.endsWith('/prumo-admin/delete') || (event.queryStringParameters && event.queryStringParameters.action === 'delete')) {
-    const userId = event.queryStringParameters?.userId || 'anonymous';
-    console.log(`[PRUMO-BACKUP] Executando remoção de dados conforme LGPD para o usuário: ${userId}`);
+    const authHeader = event.headers?.authorization || event.headers?.Authorization || '';
+    const token = authHeader.startsWith('Bearer ') ? authHeader.substring(7) : (event.queryStringParameters?.token || '');
+    const expectedToken = process.env.NEXIA_MAQUINA_TOKEN || process.env.NEXIA_CRON_SECRET || 'prumo-admin-secure-token';
+    
+    if (!token || token !== expectedToken) {
+      console.warn('[PRUMO-BACKUP] Tentativa de exclusão LGPD sem autenticação ou com token inválido.');
+      return {
+        statusCode: 401,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ success: false, error: 'Não autorizado. Token de administrador inválido ou ausente.' })
+      };
+    }
+
+    const userId = event.queryStringParameters?.userId || '';
+    if (!userId) {
+      return {
+        statusCode: 400,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ success: false, error: 'Parâmetro userId obrigatório para exclusão LGPD.' })
+      };
+    }
+
+    console.log(`[PRUMO-BACKUP] Executando remoção segura de dados conforme LGPD para o usuário: ${userId}`);
     return {
       statusCode: 200,
       headers: { 'Content-Type': 'application/json' },
