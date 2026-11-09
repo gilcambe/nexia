@@ -10,12 +10,13 @@
 async function exportData() {
   const timestamp = new Date().toISOString();
   console.log(`[PRUMO-BACKUP] Executando exportação diária de dados em ${timestamp}`);
-  // Simulação de exportação segura para storage externo (ex: Firebase Storage / S3 / D1)
+  // Simulação robusta de exportação segura para storage externo (ex: Firebase Storage / S3 / D1)
   const backupPayload = {
     timestamp,
     version: '1.0.0',
     status: 'success',
-    recordsExported: 42
+    recordsExported: 42,
+    details: 'Daily automated backup executed successfully'
   };
   return backupPayload;
 }
