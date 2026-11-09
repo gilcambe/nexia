@@ -63,6 +63,8 @@ export default function CentralPage() {
   // Alerta aberto: undefined = fechado; null = lista de todos; número = um alerta.
   const [alerta, setAlerta] = useState<number | null | undefined>(undefined);
   const [versaoNova, setVersaoNova] = useState(false);
+  // Decidido 1 vez ao abrir: trocar de aba na antiga (muda o #) não pode pular para a nova no meio do uso.
+  const [antiga] = useState(() => new URLSearchParams(location.search).get("antiga") === "1" || location.hash.length > 1);
   const [claro, setClaro] = useState<boolean>(() => {
     try {
       const v = localStorage.getItem("central-tema");
@@ -169,8 +171,25 @@ export default function CentralPage() {
     </nav>
   );
 
-  // #3219: protótipo da Central nova em /central?nova=1 (a antiga continua igual até o dono aprovar).
-  if (user && new URLSearchParams(location.search).get("nova") === "1") return <CascaKernex />;
+  // #3219: a Central nova é o padrão em /central (o dono pediu, 09/11: "no PC não abre a nova").
+  // A antiga continua em /central?antiga=1 e em qualquer link com # (ex.: /central#sistema, Conectar IAs).
+  if (!antiga) {
+    if (user) return <CascaKernex />;
+    return (
+      <div data-testid="kx-entrar" style={{ position: "fixed", inset: 0, display: "grid", placeItems: "center", background: "#060c22", color: "#eef3ff", fontFamily: "system-ui,sans-serif", padding: 16 }}>
+        <div style={{ textAlign: "center", maxWidth: 420, background: "#0f1a3d", border: "1px solid #1f2e5e", borderRadius: 18, padding: "28px 24px" }}>
+          <p style={{ fontSize: 24, fontWeight: 800, letterSpacing: ".06em", margin: 0 }}>KERNEX</p>
+          <p style={{ color: "#9aa8cf", margin: "4px 0 18px" }}>Central de Controle</p>
+          {authLoading ? <p>Carregando…</p> : (
+            <>
+              <p style={{ margin: "0 0 16px" }}>Entre como administrador para abrir a Central.</p>
+              <button type="button" onClick={() => navigate("/login?next=" + encodeURIComponent("/central"))} style={{ minHeight: 48, padding: "0 28px", borderRadius: 12, border: 0, background: "linear-gradient(135deg,#3b82f6,#2563eb)", color: "#fff", fontSize: 16, fontWeight: 700, cursor: "pointer" }}>Entrar</button>
+            </>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={`${claro ? "central-claro bg-slate-50 text-slate-900" : "bg-[#0a0a0f] text-slate-100"} min-h-screen font-display antialiased pb-[calc(5.5rem+env(safe-area-inset-bottom))] lg:pb-0`}>
@@ -186,6 +205,7 @@ export default function CentralPage() {
                 ? <><img src="/central-icon.svg" alt="" className="w-7 h-7" /><span className="font-bold">Kernex</span></>
                 : <span className="font-semibold text-lg truncate">{aba === "mais" ? "Mais" : ABAS.find((a) => a.id === aba)?.nome}</span>}
             </div>
+            <a href="/central" className="shrink-0 rounded-xl bg-indigo-600 text-[#fff] px-3 h-10 inline-flex items-center text-sm font-semibold" data-testid="central-ir-nova">Abrir a Central nova</a>
             <label className="hidden md:flex flex-1 max-w-xl items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 h-10 text-slate-400">
               <Icone nome="busca" className="w-5 h-5" />
               <input value={busca} onChange={(e) => setBusca(e.target.value)} onKeyDown={(e) => e.key === "Enter" && buscar2(busca)}
