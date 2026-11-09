@@ -84,7 +84,7 @@ function createHandler(deps = {}) {
         return res(status, corpo);
       }
       if (b.acao === 'homologar') return res(200, await require('./central/homologacao').rodar(p.gh));   // #3269 botão Rodar tudo
-      const x = await agir(p, b, auth.email || 'dono');
+      const x = await agir({ ...p, statusAgora: deps.statusAgora || (() => require('./central/status-agora').statusAgora(p.gh)) }, b, auth.email || 'dono');
       return res(x.status, x.corpo);
     } catch (e) {
       return res(502, { error: 'GitHub: ' + e.message });

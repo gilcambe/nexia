@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { usePedidos } from "../../meu-cortex/api";
-import { useCentral, type Maquina } from "../api";
+import { useCentral, type Maquina, type OQueFaltaDados } from "../api";
+import StatusTudo from "./StatusTudo";
 import Bloco from "./Bloco";
 import PrecisaDeVoce from "./PrecisaDeVoce";
 import type { Acao } from "./donos";
@@ -11,8 +12,8 @@ import { COR_ESTADO, corSemaforo, haQuanto, hora, semPrecisa, type TelaId } from
 // atalhos para os módulos, controles com 1 toque, assistente para pedir ao Cortex e os painéis do dia.
 // Só número com fonte real; sem fonte, "sem dados" ou "—".
 export interface Ias { ias: { nome: string; situacao: string; ativa: boolean; texto: string; tarefa?: { numero: number; titulo: string } | null; desde?: string | null }[]; resumo: string; contagens: Record<string, number>; conferidoEm: string; origem: string }
-export interface Painel { ias: Ias | null; saude: { fora: number; total: number; em: string } | null; erro: string | null; dono?: Acao[] | null; recarregar?: () => void }
-interface Item { numero: number; titulo: string; texto?: string; icone?: string; cor?: string; motivo?: string; quando: string; ia?: string | null; link?: string }
+export interface Painel { ias: Ias | null; saude: { fora: number; total: number; em: string } | null; erro: string | null; dono?: Acao[] | null; tudo?: OQueFaltaDados | null; maq?: { com: number; total: number } | null; recarregar?: () => void }
+interface Item { numero: number; titulo: string; texto?: string; icone?: string; cor?: string; estado?: string; motivo?: string; quando: string; ia?: string | null; link?: string }
 interface Projeto { id: string; nome: string; definido: boolean; pct: number; faltam: unknown[] }
 
 const MODULOS: { id: TelaId; nome: string; frase: string; icone: string; fundo: string }[] = [
@@ -42,12 +43,13 @@ export default function Inicio({ irPara, painel, nome }: { irPara: (t: TelaId) =
   const [aviso, setAviso] = useState<string | null>(null);
   const [ocupado, setOcupado] = useState<string | null>(null);
   const [pedido, setPedido] = useState("");
-  const [meus, setMeus] = useState<{ itens: Item[]; em: string } | null>(null);
+  const [meus, setMeus] = useState<{ itens: Item[]; todos: Item[]; em: string } | null>(null);
+  const [resposta, setResposta] = useState<string | null>(null);
 
   const carregar = useCallback(async () => {
     const agora = new Date().toISOString();
     const [m, f, pr, me] = await Promise.allSettled([buscar("maquinas"), listar("", "concluidas", 1), projetos<{ projetos: Projeto[]; conferidoEm: string; origem: string }>(), listar("", "meus", 1)]);
-    if (me.status === "fulfilled") setMeus({ itens: (me.value.itens as unknown as Item[]).slice(0, 5), em: agora });
+    if (me.status === "fulfilled") setMeus({ itens: (me.value.itens as unknown as Item[]).slice(0, 5), todos: me.value.itens as unknown as Item[], em: agora });
     if (m.status === "fulfilled" && m.value) setMaq({ ligado: !!m.value.ligado, maquinas: m.value.maquinas || [], em: agora });
     if (f.status === "fulfilled") setFeitas({ itens: (f.value.itens as unknown as Item[]).slice(0, 5), em: agora });
     if (pr.status === "fulfilled") setProj(pr.value);
@@ -67,9 +69,15 @@ export default function Inicio({ irPara, painel, nome }: { irPara: (t: TelaId) =
   };
   const enviarPedido = async () => {
     const t = pedido.trim();
-    if (t.length < 10) { setAviso("Escreva o pedido com pelo menos 10 letras."); return; }
-    await fazer("pedir", { acao: "pedir", texto: t });
-    setPedido("");
+    if (t.length < 3) { setAviso("Escreva o seu pedido ou a sua pergunta."); return; }
+    setOcupado("pedir");
+    try {
+      const r = await agir({ acao: "pedir", texto: t }) as { mensagem: string; resposta?: boolean };
+      // Pergunta de status: a Central responde na hora (não vira tarefa).
+      if (r.resposta) setResposta(r.mensagem); else { setResposta(null); setAviso(r.mensagem); }
+      setPedido(""); painel.recarregar?.(); carregar();
+    } catch (e) { setAviso("Não deu certo: " + (e as Error).message); }
+    setOcupado(null);
   };
 
   const ver = (t: TelaId, texto?: string) => ({ texto, ir: () => irPara(t) });
@@ -100,6 +108,8 @@ export default function Inicio({ irPara, painel, nome }: { irPara: (t: TelaId) =
           <button type="button" className="kx-btn" disabled={!!ocupado} onClick={() => fazer("voltar", { acao: "voltar-fila" })}><Icone nome="play" tam={16} />Voltar a rodar</button>
         </div>
       </section>
+
+      <StatusTudo tudo={painel.tudo} maq={painel.maq} meus={meus ? meus.todos : null} ir={irPara} recarregar={() => { painel.recarregar?.(); carregar(); }} />
 
       <button type="button" className="kx-kpi az" onClick={() => irPara("maquinas")} data-testid="kx-kpi-maquinas">
         <span className="ico" style={{ background: "linear-gradient(135deg,#3b82f6,#1d4ed8)" }}><Icone nome="pc" tam={26} cor="#fff" /></span>
@@ -138,8 +148,9 @@ export default function Inicio({ irPara, painel, nome }: { irPara: (t: TelaId) =
           <button type="button" className="kx-sugestao" onClick={() => irPara("projetos")}><Icone nome="pasta" tam={16} cor="#a5b4fc" />Ver quanto falta em cada projeto</button>
           <button type="button" className="kx-sugestao" onClick={() => irPara("tarefas")}><Icone nome="lista" tam={16} cor="#a5b4fc" />Ver as últimas tarefas</button>
           <button type="button" className="kx-sugestao" onClick={() => { document.getElementById("kx-busca")?.focus(); }}><Icone nome="busca" tam={16} cor="#a5b4fc" />Buscar uma tela ou tarefa</button>
-          <textarea placeholder="Digite seu pedido… (ex.: corrigir o botão de login do Body Coach)" value={pedido} onChange={(e) => setPedido(e.target.value)} aria-label="Pedido para o Cortex" data-testid="kx-pedido" />
+          <textarea placeholder="Peça ou pergunte… (ex.: qual o status de tudo? / corrigir o login do Body Coach)" value={pedido} onChange={(e) => setPedido(e.target.value)} aria-label="Pedido para o Cortex" data-testid="kx-pedido" />
           <button type="button" className="kx-btn forte" style={{ justifyContent: "center" }} disabled={ocupado === "pedir"} onClick={enviarPedido}><Icone nome="enviar" tam={16} />Mandar para o Cortex</button>
+          {resposta && <div className="kx-passos neutro" data-testid="kx-resposta" style={{ marginTop: 8 }}><b>Resposta da Central:</b> {resposta}</div>}
           <p className="kx-mut" style={{ margin: "8px 0 0" }}>Meus pedidos {meus ? "· conferido " + haQuanto(meus.em) : ""}</p>
           <ul className="kx-lista" data-testid="kx-meus-pedidos">
             {(meus?.itens || []).map((t) => (

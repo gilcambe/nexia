@@ -300,3 +300,11 @@ test('CF-AUDITORIA-7DIAS. Reabre issues dos últimos 7 dias que falharam na vali
   assert.ok(chamadas.some(c => c.method === 'PATCH' && c.path.includes('/issues/1853') && c.body.state === 'open'));
   assert.ok(chamadas.some(c => c.method === 'POST' && c.path.includes('/comments') && c.body.body.includes('Reabrindo issue')));
 });
+
+test('CF-DONO. pedido do dono pela Central e "Destravar" passam na frente das partes urgentes (dono, 09/11)', () => {
+  const parteUrg = (n) => issue(n, ['cortex-urgente', 'cortex-parte'], { title: `[Parte 1/2 de #${n + 1000}] x` });
+  const pedido = issue(50, [], { body: 'Qual o próximo passo?\n\n_Pedido de gcbezerra pela Central._' });
+  const destravada = issue(60, ['dono-agora']);
+  const a = decidir({ issues: [parteUrg(1), parteUrg(2), pedido, destravada], runs: [], agora: AGORA, pistas: 2 });
+  assert.deepEqual(a.filter(x => x.tipo === 'despachar').map(x => x.numero), [60, 50]);
+});

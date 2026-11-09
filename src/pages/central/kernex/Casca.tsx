@@ -50,6 +50,8 @@ function usePainel(): Painel {
     setP((v) => {
       const n: Painel = { ...v, erro: null };
       // 09/11: "Precisa de você" = só o que o dono pode fazer, cada um com passo a passo (donos.ts).
+      if (o.status === "fulfilled" && o.value) n.tudo = o.value as NonNullable<Painel["tudo"]>;
+      if (m.status === "fulfilled" && m.value && m.value.ligado) n.maq = { com: (m.value.maquinas || []).filter((x: { online?: boolean }) => x.online).length, total: (m.value.maquinas || []).length };
       n.dono = montarAcoes({
         esperando: o.status === "fulfilled" && o.value ? ((o.value as unknown as { esperandoVoce?: [] }).esperandoVoce || []) : [],
         maquinas: m.status === "fulfilled" && m.value ? (m.value.maquinas || []) : [],
