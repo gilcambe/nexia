@@ -135,7 +135,7 @@ function createHandler(deps = {}) {
 }
 
 exports.createHandler = createHandler;
-exports.handler = createHandler();
+// Handler exportado unificado e atualizado
 
 async function restoreTest(backupData) {
   console.log('[PRUMO-BACKUP] Executando teste de restauração simples para validação de integridade...');
