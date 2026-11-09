@@ -24,6 +24,7 @@ function createHandler(deps = {}) {
 
     const method = String(event.httpMethod || '').toUpperCase();
     if (method === 'OPTIONS') return { statusCode: 204, headers: cors, body: '' };
+    if (method !== 'GET' && method !== 'POST') return res(405, { error: 'Method Not Allowed' });
 
     const auth = headers.authorization ? await getMw().verifyBearerToken(event) : { ok: false };
     if (!auth.ok || auth.role !== 'master') {
