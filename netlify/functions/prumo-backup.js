@@ -146,7 +146,8 @@ async function restoreTest(backupData) {
   return { restored: true, timestamp: backupData.timestamp, integrity: 'verified' };
 }
 
-exports.handler = async function(event, context) {\n  console.log('[PRUMO-BACKUP] Backup diário acionado via Netlify schedule / cron.');
+exports.handler = async function(event, context) {
+  console.log('[PRUMO-BACKUP] Backup diário acionado via Netlify schedule / cron.');
   const path = event.path || '';
   const method = event.httpMethod || 'GET';
 
