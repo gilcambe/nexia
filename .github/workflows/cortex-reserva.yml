@@ -118,6 +118,16 @@ jobs:
           git checkout -q -b "nexia/reserva-$NUMERO-$GITHUB_RUN_NUMBER"
           PROMPT="Aplique esta tarefa no repositório. Só grátis, não remova nenhuma função existente. $(cat "$RUNNER_TEMP/tarefa.md")"
           contas=()
+          # Nomes de modelo morrem com o tempo (gemini-2.5-flash, llama-3.3-70b-versatile, deepseek :free, NVIDIA llama 410).
+          # Em vez de nome fixo, pergunta a cada provedor quais modelos existem AGORA (mesma correção do avaya-gsd #17).
+          mod_gemini() { curl -sS "https://generativelanguage.googleapis.com/v1beta/models?pageSize=200&key=$1" 2>/dev/null | jq -r '[.models[]?|select(.supportedGenerationMethods|index("generateContent"))|.name|select(test("flash"))|select(test("image|tts|live|thinking|exp|preview|audio|omni|robotics")|not)] as $m | ([$m[]|select(test("lite")|not)]|sort|reverse|.[0:3][]), ([$m[]|select(test("lite"))]|sort|reverse|.[0:2][])' 2>/dev/null | sed 's#^models/##' | awk '!v[$0]++'; }
+          mod_groq() { curl -sS -H "Authorization: Bearer $1" https://api.groq.com/openai/v1/models 2>/dev/null | jq -r '[.data[]?|select(.active!=false)|select(.id|test("whisper|tts|guard|playai|orpheus|prompt|vision";"i")|not)]|sort_by(-(.context_window//0))|.[0:3][]|.id' 2>/dev/null; }
+          mod_or() { curl -sS https://openrouter.ai/api/v1/models 2>/dev/null | jq -r '[.data[]?|select(.id|endswith(":free"))|select((.context_length//0)>=100000)]|sort_by((if (.id|test("coder|code|qwen3|deepseek";"i")) then 0 else 1 end), -(.context_length//0))|.[0:3][]|.id' 2>/dev/null; }
+          mod_nvidia() { curl -sS -H "Authorization: Bearer $1" https://integrate.api.nvidia.com/v1/models 2>/dev/null | jq -r '[.data[]?.id|select(test("embed|rerank|guard|vision|vl|reward|safety|parse|clip|retriev";"i")|not)]|sort_by(if test("coder";"i") then 0 elif test("qwen3|deepseek|kimi|glm";"i") then 1 else 2 end)|.[0:2][]' 2>/dev/null; }
+          add_gemini() { local nome=$1 ch=$2 m; for m in $(mod_gemini "$ch"); do contas+=("$nome|gemini/$m|GEMINI_API_KEY|$ch"); done; }
+          add_groq() { local nome=$1 ch=$2 m; for m in $(mod_groq "$ch"); do contas+=("$nome|groq/$m|GROQ_API_KEY|$ch"); done; }
+          add_or() { local nome=$1 ch=$2 m; for m in $(mod_or); do contas+=("$nome|openrouter/$m|OPENROUTER_API_KEY|$ch"); done; }
+          add_nvidia() { local nome=$1 ch=$2 m; for m in $(mod_nvidia "$ch"); do contas+=("$nome|nvidia_nim/$m|NVIDIA_NIM_API_KEY|$ch"); done; }
           ORDEM=$(node -e "const v=require('./nexia-ai/model-router/vagas');const c=v.lerConfig(process.env);const p=n=>{const i=c.ordem.indexOf(n);return i<0?1000+n:i};console.log(Array.from({length:v.MAX_VAGAS},(_,i)=>i+1).filter(n=>!c.pausadas.includes(n)).sort((a,b)=>p(a)-p(b)).join(' '))" 2>/dev/null || seq 1 50)
           for N in $ORDEM; do  # 50 vagas da Central (#2716), sem as pausadas e na ordem da Central (#2808)
             V="IA_VAGA_$N"; V="${!V}"
@@ -125,14 +135,14 @@ jobs:
             PROV="${V%%:*}"; CH="${V#*:}"
             echo "::add-mask::$CH"
             case "$PROV" in
-              gemini) contas+=("vaga-$N-gemini|gemini/gemini-2.5-flash|GEMINI_API_KEY|$CH") ;;
-              groq) contas+=("vaga-$N-groq|groq/llama-3.3-70b-versatile|GROQ_API_KEY|$CH") ;;
-              openrouter) contas+=("vaga-$N-openrouter|openrouter/deepseek/deepseek-chat-v3-0324:free|OPENROUTER_API_KEY|$CH") ;;
+              gemini) add_gemini "vaga-$N-gemini" "$CH" ;;
+              groq) add_groq "vaga-$N-groq" "$CH" ;;
+              openrouter) add_or "vaga-$N-openrouter" "$CH" ;;
               mistral) contas+=("vaga-$N-mistral|mistral/codestral-latest|MISTRAL_API_KEY|$CH") ;;
               cohere) contas+=("vaga-$N-cohere|cohere_chat/command-a-03-2025|COHERE_API_KEY|$CH") ;;
               huggingface) contas+=("vaga-$N-huggingface|huggingface/meta-llama/Llama-3.3-70B-Instruct|HUGGINGFACE_API_KEY|$CH") ;;
               codestral) contas+=("vaga-$N-codestral|codestral/codestral-latest|CODESTRAL_API_KEY|$CH") ;;
-              nvidia) contas+=("vaga-$N-nvidia|nvidia_nim/meta/llama-3.3-70b-instruct|NVIDIA_NIM_API_KEY|$CH") ;;
+              nvidia) add_nvidia "vaga-$N-nvidia" "$CH" ;;
               zai) contas+=("vaga-$N-zai|openai/glm-4.5-flash|OPENAI_API_KEY|$CH|https://api.z.ai/api/paas/v4") ;;
               sambanova) contas+=("vaga-$N-sambanova|sambanova/Meta-Llama-3.3-70B-Instruct|SAMBANOVA_API_KEY|$CH") ;;
               custom)
@@ -144,18 +154,12 @@ jobs:
                 contas+=("vaga-$N-custom|openai/$CMOD|OPENAI_API_KEY|$CKEY|$CURL") ;;
             esac
           done
-          if [ -n "$RESERVA_GEMINI_KEY" ]; then
-            # Modelo do Gemini muda com o tempo (o 2.0 foi desligado): pergunta ao Google qual "flash" está disponível agora.
-            # Vários modelos candidatos: alguns não têm cota grátis (limit 0); o laço abaixo passa para o próximo.
-            for GM in $(curl -sS "https://generativelanguage.googleapis.com/v1beta/models?pageSize=200&key=$RESERVA_GEMINI_KEY" | jq -r '[.models[]?|select(.supportedGenerationMethods|index("generateContent"))|.name|select(test("flash")) |select(test("lite|image|tts|live|thinking|exp|preview|omni|audio|robotics")|not)]|sort|reverse|.[0:4][]' | sed 's#^models/##'); do
-              echo "Modelo Gemini candidato: $GM"
-              contas+=("gemini|gemini/$GM|GEMINI_API_KEY|$RESERVA_GEMINI_KEY")
-            done
-          fi
-          [ -n "$GROQ_API_KEY" ] && contas+=("groq|groq/llama-3.3-70b-versatile|GROQ_API_KEY|$GROQ_API_KEY")
+          [ -n "$RESERVA_GEMINI_KEY" ] && add_gemini gemini "$RESERVA_GEMINI_KEY"
+          [ -n "$GEMINI_API_KEY" ] && [ "$GEMINI_API_KEY" != "$RESERVA_GEMINI_KEY" ] && add_gemini gemini-cortex "$GEMINI_API_KEY"
+          [ -n "$GROQ_API_KEY" ] && add_groq groq "$GROQ_API_KEY"
           [ -n "$MISTRAL_API_KEY" ] && contas+=("mistral|mistral/codestral-latest|MISTRAL_API_KEY|$MISTRAL_API_KEY")
-          [ -n "$OPENROUTER_API_KEY" ] && contas+=("openrouter-cortex|openrouter/deepseek/deepseek-chat-v3-0324:free|OPENROUTER_API_KEY|$OPENROUTER_API_KEY")
-          [ -n "$RESERVA_OPENROUTER_KEY" ] && contas+=("openrouter|openrouter/deepseek/deepseek-chat-v3-0324:free|OPENROUTER_API_KEY|$RESERVA_OPENROUTER_KEY")
+          [ -n "$OPENROUTER_API_KEY" ] && add_or openrouter-cortex "$OPENROUTER_API_KEY"
+          [ -n "$RESERVA_OPENROUTER_KEY" ] && add_or openrouter "$RESERVA_OPENROUTER_KEY"
           [ -n "$RESERVA_OPENAI_KEY" ] && contas+=("openai|gpt-4o-mini|OPENAI_API_KEY|$RESERVA_OPENAI_KEY")
           [ -n "$RESERVA_ANTHROPIC_KEY" ] && contas+=("anthropic|claude-3-5-haiku-20241022|ANTHROPIC_API_KEY|$RESERVA_ANTHROPIC_KEY")
           if [ ${#contas[@]} -eq 0 ]; then echo "Nenhuma conta de reserva ligada."; echo "ok=0" >> "$GITHUB_OUTPUT"; exit 0; fi
@@ -194,10 +198,25 @@ jobs:
           done
           echo "ok=0" >> "$GITHUB_OUTPUT"
       - name: Testar
+        id: testar
         if: steps.aplicar.outputs.ok == '1'
-        run: npm test
+        continue-on-error: true
+        run: npm test 2>&1 | tee "$RUNNER_TEMP/teste.txt"; exit "${PIPESTATUS[0]}"
+      - name: Guardar o trabalho mesmo com teste vermelho
+        # Antes, teste vermelho jogava fora tudo o que a IA escreveu. Agora o ramo fica salvo e a issue diz o que falhou,
+        # para a próxima IA (ou a Claude) só consertar o teste em vez de começar do zero.
+        if: steps.aplicar.outputs.ok == '1' && steps.testar.outcome == 'failure'
+        run: |
+          git add -A
+          git reset -q -- '.aider*' .gitignore 2>/dev/null || true
+          git commit -q -m "Reserva (${{ steps.aplicar.outputs.conta }}): issue #$NUMERO (testes vermelhos, falta consertar)"
+          RAMO="nexia/reserva-$NUMERO-$GITHUB_RUN_NUMBER"
+          git push -q origin "$RAMO"
+          FALHAS=$(grep -E '^not ok|Cannot find module|AssertionError' "$RUNNER_TEMP/teste.txt" | head -8 | sed 's/^/    /')
+          gh issue comment "$NUMERO" --body "$(printf 'Reserva (%s) escreveu o código, mas os testes ficaram vermelhos. O trabalho está salvo no ramo `%s`; falta só consertar:\n\n%s\n' "${{ steps.aplicar.outputs.conta }}" "$RAMO" "$FALHAS")"
+          exit 1
       - name: Abrir PR
-        if: steps.aplicar.outputs.ok == '1'
+        if: steps.aplicar.outputs.ok == '1' && steps.testar.outcome == 'success'
         env:
           GITHUB_APP_ID: ${{ secrets.NEXIA_GITHUB_APP_ID }}
           GITHUB_APP_PRIVATE_KEY: ${{ secrets.NEXIA_GITHUB_APP_PRIVATE_KEY }}

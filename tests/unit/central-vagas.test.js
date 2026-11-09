@@ -98,7 +98,7 @@ test('VAGAS7: reserva usa as vagas primeiro e mascara a chave no log', () => {
   const yml = require('fs').readFileSync(require('path').join(__dirname, '../../.github/workflows/cortex-reserva.yml'), 'utf8');
   assert.ok(/IA_VAGA_1: \$\{\{ secrets\.IA_VAGA_1 \}\}/.test(yml));
   assert.ok(yml.includes('::add-mask::$CH'));
-  assert.ok(yml.indexOf('IA_VAGA_$N') < yml.indexOf('if [ -n "$RESERVA_GEMINI_KEY" ]'));
+  assert.ok(yml.indexOf('IA_VAGA_$N') < yml.indexOf('[ -n "$RESERVA_GEMINI_KEY" ]'));
 });
 
 test('VAGAS8: sem conexão daqui ainda salva (não testada) e chama o robô; Google API_KEY_INVALID é recusa', async () => {
@@ -126,7 +126,8 @@ test('VAGAS10: as 10 vagas estão listadas uma a uma nos dois workflows', () => 
   const ler = (f) => require('fs').readFileSync(require('path').join(__dirname, '../../.github/workflows', f), 'utf8');
   for (const f of ['cortex-reserva.yml', 'ia-vagas.yml']) for (const n of v.VAGAS) assert.ok(ler(f).includes(`IA_VAGA_${n}: \${{ secrets.IA_VAGA_${n} }}`), `${f} sem IA_VAGA_${n}`);
   const yml = ler('cortex-reserva.yml');
-  for (const p of Object.keys(v.PROVEDORES)) assert.ok(yml.includes(`vaga-$N-${p}|`), `reserva sem ${p}`);
+  // Gemini, Groq, OpenRouter e NVIDIA entram por add_<provedor> "vaga-$N-<p>" (modelo perguntado à API na hora).
+  for (const p of Object.keys(v.PROVEDORES)) assert.ok(yml.includes(`vaga-$N-${p}|`) || yml.includes(`"vaga-$N-${p}"`), `reserva sem ${p}`);
 });
 
 test('VAGAS11: sem permissão, a mensagem diz o passo, o código do GitHub e o nome do token', async () => {

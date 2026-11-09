@@ -14,7 +14,7 @@ export const CSS = `
 .kx-busca{flex:1;width:100%;height:42px;border-radius:12px;border:1px solid var(--linha);background:#0d1738cc;color:var(--txt);padding:0 14px 0 40px;font-size:14px}
 .kx-busca-ico{position:absolute;left:12px;top:11px;color:var(--mut);pointer-events:none}
 .kx-status{display:flex;align-items:center;gap:10px;padding:6px 14px;border-radius:12px;border:1px solid;white-space:nowrap;background:none;color:var(--txt);cursor:pointer;font:inherit}
-.kx-status b{display:block;font-size:14px;text-align:left}.kx-status span{display:block;font-size:11px;color:var(--mut);text-align:left}
+.kx-status b{display:block;font-size:14px;text-align:left}.kx-status-txt{display:block}.kx-status-txt span{display:block;font-size:11px;color:var(--mut);text-align:left}
 .kx-sino{position:relative;width:42px;height:42px;border-radius:12px;border:1px solid var(--linha);background:none;color:var(--txt);display:grid;place-items:center;cursor:pointer;flex-shrink:0}
 .kx-sino i{position:absolute;top:-5px;right:-5px;min-width:18px;height:18px;border-radius:9px;background:var(--vm);font-size:11px;font-style:normal;font-weight:700;display:grid;place-items:center;padding:0 4px}
 .kx-menu{grid-row:2;border-right:1px solid var(--linha);padding:12px 10px;display:flex;flex-direction:column;gap:3px;overflow:auto;background:var(--fundo2)}
@@ -33,7 +33,7 @@ export const CSS = `
 .kx-ver{background:none;border:0;color:#60a5fa;font-size:13px;cursor:pointer;display:inline-flex;gap:4px;align-items:center;padding:4px;white-space:nowrap}
 .kx-ajuda{width:24px;height:24px;border-radius:50%;border:1px solid var(--linha);background:none;color:var(--mut);cursor:pointer;font-size:12px;flex-shrink:0}
 .kx-ajuda-texto{margin:0 0 6px;color:var(--mut)}
-.kx-bloco-corpo{flex:1;min-height:0;overflow:auto}
+.kx-bloco-corpo{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden}
 .kx-fonte{font-size:11px;color:#7d8bb5;margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .kx-sem{color:var(--mut)}
 .kx-num{font-size:32px;font-weight:800;margin:4px 0}
@@ -54,6 +54,7 @@ export const CSS = `
 .kx-chip[aria-pressed=true]{background:var(--az);border-color:var(--az);color:#fff}
 .kx-selo{display:inline-flex;gap:4px;align-items:center;padding:3px 10px;border-radius:10px;font-size:12px;font-weight:600;color:#fff;white-space:nowrap}
 .kx-linha-tarefa{width:100%;text-align:left;background:none;border:1px solid transparent;border-radius:10px;color:var(--txt);padding:6px 8px;cursor:pointer;display:flex;gap:8px;align-items:center;font-size:14px;text-decoration:none}
+.kx-lista li>.kx-linha-tarefa{width:auto;flex:1;min-width:0}
 .kx-linha-tarefa:hover{background:#ffffff08}
 .kx-linha-tarefa[aria-current=true]{border-color:var(--az);background:var(--fundo)}
 .kx-titulo{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
@@ -100,12 +101,25 @@ export const CSS = `
 .kx-sugestao:hover{border-color:#818cf8}
 .kx-inicio>.kx-assist{grid-column:span 3;grid-row:span 2}
 .kx-span5{grid-column:span 5}.kx-span4{grid-column:span 4}
+.kx-tela{flex:1;min-height:0;display:flex;flex-direction:column;gap:12px}
+.kx-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;flex:none}
+.kx-kpis .kx-kpi{grid-column:auto;min-height:88px;padding:12px 14px}
+.kx-kpis .kx-kpi b{font-size:26px}
+.kx-kpi.ci{background:linear-gradient(135deg,#0e7490,#083344);border-color:#06b6d488}
+.kx-kpi.ativo{outline:2px solid #fff;outline-offset:-2px}
+.kx-colunas{display:flex;align-items:flex-end;gap:10px;height:150px;padding-top:8px}
+.kx-colunas div{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;height:100%;justify-content:flex-end;min-width:0}
+.kx-colunas i{display:block;width:100%;max-width:44px;border-radius:8px 8px 3px 3px;background:linear-gradient(180deg,#60a5fa,#2563eb);min-height:3px}
+.kx-colunas span{font-size:11px;color:var(--mut)}
+.kx-ladrilhos{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
 .kx-so-cel{display:none}
 .kx-gaveta-fundo{display:none}
 .kx-busca-caixa{position:relative;flex:1;max-width:620px}
 @media (max-width:1280px){.kx-controles{max-width:60%}.kx-heroi h1{font-size:24px}.kx-modulos{grid-template-columns:repeat(3,minmax(0,1fr))}.kx-mod{min-height:84px}}
 @media (max-width:768px){
- .kx{grid-template-columns:1fr;grid-template-rows:56px 1fr 64px}
+ .kx{grid-template-columns:minmax(0,1fr);grid-template-rows:56px minmax(0,1fr) 64px}
+ .kx-topo,.kx-area,.kx-menu{min-width:0}
+ .kx-menu button{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
  .kx-marca{display:none}
  .kx-topo{grid-column:1;padding:0 12px;gap:10px}
  .kx-so-cel{display:inline-flex}
@@ -125,7 +139,7 @@ export const CSS = `
  .kx-bloco-corpo{overflow:visible}
  .kx-busca-caixa{display:none}
  .kx.buscando .kx-busca-caixa{display:block;position:fixed;left:8px;right:8px;top:8px;z-index:40;max-width:none}
- .kx-status{padding:4px 10px}.kx-status span{display:none}
+ .kx-status{padding:4px 10px}.kx-status-txt span{display:none}
  .kx-inicio{grid-template-columns:repeat(2,minmax(0,1fr))}
  .kx-inicio>*{grid-column:1/-1!important}
  .kx-inicio>.kx-kpi{grid-column:span 1!important;min-height:96px;padding:12px;flex-direction:column;align-items:flex-start;gap:8px}
@@ -137,4 +151,10 @@ export const CSS = `
  .kx-modulos{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
  .kx-mod{min-height:84px;padding:10px}.kx-mod span,.kx-mod .seta{display:none}
  .kx-esconde-cel{display:none}
-}`;
+ .kx-lista li{flex-wrap:wrap}.kx-lista .kx-mut{white-space:normal}
+ .kx-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .kx-kpis .kx-kpi{grid-column:auto!important;flex-direction:column;align-items:flex-start;gap:6px}
+ .kx-kpis .kx-kpi .ico{width:36px;height:36px}
+ .kx-tela{flex:none}
+}
+@media (max-width:420px){.kx-status-txt{display:none!important}.kx-status{padding:6px}.kx-topo{gap:6px;padding:0 8px}.kx-sino{width:38px;height:38px}}`;

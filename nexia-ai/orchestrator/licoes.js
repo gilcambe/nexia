@@ -25,4 +25,16 @@ const LICOES = Object.freeze([
 
 const TEXTO = `LIÇÕES APRENDIDAS (erros reais de tarefas anteriores; não repita):\n${LICOES.map(l => `- ${l}`).join('\n')}`;
 
-module.exports = { LICOES, TEXTO };
+const REGISTRO_PASSAGENS = [];
+
+function registrarPassagem({ data, quem, motivo, para }) {
+  const linha = `${data || new Date().toISOString()}: ${quem || 'IA'} parou (${motivo || 'sem sinal'}); passado para ${para || 'Cortex'}.`;
+  REGISTRO_PASSAGENS.push(linha);
+  return linha;
+}
+
+function listarPassagens() {
+  return [...REGISTRO_PASSAGENS];
+}
+
+module.exports = { LICOES, TEXTO, registrarPassagem, listarPassagens };
