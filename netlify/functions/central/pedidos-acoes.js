@@ -32,6 +32,13 @@ async function anexar(p, b) {
   return r(200, { ok: true, caminho, ramo: RAMO_ANEXOS, mensagem: 'Anexo guardado.' });
 }
 
+// Pergunta curta sobre andamento/status (não é pedido de trabalho).
+function ehPerguntaDeStatus(t) {
+  const s = String(t || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+  if (s.length > 140) return false;
+  return /\b(status|andamento|situacao)\b/.test(s) && /(\?|^(qual|quais|como|me (de|da|passe|mostra)|ver|mostrar))/.test(s) && !/\b(cri(e|ar)|corrig|faca|fazer|mud(e|ar)|adicion|implement|tela de|pagina de)\b/.test(s);
+}
+
 const ROTEIRO = (id) => 'docs/roadmaps/' + id + '.md';
 async function montarRoteiro(p, id, nome, quem) {
   const titulo = 'Montar o roteiro do projeto ' + nome + ' (' + ROTEIRO(id) + ')';
@@ -74,6 +81,8 @@ async function agir(p, b, quem) {
   const texto = String(b.texto || '').trim();
   const n = Number(b.n) || 0;
   if (b.acao === 'pedir') {
+    // 09/11 (dono): "Qual status de tudo?" virou tarefa e ficou na fila. Pergunta de status a Central responde na hora.
+    if (ehPerguntaDeStatus(texto) && p.statusAgora) return r(200, { ok: true, resposta: true, mensagem: await p.statusAgora() });
     if (texto.length < 10) return r(400, { error: 'Escreva o pedido com pelo menos 10 letras.' });
     if (texto.length > 60000) return r(400, { error: 'Pedido grande demais. Divida em pedidos menores (até 60000 letras).' });
     const ped = montarPedido ? montarPedido(texto, quem) : { titulo: texto.split('\n')[0].slice(0, 90), labels: ['cortex-fila'], body: texto + '\n\n_Pedido de ' + quem + '._' };
@@ -145,6 +154,15 @@ async function agir(p, b, quem) {
     await p.gh(issue(n) + '/comments', { method: 'POST', body: JSON.stringify({ body: texto + '\n\n_Nota de ' + quem + '._' }) });
     return r(200, { ok: true, mensagem: 'Mensagem guardada no pedido #' + n + '.' });
   }
+  // 09/11 (dono): botão "Destravar" na Central. Zera tentativas e põe a tarefa na frente de tudo (dono-agora).
+  if (b.acao === 'destravar') {
+    const i = await p.gh(issue(n));
+    const tirar = (i.labels || []).map((l) => l.name).filter((l) => ['cortex-travado', 'cortex-rodando', 'cortex-reserva-sem-cota', 'fila-pausada'].includes(l) || /^tentativa-\d+$/.test(l) || /^pista-\d+$/.test(l));
+    for (const l of tirar) await p.gh(issue(n) + '/labels/' + encodeURIComponent(l), { method: 'DELETE' }).catch(() => null);
+    await p.gh(issue(n) + '/labels', { method: 'POST', body: JSON.stringify({ labels: ['cortex-fila', 'dono-agora'] }) });
+    await p.gh(issue(n) + '/comments', { method: 'POST', body: JSON.stringify({ body: 'Destravado por ' + quem + ' na Central: tentativas zeradas e tarefa na frente da fila.' }) }).catch(() => null);
+    return r(200, { ok: true, mensagem: 'Tarefa #' + n + ' destravada: foi para a frente da fila. O Cortex pega em até 15 minutos.' });
+  }
   if (b.acao === 'tentar') {
     const i = await p.gh(issue(n));
     const tirar = (i.labels || []).map((l) => l.name).filter((l) => l === 'cortex-travado' || l === 'cortex-rodando' || /^tentativa-\d+$/.test(l) || /^pista-\d+$/.test(l));
@@ -206,4 +224,4 @@ async function pausa(p, pausar, quem) {
   return r(200, { ok: true, pausada: false, mensagem: 'A fila voltou a rodar.' });
 }
 
-module.exports = { agir, socorro, pausa };
+module.exports = { ehPerguntaDeStatus, agir, socorro, pausa };

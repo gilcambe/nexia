@@ -115,6 +115,12 @@ export const CSS = `
 .kx-passos{border:1px solid #f8717166;background:#7f1d1d22;border-radius:12px;padding:10px 12px;white-space:normal;line-height:1.45}
 .kx-passos ol{margin:6px 0 8px;padding-left:20px;color:#dbe4ff}.kx-passos li{margin:2px 0}
 .kx-passos .kx-btn{white-space:normal}
+.kx-status-tudo{grid-column:1/-1}
+.kx-status-grade{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px}
+.kx-status-item{display:flex;flex-direction:column;gap:2px;align-items:flex-start;padding:10px 12px;border-radius:12px;border:1px solid;background:#ffffff08;color:var(--txt);cursor:pointer;text-align:left;font:inherit}
+.kx-status-item b{font-size:24px;font-weight:800;line-height:1.1}.kx-status-item span{font-size:12px;color:#c7d2f0}
+@media (max-width:1100px){.kx-status-grade{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:768px){.kx-status-grade{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .kx-passos.neutro{border-color:var(--linha);background:#ffffff08}
 /* 09/11 (dono): "a tela corta botões". Notebook com janela baixa: nada encolhe nem some, a área rola. */
 @media (min-width:769px) and (max-height:900px){

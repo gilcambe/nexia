@@ -22,9 +22,13 @@ export default function Pedir() {
   useEffect(() => { carregar(); const t = setInterval(carregar, 60000); return () => clearInterval(t); }, [carregar]);
   const mandar = async () => {
     const t = texto.trim();
-    if (t.length < 10) { setMsg("Escreva o pedido com pelo menos 10 letras."); return; }
+    if (t.length < 3) { setMsg("Escreva o seu pedido ou a sua pergunta."); return; }
     setOcupado(true);
-    try { const r = await agir({ acao: "pedir", texto: t }); setMsg(r.mensagem + " Ele aparece na lista ao lado."); setTexto(""); carregar(); } catch (e) { setMsg("Não deu certo: " + (e as Error).message); }
+    try {
+      const r = await agir({ acao: "pedir", texto: t }) as { mensagem: string; resposta?: boolean };
+      // Pergunta de status: a Central responde na hora (não vira tarefa).
+      setMsg(r.resposta ? r.mensagem : r.mensagem + " Ele aparece na lista ao lado."); setTexto(""); carregar();
+    } catch (e) { setMsg("Não deu certo: " + (e as Error).message); }
     setOcupado(false);
   };
   const lista = itens || [];

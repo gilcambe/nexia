@@ -349,7 +349,11 @@ function decidir({ issues, runs, agora = Date.now(), pistas = PISTAS, prs = [], 
     if (pista) pistasEmUso.add(pista);
   }
 
-  const peso = i => (nomes(i).includes(L.urgente) ? 2 : 0) + (nomes(i).includes(L.prioridade) ? 1 : 0);
+  // 09/11 (dono): "tem tarefas paradas há 1 dia". Com 78 issues cortex-urgente (partes herdam a pressa), o pedido
+  // novo do dono pela Central esperava atrás de todas. Agora: "Destravar" na Central (dono-agora) vem primeiro,
+  // depois o pedido do dono feito pela Central (texto "_Pedido de ...", sem ser parte), depois urgente e prioridade.
+  const doDono = i => !parteDe(i) && /_Pedido de [^_\n]+_/.test(String(i.body || ''));
+  const peso = i => (nomes(i).includes('dono-agora') ? 8 : 0) + (doDono(i) ? 4 : 0) + (nomes(i).includes(L.urgente) ? 2 : 0) + (nomes(i).includes(L.prioridade) ? 1 : 0);
   const fila = validas
     .filter(i => { const ls = nomes(i); return !ls.includes(L.rodando) && !ls.includes(L.feito) && !ls.includes(L.travado) && !ls.includes(L.dividido) && !ls.includes(L.semCota); })   // #803: sem cota hoje espera o dia virar
     // cortex-urgente (o dono pediu agora) passa na frente de tudo; depois cortex-prioridade; depois, por número.

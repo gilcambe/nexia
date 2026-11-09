@@ -124,3 +124,9 @@ test('KX11. PC sem sinal não aparece como "Desligado" e mostra o que fazer (PC2
   assert.ok(!/"Desligado"/.test(s));
   assert.ok(/Agendador de Tarefas/.test(s) && /NEXIA Agente/.test(s));
 });
+
+test('KX12. Início tem "Status de tudo" com paradas há mais de 1 dia e Destravar (dono, 09/11)', () => {
+  const s = fs.readFileSync(path.join(PASTA, 'StatusTudo.tsx'), 'utf8');
+  assert.ok(/acao: "destravar"/.test(s) && /Paradas há mais de 1 dia/.test(s) && /prontos de/.test(s));
+  assert.ok(/<StatusTudo /.test(fs.readFileSync(path.join(PASTA, 'Inicio.tsx'), 'utf8')));
+});
