@@ -36,10 +36,13 @@ function montar({ abertas = [], fechadas = [], prs = [], agora = Date.now() }) {
     .map(({ _peso, ...x }) => x);
 
   const esperandoVoce = [
-    ...prs.filter((p) => !p.draft && (/^claude\//.test((p.head && p.head.ref) || '') || nomes(p).includes('vez-do-dono') || /workflow/i.test(p.title || '')))
-      .map((p) => ({ tipo: 'pr', numero: p.number, titulo: String(p.title || '').slice(0, 120), link: p.html_url, quando: p.updated_at, motivo: 'Abra e toque em Merge (juntar)' })),
-    ...issues.filter((i) => nomes(i).includes('vez-do-dono'))
-      .map((i) => ({ tipo: 'issue', numero: i.number, titulo: String(i.title || '').slice(0, 120), link: i.html_url, quando: i.updated_at, motivo: 'Precisa de você' })),
+    // PR que o revisor recusou não vai para o dono (ele é leigo e não deve juntar código recusado).
+    ...prs.filter((p) => !p.draft && !nomes(p).includes('revisor-recusou') && (/^claude\//.test((p.head && p.head.ref) || '') || nomes(p).includes('vez-do-dono') || /workflow/i.test(p.title || '')))
+      .map((p) => ({ tipo: 'pr', numero: p.number, titulo: String(p.title || '').slice(0, 120), link: p.html_url, quando: p.updated_at, motivo: 'Abra e toque em Merge (juntar)',
+        passos: ['Clique em "Abrir para aprovar".', 'Desça a página até o fim.', 'Clique no botão verde "Merge pull request" e depois em "Confirm merge".', 'Pronto: em uns 20 minutos isso entra no ar sozinho.'] })),
+    ...issues.filter((i) => nomes(i).includes('vez-do-dono') || nomes(i).includes('esperando-dono'))
+      .map((i) => ({ tipo: 'issue', numero: i.number, titulo: String(i.title || '').slice(0, 120), link: i.html_url, quando: i.updated_at, motivo: 'Precisa de você',
+        passos: ['Clique em "Abrir".', 'Leia a última mensagem da Kernex no fim da página: ela diz o que falta.', 'Responda ali mesmo, em português, e clique em "Comment".'] })),
   ];
 
   const prontos = fechadas

@@ -17,11 +17,14 @@ import Relatorios from "./Relatorios";
 import Homologacao from "./Homologacao";
 import Config from "./Config";
 import Busca from "./Busca";
+import Pedir from "./Pedir";
+import Clientes from "./Clientes";
+import { montarAcoes } from "./donos";
 
 // #3219: casca da Central nova, no jeito do "Painel Executivo" que o dono mandou.
 // PC: menu lateral com as 10 telas. Celular: 5 telas embaixo + gaveta (☰) com todas.
-const NO_CELULAR: TelaId[] = ["inicio", "tarefas", "ia", "projetos", "config"];
-export const ICONE_TELA: Record<TelaId, string> = { inicio: "casa", projetos: "pasta", maquinas: "servidor", ia: "ia", tarefas: "lista", arquivos: "arquivo", publicacoes: "foguete", homologacao: "check", cofre: "cadeado", relatorios: "grafico", config: "engrenagem" };
+const NO_CELULAR: TelaId[] = ["inicio", "pedir", "tarefas", "projetos", "maquinas"];
+export const ICONE_TELA: Record<TelaId, string> = { inicio: "casa", pedir: "enviar", clientes: "troca", projetos: "pasta", maquinas: "servidor", ia: "ia", tarefas: "lista", arquivos: "arquivo", publicacoes: "foguete", homologacao: "check", cofre: "cadeado", relatorios: "grafico", config: "engrenagem" };
 const COR_SINAL = { verde: "#22c55e", amarelo: "#f59e0b", vermelho: "#ef4444" };
 
 function EmBreve({ nome }: { nome: string }) {
@@ -39,13 +42,19 @@ function EmBreve({ nome }: { nome: string }) {
 
 // Dados que o topo e o Início usam juntos (lidos 1 vez por minuto).
 function usePainel(): Painel {
-  const { ias } = usePedidos();
+  const { ias, projetos } = usePedidos();
   const { buscar } = useCentral();
-  const [p, setP] = useState<Painel>({ ias: null, saude: null, erro: null });
+  const [p, setP] = useState<Painel>({ ias: null, saude: null, erro: null, dono: null });
   const ler = useCallback(async () => {
-    const [a, c] = await Promise.allSettled([ias<NonNullable<Painel["ias"]>>(), buscar("saude")]);
+    const [a, c, o, m, pr] = await Promise.allSettled([ias<NonNullable<Painel["ias"]>>(), buscar("saude"), buscar("oQueFalta"), buscar("maquinas"), projetos<{ projetos: { id: string; nome?: string; proposto?: boolean }[] }>()]);
     setP((v) => {
       const n: Painel = { ...v, erro: null };
+      // 09/11: "Precisa de você" = só o que o dono pode fazer, cada um com passo a passo (donos.ts).
+      n.dono = montarAcoes({
+        esperando: o.status === "fulfilled" && o.value ? ((o.value as unknown as { esperandoVoce?: [] }).esperandoVoce || []) : [],
+        maquinas: m.status === "fulfilled" && m.value ? (m.value.maquinas || []) : [],
+        projetos: pr.status === "fulfilled" ? pr.value.projetos || [] : [],
+      });
       if (a.status === "fulfilled") n.ias = a.value; else n.erro = (a.reason as Error).message;
       if (c.status === "fulfilled" && c.value && Array.isArray(c.value.produtos)) {
         const medidos = c.value.produtos.filter((x: { ok: boolean | null }) => x.ok !== null);
@@ -53,7 +62,7 @@ function usePainel(): Painel {
       }
       return n;
     });
-  }, [ias, buscar]);
+  }, [ias, buscar, projetos]);
   useEffect(() => { ler(); const t = setInterval(ler, 60000); return () => clearInterval(t); }, [ler]);
   return { ...p, recarregar: ler };
 }
@@ -80,9 +89,9 @@ export default function Casca() {
   }, []);
   const atual = TELAS.find((t) => t.id === tela) || TELAS[0];
   const c = painel.ias?.contagens || {};
-  const sinal = corSemaforo({ precisa: c.precisaVoce || 0, travadas: c.travada || 0, servicosFora: painel.saude?.fora || 0 });
+  const sinal = corSemaforo({ precisa: painel.dono?.length || 0, travadas: c.travada || 0, servicosFora: painel.saude?.fora || 0 });
   const corSinal = COR_SINAL[sinal.cor];
-  const precisa = c.precisaVoce || 0;
+  const precisa = painel.dono?.length || 0;
   const corSaude = !painel.saude ? "#64748b" : painel.saude.fora ? "#ef4444" : "#22c55e";
   const nome = (user?.displayName || "").split(" ")[0] || "";
   const abrirBusca = () => { setBuscando(true); setTimeout(() => document.getElementById("kx-busca")?.focus(), 0); };
@@ -98,6 +107,7 @@ export default function Casca() {
         <span className="kx-so-cel" style={{ alignItems: "center", gap: 8, flex: 1 }}><LogoK tam={28} /><b style={{ letterSpacing: ".06em" }}>KERNEX</b></span>
         <Busca ir={ir} fechar={() => setBuscando(false)} />
         <button type="button" className="kx-sino kx-so-cel" aria-label="Buscar" onClick={abrirBusca}><Icone nome="busca" /></button>
+        <button type="button" className="kx-btn forte kx-so-pc-flex" onClick={() => ir("pedir")} data-testid="kx-pedir-topo"><Icone nome="enviar" tam={16} />Pedir ao Cortex</button>
         <button type="button" className="kx-status" style={{ borderColor: corSinal + "99", background: corSinal + "1a" }} onClick={() => ir(precisa ? "tarefas" : "inicio")} data-testid="kx-status-topo"
           title={painel.ias?.resumo || ""}>
           <span className="kx-bola" style={{ background: painel.ias ? corSinal : "#64748b", width: 22, height: 22, display: "grid", placeItems: "center" }}>
@@ -131,8 +141,8 @@ export default function Casca() {
       </nav>
       <main className="kx-area">
         {tela !== "inicio" && <p className="kx-serve" data-testid="kx-serve"><b>{atual.nome}:</b> {atual.serve}</p>}
-        {tela === "inicio" ? <Inicio irPara={ir} painel={painel} nome={nome} /> : tela === "tarefas" ? <Tarefas painel={painel} /> : tela === "ia" ? <IaCortex /> : tela === "publicacoes" ? <Publicacoes />
-          : tela === "projetos" ? <Projetos /> : tela === "maquinas" ? <Maquinas /> : tela === "cofre" ? <Cofre /> : tela === "relatorios" ? <Relatorios painel={painel} /> : tela === "homologacao" ? <Homologacao /> : tela === "config" ? <Config /> : <EmBreve nome={atual.nome} />}
+        {tela === "inicio" ? <Inicio irPara={ir} painel={painel} nome={nome} /> : tela === "tarefas" ? <Tarefas painel={painel} ir={ir} /> : tela === "ia" ? <IaCortex /> : tela === "publicacoes" ? <Publicacoes />
+          : tela === "projetos" ? <Projetos /> : tela === "maquinas" ? <Maquinas /> : tela === "cofre" ? <Cofre /> : tela === "relatorios" ? <Relatorios painel={painel} /> : tela === "homologacao" ? <Homologacao /> : tela === "config" ? <Config /> : tela === "pedir" ? <Pedir /> : tela === "clientes" ? <Clientes /> : <EmBreve nome={atual.nome} />}
       </main>
     </div>
   );

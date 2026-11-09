@@ -1,7 +1,9 @@
 // Central Kernex nova (#3219): regras puras (testadas em tests/unit/central-kernex.test.js).
 export const TELAS = [
   { id: "inicio", nome: "Início", icone: "🏠", serve: "Ver em 5 segundos se está tudo certo e o que precisa de você." },
+  { id: "pedir", nome: "Pedir", icone: "✍️", serve: "Escreva o que você quer; acompanhe cada pedido até ficar pronto." },
   { id: "projetos", nome: "Projetos", icone: "📁", serve: "Quanto falta em cada projeto, contado só com prova." },
+  { id: "clientes", nome: "Clientes e modelos", icone: "🧩", serve: "Clonar um cliente (tenant) e criar sites e sistemas a partir dos modelos base." },
   { id: "maquinas", nome: "Máquinas", icone: "🖥️", serve: "PC 1 e PC 2: ligados, ocupados e o que estão fazendo." },
   { id: "ia", nome: "IA & Cortex", icone: "🤖", serve: "O que cada IA está fazendo agora e quanto de cota resta." },
   { id: "tarefas", nome: "Tarefas", icone: "✅", serve: "Cada tarefa: quem pegou, onde parou e por quê." },
@@ -76,3 +78,6 @@ export function porDiaEIa(itens: { quando: string; ia?: string | null }[], agora
 
 const semAcento = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
 export const buscarTelas = (q: string) => (q.trim() ? TELAS.filter((t) => semAcento(t.nome).includes(semAcento(q.trim()))) : []);
+
+// O "precisa de você" de verdade é a lista com passo a passo (donos.ts); o número do resumo do servidor sai da frase.
+export const semPrecisa = (t: string) => String(t || "").replace(/, \d+ precisa(m)? de você/, "");

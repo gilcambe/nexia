@@ -2,14 +2,16 @@ import { useCallback, useEffect, useState } from "react";
 import { usePedidos } from "../../meu-cortex/api";
 import { useCentral, type Maquina } from "../api";
 import Bloco from "./Bloco";
+import PrecisaDeVoce from "./PrecisaDeVoce";
+import type { Acao } from "./donos";
 import Icone, { LogoK } from "./Icone";
-import { COR_ESTADO, corSemaforo, haQuanto, hora, type TelaId } from "./regras";
+import { COR_ESTADO, corSemaforo, haQuanto, hora, semPrecisa, type TelaId } from "./regras";
 
 // #3219 Início no jeito do "Painel Executivo" que o dono mandou: saudação, 4 números grandes coloridos,
 // atalhos para os módulos, controles com 1 toque, assistente para pedir ao Cortex e os painéis do dia.
 // Só número com fonte real; sem fonte, "sem dados" ou "—".
 export interface Ias { ias: { nome: string; situacao: string; ativa: boolean; texto: string; tarefa?: { numero: number; titulo: string } | null; desde?: string | null }[]; resumo: string; contagens: Record<string, number>; conferidoEm: string; origem: string }
-export interface Painel { ias: Ias | null; saude: { fora: number; total: number; em: string } | null; erro: string | null; recarregar?: () => void }
+export interface Painel { ias: Ias | null; saude: { fora: number; total: number; em: string } | null; erro: string | null; dono?: Acao[] | null; recarregar?: () => void }
 interface Item { numero: number; titulo: string; texto?: string; icone?: string; cor?: string; motivo?: string; quando: string; ia?: string | null; link?: string }
 interface Projeto { id: string; nome: string; definido: boolean; pct: number; faltam: unknown[] }
 
@@ -35,7 +37,6 @@ export default function Inicio({ irPara, painel, nome }: { irPara: (t: TelaId) =
   const { listar, projetos, agir } = usePedidos();
   const { buscar } = useCentral();
   const [maq, setMaq] = useState<{ ligado: boolean; maquinas: Maquina[]; em: string } | null>(null);
-  const [precisa, setPrecisa] = useState<{ itens: Item[]; em: string } | null>(null);
   const [feitas, setFeitas] = useState<{ itens: Item[]; em: string } | null>(null);
   const [proj, setProj] = useState<{ projetos: Projeto[]; conferidoEm: string; origem: string } | null>(null);
   const [aviso, setAviso] = useState<string | null>(null);
@@ -45,10 +46,9 @@ export default function Inicio({ irPara, painel, nome }: { irPara: (t: TelaId) =
 
   const carregar = useCallback(async () => {
     const agora = new Date().toISOString();
-    const [m, p, f, pr, me] = await Promise.allSettled([buscar("maquinas"), listar("", "precisa", 1), listar("", "concluidas", 1), projetos<{ projetos: Projeto[]; conferidoEm: string; origem: string }>(), listar("", "meus", 1)]);
+    const [m, f, pr, me] = await Promise.allSettled([buscar("maquinas"), listar("", "concluidas", 1), projetos<{ projetos: Projeto[]; conferidoEm: string; origem: string }>(), listar("", "meus", 1)]);
     if (me.status === "fulfilled") setMeus({ itens: (me.value.itens as unknown as Item[]).slice(0, 5), em: agora });
     if (m.status === "fulfilled" && m.value) setMaq({ ligado: !!m.value.ligado, maquinas: m.value.maquinas || [], em: agora });
-    if (p.status === "fulfilled") setPrecisa({ itens: (p.value.itens as unknown as Item[]).slice(0, 4), em: agora });
     if (f.status === "fulfilled") setFeitas({ itens: (f.value.itens as unknown as Item[]).slice(0, 5), em: agora });
     if (pr.status === "fulfilled") setProj(pr.value);
   }, [buscar, listar, projetos]);
@@ -75,12 +75,13 @@ export default function Inicio({ irPara, painel, nome }: { irPara: (t: TelaId) =
   const ver = (t: TelaId, texto?: string) => ({ texto, ir: () => irPara(t) });
   const ias = painel.ias;
   const c = ias?.contagens || {};
-  const sinal = corSemaforo({ precisa: c.precisaVoce || 0, travadas: c.travada || 0, servicosFora: painel.saude?.fora || 0 });
+  const nDono = painel.dono?.length || 0;
+  const sinal = corSemaforo({ precisa: nDono, travadas: c.travada || 0, servicosFora: painel.saude?.fora || 0 });
   const online = (maq?.maquinas || []).filter((x) => x.online).length;
   const temMaq = !!(maq && maq.ligado && maq.maquinas.length);
   const saude = painel.saude;
   const pctNoAr = saude && saude.total ? Math.round(((saude.total - saude.fora) / saude.total) * 100) : 0;
-  const fraseHeroi = !ias ? "Conferindo como está tudo…" : sinal.cor === "verde" ? "Sua Central está funcionando: nada travado e nada esperando você." : sinal.cor === "amarelo" ? `Atenção: ${c.travada} tarefa(s) travada(s). As IAs podem tentar de novo.` : `${c.precisaVoce || 0} coisa(s) precisam de você${saude && saude.fora ? ` e ${saude.fora} serviço(s) estão fora do ar` : ""}.`;
+  const fraseHeroi = !ias ? "Conferindo como está tudo…" : sinal.cor === "verde" ? "Sua Central está funcionando: nada travado e nada esperando você." : sinal.cor === "amarelo" ? `Atenção: ${c.travada} tarefa(s) travada(s). As IAs podem tentar de novo.` : `${nDono} coisa(s) precisam de você${saude && saude.fora ? ` e ${saude.fora} serviço(s) estão fora do ar` : ""}.`;
   const iasLista = (ias?.ias || []).slice().sort((a, b) => Number(b.ativa) - Number(a.ativa)).slice(0, 5);
 
   return (
@@ -90,7 +91,7 @@ export default function Inicio({ irPara, painel, nome }: { irPara: (t: TelaId) =
         <div style={{ position: "relative", zIndex: 1, minWidth: 0 }}>
           <h1>Olá{nome ? ", " + nome : ""}!</h1>
           <p data-testid="kx-resumo">{fraseHeroi}</p>
-          {ias && <span className="kx-heroi-faixa">{ias.resumo}</span>}
+          {ias && <span className="kx-heroi-faixa">{semPrecisa(ias.resumo)}</span>}
         </div>
         <div className="kx-controles" data-testid="kx-controles">
           <button type="button" className="kx-btn roxo" disabled={!!ocupado} onClick={() => fazer("socorro", { acao: "socorro", jules: true })} title="Passa as tarefas travadas para as IAs grátis e o Jules"><Icone nome="raio" tam={16} />Ativar ajuda das IAs</button>
@@ -178,17 +179,9 @@ export default function Inicio({ irPara, painel, nome }: { irPara: (t: TelaId) =
         </ul>
       </Bloco>
 
-      <Bloco className="kx-span4" titulo="Precisa de você" icone="sino" corIcone="#f87171" ver={ver("tarefas")}
-        ajuda="Só o que depende de você. As outras travadas as IAs resolvem." fonte={precisa ? "issues abertas que só o dono resolve" : null} atualizadoEm={precisa?.em || null}>
-        {precisa && precisa.itens.length === 0 ? <p style={{ display: "flex", gap: 8, alignItems: "center" }}><Icone nome="check" cor="#22c55e" />Nada esperando você.</p> : (
-          <div data-testid="kx-precisa">{(precisa?.itens || []).map((t) => (
-            <div key={t.numero} className="kx-alerta">
-              <Icone nome="alerta" cor="#f87171" />
-              <span className="kx-titulo"><b style={{ display: "block", overflow: "hidden", textOverflow: "ellipsis" }}>#{t.numero} {t.titulo}</b><span className="kx-mut">{t.motivo || t.texto || ""} · {haQuanto(t.quando)}</span></span>
-              <button type="button" className="kx-btn vermelho" style={{ minHeight: 32 }} onClick={() => irPara("tarefas")}>Resolver</button>
-            </div>
-          ))}</div>
-        )}
+      <Bloco className="kx-span4" titulo="Precisa de você" icone="sino" corIcone="#f87171" ver={ver("tarefas", "Ver tudo")}
+        ajuda="Só o que VOCÊ pode fazer, com o passo a passo. As tarefas travadas as IAs resolvem sozinhas." fonte={painel.dono ? "PRs para aprovar, PCs sem sinal e roteiros para aprovar" : null} atualizadoEm={painel.ias?.conferidoEm || null}>
+        <PrecisaDeVoce acoes={painel.dono || null} ir={irPara} max={2} />
       </Bloco>
 
       <Bloco className="kx-span4" titulo="Atividade recente" icone="relogio" corIcone="#60a5fa" ver={ver("relatorios", "Ver tudo")}
