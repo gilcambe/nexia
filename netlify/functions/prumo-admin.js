@@ -1,13 +1,15 @@
 'use strict';
 
 // NEXIA Prumo Admin — painel de administração do Prumo (restrito a master).
-// Verifica se o usuário autenticado via Bearer token possui a role "master".
-// Caso contrário, retorna 403 Forbidden.
+// Segue a estrutura padrão (semelhante a agenda.js), verificando a role "master"
+// e retornando 403 se o usuário não for master.
 
 function createHandler(deps = {}) {
   const getMw = deps.getMw || (() => require('./middleware'));
+  const now = deps.now || (() => Date.now());
 
   return async (event) => {
+    const method = String(event.httpMethod || '').toUpperCase();
     const headers = event.headers || {};
     const cors = {
       'Content-Type': 'application/json',
@@ -22,16 +24,26 @@ function createHandler(deps = {}) {
       body: JSON.stringify(body),
     });
 
-    const method = String(event.httpMethod || '').toUpperCase();
     if (method === 'OPTIONS') return { statusCode: 204, headers: cors, body: '' };
     if (method !== 'GET' && method !== 'POST') return res(405, { error: 'Method Not Allowed' });
 
+    let body = {};
+    if (method === 'POST' && event.body) {
+      try {
+        body = JSON.parse(event.body);
+      } catch {
+        return res(400, { error: 'Pedido inválido.' });
+      }
+    }
+    if (!body || typeof body !== 'object' || Array.isArray(body)) body = {};
+
+    // Verifica autenticação e role "master" obrigatoriamente
     const auth = headers.authorization ? await getMw().verifyBearerToken(event) : { ok: false };
     if (!auth.ok || auth.role !== 'master') {
       return res(403, { error: 'Acesso restrito a administradores master.' });
     }
 
-    return res(200, { ok: true, message: 'Painel Prumo Admin.' });
+    return res(200, { ok: true, message: 'Painel Prumo Admin.', timestamp: now() });
   };
 }
 
