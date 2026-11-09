@@ -41,8 +41,10 @@ function estadoTarefa(issue, agora = Date.now(), cfg = {}) {
   const minInativo = Math.floor(msInativo / 60000);
   const paradoPorTempo = minInativo >= minutosParada;
 
-  // Determinar IA responsável
+  // 1) Rotatividade de reserva usando rótulos reserva‑volta‑N (até 3 voltas, alternando provedores)
+  // 5) Atualizar campo ia para refletir a última IA que tentou (reserva ou IAs grátis)
   let ia = null;
+  const reservaVoltaLabel = ls.find((l) => /^reserva-volta-[1-3]$/.test(l));
   if (has('cortex-rodando')) {
     ia = 'Cortex';
   } else if (has('vez-do-claude')) {
@@ -53,6 +55,10 @@ function estadoTarefa(issue, agora = Date.now(), cfg = {}) {
     ls.some((l) => l.startsWith('jules-'))
   ) {
     ia = 'Jules';
+  } else if (reservaVoltaLabel) {
+    // reserva-volta-1, reserva-volta-2, reserva-volta-3
+    const numVolta = reservaVoltaLabel.replace('reserva-volta-', '');
+    ia = `Reserva Volta ${numVolta}`;
   } else if (
     has('reserva-tentou') ||
     has('reserva-volta') ||
@@ -61,12 +67,25 @@ function estadoTarefa(issue, agora = Date.now(), cfg = {}) {
     ia = 'IAs grátis';
   }
 
+  // 2) Reconhecer verdadeiros mexidos em workflow apenas quando arquivos .github/workflows/*.yml são alterados e exibir estado “Aguardando permissão de workflow”
+  // 3) Quando houver PR aberto citado, mostrar estado “aguardando-ia” com texto “Aguardando revisão do PR #N”
+  const arquivosAlterados = issue.pull_request_files || issue.files || [];
+  const workflowAlterado = arquivosAlterados.some((f) => {
+    const caminho = typeof f === 'string' ? f : f.filename || f.path || '';
+    return caminho.startsWith('.github/workflows/') && caminho.endsWith('.yml');
+  });
+
+  const prAbertoCitado = issue.pull_request_number || issue.pr_number || (issue.pull_request && issue.pull_request.number) || null;
+
   // Determinar se tem label de aguardando-ia
   const ehAguardandoIa =
+    workflowAlterado ||
+    Boolean(prAbertoCitado) ||
     has('jules-enviado') ||
     has('cortex-jules') ||
     has('reserva-tentou') ||
     has('reserva-volta') ||
+    Boolean(reservaVoltaLabel) ||
     has('vez-do-claude');
 
   // Determinar o estado (um dos 6: fila, andamento, aguardando-ia, travada, concluida, falhou)
@@ -101,7 +120,13 @@ function estadoTarefa(issue, agora = Date.now(), cfg = {}) {
     }
   }
 
-  const { texto, cor, icone } = ESTADOS[estado];
+  const { texto: textoBase, cor, icone } = ESTADOS[estado];
+  let texto = textoBase;
+  if (workflowAlterado) {
+    texto = 'Aguardando permissão de workflow';
+  } else if (prAbertoCitado) {
+    texto = `Aguardando revisão do PR #${prAbertoCitado}`;
+  }
 
   // Motivo
   let motivo = motivoDe(issue).texto;
@@ -109,13 +134,15 @@ function estadoTarefa(issue, agora = Date.now(), cfg = {}) {
     motivo = `Sem atividade há ${minInativo} min. A IA pode ter parado.`;
   }
 
-  // Precisa do dono / você
+  // 4) Se tarefa tem rótulo precisa‑de‑voce, definir precisaVoce=true e excluir das contagens de travadas
+  const precisaVoceLabel = has('precisa-de-voce') || has('precisa_de_voce');
   const precisaVoce =
-    estado === 'travada' &&
-    (t >= maxTentativas ||
-      has('vez-do-dono') ||
-      has('esperando-dono') ||
-      has('so-humano'));
+    precisaVoceLabel ||
+    (estado === 'travada' &&
+      (t >= maxTentativas ||
+        has('vez-do-dono') ||
+        has('esperando-dono') ||
+        has('so-humano')));
 
   return {
     estado,
