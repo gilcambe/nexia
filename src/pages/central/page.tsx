@@ -63,8 +63,11 @@ export default function CentralPage() {
   // Alerta aberto: undefined = fechado; null = lista de todos; número = um alerta.
   const [alerta, setAlerta] = useState<number | null | undefined>(undefined);
   const [versaoNova, setVersaoNova] = useState(false);
-  // Decidido 1 vez ao abrir: trocar de aba na antiga (muda o #) não pode pular para a nova no meio do uso.
-  const [antiga] = useState(() => new URLSearchParams(location.search).get("antiga") === "1" || location.hash.length > 1);
+  // Decidido 1 vez ao abrir. Só ?antiga=1 (ou o link de Conectar IAs, #sistema) abre a antiga.
+  // 09/11: o dono abria /central#inicio (o # que a antiga grava no endereço) e caía sempre na antiga.
+  const [antiga] = useState(() => new URLSearchParams(location.search).get("antiga") === "1" || location.hash === "#sistema");
+  // Na nova, tira o # velho do endereço para o favorito do navegador ficar /central.
+  useEffect(() => { if (!antiga && location.hash) history.replaceState(null, "", location.pathname + location.search); }, [antiga]);
   const [claro, setClaro] = useState<boolean>(() => {
     try {
       const v = localStorage.getItem("central-tema");
@@ -172,7 +175,7 @@ export default function CentralPage() {
   );
 
   // #3219: a Central nova é o padrão em /central (o dono pediu, 09/11: "no PC não abre a nova").
-  // A antiga continua em /central?antiga=1 e em qualquer link com # (ex.: /central#sistema, Conectar IAs).
+  // A antiga continua em /central?antiga=1 (e /central#sistema, Conectar IAs). Qualquer outro # abre a nova.
   if (!antiga) {
     if (user) return <CascaKernex />;
     return (

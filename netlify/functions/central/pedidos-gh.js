@@ -55,6 +55,8 @@ function criarPedidos(env = process.env, fetchFn = fetch) {
     else if (estado === 'feitos' || estado === 'concluidas') filtro += ' is:closed';
     else if (estado === 'andamento') filtro += ' is:open label:cortex-rodando';
     else if (estado === 'precisa') filtro += ' is:open';
+    // Meus pedidos: os que o dono mandou pela Central ("Pedir ao Cortex" grava "Pedido de ..." no texto).
+    else if (estado === 'meus') filtro += ' in:body "Pedido de"';
 
     const termo = frase(q);
     if (termo) filtro += ' ' + termo;

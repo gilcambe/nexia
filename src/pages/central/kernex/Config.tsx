@@ -24,7 +24,7 @@ export default function Config() {
         <div style={{ display: "flex", gap: 12, alignItems: "center" }}><Ico nome="sino" fundo="linear-gradient(135deg,#ef4444,#b91c1c)" /><a className="kx-btn forte" href="/cortex">Ligar avisos</a></div>
       </Bloco>
       <Bloco icone="ia" titulo="IAs conectadas" ajuda="Colocar ou trocar as chaves das IAs grátis." fonte="Conectar IAs" atualizadoEm={null}>
-        <div style={{ display: "flex", gap: 12, alignItems: "center" }}><Ico nome="ia" fundo="linear-gradient(135deg,#22c55e,#15803d)" /><a className="kx-btn" href="/central#sistema">Abrir Conectar IAs</a></div>
+        <div style={{ display: "flex", gap: 12, alignItems: "center" }}><Ico nome="ia" fundo="linear-gradient(135deg,#22c55e,#15803d)" /><a className="kx-btn" href="/central?antiga=1#sistema">Abrir Conectar IAs</a></div>
       </Bloco>
       <Bloco icone="foguete" titulo="Central antiga" ajuda="A Central de antes continua funcionando enquanto esta é a nova." fonte="links fixos" atualizadoEm={null}>
         <div style={{ display: "flex", gap: 12, alignItems: "center" }}><Ico nome="casa" fundo="linear-gradient(135deg,#334155,#1e293b)" /><a className="kx-btn" href="/central?antiga=1">Abrir a Central antiga</a></div>

@@ -91,3 +91,16 @@ test('KX9. cofre devolve só nome e data', async () => {
   const r = await cofre(async () => ({ secrets: [{ name: 'A', updated_at: '2026-01-01T00:00:00Z', valor: 'xx', visibility: 'all' }] }));
   assert.deepEqual(r.segredos, [{ name: 'A', updated_at: '2026-01-01T00:00:00Z' }]);
 });
+
+test('KX9. /central com # velho (ex.: #inicio) abre a NOVA; antiga só com ?antiga=1 ou #sistema (bug do dono 09/11)', () => {
+  const s = fs.readFileSync(path.join(__dirname, '../../src/pages/central/page.tsx'), 'utf8');
+  const linha = s.split('\n').find((l) => l.includes('const [antiga]'));
+  assert.ok(linha, 'achou a regra da antiga');
+  assert.ok(!/location\.hash\.length/.test(linha), 'qualquer # não pode abrir a antiga');
+  const antiga = (search, hash) => new Function('location', 'URLSearchParams', 'return ' + linha.match(/useState\(\(\) => (.*)\);/)[1])({ search, hash }, URLSearchParams);
+  assert.equal(antiga('', '#inicio'), false);
+  assert.equal(antiga('', ''), false);
+  assert.equal(antiga('?nova=1', '#cortex'), false);
+  assert.equal(antiga('?antiga=1', '#inicio'), true);
+  assert.equal(antiga('', '#sistema'), true);
+});

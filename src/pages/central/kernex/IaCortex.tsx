@@ -62,7 +62,7 @@ export default function IaCortex() {
       <Bloco icone="relogio" corIcone="#fbbf24" titulo="Cotas" ajuda="Quanto cada IA ainda pode usar hoje. Só aparece o que o provedor informa." fonte={d ? "estado das vagas em Conectar IAs" : null} atualizadoEm={d?.conferidoEm || null}>
         <ul className="kx-lista">{(d?.ias || []).filter((x) => x.nome.startsWith("Vaga")).map((x) => <li key={x.nome}><b>{x.nome}</b><span className="kx-mut">{textoCota(x.situacao)}</span></li>)}</ul>
         <p className="kx-mut" style={{ marginTop: 8 }}>Tokens da Claude: não disponível (sem fonte real).</p>
-        <a className="kx-btn" href="/central#sistema">Conectar IAs</a>
+        <a className="kx-btn" href="/central?antiga=1#sistema">Conectar IAs</a>
       </Bloco>
     </div>
     </div>

@@ -31,3 +31,11 @@ test('PED7. lista e detalhe usam a busca do GitHub e juntam os PRs', async () =>
   assert.strictEqual(d.conversa.length, 2); assert.strictEqual(d.conversa[1].texto, 'ok');
   assert.strictEqual(d.prs[0].estado, 'juntado');
 });
+
+test('PED8. "Meus pedidos" filtra os pedidos mandados pela Central (dono, 09/11)', async () => {
+  const urls = [];
+  const fetchFn = async (u) => { urls.push(u); return { ok: true, status: 200, json: async () => ({ items: [] }) }; };
+  const p = criarPedidos({ NEXIA_JOBS_TOKEN: 't' }, fetchFn);
+  await p.lista({ estado: 'meus' });
+  assert.ok(decodeURIComponent(urls[0]).includes('in:body "Pedido de"'));
+});
