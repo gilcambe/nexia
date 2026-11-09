@@ -69,6 +69,7 @@ function createHandler(deps = {}) {
         if (qs.projetos) return res(200, await require('./central/projetos').carregar(p.gh, require('./central/pedidos-gh').REPO));
         if (qs.cofre) return res(200, await cofre(p.gh));
         if (qs.prs) return res(200, await prsAbertos(p.gh));
+        if (qs.homologacao) return res(200, await require('./central/homologacao').carregar(p.gh));   // #3269
         if (qs.ias) return res(200, await (deps.iasAgora || iasAgoraComResumo)(p.gh));
         return res(200, await p.lista({ q: qs.q, estado: qs.estado, pagina: qs.pagina }));
       }
@@ -80,6 +81,7 @@ function createHandler(deps = {}) {
         const [status, corpo] = (await require('./central/cortex-avisos').acoesAvisos(b, getDb())) || [400, { error: 'Ação desconhecida.' }];
         return res(status, corpo);
       }
+      if (b.acao === 'homologar') return res(200, await require('./central/homologacao').rodar(p.gh));   // #3269 botão Rodar tudo
       const x = await agir(p, b, auth.email || 'dono');
       return res(x.status, x.corpo);
     } catch (e) {
