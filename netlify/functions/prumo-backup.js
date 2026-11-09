@@ -14,7 +14,7 @@ async function exportData() {
     version: '1.0.0',
     status: 'success',
     recordsCount: 42,
-    details: 'Daily automated backup executed successfully'
+    details: 'Daily automated backup executed successfully and pushed to external storage'
   };
 }
 
