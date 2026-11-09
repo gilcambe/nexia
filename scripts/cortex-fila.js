@@ -41,7 +41,7 @@ function precisaDividir(i, tamanhos = {}) {
   const ls = nomes(i);
   if (ls.includes(L.parte) || ls.includes(L.dividido) || ls.includes(L.semDivisao)) return false;
   const corpo = String(i.body || '');
-  // Cópia exata ("Copie EXATAMENTE") é gravada direto, sem IA: dividir apagaria o código do pedido.
+  // Cópia exata ("Copie EXATAMENTE") is gravada direto, sem IA: dividir apagaria o código do pedido.
   if (require('./cortex-literal-direto').arquivosDiretos(i).length) return false;
   const arquivos = new Set(corpo.match(/[\w./-]+\.(?:js|ts|tsx|jsx|css|html|json|md|yml)\b/g) || []);
   return corpo.length > MAX_CORPO || arquivos.size > MAX_ARQUIVOS || plano.classificar({ corpo, tamanhos }).tamanho === 'grande';
@@ -317,8 +317,41 @@ function decidir({ issues, runs, agora = Date.now(), pistas = PISTAS, prs = [], 
   const pistasEmUso = new Set();
   let ativas = 0;
 
+  // Mapa de datas de criação das tarefas-mãe (para partes sem data própria clara ou para cálculo de urgência)
+  const mapCriacaoPai = new Map();
+  for (const i of issues) {
+    const p = parteDe(i);
+    if (p) {
+      // Se a parte veio de uma issue mãe, podemos usar a data da mãe se disponível, mas aqui issues traz todas.
+      // Vamos indexar issues por number para consulta rápida.
+    }
+  }
+  const issuesPorNumero = new Map(issues.map(i => [i.number, i]));
+
+  // Lógica de "urgente" vence sozinho após 48h (limite de 20 por ciclo)
+  const URGENTE_EXPIRACAO_MS = 48 * 3600 * 1000;
+  const MAX_URGENTE_VENCE = 20;
+  let urgentesVencidasCount = 0;
+
   for (const i of validas) {
     const ls = nomes(i);
+    if (ls.includes(L.urgente) && !ls.includes(L.rodando)) {
+      // Determinar data de criação
+      let dataCriacao = i.created_at;
+      const p = parteDe(i);
+      if (p && issuesPorNumero.has(p.pai)) {
+        const mae = issuesPorNumero.get(p.pai);
+        if (mae && mae.created_at) dataCriacao = mae.created_at;
+      }
+      if (dataCriacao && (agora - new Date(dataCriacao).getTime() >= URGENTE_EXPIRACAO_MS)) {
+        if (urgentesVencidasCount < MAX_URGENTE_VENCE) {
+          acoes.push({ tipo: 'urgente-vence', numero: i.number });
+          urgentesVencidasCount++;
+          continue;
+        }
+      }
+    }
+
     // #1016: tarefa ainda aberta com cortex-feito (ex.: #800) fecha como concluída, sem pista nem "rodando".
     if (ls.includes(L.feito) && i.state !== 'closed') { acoes.push({ tipo: 'fechar-feito', numero: i.number, corpo: String(i.body || '') }); continue; }
     if (ls.includes(L.travado)) continue;
@@ -370,7 +403,10 @@ function decidir({ issues, runs, agora = Date.now(), pistas = PISTAS, prs = [], 
   };
   const rodando = validas.filter(i => nomes(i).includes(L.rodando));
   for (const i of fila) {
-    // Parte grande do plano vai para o Jules (cloudflare/jules-auto.js). Se ele não aceitar em 3 h (limite do dia), volta ao Cortex.
+    // Se a issue foi marcada para urgente-vence neste ciclo, não despacha agora (aguarda o próximo ciclo após rotular)
+    if (acoes.some(a => a.tipo === 'urgente-vence' && a.numero === i.number)) continue;
+
+    // Parte grande do plano vai para o Jules (cloudflare/jules-auto.js). Se he não aceitar em 3 h (limite do dia), volta ao Cortex.
     if (nomes(i).includes(L.jules)) {
       if (!nomes(i).includes('jules-enviado') && !mexeEmWorkflow(i) && minutos(agora, i.updated_at) > plano.JULES_DESISTE_MIN) acoes.push({ tipo: 'jules-volta', numero: i.number });
       continue;
@@ -522,7 +558,11 @@ async function executar(token, acao, dividir) {
     console.log(`#${n}: a rodada falhou, mas os arquivos do plano já foram entregues; concluo em vez de repetir.`);
     return executar(token, { tipo: 'concluir', numero: n, run: acao.run, corpo: acao.corpo, titulo: acao.titulo, desde: acao.desde }, dividir);
   }
-  if (acao.tipo === 'dividir') {
+  if (acao.tipo === 'urgente-vence') {
+    await delLabel(L.urgente).catch(() => null);
+    await addLabel(L.prioridade);
+    await comentar('Urgente há mais de 48 h: virou prioridade para os pedidos novos do dono passarem na frente.');
+  } else if (acao.tipo === 'dividir') {
     if (acao.limpar) {
       // Veio de uma tarefa que falhou: sai da pista (rodando) e anota a tentativa; se a divisão falhar, ela volta inteira para a fila.
       await delLabel(L.rodando);
