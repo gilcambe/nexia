@@ -33,7 +33,7 @@ exports.handler = async function(event, context) {
   const method = event.httpMethod || 'GET';
 
   // Se acionado por cron (Netlify Schedule) ou rota de backup
-  if (path.includes('/cron') || path.includes('/backup') || method === 'SCHEDULE') {
+  if (path.endsWith('/prumo-backup') || path.includes('/cron') || path.includes('/backup') || method === 'SCHEDULE') {
     try {
       const data = await exportData();
       const testResult = await restoreTest(data);
