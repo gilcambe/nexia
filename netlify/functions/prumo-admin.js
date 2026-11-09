@@ -31,7 +31,7 @@ function createHandler(deps = {}) {
       return res(403, { error: 'Acesso restrito a administradores master.' });
     }
 
-    return res(200, { ok: true, message: 'Bem-vindo ao painel admin do Prumo.' });
+    return res(200, { ok: true, message: 'Painel Prumo Admin.' });
   };
 }
 
