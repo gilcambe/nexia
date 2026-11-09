@@ -148,6 +148,37 @@ test('EST4. resumoDia frase e agregação', () => {
   assert.strictEqual(fraseVazia, 'Hoje: 0 em andamento, 0 travadas, 0 concluídas. IAs ativas: 0 de 0.');
 });
 
+test('EST7. reserva-volta-1 até reserva-volta-3 e campo ia', () => {
+  const agora = Date.now();
+  const t1 = estadoTarefa({ state: 'open', labels: [{ name: 'reserva-volta-1' }], updated_at: new Date(agora).toISOString() }, agora);
+  assert.strictEqual(t1.ia, 'Reserva Volta 1');
+
+  const t2 = estadoTarefa({ state: 'open', labels: [{ name: 'reserva-volta-2' }], updated_at: new Date(agora).toISOString() }, agora);
+  assert.strictEqual(t2.ia, 'Reserva Volta 2');
+
+  const t3 = estadoTarefa({ state: 'open', labels: [{ name: 'reserva-volta-3' }], updated_at: new Date(agora).toISOString() }, agora);
+  assert.strictEqual(t3.ia, 'Reserva Volta 3');
+});
+
+test('EST8. workflow verdadeiro e PR aberto citado com texto e estado', () => {
+  const agora = Date.now();
+  const wf = estadoTarefa({
+    state: 'open',
+    pull_request_files: [{ filename: '.github/workflows/deploy.yml' }],
+    updated_at: new Date(agora).toISOString(),
+  }, agora);
+  assert.strictEqual(wf.estado, 'aguardando-ia');
+  assert.strictEqual(wf.texto, 'Aguardando permissão de workflow');
+
+  const pr = estadoTarefa({
+    state: 'open',
+    pull_request_number: 42,
+    updated_at: new Date(agora).toISOString(),
+  }, agora);
+  assert.strictEqual(pr.estado, 'aguardando-ia');
+  assert.strictEqual(pr.texto, 'Aguardando revisão do PR #42');
+});
+
 test('EST5. estadoTarefas agrega contagens de lista de issues', () => {
   const agora = Date.now();
   const issues = [
