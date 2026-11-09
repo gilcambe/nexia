@@ -1,6 +1,29 @@
 'use strict';
 // Prumo: aba carteira. Usa window.MB (casca em app.js) e as peças de /prumo/ui.js.
-(function () {
+
+/** Vários prints da MESMA tela (rolada) têm um total só, no topo do primeiro. Junta cada print sem total
+ *  (ou com o mesmo total) ao último total visto, tira os itens repetidos entre prints e compara a soma.
+ *  conferencia[i].itens = quantos itens vieram do print i, na ordem de "itens". dup[k] = item k repetido. */
+function conferirTotais(conferencia, itens, dup) {
+  const lista = (conferencia || []).filter(Boolean);
+  if (!lista.length || lista.some((c) => !Number.isInteger(c.itens))) return lista; // leitura antiga: mantém como veio
+  const cent = (v) => Math.round(v * 100) / 100;
+  let k = 0; let cur = null; const grupos = [];
+  for (const c of lista) {
+    let soma = 0;
+    for (let n = 0; n < c.itens; n++, k++) if (!(dup && dup[k])) soma += Number(itens[k] && itens[k].valor) || 0;
+    const t = Number(c.total_print) > 0 ? Number(c.total_print) : null;
+    if (t && (!cur || !cur.t || Math.abs(cur.t - t) > 0.01)) { cur = { t, soma: 0 }; grupos.push(cur); } else if (!cur) { cur = { t: null, soma: 0 }; grupos.push(cur); }
+    cur.soma += soma;
+  }
+  const comTotal = grupos.filter((g) => g.t);
+  const tudoT = comTotal.reduce((a, g) => a + g.t, 0); const tudoS = grupos.reduce((a, g) => a + g.soma, 0);
+  const geral = tudoT > 0 && Math.abs(tudoT - tudoS) <= tudoT * 0.01; // a ordem dos prints veio trocada, mas o todo bate
+  return comTotal.map((g) => ({ total_print: cent(g.t), soma_itens: cent(g.soma), confere: geral || Math.abs(g.t - g.soma) <= g.t * 0.01 }));
+}
+if (typeof module !== 'undefined' && module.exports) module.exports = { conferirTotais };
+
+if (typeof window !== 'undefined') (function () {
   const MB = window.MB;
   let brl, esc, TIPOS, CATS, hoje, opcoes, barra, formulario, reduzir, recarregar, ok;
   const carregarUi = () => MB.ui ? Promise.resolve(MB.ui) : new Promise((ok, falha) => { const s = document.createElement('script'); s.src = '/prumo/ui.js'; s.onload = () => ok(MB.ui); s.onerror = falha; document.body.appendChild(s); });
@@ -97,7 +120,10 @@
       const a = ja.get(k);
       return a ? { s: 'atu', txt: `🔄 Atualiza: ${brl(a.valor)} → ${brl(i.valor)}` } : { s: 'novo', txt: '🆕 Novo' };
     });
-    const avisos = (conferencia || []).filter((c) => c && c.confere === false && c.total_print).map((c) => `<p style="color:#f5b041">⚠️ A soma dos itens (${brl(c.soma_itens)}) não bate com o total do print (${brl(c.total_print)}). Confira os valores abaixo.</p>`).join('');
+    const totais = conferirTotais(conferencia, itens, situ.map((x) => x.s === 'dup'));
+    const avisos = totais.filter((c) => c && c.total_print).map((c) => c.confere === false
+      ? `<p style="color:#f5b041">⚠️ A soma dos itens (${brl(c.soma_itens)}) não bate com o total do print (${brl(c.total_print)}).${c.soma_itens < c.total_print ? ` Faltam ${brl(c.total_print - c.soma_itens)}: mande o print que ficou de fora ou adicione à mão depois.` : ' Confira os valores abaixo.'}</p>`
+      : (c.confere ? `<p style="color:#58d68d">✅ Soma confere com o total do print (${brl(c.total_print)}).</p>` : '')).join('');
     el.innerHTML = `<div class="card"><b>Confira antes de salvar</b>${avisos}<p class="fraco">Corrija o que estiver errado e desmarque o que não quer salvar. Ainda não foi salvo na sua carteira, mas fica guardado neste celular até você salvar ou cancelar.</p>
       ${itens.map((i, n) => `<div class="card" data-n="${n}" style="background:#0e1a14">
         <div class="fraco">${situ[n].txt}</div>

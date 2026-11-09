@@ -150,7 +150,7 @@ test('PR9. print de corretora: ativo com ticker vira FII/ação, total do print 
   assert.equal(r.itens[0].ticker, 'MXRF11');
   assert.equal(r.itens[0].valor, 6000);
   assert.equal(r.itens[1].tipo, 'acoes');
-  assert.deepEqual(r.conferencia, [{ total_print: 10000, soma_itens: 9000, confere: false }]);
+  assert.deepEqual(r.conferencia, [{ total_print: 10000, soma_itens: 9000, confere: false, itens: 2 }]);
   assert.equal(p.conferir(1000, 1005).confere, true);
 });
 

@@ -136,13 +136,33 @@ const LER_PRINT = `Você lê prints de apps de banco, corretora, previdência e 
 {"total_print": número ou null, "itens":[{"nome":"","banco":"","tipo":"","ticker":"","quantidade":null,"preco_medio":null,"cotacao":null,"conta":"","valor":0,"data_valor":"AAAA-MM-DD ou null","vencimento":"AAAA-MM-DD ou null","taxa":""}]}
 Regras:
 1. Um item para CADA ativo/aplicação/plano/conta que aparece com valor (não junte vários num só). Se só existir um total, devolva um item com ele.
-2. "valor" é o valor ATUAL da posição: "Saldo bruto", "Valor atual", "Posição", "Saldo", ou quantidade × cotação. NUNCA use "Preço médio", "Custo médio", "Valor aplicado", "Valor investido" nem rentabilidade como valor.
+2. "valor" é o valor ATUAL da posição: "Saldo bruto", "Valor atual", "Posição", "Saldo", o valor grande em destaque logo abaixo do nome do ativo, ou quantidade × cotação. NUNCA use "Preço médio", "Custo médio", "Valor aplicado", "Valor investido", a variação (seta ↑/↓ ao lado) nem rentabilidade como valor.
 3. "total_print" é o total que o próprio print mostra ("Total investido", "Patrimônio", "Saldo total", "TOTAL"), ou null se não houver.
 4. "banco" é a instituição (pelo nome, logo, cores ou app: XP, Inter, Nubank, Itaú, Bradesco, BB, Caixa, Rico, BTG, Clear, Multiprev, Brasilprev, FGTS...).
 5. "ticker" é o código da B3 quando houver (PETR4, MXRF11, BOVA11). Ticker terminado em 11 de fundo imobiliário é tipo "fiis".
 6. tipo é um destes: ${TIPOS.join(', ')}.
 7. Mesmo plano/fundo em VÁRIAS linhas (ex.: previdência com conta "Participante" e "Patrocinadora", ou "Básica" e "Adicional") = um item POR LINHA, cada um com seu valor, e o nome da linha em "conta". Nunca devolva só a primeira linha.
-8. Números com ponto decimal (R$ 1.234,56 vira 1234.56). Não invente nada que não esteja legível.`;
+8. Números com ponto decimal (R$ 1.234,56 vira 1234.56). Não invente nada que não esteja legível.
+9. Título de grupo com subtotal NÃO é item: "CDB (92,77%) R$ 138.122,79", "FIIs", "Ações", "ETFs", "Renda fixa R$ ...". Só os ativos dentro do grupo são itens.
+10. Ativo cortado no topo ou no fim do print (sem o valor visível) fica de fora; ele aparece inteiro no próximo print.`;
+/** Grupo com subtotal ("CDB (92,77%)", "FIIs") que a IA devolveu como item: some se o valor dele é a soma dos itens logo abaixo. */
+const NOME_GRUPO = /^(cdbs?|lcis?|lcas?|lcs?|fiis?|fundos?( imobili[aá]rios)?|a[cç](ão|oes|ões)|etfs?|bdrs?|renda (fixa|vari[aá]vel)|tesouro( direto)?|deb[eê]ntures|cris?|cras?|previd[eê]ncia|criptos?|total.*)$/i;
+function tirarSubtotais(itens) {
+  const ehGrupo = (x) => !x.ticker && !x.quantidade && (/\(\s*\d+(?:[.,]\d+)?\s*%\s*\)/.test(x.nome || '') || NOME_GRUPO.test(String(x.nome || '').replace(/\(.*?\)/g, '').trim()));
+  const fora = new Set();
+  itens.forEach((x, i) => {
+    if (!ehGrupo(x)) return;
+    const tol = Math.max(0.02, x.valor * 0.005);
+    let acc = 0;
+    for (let j = i + 1; j < itens.length; j++) {
+      if (fora.has(j)) continue;
+      acc += itens[j].valor;
+      if (Math.abs(acc - x.valor) <= tol) { fora.add(i); break; }
+      if (acc > x.valor + tol) break;
+    }
+  });
+  return itens.filter((_, i) => !fora.has(i));
+}
 /** No MESMO print, duas linhas com mesmo banco e nome mas valores diferentes são posições diferentes
  *  (ex.: previdência Participante e Patrocinadora). Numera a 2ª em diante para o app não tratar como repetida. */
 function separarLinhasIguais(itens) {
@@ -277,9 +297,12 @@ async function lerPrint(imagens, deps) {
   for (const lido of lidos) {
     if (!lido) continue;
     algum = true;
-    let soma = 0;
-    for (const bruto of separarLinhasIguais(lido.itens)) { const v = validarItemCarteira(normalizarLido(bruto)); if (v.ok) { itens.push(v.item); soma += v.item.valor; } else descartados.push({ ...bruto, motivo: v.erro }); }
-    conferencia.push(conferir(valorLido(lido.total_print), soma));
+    const doPrint = [];
+    for (const bruto of separarLinhasIguais(lido.itens)) { const v = validarItemCarteira(normalizarLido(bruto)); if (v.ok) doPrint.push(v.item); else descartados.push({ ...bruto, motivo: v.erro }); }
+    const limpos = tirarSubtotais(doPrint);
+    itens.push(...limpos);
+    // "itens" diz quantos itens são deste print: o app junta vários prints da mesma tela sob um total só.
+    conferencia.push({ ...conferir(valorLido(lido.total_print), limpos.reduce((a, x) => a + x.valor, 0)), itens: limpos.length });
   }
   if (!algum && falhas.length) console.warn('[prumo] ler_print falhou:', falhas.slice(0, 6).join(' | '));
   return algum ? { itens, descartados, conferencia } : null;
@@ -460,4 +483,4 @@ exports.handler = async (event) => {
   }
 };
 
-Object.assign(exports, { viaWorkersAi, separarLinhasIguais, conferir, VISAO, LER_PRINT, normalizarLido, valorLido, validarItemCarteira, validarCartao, validarGasto, resumoMes, validarLista, avisosPendentes, extrairJson, lerImagens, lerPrint, validarObjetivo, progressoObjetivos, resumoHistorico, fotoDoDia, agir, deps, TIPOS, CATEGORIAS });
+Object.assign(exports, { viaWorkersAi, separarLinhasIguais, tirarSubtotais, conferir, VISAO, LER_PRINT, normalizarLido, valorLido, validarItemCarteira, validarCartao, validarGasto, resumoMes, validarLista, avisosPendentes, extrairJson, lerImagens, lerPrint, validarObjetivo, progressoObjetivos, resumoHistorico, fotoDoDia, agir, deps, TIPOS, CATEGORIAS });
