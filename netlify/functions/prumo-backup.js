@@ -23,6 +23,7 @@ function createHandler(deps = {}) {
   const getMw = deps.getMw || (() => ({}));
   
   return async function(event, context) {
+    console.log('[PRUMO-BACKUP] Handler acionado, path:', event.path, 'method:', event.httpMethod);
     const path = event.path || '';
     const method = event.httpMethod || 'GET';
     const headers = event.headers || {};
