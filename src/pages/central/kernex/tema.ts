@@ -112,6 +112,19 @@ export const CSS = `
 .kx-colunas i{display:block;width:100%;max-width:44px;border-radius:8px 8px 3px 3px;background:linear-gradient(180deg,#60a5fa,#2563eb);min-height:3px}
 .kx-colunas span{font-size:11px;color:var(--mut)}
 .kx-ladrilhos{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+.kx-passos{border:1px solid #f8717166;background:#7f1d1d22;border-radius:12px;padding:10px 12px;white-space:normal;line-height:1.45}
+.kx-passos ol{margin:6px 0 8px;padding-left:20px;color:#dbe4ff}.kx-passos li{margin:2px 0}
+.kx-passos .kx-btn{white-space:normal}
+.kx-passos.neutro{border-color:var(--linha);background:#ffffff08}
+/* 09/11 (dono): "a tela corta botões". Notebook com janela baixa: nada encolhe nem some, a área rola. */
+@media (min-width:769px) and (max-height:900px){
+ .kx-menu{gap:1px;padding:8px 10px}
+ .kx-menu button{min-height:34px;font-size:14px}
+ .kx-tela,.kx-grade{flex:none}
+ .kx-grade{grid-auto-rows:minmax(320px,auto)}
+ .kx-bloco{overflow:visible}
+ .kx-bloco-corpo{overflow:visible}
+}
 .kx-so-cel{display:none}
 .kx-gaveta-fundo{display:none}
 .kx-busca-caixa{position:relative;flex:1;max-width:620px}

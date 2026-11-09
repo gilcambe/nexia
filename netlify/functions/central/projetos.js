@@ -5,7 +5,9 @@ const ITEM = /^\s*-\s*\[( |x|X)\]\s*(.+?)\s*\(peso\s*(\d+)\)\s*(.*)$/;
 function percentual(md) {
   const texto = String(md || '').replace(/<!--[\s\S]*?-->/g, '');
   const nome = (/^#\s+(.+)$/m.exec(texto) || [])[1] || '';
-  const definido = !/status:\s*ainda-nao-definido/i.test(texto);
+  // 09/11: o Cortex propõe (status: proposto) e o dono aprova (status: aprovado) com 1 clique na Central.
+  const proposto = /status:\s*proposto/i.test(texto);
+  const definido = !/status:\s*ainda-nao-definido/i.test(texto) && !proposto;
   let total = 0, feito = 0;
   const faltam = [], feitos = [];
   for (const linha of texto.split('\n')) {
@@ -19,7 +21,7 @@ function percentual(md) {
     if (m[1].toLowerCase() === 'x' && comProva) { feito += peso; feitos.push({ texto: m[2], evidencia }); }
     else faltam.push({ texto: m[2], quem: (/quem:\s*([^\s].*)$/i.exec(resto) || [])[1] || 'não definido' });
   }
-  return { nome, definido: definido && total > 0, pct: total ? Math.round((feito / total) * 100) : 0, feitos, faltam };
+  return { nome, proposto: proposto && total > 0, definido: definido && total > 0, pct: total ? Math.round((feito / total) * 100) : 0, feitos, faltam };
 }
 
 async function carregar(gh, repo) {

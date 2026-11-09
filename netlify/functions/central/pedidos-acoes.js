@@ -32,6 +32,39 @@ async function anexar(p, b) {
   return r(200, { ok: true, caminho, ramo: RAMO_ANEXOS, mensagem: 'Anexo guardado.' });
 }
 
+const ROTEIRO = (id) => 'docs/roadmaps/' + id + '.md';
+async function montarRoteiro(p, id, nome, quem) {
+  const titulo = 'Montar o roteiro do projeto ' + nome + ' (' + ROTEIRO(id) + ')';
+  const achou = await p.gh('/search/issues?per_page=1&q=' + encodeURIComponent('repo:gilcambe/nexia is:issue is:open in:title "' + titulo + '"')).catch(() => ({ items: [] }));
+  if (achou.items && achou.items[0]) return r(200, { ok: true, numero: achou.items[0].number, mensagem: 'O Cortex já está montando este roteiro (#' + achou.items[0].number + ').' });
+  const body = [
+    'Escreva o arquivo `' + ROTEIRO(id) + '` com o roteiro do projeto **' + nome + '**, para o dono (leigo) aprovar com 1 clique na Central.',
+    '', 'Regras:',
+    '- Troque a linha `status: ainda-nao-definido` por `status: proposto` (NUNCA escreva `aprovado`: só o dono aprova).',
+    '- 8 a 15 itens, do que o produto precisa para ficar pronto para uso real, em português simples, cada um numa linha:',
+    '  `- [ ] Texto curto (peso N) quem: Cortex|IA grátis|Claude|EU`',
+    '- Item que já está feito e tem prova: `- [x] Texto (peso N) evidencia: PR #123` (só com PR juntado, teste ou link reais).',
+    '- Leia o código e as issues do projeto antes; não invente o que já existe.',
+    '- Mude só esse arquivo.', '', '_Pedido de ' + quem + ' pela Central (Projetos)._',
+  ].join('\n');
+  const i = await p.gh('/repos/gilcambe/nexia/issues', { method: 'POST', body: JSON.stringify({ title: titulo, labels: ['cortex-fila', 'cortex-prioridade'], body }) });
+  return r(200, { ok: true, numero: i.number, mensagem: 'Pedi ao Cortex para montar o roteiro (#' + i.number + '). Quando ficar pronto, aparece aqui com o botão Aprovar.' });
+}
+async function aprovarRoteiro(p, id, quem) {
+  const repo = '/repos/gilcambe/nexia';
+  const atual = await p.gh(repo + '/contents/' + ROTEIRO(id) + '?ref=develop');
+  const texto = Buffer.from(atual.content || '', 'base64').toString('utf8');
+  if (!/status:\s*proposto/i.test(texto)) return r(400, { error: 'Este roteiro ainda não foi montado (ou já está aprovado).' });
+  const novo = texto.replace(/status:\s*proposto/i, 'status: aprovado');
+  const base = await p.gh(repo + '/git/ref/heads/develop');
+  const ramo = 'nexia/roteiro-' + id + '-' + Date.now().toString(36);
+  await p.gh(repo + '/git/refs', { method: 'POST', body: JSON.stringify({ ref: 'refs/heads/' + ramo, sha: base.object.sha }) });
+  await p.gh(repo + '/contents/' + ROTEIRO(id), { method: 'PUT', body: JSON.stringify({ message: 'Roteiro de ' + id + ' aprovado pelo dono', content: Buffer.from(novo, 'utf8').toString('base64'), sha: atual.sha, branch: ramo }) });
+  const pr = await p.gh(repo + '/pulls', { method: 'POST', body: JSON.stringify({ title: 'Roteiro de ' + id + ' aprovado pelo dono', head: ramo, base: 'develop', body: 'Aprovado por ' + quem + ' na Central (Projetos). Só muda `status: proposto` para `status: aprovado`.' }) });
+  await p.gh(issue(pr.number) + '/labels', { method: 'POST', body: JSON.stringify({ labels: ['automerge'] }) });
+  return r(200, { ok: true, numero: pr.number, mensagem: 'Roteiro aprovado. Entra sozinho em uns 20 minutos (#' + pr.number + ').' });
+}
+
 async function agir(p, b, quem) {
   // #825: entende o anexo (descrição da imagem, texto do PDF/planilha, transcrição do áudio) com IA grátis.
   if (b.acao === 'entender') {
@@ -67,6 +100,12 @@ async function agir(p, b, quem) {
       } catch (e) { erros.push({ n: x, erro: e.message }); }
     }
     return r(200, { ok: erros.length === 0, feitos, erros, mensagem: feitos.length + ' de ' + ns.length + ' feitas.' });
+  }
+  // 09/11 (dono): "que porra é essa de roteiro". O Cortex monta o roteiro sozinho; o dono só aprova com 1 clique.
+  if (b.acao === 'montar-roteiro' || b.acao === 'aprovar-roteiro') {
+    const id = String(b.projeto || '');
+    if (!/^[a-z0-9-]{2,40}$/.test(id)) return r(400, { error: 'Projeto inválido.' });
+    return b.acao === 'montar-roteiro' ? montarRoteiro(p, id, String(b.nome || id), quem) : aprovarRoteiro(p, id, quem);
   }
   if (!n && b.acao !== 'juntar') return r(400, { error: 'Falta o número do pedido.' });
   if (b.acao === 'reserva') {

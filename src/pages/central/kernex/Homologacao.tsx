@@ -25,7 +25,7 @@ export default function Homologacao() {
   const carregar = useCallback(() => { homologacao<Homolog>().then(setD).catch((e: Error) => setErro(e.message)); }, [homologacao]);
   useEffect(() => { carregar(); }, [carregar]);
   const rodar = async () => { setMsg("Mandando…"); try { const r = await agir({ acao: "homologar" }); setMsg(r.mensagem); } catch (e) { setMsg((e as Error).message); } };
-  const lista = d ? Object.entries(d.produtos).sort(([a], [b]) => (NOME[a] || a).localeCompare(NOME[b] || b)) : [];
+  const lista = d && d.produtos ? Object.entries(d.produtos).sort(([a], [b]) => (NOME[a] || a).localeCompare(NOME[b] || b)) : [];
   const det = aberto && d ? d.produtos[aberto] : null;
   return (
     <div className="kx-grade" style={{ gridTemplateColumns: "2fr 1fr" }} data-testid="kx-homologacao">
@@ -44,7 +44,7 @@ export default function Homologacao() {
             </li>
           ))}
         </ul>
-        {d?.quando && <p className="kx-mut">Última rodada {haQuanto(d.quando)} · commit {String(d.commit || "").slice(0, 7)}{d.link && <> · <a href={d.link} target="_blank" rel="noreferrer">ver no GitHub</a></>}</p>}
+        {d?.quando && <p className="kx-mut" style={{ whiteSpace: "normal" }}>Última rodada {haQuanto(d.quando)} · commit {String(d.commit || "").slice(0, 7)}{d.link && <> · <a href={d.link} target="_blank" rel="noreferrer">ver no GitHub</a></>}</p>}
       </Bloco>
       <div style={{ display: "flex", flexDirection: "column", gap: 12, minHeight: 0 }}>
         <Bloco titulo="Rodar agora" icone="play" ajuda="Roda a homologação de todos os produtos (e do GSD Lab) na hora." fonte="GitHub Actions" atualizadoEm={d?.conferidoEm || null}>

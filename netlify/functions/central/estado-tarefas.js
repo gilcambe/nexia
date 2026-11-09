@@ -110,12 +110,10 @@ function estadoTarefa(issue, agora = Date.now(), cfg = {}) {
   }
 
   // Precisa do dono / você
-  const precisaVoce =
-    estado === 'travada' &&
-    (t >= maxTentativas ||
-      has('vez-do-dono') ||
-      has('esperando-dono') ||
-      has('so-humano'));
+  // 09/11 (dono): "aparece precisa de você mas não diz o que fazer". Só entra aqui o que ELE pode fazer
+  // (rótulo vez-do-dono ou esperando-dono). Tarefa que as IAs não conseguiram é das IAs/Claude, não do dono leigo.
+  void maxTentativas;
+  const precisaVoce = !fechada && (has('vez-do-dono') || has('esperando-dono'));
 
   return {
     estado,

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { usePedidos } from "../../meu-cortex/api";
 import Bloco from "./Bloco";
 import Kpi from "./Kpi";
-import { textoCota } from "./regras";
+import { semPrecisa, textoCota } from "./regras";
 
 // #3219 parte 4: IA & Cortex. Escada, o que cada IA faz agora, cotas e o botão "Ativar ajuda das IAs".
 interface Ia { nome: string; situacao: string; ativa: boolean; texto: string; tarefa: { numero: number; titulo: string } | null; desde: string | null }
@@ -32,7 +32,7 @@ export default function IaCortex() {
     </div>
     <div className="kx-grade" style={{ gridTemplateColumns: "2fr 1fr", gridTemplateRows: "auto 1fr" }}>
       <Bloco icone="ia" corIcone="#a78bfa" titulo="IAs trabalhando agora" ajuda="Uma linha por IA: trabalhando, parada, sem cota ou com erro, e em qual tarefa." fonte={d ? d.origem : null} atualizadoEm={d?.conferidoEm || null} className="kx-alto">
-        <p style={{ margin: "0 0 8px" }} data-testid="kx-ia-resumo">{d?.resumo}</p>
+        <p style={{ margin: "0 0 8px" }} data-testid="kx-ia-resumo">{d ? semPrecisa(d.resumo) : null}</p>
         <ul className="kx-lista" data-testid="kx-ias">
           {(d?.ias || []).slice(0, 10).map((x) => (
             <li key={x.nome}>

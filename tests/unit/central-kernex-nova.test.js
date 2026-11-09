@@ -18,7 +18,7 @@ async function regras() {
 
 test('KX1. menu tem as 10 telas do Plano-Mestre + Homologação (pedido do dono 09/11)', async () => {
   const { TELAS } = await regras();
-  assert.deepEqual(TELAS.map((t) => t.nome), ['Início', 'Projetos', 'Máquinas', 'IA & Cortex', 'Tarefas', 'Arquivos', 'Publicações', 'Homologação', 'Cofre', 'Relatórios', 'Configurações']);
+  assert.deepEqual(TELAS.map((t) => t.nome), ['Início', 'Pedir', 'Projetos', 'Clientes e modelos', 'Máquinas', 'IA & Cortex', 'Tarefas', 'Arquivos', 'Publicações', 'Homologação', 'Cofre', 'Relatórios', 'Configurações']);
   assert.ok(TELAS.every((t) => t.serve.length > 10));
 });
 
@@ -103,4 +103,24 @@ test('KX9. /central com # velho (ex.: #inicio) abre a NOVA; antiga só com ?anti
   assert.equal(antiga('?nova=1', '#cortex'), false);
   assert.equal(antiga('?antiga=1', '#inicio'), true);
   assert.equal(antiga('', '#sistema'), true);
+});
+
+test('KX10. "Precisa de você" só tem o que o dono pode fazer, cada um com passos e botão (bug do dono 09/11)', async () => {
+  const out = ts.transpileModule(fs.readFileSync(path.join(PASTA, 'donos.ts'), 'utf8'), { compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 } }).outputText;
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'kx-'));
+  fs.writeFileSync(path.join(dir, 'donos.mjs'), out);
+  const { montarAcoes } = await import(pathToFileURL(path.join(dir, 'donos.mjs')).href);
+  const a = montarAcoes({
+    esperando: [{ tipo: 'pr', numero: 7, titulo: 'Robô novo', link: 'https://x/7', passos: ['Abrir', 'Merge'] }, { tipo: 'pr', numero: 8, titulo: 'Sem passos', link: 'https://x/8' }],
+    maquinas: [{ nome: 'PC1', online: true, visto_em: 'x' }, { nome: 'PC2', online: false, visto_em: '2026-10-29T00:00:00Z' }],
+    projetos: [{ id: 'cortex', proposto: true }, { id: 'bezsan' }],
+  });
+  assert.deepEqual(a.map((x) => x.id), ['pr7', 'maq-PC2', 'rot-cortex']);
+  for (const x of a) { assert.ok(x.passos.length >= 2, x.id + ' tem passos'); assert.ok(x.botao.href || x.botao.tela, x.id + ' tem botão'); }
+});
+
+test('KX11. PC sem sinal não aparece como "Desligado" e mostra o que fazer (PC2, 09/11)', () => {
+  const s = fs.readFileSync(path.join(PASTA, 'Maquinas.tsx'), 'utf8');
+  assert.ok(!/"Desligado"/.test(s));
+  assert.ok(/Agendador de Tarefas/.test(s) && /NEXIA Agente/.test(s));
 });

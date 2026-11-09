@@ -3,7 +3,8 @@ import { usePedidos, type Filtro } from "../../meu-cortex/api";
 import Bloco from "./Bloco";
 import Kpi from "./Kpi";
 import type { Painel } from "./Inicio";
-import { CHIPS, COR_ESTADO, haQuanto, hora } from "./regras";
+import { CHIPS, COR_ESTADO, haQuanto, hora, type TelaId } from "./regras";
+import PrecisaDeVoce from "./PrecisaDeVoce";
 
 // #3219 parte 3: Tarefas. Lista com chips à esquerda, história da tarefa à direita, ações em lote.
 interface Item { numero: number; titulo: string; estado?: string; texto?: string; icone?: string; cor?: string; ia?: string | null; motivo?: string; quando: string; link: string }
@@ -15,7 +16,7 @@ export function Selo({ t }: { t: Pick<Item, "texto" | "icone" | "cor"> }) {
   return <span className="kx-selo" data-testid="kx-selo" style={{ background: COR_ESTADO[t.cor || "cinza"] || "#64748b" }}>{t.icone} {t.texto}</span>;
 }
 
-export default function Tarefas({ painel }: { painel?: Painel }) {
+export default function Tarefas({ painel, ir }: { painel?: Painel; ir?: (t: TelaId) => void }) {
   const { listar, abrir, agir } = usePedidos();
   const [chip, setChip] = useState<Filtro>("meus");
   const [q, setQ] = useState("");
@@ -53,7 +54,7 @@ export default function Tarefas({ painel }: { painel?: Painel }) {
     <div className="kx-kpis" data-testid="kx-kpis-tarefas">
       <Kpi cor="az" icone="lista" valor={c ? (c.andamento || 0) + (c["aguardando-ia"] || 0) : null} rotulo="Em andamento" sub="toque para ver" ativo={chip === "andamento"} onClick={() => setChip("andamento")} />
       <Kpi cor="rx" icone="raio" valor={c ? c.travada || 0 : null} rotulo="Travadas" sub="as IAs tentam de novo" ativo={chip === "travadas"} onClick={() => setChip("travadas")} />
-      <Kpi cor="vm" icone="sino" valor={c ? c.precisaVoce || 0 : null} rotulo="Precisam de você" sub="só você resolve" ativo={chip === "precisa"} onClick={() => setChip("precisa")} />
+      <Kpi cor="vm" icone="sino" valor={painel?.dono ? painel.dono.length : null} rotulo="Precisam de você" sub="com o passo a passo" ativo={chip === "precisa"} onClick={() => setChip("precisa")} />
       <Kpi cor="vd" icone="check" valor={c ? c.concluida || 0 : null} rotulo="Concluídas hoje" ativo={chip === "concluidas"} onClick={() => setChip("concluidas")} />
     </div>
     <div className="kx-grade" style={{ gridTemplateColumns: "minmax(320px,2fr) 3fr" }}>
@@ -72,7 +73,8 @@ export default function Tarefas({ painel }: { painel?: Painel }) {
           </div>
         )}
         {msg && <p className="kx-mut" style={{ whiteSpace: "normal" }}>{msg}</p>}
-        <ul className="kx-lista" data-testid="kx-tarefas">
+        {chip === "precisa" && <PrecisaDeVoce acoes={painel?.dono || null} ir={(t) => ir?.(t)} />}
+        {chip !== "precisa" && <ul className="kx-lista" data-testid="kx-tarefas">
           {(itens || []).slice(0, 14).map((t) => (
             <li key={t.numero}>
               <input type="checkbox" aria-label={"Marcar #" + t.numero} checked={marcadas.includes(t.numero)} onChange={() => marcar(t.numero)} style={{ width: 18, height: 18 }} />
@@ -82,7 +84,7 @@ export default function Tarefas({ painel }: { painel?: Painel }) {
             </li>
           ))}
           {itens && itens.length === 0 && <li>Nenhuma tarefa aqui.</li>}
-        </ul>
+        </ul>}
       </Bloco>
       <Bloco icone="relogio" titulo={aberto ? `Tarefa #${aberto.numero}` : "História da tarefa"} ajuda="Quando entrou, qual IA pegou, tentativas, PR e como está agora." fonte={aberto ? "issue e timeline do GitHub" : null} atualizadoEm={aberto ? new Date().toISOString() : null}>
         {aberto && (
