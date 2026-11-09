@@ -20,7 +20,8 @@ function criarGhFalso({ issuesNexia = [], issuesDestino = {} } = {}) {
     const body = opts.body ? JSON.parse(opts.body) : null;
 
     if (method === 'GET') {
-      if (path.includes('/repos/gilcambe/nexia/issues')) {
+      // Registros (trabalho-ativo) vêm do nexia; a busca anti-duplicação (state=all) vai ao repo de destino, que pode ser o próprio nexia.
+      if (path.includes('labels=trabalho-ativo')) {
         return dados.nexiaIssues;
       }
       for (const repo of Object.keys(dados.destinos)) {
