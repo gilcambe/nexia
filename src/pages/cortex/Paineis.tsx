@@ -111,6 +111,22 @@ function IasAgora() {
   );
 }
 
+function QuemTrabalha() {
+  const { quem } = usePedidos();
+  const [d, setD] = useState<{ itens: { issue: number; quem: string; onde: string; status: string; detalhes: string; pendentesCount: number; totalCount: number }[]; conferidoEm: string } | null>(null);
+  useEffect(() => { const ler = () => quem<NonNullable<typeof d>>().then(setD).catch(() => undefined); ler(); const t = setInterval(ler, 60000); return () => clearInterval(t); }, [quem]);
+  if (!d || !d.itens.length) return null;
+  const cor: Record<string, string> = { trabalhando: "#22c55e", parou: "#ef4444", assumido: "#f59e0b" };
+  return (
+    <div className="rounded-2xl border border-[var(--cx-line)] bg-[var(--cx-card)] p-4 mb-4" data-testid="cx-quem-trabalha">
+      <p className="font-semibold">Quem está trabalhando</p>
+      <ul className="mt-2 space-y-1.5 text-sm">{d.itens.slice(0, 10).map((x) => (
+        <li key={x.issue} className="flex items-center gap-2"><span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: cor[x.status] || "#64748b" }} /><b>{x.quem}</b><span className="text-[var(--cx-mut)]">{x.onde} · {x.status} · {x.detalhes} · faltam {x.pendentesCount} de {x.totalCount}</span></li>
+      ))}</ul>
+    </div>
+  );
+}
+
 export function Tarefas({ abrir }: { abrir: (n: number) => void }) {
   const { listar, agir } = usePedidos();
   const [f, setF] = useState<Filtro>("andamento");
@@ -202,6 +218,7 @@ export function Tarefas({ abrir }: { abrir: (n: number) => void }) {
     <div className="max-w-3xl mx-auto p-6">
       <Titulo t="Tarefas" s="A fila do Cortex, do jeito que ele enxerga." />
       <IasAgora />
+      <QuemTrabalha />
       {avisos.length > 0 && <div className="rounded-xl bg-[var(--cx-ac)] text-black p-3 mb-4 text-sm font-semibold" role="status" data-testid="cx-avisos">{avisos.join(" · ")}</div>}
       <div className="mb-4">
         <input type="text" value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Pesquisar tarefas..." data-testid="cx-tarefas-busca"
