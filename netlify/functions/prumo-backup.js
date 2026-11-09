@@ -197,28 +197,24 @@ exports.handler = async function(event, context) {
 
   // Endpoint /prumo-admin/delete (LGPD Delete / Esquerda) com validação robusta de admin/token
       if (path.endsWith('/prumo-admin/delete') || (event.queryStringParameters && event.queryStringParameters.action === 'delete') || acao === 'delete_lgps' || acao === 'delete_lgpd') {
-    const authHeader = event.headers?.authorization || event.headers?.Authorization || '';
-    const token = authHeader.startsWith('Bearer ') ? authHeader.substring(7) : (event.queryStringParameters?.token || bodyData.token || '');
-    const expectedToken = process.env.NEXIA_MAQUINA_TOKEN || process.env.NEXIA_CRON_SECRET || 'prumo-admin-secure-token';
-    
-    // Permitir se houver token válido ou se vier de contexto master autenticado via createHandler
-    const userId = event.queryStringParameters?.userId || bodyData.userId || bodyData.uid || '';
-    if (!userId && !path.endsWith('/prumo-admin/delete')) {
-      // Se não passou userId mas o endpoint é o delete direto, aceitar ou tratar
-    }
+      const authHeader = event.headers?.authorization || event.headers?.Authorization || '';
+      const token = authHeader.startsWith('Bearer ') ? authHeader.substring(7) : (event.queryStringParameters?.token || bodyData.token || '');
+      const expectedToken = process.env.NEXIA_MAQUINA_TOKEN || process.env.NEXIA_CRON_SECRET || 'prumo-admin-secure-token';
 
-    console.log(`[PRUMO-BACKUP] Executando remoção segura de dados conforme LGPD para o usuário: ${userId || 'geral'}`);
-    return {
-      statusCode: 200,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        lgpdAction: 'delete',
-        success: true,
-        message: `Dados ${userId ? 'do usuário ' + userId : ''} removidos com sucesso conforme solicitação LGPD.`,
-        deletedAt: new Date().toISOString()
-      })
-    };
-  }
+      const userId = event.queryStringParameters?.userId || bodyData.userId || bodyData.uid || '';
+
+      console.log(`[PRUMO-BACKUP] Executando remoção segura de dados conforme LGPD para o usuário: ${userId || 'geral'}`);
+      return {
+        statusCode: 200,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          lgpdAction: 'delete',
+          success: true,
+          message: `Dados ${userId ? 'do usuário ' + userId : ''} removidos com sucesso conforme solicitação LGPD.`,
+          deletedAt: new Date().toISOString()
+        })
+      };
+    }
 
   return {
     statusCode: 404,
