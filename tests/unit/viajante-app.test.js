@@ -68,3 +68,16 @@ test('Central Administrativa (vp-admin.html): só telas reais pela API oficial (
   for (const l of ['/viajante-pro/cotacoes', '/viajante-pro/viagens', '/viajante-pro/editar']) assert.ok(html.includes(l), `link real ${l}`);
   for (const fake of ['COL(', "collection('data')", '/api/cortex', 'Simule', 'getDefault', 'simScan', 'pg-pabx']) assert.ok(!html.includes(fake), `sem tela de teste: ${fake}`);
 });
+
+test('App do Viajante (app.js): usa API real por token e sem dados inventados (#2303)', () => {
+  const appJsPath = path.join(RAIZ, 'app.js');
+  assert.ok(fs.existsSync(appJsPath), 'app.js deve existir');
+  const appJs = fs.readFileSync(appJsPath, 'utf8');
+
+  assert.ok(!appJs.includes('dadosPadrao'), 'Não deve conter a função dadosPadrao');
+  assert.ok(!appJs.includes('Carlos Eduardo'), 'Não deve conter Carlos Eduardo inventado');
+  assert.ok(!appJs.includes('982100'), 'Não deve conter Apólice #982100');
+  assert.ok(appJs.includes('app_obter'), 'Deve conter chamada app_obter na API');
+  assert.ok(appJs.includes('mostrarMensagem'), 'Deve implementar mostrarMensagem');
+  assert.ok(appJs.includes('converter'), 'Deve implementar converter');
+});
