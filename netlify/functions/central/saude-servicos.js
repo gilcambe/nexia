@@ -64,7 +64,8 @@ function checadoresPadrao({ env = process.env, fetchImpl = globalThis.fetch, get
       const headers = { 'User-Agent': 'nexia-central', Accept: 'application/vnd.github+json' };
       if (token) headers.Authorization = `Bearer ${token}`;
       const r = await fetchImpl('https://api.github.com/repos/gilcambe/nexia', { method: 'GET', headers, signal });
-      return { ok: r.status < 500, motivo: `HTTP ${r.status}` };
+      const ok = r.ok || r.status < 500;
+      return { ok, motivo: `HTTP ${r.status}` };
     },
     vault: async () => {
       const db = getVaultDb ? getVaultDb() : require('../firebase-vault').vaultDb(env);
