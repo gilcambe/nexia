@@ -6,15 +6,29 @@ const DIA = 864e5;
 const temChave = (env, k) => !!(k && String(env[k] || '').trim());
 
 /** Fornecedores e integradores: ligado (tem chave), falta ligar, ou o estado do robô que usa o serviço. */
-function fornecedores(lista, env, robos = []) {
+function fornecedores(lista, env, robos = [], testesVagas = []) {
+  const agora = Date.now();
+  const LIMITE_24H = 24 * 3600 * 1000;
   return lista.map((f) => {
     const robo = f.robo ? robos.find((r) => r.arquivo === f.robo) : null;
     let situacao = 'ok';
-    if (f.chave && !temChave(env, f.chave)) situacao = 'desligado';
-    else if (robo) situacao = robo.situacao === 'erro' ? 'erro' : robo.situacao === 'nunca' ? 'desligado' : 'ok';
+    
+    // Verificação de teste real da vaga usando o módulo/dados ia-vagas se aplicável
+    const testeRecente = f.id ? testesVagas.find((t) => t.vagaId === f.id && (agora - (t.quando || t.timestamp || 0)) <= LIMITE_24H) : null;
+    
+    if (f.chave && !temChave(env, f.chave)) {
+      situacao = 'desligado';
+    } else if (f.id && testesVagas.length > 0 && !testeRecente) {
+      situacao = 'nao testado';
+    } else if (robo) {
+      situacao = robo.situacao === 'erro' ? 'erro' : robo.situacao === 'nunca' ? 'desligado' : 'ok';
+    } else if (f.id && testesVagas.length > 0 && testeRecente && testeRecente.situacao) {
+      situacao = testeRecente.situacao;
+    }
+
     // chave = só o NOME da variável; chaveEstado diz se existe. O valor nunca sai do servidor (#1872).
     const chaveEstado = f.chave ? (temChave(env, f.chave) ? 'existe' : 'falta') : null;
-    return { id: f.id, nome: f.nome, grupo: f.grupo, paraQue: f.paraQue, gratis: f.gratis, link: f.link, situacao, quando: robo ? robo.quando : null, chave: f.chave || null, chaveEstado };
+    return { id: f.id, nome: f.nome, grupo: f.grupo, paraQue: f.paraQue, gratis: f.gratis, link: f.link, situacao, quando: robo ? robo.quando : (testeRecente ? (testeRecente.quando || testeRecente.timestamp) : null), chave: f.chave || null, chaveEstado };
   });
 }
 
