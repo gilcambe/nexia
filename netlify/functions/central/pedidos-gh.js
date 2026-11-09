@@ -58,7 +58,7 @@ function criarPedidos(env = process.env, fetchFn = fetch) {
     let itens = (r.items || []).map(resumo);
     if (estado === 'andamento') {
       itens = itens.filter(i => i.estado === 'andamento');
-    } else if (estado === 'travadas' || estado === 'travados') {
+    } else if (estado === 'travadas' || estado === 'travado' || estado === 'travada') {
       itens = itens.filter(i => i.estado === 'travada');
     } else if (estado === 'concluidas' || estado === 'feitos' || estado === 'concluida') {
       itens = itens.filter(i => i.estado === 'concluida');
@@ -66,6 +66,9 @@ function criarPedidos(env = process.env, fetchFn = fetch) {
       itens = itens.filter(i => i.precisaVoce);
     } else if (estado === 'fila') {
       itens = itens.filter(i => i.estado === 'fila');
+    } else if (estado) {
+      // Filtro flexível por qualquer estado retornado por estadoTarefa (ex: aguardando-ia, falhou)
+      itens = itens.filter(i => i.estado === estado);
     }
     
     const total = itens.length;
