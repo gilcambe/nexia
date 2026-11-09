@@ -34,3 +34,5 @@ apps/body-coach/android/upload.keystore
 test-results-no-ar/
 playwright-report-no-ar/
 tools/agente-maquina/agente.config.json
+homologacao-resultado.json
+homologacao-resumo.md

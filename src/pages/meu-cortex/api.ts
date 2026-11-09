@@ -48,6 +48,7 @@ export function usePedidos() {
   const prs = useCallback(<T,>() => chamar<T>("?prs=1"), [chamar]);
   const projetos = useCallback(<T,>() => chamar<T>("?projetos=1"), [chamar]);
   const cofre = useCallback(<T,>() => chamar<T>("?cofre=1"), [chamar]);
+  const homologacao = useCallback(<T,>() => chamar<T>("?homologacao=1"), [chamar]);   // #3269
   const agir = useCallback((corpo: Record<string, unknown>) => chamar<{ ok: boolean; mensagem: string; numero?: number; caminho?: string; assumiu?: { ia: string; numero: number; titulo?: string; fazendo: string }[]; feitos?: number[] }>("", corpo), [chamar]);
-  return { listar, abrir, agir, deploy, ias, prs, projetos, cofre };
+  return { listar, abrir, agir, deploy, ias, prs, projetos, cofre, homologacao };
 }

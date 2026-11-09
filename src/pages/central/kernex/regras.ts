@@ -7,6 +7,7 @@ export const TELAS = [
   { id: "tarefas", nome: "Tarefas", icone: "✅", serve: "Cada tarefa: quem pegou, onde parou e por quê." },
   { id: "arquivos", nome: "Arquivos", icone: "🗂️", serve: "Achar qualquer arquivo dos seus PCs e abrir com 1 clique." },
   { id: "publicacoes", nome: "Publicações", icone: "🚀", serve: "O que entrou no código e o que já está no ar." },
+  { id: "homologacao", nome: "Homologação", icone: "🧪", serve: "Cada produto testado antes de qualquer versão: verde passa, vermelho bloqueia." },
   { id: "cofre", nome: "Cofre", icone: "🔐", serve: "Nomes das chaves e quando foram trocadas. O valor nunca aparece." },
   { id: "relatorios", nome: "Relatórios", icone: "📊", serve: "O que foi feito por dia e por IA." },
   { id: "config", nome: "Configurações", icone: "⚙️", serve: "Avisos, modo ausente e jeito da tela." },

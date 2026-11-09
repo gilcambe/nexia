@@ -16,9 +16,9 @@ async function regras() {
   return import(pathToFileURL(path.join(dir, 'regras.mjs')).href);
 }
 
-test('KX1. menu tem as 10 telas do Plano-Mestre', async () => {
+test('KX1. menu tem as 10 telas do Plano-Mestre + Homologação (pedido do dono 09/11)', async () => {
   const { TELAS } = await regras();
-  assert.deepEqual(TELAS.map((t) => t.nome), ['Início', 'Projetos', 'Máquinas', 'IA & Cortex', 'Tarefas', 'Arquivos', 'Publicações', 'Cofre', 'Relatórios', 'Configurações']);
+  assert.deepEqual(TELAS.map((t) => t.nome), ['Início', 'Projetos', 'Máquinas', 'IA & Cortex', 'Tarefas', 'Arquivos', 'Publicações', 'Homologação', 'Cofre', 'Relatórios', 'Configurações']);
   assert.ok(TELAS.every((t) => t.serve.length > 10));
 });
 

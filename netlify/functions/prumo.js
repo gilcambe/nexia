@@ -380,8 +380,27 @@ const deps = {
 const responder = (event, statusCode, body) => ({ statusCode, headers: makeHeaders(event), body: JSON.stringify(body) });
 
 async function listar(col) { const s = await col.get(); return s.docs.map((d) => ({ id: d.id, ...d.data() })); }
+// ---------- Homologação KF (#3267): o mesmo ativo nunca aparece 2 vezes ----------
+// Chave do ativo: banco + (ticker ou nome), sem acento, sem maiúscula, sem "S.A."/"Ltda", sem palavras soltas
+// (do, da, de, -). O vencimento NÃO entra: o print quase nunca traz e o salvo às vezes tem (viraria duplicado).
+// A MESMA regra está em prumo/carteira.js (chaveAtivo); o teste KF-010 confere que as duas dão igual.
+function chaveAtivo(x) {
+  const n = (v) => String(v || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+    .replace(/\b(s\.?a\.?|ltda)\b/g, ' ').replace(/[^a-z0-9%]+/g, ' ').replace(/\b(do|da|de|dos|das|e)\b/g, ' ').replace(/\s+/g, ' ').trim();
+  return [n(x && x.banco), n(x && (x.ticker || x.nome))].join('|');
+}
+/** Junta linhas repetidas (mesma chave): fica a mais nova. Não apaga nada do banco. */
+function semDuplicados(itens) {
+  const porChave = new Map();
+  for (const it of itens || []) {
+    const k = chaveAtivo(it); const ja = porChave.get(k);
+    if (!ja || String(it.atualizado_em || '') > String(ja.atualizado_em || '')) porChave.set(k, it);
+  }
+  return [...porChave.values()];
+}
+async function listarCarteira(base) { return semDuplicados(await listar(base.collection('carteira'))); }
 async function gravarHistorico(base) {
-  const itens = await listar(base.collection('carteira'));
+  const itens = await listarCarteira(base);
   const data = deps.agora().toISOString().slice(0, 10);
   await base.collection('historico').doc(data).set({ data, ...fotoDoDia(itens) });
 }
@@ -401,10 +420,22 @@ async function agir(uid, body) {
   const apagar = async (colecao) => { if (!id) return [400, { error: 'Diga qual item apagar.' }]; await base.collection(colecao).doc(id).delete(); return [200, { ok: true }]; };
 
   // Fases 2 a 4 (holerite, orçamento, consultor, milhas) ficam em prumo-lib/extra.js.
-  const ctx = { uid, base, listar, salvar, apagar, deps, agoraIso, lerImagens, extrairJson, resumoMes, progressoObjetivos, resumoHistorico };
+  const ctx = { uid, base, listar, listarCarteira: () => listarCarteira(base), salvar, apagar, deps, agoraIso, lerImagens, extrairJson, resumoMes, progressoObjetivos, resumoHistorico };
   switch (body.acao) {
-    case 'carteira_listar': return [200, { itens: (await listar(base.collection('carteira'))).sort((a, b) => String(a.nome).localeCompare(String(b.nome), 'pt-BR')) }];
-    case 'carteira_salvar': { const r = await salvar('carteira', validarItemCarteira(body)); if (r[0] === 200) await gravarHistorico(base); return r; }
+    case 'carteira_listar': return [200, { itens: (await listarCarteira(base)).sort((a, b) => String(a.nome).localeCompare(String(b.nome), 'pt-BR')) }];
+    case 'carteira_salvar': {
+      // Sem id e já existe o mesmo ativo: atualiza o que existe (não cria outro).
+      const valid = validarItemCarteira(body);
+      if (valid.ok && !id) {
+        const igual = (await listar(base.collection('carteira'))).filter((a) => chaveAtivo(a) === chaveAtivo(valid.item)).sort((a, b) => String(b.atualizado_em || '').localeCompare(String(a.atualizado_em || '')))[0];
+        if (igual) {
+          if (!valid.item.objetivo_id && igual.objetivo_id) valid.item.objetivo_id = igual.objetivo_id;
+          await base.collection('carteira').doc(igual.id).set({ ...valid.item, atualizado_em: agoraIso });
+          await gravarHistorico(base);
+          return [200, { ok: true, id: igual.id, atualizado: true, item: { id: igual.id, ...valid.item } }];
+        }
+      }
+      const r = await salvar('carteira', valid); if (r[0] === 200) await gravarHistorico(base); return r; }
     case 'carteira_limpar': {
       // #3037: limpar e refazer. Só a carteira do próprio usuário; objetivos e histórico ficam.
       if (body.confirmar !== 'LIMPAR') return [400, { error: 'Confirme digitando LIMPAR.' }];
@@ -413,7 +444,13 @@ async function agir(uid, body) {
       await gravarHistorico(base);
       return [200, { ok: true, apagados: todos.length }];
     }
-    case 'carteira_apagar': { const r = await apagar('carteira'); if (r[0] === 200) await gravarHistorico(base); return r; }
+    case 'carteira_apagar': {
+      // Apagar um ativo apaga também as cópias repetidas dele (senão a cópia "volta" na lista e o total não cai).
+      if (id) {
+        const todos = await listar(base.collection('carteira')); const alvo = todos.find((a) => a.id === id);
+        if (alvo) for (const c of todos) if (c.id !== id && chaveAtivo(c) === chaveAtivo(alvo)) await base.collection('carteira').doc(c.id).delete();
+      }
+      const r = await apagar('carteira'); if (r[0] === 200) await gravarHistorico(base); return r; }
     case 'cartao_salvar': return salvar('cartoes', validarCartao(body));
     case 'cartao_listar': return [200, { cartoes: await listar(base.collection('cartoes')) }];
     case 'cartao_apagar': return apagar('cartoes');
@@ -449,7 +486,7 @@ async function agir(uid, body) {
       return r ? [200, r] : [503, { error: 'Não consegui ler agora. Tente de novo ou digite os valores.' }];
     }
     case 'objetivo_salvar': return salvar('objetivos', validarObjetivo(body));
-    case 'objetivo_listar': return [200, { objetivos: progressoObjetivos(await listar(base.collection('objetivos')), await listar(base.collection('carteira'))) }];
+    case 'objetivo_listar': return [200, { objetivos: progressoObjetivos(await listar(base.collection('objetivos')), await listarCarteira(base)) }];
     case 'objetivo_apagar': {
       if (!id) return [400, { error: 'Diga qual objetivo apagar.' }];
       for (const it of (await listar(base.collection('carteira'))).filter((x) => x.objetivo_id === id)) {
@@ -483,4 +520,4 @@ exports.handler = async (event) => {
   }
 };
 
-Object.assign(exports, { viaWorkersAi, separarLinhasIguais, tirarSubtotais, conferir, VISAO, LER_PRINT, normalizarLido, valorLido, validarItemCarteira, validarCartao, validarGasto, resumoMes, validarLista, avisosPendentes, extrairJson, lerImagens, lerPrint, validarObjetivo, progressoObjetivos, resumoHistorico, fotoDoDia, agir, deps, TIPOS, CATEGORIAS });
+Object.assign(exports, { chaveAtivo, semDuplicados, viaWorkersAi, separarLinhasIguais, tirarSubtotais, conferir, VISAO, LER_PRINT, normalizarLido, valorLido, validarItemCarteira, validarCartao, validarGasto, resumoMes, validarLista, avisosPendentes, extrairJson, lerImagens, lerPrint, validarObjetivo, progressoObjetivos, resumoHistorico, fotoDoDia, agir, deps, TIPOS, CATEGORIAS });

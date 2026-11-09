@@ -1,0 +1,26 @@
+{
+  "produto": "kernex-finance",
+  "nota": "Bugs do dono: soma de totais e ATIVOS DUPLICADOS na lista (#3267). Os 10 casos estão no mesmo arquivo de teste.",
+  "casos": [
+    {
+      "id": "KF-ARQ",
+      "titulo": "Kernex Finance: KF-001 Total = soma exata das linhas, em centavos; KF-002 Soma dos grupos por tipo = total geral; KF-003 Mesmo ativo em 2 prints (rolagem) salva 1 vez só; KF-004 Mesmo ativo escrito diferente (caixa, acento, 'do', hífen, S.A.) é o mesmo; KF-005 Importar o mesmo print 2 vezes não dobra o valor; KF-006 Ativos diferentes de nome parecido continuam separados; KF-007 Título de grupo com subtotal nunca vira ativo; KF-008 Duplicados já gravados: lista mostra 1 e apagar faz o total cair o valor exato; KF-009 Salvar de novo depois de recarregar: mesma lista e mesmo total; KF-010 Chave do ativo igual na tela e no servidor",
+      "origem": "bug do dono 2026-11 (ativos duplicados e soma) #3267",
+      "tipo": "unit",
+      "teste": "tests/unit/prumo-homologacao.test.js",
+      "variaveis": [
+        "2 prints",
+        "print repetido",
+        "nome escrito diferente",
+        "duplicado já gravado"
+      ]
+    },
+    {
+      "id": "KF-TP",
+      "titulo": "Totais de prints rolados (TP1-TP3)",
+      "origem": "bug do dono 2026-11 (soma de totais)",
+      "tipo": "unit",
+      "teste": "tests/unit/prumo-totais-prints.test.js"
+    }
+  ]
+}
