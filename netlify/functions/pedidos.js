@@ -71,6 +71,8 @@ function createHandler(deps = {}) {
         if (qs.prs) return res(200, await prsAbertos(p.gh));
         if (qs.homologacao) return res(200, await require('./central/homologacao').carregar(p.gh));   // #3269
         if (qs.ias) return res(200, await (deps.iasAgora || iasAgoraComResumo)(p.gh));
+        // #3284: card "Quem está trabalhando" (registros trabalho-ativo: trabalhando / parou / assumido).
+        if (qs.quem) return res(200, { ...(await (deps.quemTrabalha || require('./central/quem-trabalha').obterQuemTrabalha)({ gh: p.gh })), conferidoEm: new Date().toISOString() });
         return res(200, await p.lista({ q: qs.q, estado: qs.estado, pagina: qs.pagina }));
       }
       let b = {};

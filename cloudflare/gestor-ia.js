@@ -97,6 +97,7 @@ async function processarPassagens({ gh, agora = Date.now(), placar = getPlacar()
     }
 
     const novasIssues = [];
+    let falhas = 0; // issue que não abriu (ex.: sem acesso ao repo): o registro NÃO vira 'passado', a próxima rodada tenta de novo.
     for (const item of pendentes) {
       if (totalCriadas >= MAX_ISSUES_RODADA) break;
       const chaveMarcador = `${reg.repo || REPO_PADRAO}#${issue.number}#${item.indice}`;
@@ -124,6 +125,7 @@ async function processarPassagens({ gh, agora = Date.now(), placar = getPlacar()
         return null;
       });
 
+      if (!res || !res.number) { falhas++; continue; }
       if (res && res.number) {
         novasIssues.push(res.number);
         jaPassados.add(chaveMarcador);
@@ -131,6 +133,8 @@ async function processarPassagens({ gh, agora = Date.now(), placar = getPlacar()
         out.criadas.push({ repo: destinoRepo, issue: res.number, de: issue.number, indice: item.indice });
       }
     }
+
+    if (falhas) { out.paradas[out.paradas.length - 1].falhas = falhas; continue; }
 
     // Se passou itens ou todos já haviam sido passados, atualiza estado do registro para 'passado'
     const regAtualizado = { ...reg, estado: 'passado', atualizadoEm: new Date(agora).toISOString() };

@@ -49,6 +49,8 @@ export function usePedidos() {
   const projetos = useCallback(<T,>() => chamar<T>("?projetos=1"), [chamar]);
   const cofre = useCallback(<T,>() => chamar<T>("?cofre=1"), [chamar]);
   const homologacao = useCallback(<T,>() => chamar<T>("?homologacao=1"), [chamar]);   // #3269
+  // #3284: quem está trabalhando (Claude/IA com registro trabalho-ativo) e quem assumiu quando parou.
+  const quem = useCallback(<T,>() => chamar<T>("?quem=1"), [chamar]);
   const agir = useCallback((corpo: Record<string, unknown>) => chamar<{ ok: boolean; mensagem: string; numero?: number; caminho?: string; assumiu?: { ia: string; numero: number; titulo?: string; fazendo: string }[]; feitos?: number[] }>("", corpo), [chamar]);
-  return { listar, abrir, agir, deploy, ias, prs, projetos, cofre, homologacao };
+  return { listar, abrir, agir, deploy, ias, prs, projetos, cofre, homologacao, quem };
 }
