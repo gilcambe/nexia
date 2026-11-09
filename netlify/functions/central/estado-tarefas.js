@@ -149,31 +149,98 @@ function resumoDia(contagens = {}, ias = []) {
 /**
  * Agrega e conta tarefas por estado para painéis e resumos.
  */
-function estadoTarefas(issues = [], agora = Date.now(), cfg = {}) {
-  const contagens = {
-    fila: 0,
-    andamento: 0,
-    'aguardando-ia': 0,
-    travada: 0,
-    concluida: 0,
-    falhou: 0,
-    total: 0,
-    precisaVoce: 0,
+/**
+ * Busca e agrega o estado das tarefas usando a API do GitHub.
+ * @param {object} [opts] - Opções (ex: token, agora)
+ */
+async function estadoTarefas(opts = {}) {
+  const token = opts.token || process.env.GITHUB_TOKEN || process.env.NEXIA_JOBS_TOKEN || process.env.NEXIA_GITHUB_TOKEN || '';
+  const agora = opts.agora || Date.now();
+  const headers = {
+    Accept: 'application/vnd.github.v3+json',
+    'User-Agent': 'Nexia-Cortex',
   };
-
-  for (const issue of issues) {
-    if (issue.pull_request) continue;
-    contagens.total++;
-    const info = estadoTarefa(issue, agora, cfg);
-    if (contagens[info.estado] !== undefined) {
-      contagens[info.estado]++;
-    }
-    if (info.precisaVoce) {
-      contagens.precisaVoce++;
-    }
+  if (token) {
+    headers['Authorization'] = `token ${token}`;
   }
 
-  return contagens;
+  let fila = 0;
+  let rodandoList = [];
+  let travadasList = [];
+  let feitas7 = 0;
+
+  try {
+    // 1. Fila: repo:gilcambe/nexia is:issue is:open label:cortex-fila
+    const resFila = await fetch('https://api.github.com/search/issues?q=' + encodeURIComponent('repo:gilcambe/nexia is:issue is:open label:cortex-fila'), { headers });
+    if (resFila.ok) {
+      const dataFila = await resFila.json();
+      fila = typeof dataFila.total_count === 'number' ? dataFila.total_count : 0;
+    }
+  } catch (e) {
+    // Ignora erro de fetch na fila
+  }
+
+  try {
+    // 2. Rodando e travadas: repo:gilcambe/nexia is:issue is:open label:cortex-rodando
+    const resRodando = await fetch('https://api.github.com/search/issues?q=' + encodeURIComponent('repo:gilcambe/nexia is:issue is:open label:cortex-rodando'), { headers });
+    if (resRodando.ok) {
+      const dataRodando = await resRodando.json();
+      const items = Array.isArray(dataRodando.items) ? dataRodando.items : [];
+      const limiteMs = 30 * 60 * 1000;
+
+      for (const issue of items) {
+        const updatedAt = issue.updated_at || issue.created_at || new Date().toISOString();
+        const msAtualizacao = Date.parse(updatedAt);
+        const msInativo = Number.isFinite(msAtualizacao) ? Math.max(0, agora - msAtualizacao) : 0;
+        const minInativo = Math.floor(msInativo / 60000);
+
+        const obj = {
+          id: issue.id || issue.number,
+          title: issue.title || '',
+          updated_at: updatedAt,
+          motivo: `sem atividade há ${minInativo} min`,
+        };
+
+        if (msInativo <= limiteMs) {
+          rodandoList.push(obj);
+        } else {
+          travadasList.push(obj);
+        }
+      }
+    }
+  } catch (e) {
+    // Ignora erro de fetch em rodando
+  }
+
+  try {
+    // 3. Feitas nos últimos 7 dias: closed nos últimos 7 dias (label cortex-feito ou state:closed)
+    const seteDiasAtras = new Date(agora - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    const queryFeitas = `repo:gilcambe/nexia is:issue is:closed closed:>=${seteDiasAtras} label:cortex-feito`;
+    const resFeitas = await fetch('https://api.github.com/search/issues?q=' + encodeURIComponent(queryFeitas), { headers });
+    if (resFeitas.ok) {
+      const dataFeitas = await resFeitas.json();
+      feitas7 = typeof dataFeitas.total_count === 'number' ? dataFeitas.total_count : 0;
+    } else {
+      // Fallback sem label cortex-feito
+      const queryFeitasAlt = `repo:gilcambe/nexia is:issue is:closed closed:>=${seteDiasAtras}`;
+      const resFeitasAlt = await fetch('https://api.github.com/search/issues?q=' + encodeURIComponent(queryFeitasAlt), { headers });
+      if (resFeitasAlt.ok) {
+        const dataFeitasAlt = await resFeitasAlt.json();
+        feitas7 = typeof dataFeitasAlt.total_count === 'number' ? dataFeitasAlt.total_count : 0;
+      }
+    }
+  } catch (e) {
+    // Ignora erro de fetch em feitas
+  }
+
+  return {
+    fila,
+    rodando: rodandoList,
+    travadas: travadasList,
+    feitas7,
+    conferidoEm: new Date(agora).toISOString(),
+    origem: 'GitHub search issues – contagem de rótulos cortex‑fila/rodando/feito',
+  };
 }
 
 module.exports = {
