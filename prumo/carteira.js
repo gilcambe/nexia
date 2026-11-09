@@ -137,7 +137,9 @@ if (typeof window !== 'undefined') (function () {
       ${descartados && descartados.length ? `<p class="fraco">${descartados.length} item(ns) sem valor legível foram ignorados.</p>` : ''}
       <div class="linha"><button class="btn sec" id="cancelar">Cancelar</button><button class="btn" id="salvar">Salvar selecionados</button></div></div>`;
     el.querySelector('#cancelar').onclick = () => { apagarRascunho(); recarregar(); };
-    el.querySelector('#salvar').onclick = async () => {
+    el.querySelector('#salvar').onclick = async (ev) => {
+      // Um toque só: o botão trava enquanto salva (dois toques criavam o mesmo investimento duas vezes).
+      if (ev && ev.currentTarget) { if (ev.currentTarget.disabled) return; ev.currentTarget.disabled = true; ev.currentTarget.textContent = 'Salvando…'; }
       const escolhidos = [...el.querySelectorAll('[data-n]')].filter((c) => c.querySelector('input[type=checkbox]').checked).map((c) => {
         const base = { ...itens[Number(c.dataset.n)] };
         c.querySelectorAll('[data-k]').forEach((f) => { base[f.dataset.k] = f.dataset.k === 'valor' ? Number(f.value) : f.value; });

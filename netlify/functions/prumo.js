@@ -257,6 +257,24 @@ const VISAO = [
   { provider: 'openrouter', model: 'google/gemma-3-27b-it:free' },
   { provider: 'openrouter', model: 'qwen/qwen2.5-vl-72b-instruct:free' },
 ];
+/** Mesmo investimento: mesmo ticker (ou mesmo nome, sem ticker) e mesmo banco (banco vazio vale para qualquer um). */
+const normCarteira = (v) => String(v || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/\b(s\.?a\.?|ltda)\b/g, '').replace(/[^a-z0-9%]+/g, ' ').trim();
+function mesmoAtivo(a, b) {
+  if (!a || !b) return false;
+  const ka = normCarteira(a.ticker || a.nome); const kb = normCarteira(b.ticker || b.nome);
+  if (!ka || ka !== kb) return false;
+  const ba = normCarteira(a.banco); const bb = normCarteira(b.banco);
+  return !ba || !bb || ba === bb;
+}
+/** Separa cópias idênticas (mesmo ativo + mesmo valor + mesmas cotas): fica a primeira. */
+function copiasIguais(itens) {
+  const ficam = []; const sobram = [];
+  for (const x of itens || []) {
+    const igual = ficam.find((f) => mesmoAtivo(f, x) && Number(f.valor) === Number(x.valor) && (Number(f.quantidade) || 0) === (Number(x.quantidade) || 0));
+    (igual ? sobram : ficam).push(x);
+  }
+  return { ficam, sobram };
+}
 async function lerPrint(imagens, deps) {
   const router = deps.getRouter();
   const itens = []; const descartados = []; const falhas = [];
@@ -403,8 +421,25 @@ async function agir(uid, body) {
   // Fases 2 a 4 (holerite, orçamento, consultor, milhas) ficam em prumo-lib/extra.js.
   const ctx = { uid, base, listar, salvar, apagar, deps, agoraIso, lerImagens, extrairJson, resumoMes, progressoObjetivos, resumoHistorico };
   switch (body.acao) {
-    case 'carteira_listar': return [200, { itens: (await listar(base.collection('carteira'))).sort((a, b) => String(a.nome).localeCompare(String(b.nome), 'pt-BR')) }];
-    case 'carteira_salvar': { const r = await salvar('carteira', validarItemCarteira(body)); if (r[0] === 200) await gravarHistorico(base); return r; }
+    case 'carteira_listar': {
+      // Cópias idênticas (mesmo ativo, mesmo valor, mesmas cotas), de um "Salvar" tocado duas vezes, somem aqui.
+      const todos = await listar(base.collection('carteira'));
+      const { ficam, sobram } = copiasIguais(todos);
+      for (const x of sobram) await base.collection('carteira').doc(x.id).delete();
+      if (sobram.length) await gravarHistorico(base);
+      return [200, { itens: ficam.sort((a, b) => String(a.nome).localeCompare(String(b.nome), 'pt-BR')), copias_removidas: sobram.length }];
+    }
+    case 'carteira_salvar': {
+      const v = validarItemCarteira(body);
+      if (!v.ok) return [400, { error: v.erro }];
+      // Sem id: se o mesmo investimento já existe, atualiza ele em vez de criar outro.
+      let alvo = id;
+      if (!alvo) { const igual = (await listar(base.collection('carteira'))).find((a) => mesmoAtivo(a, v.item)); if (igual) { alvo = igual.id; if (!v.item.objetivo_id && igual.objetivo_id) v.item.objetivo_id = igual.objetivo_id; } }
+      const novo = alvo || novoId();
+      await base.collection('carteira').doc(novo).set({ ...v.item, atualizado_em: agoraIso });
+      await gravarHistorico(base);
+      return [200, { ok: true, id: novo, item: { id: novo, ...v.item }, atualizou: !!alvo }];
+    }
     case 'carteira_limpar': {
       // #3037: limpar e refazer. Só a carteira do próprio usuário; objetivos e histórico ficam.
       if (body.confirmar !== 'LIMPAR') return [400, { error: 'Confirme digitando LIMPAR.' }];
@@ -483,4 +518,4 @@ exports.handler = async (event) => {
   }
 };
 
-Object.assign(exports, { viaWorkersAi, separarLinhasIguais, tirarSubtotais, conferir, VISAO, LER_PRINT, normalizarLido, valorLido, validarItemCarteira, validarCartao, validarGasto, resumoMes, validarLista, avisosPendentes, extrairJson, lerImagens, lerPrint, validarObjetivo, progressoObjetivos, resumoHistorico, fotoDoDia, agir, deps, TIPOS, CATEGORIAS });
+Object.assign(exports, { viaWorkersAi, separarLinhasIguais, tirarSubtotais, mesmoAtivo, copiasIguais, conferir, VISAO, LER_PRINT, normalizarLido, valorLido, validarItemCarteira, validarCartao, validarGasto, resumoMes, validarLista, avisosPendentes, extrairJson, lerImagens, lerPrint, validarObjetivo, progressoObjetivos, resumoHistorico, fotoDoDia, agir, deps, TIPOS, CATEGORIAS });

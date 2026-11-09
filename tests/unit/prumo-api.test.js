@@ -182,3 +182,37 @@ test('PR11. print: se as IAs com chave falham, o Workers AI do Cloudflare lê so
   assert.equal(r.itens.length, 1);
   assert.equal(r.conferencia[0].confere, true);
 });
+
+test('PR-DUP1. carteira nunca guarda o mesmo ativo duas vezes (caso real dos prints da corretora)', async () => {
+  const banco = bancoFalso();
+  const antes = { db: p.deps.db, agora: p.deps.agora };
+  p.deps.db = () => banco;
+  p.deps.agora = () => new Date('2026-11-09T12:00:00Z');
+  try {
+    // "Salvar" tocado duas vezes: os mesmos itens chegam duas vezes, sem id.
+    const lote = [
+      { nome: 'CDB LIQUIDEZ DIARIA', tipo: 'renda_fixa', valor: 138122.79 },
+      { nome: 'BTLG11', ticker: 'BTLG11', tipo: 'fiis', valor: 2554.24, quantidade: 26 },
+      { nome: 'CDII11', ticker: 'CDII11', tipo: 'fiis', valor: 272.55, quantidade: 3 },
+    ];
+    for (let vez = 0; vez < 2; vez++) for (const it of lote) assert.equal((await p.agir('u1', { acao: 'carteira_salvar', ...it }))[0], 200);
+    const r = (await p.agir('u1', { acao: 'carteira_listar' }))[1];
+    assert.equal(r.itens.length, 3);
+    assert.equal(Math.round(r.itens.reduce((a, x) => a + x.valor, 0) * 100) / 100, 140949.58);
+    // Mesmo ativo com valor novo = atualiza, não cria outro.
+    await p.agir('u1', { acao: 'carteira_salvar', nome: 'BTLG11', ticker: 'BTLG11', tipo: 'fiis', valor: 2600, quantidade: 26 });
+    const r2 = (await p.agir('u1', { acao: 'carteira_listar' }))[1];
+    assert.equal(r2.itens.length, 3);
+    assert.equal(r2.itens.find((x) => x.ticker === 'BTLG11').valor, 2600);
+  } finally { Object.assign(p.deps, antes); }
+});
+
+test('PR-DUP2. cópias idênticas já salvas somem ao abrir a carteira; posições diferentes ficam', () => {
+  const { ficam, sobram } = p.copiasIguais([
+    { id: 'a', nome: 'CDB LIQUIDEZ DIARIA', valor: 138122.79 }, { id: 'b', nome: 'CDB LIQUIDEZ DIARIA', valor: 138122.79 },
+    { id: 'c', nome: 'CYCR11', ticker: 'CYCR11', valor: 186.99, quantidade: 23 }, { id: 'd', nome: 'CYCR11', ticker: 'CYCR11', valor: 186.99, quantidade: 23 },
+    { id: 'e', nome: 'Previdência — Participante', valor: 100 }, { id: 'f', nome: 'Previdência — Patrocinadora', valor: 100 },
+  ]);
+  assert.deepEqual(ficam.map((x) => x.id), ['a', 'c', 'e', 'f']);
+  assert.deepEqual(sobram.map((x) => x.id), ['b', 'd']);
+});
