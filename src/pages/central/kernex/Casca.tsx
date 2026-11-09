@@ -121,7 +121,7 @@ export default function Casca() {
           </button>
         ))}
         <div className="kx-menu-rodape">
-          <a className="kx-online" href="/central" style={{ borderColor: "#33415599", color: "#c7d2f0" }}>Abrir a Central antiga</a>
+          <a className="kx-online" href="/central?antiga=1" style={{ borderColor: "#33415599", color: "#c7d2f0" }}>Abrir a Central antiga</a>
           <div className="kx-online" style={{ borderColor: corSaude + "88", background: corSaude + "14" }}>
             <span className="kx-bola" style={{ background: corSaude }} />
             <span><b style={{ display: "block" }}>{painel.saude ? `${painel.saude.total - painel.saude.fora} de ${painel.saude.total} serviços no ar` : "Serviços: conferindo"}</b>
