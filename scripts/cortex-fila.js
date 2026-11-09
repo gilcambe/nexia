@@ -425,13 +425,57 @@ async function sondarUm(txt, fetchImpl, tokenImpl) {
   }
 }
 
-// Vale se QUALQUER banco do rodízio (B, C) ainda tem cota de leitura e escrita.
+// Sonda o Cloudflare D1 (banco de reserva). Retorna { ok: true/false, motivo }.
+async function sondarD1(env, fetchImpl) {
+  const token = env.NEXIA_D1_TOKEN, accountId = env.NEXIA_D1_ACCOUNT_ID;
+  if (!token || !accountId) return null;
+  const H = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
+  try {
+    let dbId = env.NEXIA_D1_DATABASE_ID;
+    if (!dbId) {
+      const dbName = env.NEXIA_D1_NAME || 'nexia-cortex';
+      const rName = await fetchImpl(`https://api.cloudflare.com/client/v4/accounts/${accountId}/d1/database?name=${encodeURIComponent(dbName)}`, { headers: H });
+      const jName = await rName.json().catch(() => ({}));
+      const hit = (jName.result || []).find(d => d.name === dbName);
+      if (hit && hit.uuid) dbId = hit.uuid;
+      else if (rName.status === 429 || /free tier daily row read limit|RESOURCE_EXHAUSTED|exceeded.*(limit|free tier)|daily .*limit/i.test(JSON.stringify(jName))) {
+        return { ok: false, motivo: 'limite grátis do D1 acabou (volta às 00:00 UTC)' };
+      }
+    }
+    if (!dbId) dbId = env.NEXIA_D1_NAME || 'nexia-cortex';
+    const r = await fetchImpl(`https://api.cloudflare.com/client/v4/accounts/${accountId}/d1/database/${dbId}/query`, {
+      method: 'POST', headers: H, body: JSON.stringify({ sql: 'SELECT 1' }),
+    });
+    const c = await r.text();
+    if (r.status === 429 || /free tier daily row read limit|RESOURCE_EXHAUSTED|exceeded.*(limit|free tier)|daily .*limit/i.test(c)) {
+      return { ok: false, motivo: 'limite grátis do D1 acabou (volta às 00:00 UTC)' };
+    }
+    if (r.ok) return { ok: true, motivo: 'banco de reserva D1 ativo' };
+    return { ok: true, motivo: `sonda do D1 inconclusiva (${r.status})` };
+  } catch (e) {
+    return { ok: true, motivo: `sonda do D1 falhou (${e.message})` };
+  }
+}
+
+// Vale se QUALQUER banco do rodízio (D1 reserva ou Firebase B, C) ainda tem cota de leitura e escrita.
 async function sondarCota(env = process.env, fetchImpl = (...a) => fetch(...a), tokenImpl = null) {
-  if (env.NEXIA_D1_TOKEN && env.NEXIA_D1_ACCOUNT_ID) return { ok: true, motivo: 'banco de reserva D1 ativo' }; // o Vault cai nele sozinho quando o Firebase estoura
+  let d1SemCota = false;
+  let d1Motivo = null;
+  if (env.NEXIA_D1_TOKEN && env.NEXIA_D1_ACCOUNT_ID) {
+    const sD1 = await sondarD1(env, fetchImpl);
+    if (sD1 && sD1.ok) return sD1;
+    if (sD1 && !sD1.ok) {
+      d1SemCota = true;
+      d1Motivo = sD1.motivo;
+    }
+  }
   const textos = ['B', 'C'].map(l => (env[`FIREBASE_SERVICE_ACCOUNT_${l}`] || '').trim()).filter(Boolean);
   if (!textos.length) {
     const b64 = (env.FIREBASE_SERVICE_ACCOUNT_BASE64 || '').replace(/\s/g, '');
-    if (!b64) return { ok: true, motivo: 'sem conta configurada' };
+    if (!b64) {
+      if (d1SemCota) return { ok: false, motivo: d1Motivo || 'limite grátis do D1 acabou (volta às 00:00 UTC)' };
+      return { ok: true, motivo: 'sem conta configurada' };
+    }
     textos.push(Buffer.from(b64, 'base64').toString('utf8'));
   }
   let ultimo = null;
@@ -439,6 +483,9 @@ async function sondarCota(env = process.env, fetchImpl = (...a) => fetch(...a), 
     const r = await sondarUm(txt, fetchImpl, tokenImpl);
     if (r.ok) return r;
     ultimo = r;
+  }
+  if (d1SemCota && (!ultimo || !ultimo.ok)) {
+    return { ok: false, motivo: d1Motivo || (ultimo && ultimo.motivo) || 'limite grátis dos bancos acabou' };
   }
   return ultimo;
 }

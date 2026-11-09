@@ -56,6 +56,15 @@ export function calcularAvisos(d: Dados): Aviso[] {
     passos: ["Toque em \"Conferir agora\" daqui a 1 minuto.", "Se continuar, abra o Firebase pelo link e veja se aparece algum aviso vermelho.", "Se aparecer, me mande um print."],
     link: { rotulo: "Abrir o Firebase", url: "https://console.firebase.google.com/project/nexia-c8710" },
   });
+  if (d.banco && !d.banco.ok && d.banco.cheio) {
+    a.push({
+      cor: "amarelo", texto: "Os bancos acabaram a cota de hoje. A fila volta sozinha (D1 à meia-noite UTC, Firestore às 7h UTC)", aba: "sistema",
+      oque: "Tanto o banco principal quanto o reserva esgotaram a cota diária de leituras ou escritas.",
+      impacto: "A fila do Cortex pausa novos disparos para não queimar tentativas.",
+      passos: ["Não precisa fazer nada: a fila volta a rodar sozinha assim que a cota renovar à meia-noite UTC (D1) e às 7h UTC (Firestore)."],
+      sozinho: true,
+    });
+  }
   for (const r of d.robos?.robos || []) if (r.situacao === "erro") a.push({
     cor: "amarelo", texto: `O robô "${r.nome}" deu erro na última vez`, aba: "sistema",
     oque: `A última rodada do robô "${r.nome}" (${r.arquivo}) terminou com erro.`,

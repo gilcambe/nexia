@@ -97,6 +97,51 @@ test('CF-Q1. sonda de cota: sem conta segue; 429/RESOURCE_EXHAUSTED segura; outr
   assert.equal((await sondarCota(env, async () => { throw new Error('rede'); }, tok)).ok, true);
 });
 
+test('CF-D1-COTA. sonda do D1: 200 devolve ok: true; 429 ou free tier row limit devolve ok: false (quando Firebase também sem cota)', async () => {
+  const envD1 = { NEXIA_D1_TOKEN: 'token-d1', NEXIA_D1_ACCOUNT_ID: 'acc-d1', NEXIA_D1_DATABASE_ID: 'db-d1' };
+
+  // 1. D1 com 200 OK -> devolve ok: true
+  const mockFetchD1Ok = async () => ({ ok: true, status: 200, text: async () => JSON.stringify({ success: true, result: [{ results: [1] }] }) });
+  const rOk = await sondarCota(envD1, mockFetchD1Ok);
+  assert.equal(rOk.ok, true);
+  assert.match(rOk.motivo, /banco de reserva D1 ativo/);
+
+  // 2. D1 com 429 e sem Firebase -> ok: false
+  const mockFetchD1429 = async () => ({ ok: false, status: 429, text: async () => 'error 429' });
+  const r429 = await sondarCota(envD1, mockFetchD1429);
+  assert.equal(r429.ok, false);
+  assert.match(r429.motivo, /limite grátis do D1 acabou/);
+
+  // 3. D1 com "free tier daily row read limit" e sem Firebase -> ok: false
+  const mockFetchD1Limit = async () => ({ ok: false, status: 400, text: async () => 'free tier daily row read limit exceeded' });
+  const rLimit = await sondarCota(envD1, mockFetchD1Limit);
+  assert.equal(rLimit.ok, false);
+  assert.match(rLimit.motivo, /limite grátis do D1 acabou/);
+
+  // 4. D1 sem cota (429), mas Firestore B tem cota -> devolve ok: true do Firestore
+  const sa = { project_id: 'p', client_email: 'a@b.c', private_key: 'x' };
+  const envD1ComFb = { ...envD1, FIREBASE_SERVICE_ACCOUNT_B: JSON.stringify(sa) };
+  const mockD1FalhaFbOk = async (url) => {
+    if (String(url).includes('cloudflare.com')) {
+      return { ok: false, status: 429, text: async () => 'free tier daily row read limit exceeded' };
+    }
+    // Firestore
+    return { ok: true, status: 200, text: async () => '{}' };
+  };
+  const rFbFallback = await sondarCota(envD1ComFb, mockD1FalhaFbOk, async () => 'fb-token');
+  assert.equal(rFbFallback.ok, true);
+
+  // 5. D1 sem cota e Firestore também sem cota (429) -> devolve ok: false
+  const mockAmbosSemCota = async (url) => {
+    if (String(url).includes('cloudflare.com')) {
+      return { ok: false, status: 429, text: async () => 'free tier daily row read limit' };
+    }
+    return { ok: false, status: 429, text: async () => 'RESOURCE_EXHAUSTED' };
+  };
+  const rAmbos = await sondarCota(envD1ComFb, mockAmbosSemCota, async () => 'fb-token');
+  assert.equal(rAmbos.ok, false);
+});
+
 test('CF13. partes criadas pela própria fila (github-actions[bot]) são despachadas, uma de cada vez e em ordem', () => {
   const parte = (n, k) => issue(n, ['cortex-parte'], { author_association: 'CONTRIBUTOR', user: { login: 'github-actions[bot]' }, title: `[Parte ${k}/2 de #359] Bezsan: fontes` });
   const a = decidir({ issues: [parte(364, 1), parte(365, 2)], runs: [], agora: AGORA });

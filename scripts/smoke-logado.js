@@ -72,11 +72,16 @@ async function deleteTestUser(sa) {
 }
 
 // Apaga um registro de teste. O Vault exige If-Match com a versão ATUAL (senão responde 428), por isso lê antes.
+// Segurança: só apaga registros cujo slug seja do teste automático (teste-automatico... ou site-teste-cortex...).
 async function deleteTestRecord(api, tipo, id) {
   if (!id) return false;
   const cur = await api(`/nexia/${tipo}/${id}`);
-  const v = cur.json && cur.json.record && cur.json.record.version;
+  const rec = cur.json && cur.json.record;
+  const v = rec && rec.version;
   if (v === undefined || v === null) return false;
+  const slug = String(rec.slug || '');
+  if (tipo === 'clients' && !slug.startsWith('teste-automatico')) return false;
+  if (tipo === 'projects' && !slug.startsWith('site-teste-cortex')) return false;
   const r = await api(`/nexia/${tipo}/${id}`, { method: 'DELETE', headers: { 'If-Match': `"v${v}"` } });
   return r.status === 200;
 }
@@ -130,8 +135,10 @@ async function main() {
     clienteCriado = client ? client.id : null;
     if (!client && cl.status === 409) client = ((await api('/nexia/clients')).json.items || []).find(c => c.slug === `teste-automatico${PROJ}`);
     if (!client) {
-      report(false, 'Vault: criar cliente', `${cl.status} ${cl.json && (cl.json.error || '')} ${(cl.json && cl.json.causa) || ''}`);
-      throw new Error('Falha ao criar cliente de teste');
+      const causaCliente = `${cl.status} ${cl.json && (cl.json.error || '')} ${(cl.json && cl.json.causa) || ''}`.trim();
+      report(false, 'Vault: criar cliente', causaCliente);
+      report(false, 'Vault: criar projeto', 'não testado: cliente não foi criado');
+      throw new Error(`Falha ao criar cliente de teste: ${causaCliente}`);
     }
     report(true, 'Vault: criar cliente', `${cl.status} ${cl.json && (cl.json.error || '')} ${(cl.json && cl.json.causa) || ''}`);
 
