@@ -264,9 +264,23 @@ const MAX_RECUPERAR_POR_CICLO = 6;   // igual ao nº de pistas: devolve só o qu
 // a fila (não repete trabalho feito) e NÃO é fechada sozinha: quem confere o código é uma pessoa. Só citar o número não basta
 // (um PR de conserto da própria fila cita as tarefas que recupera). "Fecha" em português não fecha a issue sozinho no GitHub.
 const PALAVRA_FECHA = '(?:fecha|fechar|fechou|fechados?|closes?|closed|fix(?:es|ed)?|resolves?|resolved)';
-function entregaComprovada(numero, prsMesclados) {
+function slugDoTitulo(t) {
+  return String(t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 30);
+}
+function entregaComprovada(numero, prsMesclados, titulo) {
   const re = new RegExp(`\\b${PALAVRA_FECHA}\\b[^\\n]*?#${numero}(?!\\d)`, 'i');
-  return (prsMesclados || []).find(pr => pr && pr.merged_at && re.test(`${pr.title || ''}\n${pr.body || ''}`)) || null;
+  const slug = slugDoTitulo(titulo);
+  return (prsMesclados || []).find(pr => {
+    if (!pr || !pr.merged_at) return false;
+    if ((pr.base || {}).ref && pr.base.ref !== 'develop') return false;
+    const prTitle = String(pr.title || '').trim().toLowerCase();
+    const targetTitle = String(titulo || '').trim().toLowerCase();
+    const branchRef = String((pr.head || {}).ref || '');
+    if (re.test(`${pr.title || ''}\n${pr.body || ''}`)) return true;
+    if (targetTitle && prTitle === targetTitle) return true;
+    if (slug && branchRef.includes(slug)) return true;
+    return false;
+  }) || null;
 }
 async function travadasPeloCofre(token, issues, { ghFn = gh } = {}) {
   const voltar = [];
@@ -281,7 +295,7 @@ async function travadasPeloCofre(token, issues, { ghFn = gh } = {}) {
       const quando = await ultimoRotuloEm(token, i.number, L.travado, ghFn);
       if (!travouAntesDoConserto(quando)) continue;   // travou depois do conserto: a causa é da tarefa, não do ambiente
       if (mesclados === null) { const r = (await ghFn(token, 'GET', '/pulls?state=closed&sort=updated&direction=desc&per_page=100')).json; mesclados = Array.isArray(r) ? r : []; }
-      const pr = entregaComprovada(i.number, mesclados);
+      const pr = entregaComprovada(i.number, mesclados, i.title);
       if (pr) { console.log(`travada #${i.number}: o PR #${pr.number} já integrado diz fechar a tarefa; não volta para a fila (precisa de conferência da entrega)`); continue; }
       voltar.push({ tipo: 'reserva-volta', numero: i.number, rotulos: nomes(i), motivo: 'cofre' });
     } catch (e) { console.log(`travada #${i.number}: ${e.message}`); }
@@ -357,7 +371,6 @@ function decidir({ issues, runs, agora = Date.now(), pistas = PISTAS, prs = [], 
   const fila = validas
     .filter(i => { const ls = nomes(i); return !ls.includes(L.rodando) && !ls.includes(L.feito) && !ls.includes(L.travado) && !ls.includes(L.dividido) && !ls.includes(L.semCota); })   // #803: sem cota hoje espera o dia virar
     // cortex-urgente (o dono pediu agora) passa na frente de tudo; depois cortex-prioridade; depois, por número.
-    // Lição de 01/11: com dezenas de issues antigas com cortex-prioridade, o pedido novo do dono esperava a noite inteira.
     .sort((a, b) => (peso(b) - peso(a)) || a.number - b.number);
   // Partes da mesma tarefa rodam em ordem: a parte 2 só sai quando a 1 terminou (uma costuma usar o arquivo da outra).
   // Parte com plano (cortex-plano) espera só as partes de que depende: as independentes rodam juntas, em pistas diferentes.
@@ -370,6 +383,13 @@ function decidir({ issues, runs, agora = Date.now(), pistas = PISTAS, prs = [], 
   };
   const rodando = validas.filter(i => nomes(i).includes(L.rodando));
   for (const i of fila) {
+    // Lição 02/11: PR do Claude já mesclado dizia "Fecha #2853" (em português o GitHub não fecha sozinho) e a fila rodou a
+    // tarefa mais 10 vezes, ocupando pista. Entrega já integrada ou encontrada nos merges por título/branch = fecha direto.
+    const prJaFeito = entregaComprovada(i.number, mesclados, i.title);
+    if (prJaFeito) {
+      acoes.push({ tipo: 'fechar-feito', numero: i.number, corpo: String(i.body || '') });
+      continue;
+    }
     // Parte grande do plano vai para o Jules (cloudflare/jules-auto.js). Se ele não aceitar em 3 h (limite do dia), volta ao Cortex.
     if (nomes(i).includes(L.jules)) {
       if (!nomes(i).includes('jules-enviado') && !mexeEmWorkflow(i) && minutos(agora, i.updated_at) > plano.JULES_DESISTE_MIN) acoes.push({ tipo: 'jules-volta', numero: i.number });
@@ -377,9 +397,6 @@ function decidir({ issues, runs, agora = Date.now(), pistas = PISTAS, prs = [], 
     }
     // A parte que ainda espera a anterior não vai para o Jules nem para o Cortex: antes ia ao Jules sem a dependência pronta.
     if (esperaAnterior(i)) continue;
-    // Lição 02/11: PR do Claude já mesclado dizia "Fecha #2853" (em português o GitHub não fecha sozinho) e a fila rodou a
-    // tarefa mais 10 vezes, ocupando pista. Entrega já integrada = não despacha de novo; a pessoa confere e fecha.
-    if (entregaComprovada(i.number, mesclados)) continue;
     if (mexeEmWorkflow(i)) { acoes.push({ tipo: 'para-jules', numero: i.number }); continue; }
     if (plano.conflitaCom(i, rodando)) continue;   // outra parte rodando mexe no mesmo arquivo: espera ela
     if (precisaDividir(i, tamanhos)) { acoes.push({ tipo: 'dividir', numero: i.number, herdar: herdados(i), titulo: i.title || '', tarefa: String(i.body || '').trim(), tamanhos: tamanhosDe(i.body) }); continue; }
@@ -798,7 +815,7 @@ async function dadosDoPlanejador(token, issues) {
   const out = { tamanhos: {}, prs: [], julesFeitos: [], mesclados: [] };
   try {
     const fechados = (await gh(token, 'GET', '/pulls?state=closed&sort=updated&direction=desc&per_page=100')).json;
-    out.mesclados = (Array.isArray(fechados) ? fechados : []).filter(pr => pr && pr.merged_at).map(pr => ({ number: pr.number, merged_at: pr.merged_at, title: pr.title, body: pr.body }));
+    out.mesclados = (Array.isArray(fechados) ? fechados : []).filter(pr => pr && pr.merged_at).map(pr => ({ number: pr.number, merged_at: pr.merged_at, title: pr.title, body: pr.body, base: pr.base, head: pr.head }));
   } catch { /* sem a lista: segue como antes */ }
   try {
     const novas = issues.filter(i => !i.pull_request && !nomes(i).some(l => [L.rodando, L.feito, L.travado, L.dividido, L.parte, L.semDivisao].includes(l))).slice(0, 15);
