@@ -3,14 +3,14 @@ import { usePedidos } from "../../meu-cortex/api";
 import { useCentral, type Maquina } from "../api";
 import Bloco from "./Bloco";
 import Icone, { LogoK } from "./Icone";
-import { corSemaforo, haQuanto, hora, type TelaId } from "./regras";
+import { COR_ESTADO, corSemaforo, haQuanto, hora, type TelaId } from "./regras";
 
 // #3219 Início no jeito do "Painel Executivo" que o dono mandou: saudação, 4 números grandes coloridos,
 // atalhos para os módulos, controles com 1 toque, assistente para pedir ao Cortex e os painéis do dia.
 // Só número com fonte real; sem fonte, "sem dados" ou "—".
 export interface Ias { ias: { nome: string; situacao: string; ativa: boolean; texto: string; tarefa?: { numero: number; titulo: string } | null; desde?: string | null }[]; resumo: string; contagens: Record<string, number>; conferidoEm: string; origem: string }
 export interface Painel { ias: Ias | null; saude: { fora: number; total: number; em: string } | null; erro: string | null; recarregar?: () => void }
-interface Item { numero: number; titulo: string; texto?: string; motivo?: string; quando: string; ia?: string | null; link?: string }
+interface Item { numero: number; titulo: string; texto?: string; icone?: string; cor?: string; motivo?: string; quando: string; ia?: string | null; link?: string }
 interface Projeto { id: string; nome: string; definido: boolean; pct: number; faltam: unknown[] }
 
 const MODULOS: { id: TelaId; nome: string; frase: string; icone: string; fundo: string }[] = [
@@ -41,10 +41,12 @@ export default function Inicio({ irPara, painel, nome }: { irPara: (t: TelaId) =
   const [aviso, setAviso] = useState<string | null>(null);
   const [ocupado, setOcupado] = useState<string | null>(null);
   const [pedido, setPedido] = useState("");
+  const [meus, setMeus] = useState<{ itens: Item[]; em: string } | null>(null);
 
   const carregar = useCallback(async () => {
     const agora = new Date().toISOString();
-    const [m, p, f, pr] = await Promise.allSettled([buscar("maquinas"), listar("", "precisa", 1), listar("", "concluidas", 1), projetos<{ projetos: Projeto[]; conferidoEm: string; origem: string }>()]);
+    const [m, p, f, pr, me] = await Promise.allSettled([buscar("maquinas"), listar("", "precisa", 1), listar("", "concluidas", 1), projetos<{ projetos: Projeto[]; conferidoEm: string; origem: string }>(), listar("", "meus", 1)]);
+    if (me.status === "fulfilled") setMeus({ itens: (me.value.itens as unknown as Item[]).slice(0, 5), em: agora });
     if (m.status === "fulfilled" && m.value) setMaq({ ligado: !!m.value.ligado, maquinas: m.value.maquinas || [], em: agora });
     if (p.status === "fulfilled") setPrecisa({ itens: (p.value.itens as unknown as Item[]).slice(0, 4), em: agora });
     if (f.status === "fulfilled") setFeitas({ itens: (f.value.itens as unknown as Item[]).slice(0, 5), em: agora });
@@ -137,6 +139,18 @@ export default function Inicio({ irPara, painel, nome }: { irPara: (t: TelaId) =
           <button type="button" className="kx-sugestao" onClick={() => { document.getElementById("kx-busca")?.focus(); }}><Icone nome="busca" tam={16} cor="#a5b4fc" />Buscar uma tela ou tarefa</button>
           <textarea placeholder="Digite seu pedido… (ex.: corrigir o botão de login do Body Coach)" value={pedido} onChange={(e) => setPedido(e.target.value)} aria-label="Pedido para o Cortex" data-testid="kx-pedido" />
           <button type="button" className="kx-btn forte" style={{ justifyContent: "center" }} disabled={ocupado === "pedir"} onClick={enviarPedido}><Icone nome="enviar" tam={16} />Mandar para o Cortex</button>
+          <p className="kx-mut" style={{ margin: "8px 0 0" }}>Meus pedidos {meus ? "· conferido " + haQuanto(meus.em) : ""}</p>
+          <ul className="kx-lista" data-testid="kx-meus-pedidos">
+            {(meus?.itens || []).map((t) => (
+              <li key={t.numero}>
+                {t.texto && <span className="kx-selo" style={{ background: COR_ESTADO[t.cor || "cinza"] || "#64748b" }}>{t.icone} {t.texto}</span>}
+                <a className="kx-linha-tarefa" href={t.link} target="_blank" rel="noreferrer"><span className="kx-titulo">#{t.numero} {t.titulo}</span></a>
+              </li>
+            ))}
+            {meus && meus.itens.length === 0 && <li className="kx-mut">Nenhum pedido seu ainda.</li>}
+            {!meus && <li className="kx-mut">Conferindo…</li>}
+          </ul>
+          <button type="button" className="kx-sugestao" onClick={() => irPara("tarefas")}><Icone nome="lista" tam={16} cor="#a5b4fc" />Ver todos os meus pedidos e o que cada um virou</button>
         </div>
       </Bloco>
 

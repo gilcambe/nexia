@@ -17,7 +17,7 @@ export function Selo({ t }: { t: Pick<Item, "texto" | "icone" | "cor"> }) {
 
 export default function Tarefas({ painel }: { painel?: Painel }) {
   const { listar, abrir, agir } = usePedidos();
-  const [chip, setChip] = useState<Filtro>("andamento");
+  const [chip, setChip] = useState<Filtro>("meus");
   const [q, setQ] = useState("");
   const [itens, setItens] = useState<Item[] | null>(null);
   const [em, setEm] = useState<string | null>(null);

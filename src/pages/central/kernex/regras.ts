@@ -37,6 +37,7 @@ export const haQuanto = (iso?: string | null, agora = Date.now()) => {
 export const hora = (iso?: string | null) => (iso ? new Date(iso).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }) : "");
 
 export const CHIPS = [
+  { id: "meus", nome: "Meus pedidos" },
   { id: "andamento", nome: "Em andamento" },
   { id: "travadas", nome: "Travadas" },
   { id: "precisa", nome: "Precisa de você" },

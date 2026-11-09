@@ -14,7 +14,7 @@ export interface Fala { quem: string; quando: string; texto: string }
 export interface PR { numero: number; titulo: string; link: string; ramo: string; estado: "aberto" | "rascunho" | "juntado" | "fechado"; ci: string | null; automerge: boolean; quando: string }
 export interface Detalhe extends Resumo { rotulos: string[]; conversa: Fala[]; prs: PR[]; linha?: Passo[] }
 export interface Deploy { mudancas: number; titulos: string[]; ultimoDeploy: { quando: string; link: string } | null; emAndamento: boolean; falhou: boolean }
-export type Filtro = "todos" | "abertos" | "travados" | "feitos" | "andamento" | "travadas" | "precisa" | "concluidas";
+export type Filtro = "todos" | "abertos" | "travados" | "feitos" | "andamento" | "travadas" | "precisa" | "concluidas" | "meus";
 
 export const NOME_SITUACAO: Record<Situacao, string> = {
   fila: "⏳ Na fila", fazendo: "⚙️ Fazendo", travado: "🛑 Travado", dividido: "🧩 Em partes", feito: "✅ Feito", fechado: "✖️ Cancelado",
