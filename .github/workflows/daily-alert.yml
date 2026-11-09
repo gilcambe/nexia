@@ -1,0 +1,31 @@
+# Kernex Finance (Fase 14): workflow de alerta diário por e-mail.
+# Dispara diariamente às 08:00 BRT (11:00 UTC) e manualmente via workflow_dispatch.
+# Se a secret de e-mail não estiver configurada, registra "sem segredo, pulei" e finaliza sem erro.
+name: Alerta diário por e-mail
+
+on:
+  schedule:
+    - cron: '0 11 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  alertar:
+    name: Enviar alerta diário
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '20'
+      - name: Executar rotina de alerta
+        env:
+          BREVO_API_KEY: ${{ secrets.BREVO_API_KEY1 || secrets.BREVO_API_KEY }}
+          BREVO_SENDER: ${{ secrets.BREVO_SENDER }}
+          EMAIL_API_KEY: ${{ secrets.EMAIL_API_KEY }}
+          FIREBASE_SERVICE_ACCOUNT_BASE64: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_BASE64 }}
+          FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
+        run: node scripts/kernex-finance-alerta-diario.js
