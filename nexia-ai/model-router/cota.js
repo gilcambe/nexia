@@ -15,6 +15,8 @@ const UMA_H = 60 * 60 * 1000;
 const CIRCUITO_FALHAS = 3;
 const INSTAVEL = new Set(['busy', 'transient']);
 
+const { getRastreadorHora, createRastreadorHora } = require('./limites');
+
 function chaveDe(desc) {
   if (typeof desc === 'string') return desc;
   if (desc && typeof desc === 'object')
@@ -34,9 +36,10 @@ function parseReset(texto) {
   return SESSENTA_S;
 }
 
-function createPlacar({ agora = () => Date.now() } = {}) {
+function createPlacar({ agora = () => Date.now(), rastreadorHora = null } = {}) {
   const placar = {}; // chave -> { ate: number, motivo: string }
   const seguidas = {}; // chave -> falhas seguidas por instabilidade (disjuntor)
+  const limites = rastreadorHora || createRastreadorHora({ agora });
 
   function castigo(tipo, retryAfterMs) {
     switch (tipo) {
@@ -69,11 +72,77 @@ function createPlacar({ agora = () => Date.now() } = {}) {
     },
     /** #821: resposta boa fecha o disjuntor (zera as falhas seguidas). */
     sucesso(desc) { delete seguidas[chaveDe(desc)]; },
-    /** true se o modelo ainda está bloqueado. */
+    /** true se o modelo ainda está bloqueado ou se ultrapassou 90% do orçamento da hora. */
     bloqueado(desc) {
       const k = chaveDe(desc);
       const e = placar[k];
-      return !!e && e.ate > agora();
+      if (e && e.ate > agora()) return true;
+      if (desc && typeof desc === 'object' && desc.provider) {
+        if (!limites.podeExecutar(desc.provider)) return true;
+      }
+      return false;
+    },
+    /** Provedor/modelo ultrapassou 90% do orçamento da hora. */
+    orcamentoEsgotando(desc) {
+      const prov = (desc && typeof desc === 'object') ? desc.provider : String(desc).split('|')[0];
+      return !limites.podeExecutar(prov);
+    },
+    /** Retorna próximo timestamp em que ao menos um modelo estará livre. */
+    proximoReset(lista) {
+      const agora_ = agora();
+      let menorAte = null;
+      for (const item of lista) {
+        const k = chaveDe(item);
+        const e = placar[k];
+        if (e && e.ate > agora_) {
+          if (menorAte === null || e.ate < menorAte) menorAte = e.ate;
+        }
+      }
+      return menorAte || (agora_ + SESSENTA_S);
+    },
+    /**
+     * Executa com fallback imediato em caso de 429 ou esgotamento de orçamento,
+     * pulando para a próxima IA sem esperar e sem marcar falha na tarefa.
+     */
+    async executarComFallback(candidatos, chamadaFn) {
+      let ultimoErro = null;
+      for (const candidato of candidatos) {
+        if (this.bloqueado(candidato)) {
+          continue; // Pula sem chamar
+        }
+        try {
+          const resultado = await chamadaFn(candidato);
+          this.sucesso(candidato);
+          if (candidato && candidato.provider) {
+            limites.registrarConsumo(candidato.provider, {
+              requests: 1,
+              tokens: (resultado && resultado.tokens) || 0,
+            });
+          }
+          return { ok: true, resultado, candidato };
+        } catch (err) {
+          ultimoErro = err;
+          const status = err && (err.status || (err.details && err.details.status));
+          const is429 = status === 429 || /429|quota|rate limit/i.test(err && err.message);
+          if (is429) {
+            const retryAfter = err.retryAfterMs || parseReset(err.retryAfter);
+            this.marcar(candidato, 'rate', retryAfter);
+            // Salto imediato para a próxima IA
+            continue;
+          }
+          // Para outros erros fatais ou que não são de cota: propaga ou segue conforme tipo
+          throw err;
+        }
+      }
+
+      // Se todas as IAs falharam por cota ou estão bloqueadas
+      const proximoResetMs = this.proximoReset(candidatos);
+      return {
+        ok: false,
+        tentarDepois: new Date(proximoResetMs).toISOString(),
+        proximoResetMs,
+        erro: ultimoErro || new Error('Todas as IAs estão temporariamente sem cota.'),
+      };
     },
     /**
      * Devolve a lista sem os bloqueados. Se todos estiverem bloqueados,
@@ -86,8 +155,13 @@ function createPlacar({ agora = () => Date.now() } = {}) {
       for (const item of lista) {
         const k = chaveDe(item);
         const e = placar[k];
-        if (e && e.ate > agora_) bloqueados.push({ item, ate: e.ate });
-        else livres.push(item);
+        const bloqueadoOrcamento = !limites.podeExecutar(item && item.provider ? item.provider : k.split('|')[0]);
+        if ((e && e.ate > agora_) || bloqueadoOrcamento) {
+          const ateMs = (e && e.ate > agora_) ? e.ate : (agora_ + SESSENTA_S);
+          bloqueados.push({ item, ate: ateMs });
+        } else {
+          livres.push(item);
+        }
       }
       if (livres.length) return livres;
       return bloqueados
@@ -95,7 +169,11 @@ function createPlacar({ agora = () => Date.now() } = {}) {
         .map(x => x.item);
     },
     /** Esquece todos os castigos (testes e diagnóstico). */
-    limpar() { for (const k of Object.keys(placar)) delete placar[k]; for (const k of Object.keys(seguidas)) delete seguidas[k]; },
+    limpar() {
+      for (const k of Object.keys(placar)) delete placar[k];
+      for (const k of Object.keys(seguidas)) delete seguidas[k];
+      limites.limpar();
+    },
     /** Objeto simples para salvar no D1 (parte 3). */
     exportar() {
       const out = {};
@@ -153,6 +231,10 @@ function createPlacar({ agora = () => Date.now() } = {}) {
         // nunca pode quebrar a resposta do chamador
       }
     },
+    cardCentral() {
+      return limites.cardCentral();
+    },
+    rastreadorHora: limites,
   };
 }
 
