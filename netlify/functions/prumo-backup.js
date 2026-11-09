@@ -196,7 +196,7 @@ exports.handler = async function(event, context) {
   }
 
   // Endpoint /prumo-admin/delete (LGPD Delete / Esquerda) com validação robusta de admin/token
-      if (path.endsWith('/prumo-admin/delete') || (event.queryStringParameters && event.queryStringParameters.action === 'delete') || acao === 'delete_lgps' || acao === 'delete_lgpd') {
+    if (path.endsWith('/prumo-admin/delete') || (event.queryStringParameters && event.queryStringParameters.action === 'delete') || acao === 'delete_lgps' || acao === 'delete_lgpd') {
       const authHeader = event.headers?.authorization || event.headers?.Authorization || '';
       const token = authHeader.startsWith('Bearer ') ? authHeader.substring(7) : (event.queryStringParameters?.token || bodyData.token || '');
       const expectedToken = process.env.NEXIA_MAQUINA_TOKEN || process.env.NEXIA_CRON_SECRET || 'prumo-admin-secure-token';
