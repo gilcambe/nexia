@@ -21,7 +21,14 @@ function conferirTotais(conferencia, itens, dup) {
   const geral = tudoT > 0 && Math.abs(tudoT - tudoS) <= tudoT * 0.01; // a ordem dos prints veio trocada, mas o todo bate
   return comTotal.map((g) => ({ total_print: cent(g.t), soma_itens: cent(g.soma), confere: geral || Math.abs(g.t - g.soma) <= g.t * 0.01 }));
 }
-if (typeof module !== 'undefined' && module.exports) module.exports = { conferirTotais };
+/** Chave do ativo (#3267): banco + (ticker ou nome), sem acento/maiúscula/"S.A."/"Ltda"/palavras soltas (do, da, de).
+ *  Igual a chaveAtivo de netlify/functions/prumo.js (teste KF-010). */
+function chaveAtivo(x) {
+  const n = (v) => String(v || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+    .replace(/\b(s\.?a\.?|ltda)\b/g, ' ').replace(/[^a-z0-9%]+/g, ' ').replace(/\b(do|da|de|dos|das|e)\b/g, ' ').replace(/\s+/g, ' ').trim();
+  return [n(x && x.banco), n(x && (x.ticker || x.nome))].join('|');
+}
+if (typeof module !== 'undefined' && module.exports) module.exports = { conferirTotais, chaveAtivo };
 
 if (typeof window !== 'undefined') (function () {
   const MB = window.MB;
@@ -103,7 +110,7 @@ if (typeof window !== 'undefined') (function () {
   function apagarRascunho() { try { localStorage.removeItem(CHAVE); } catch { /* sem armazenamento */ } }
 
   // Mesmo banco + mesmo investimento (ticker ou nome) = mesmo item.
-  const chave = (x) => [x.banco, x.ticker || x.nome].map((v) => String(v || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/\b(s\.?a\.?|ltda)\b/g, '').replace(/[^a-z0-9%]+/g, ' ').trim()).join('|');
+  const chave = chaveAtivo;
 
   function conferir(el, { itens, descartados, conferencia }, optObj, atuais) {
     if (!itens.length) { el.innerHTML = '<div class="card">Não achei valores nesses prints. Tente um print mais nítido ou preencha à mão.</div><button class="btn sec" id="volta">Voltar</button>'; el.querySelector('#volta').onclick = recarregar; return; }

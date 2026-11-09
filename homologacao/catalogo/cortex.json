@@ -1,0 +1,6 @@
+{
+  "produto": "cortex",
+  "casos": [
+    {"id": "CX-001", "titulo": "IA cai e outra assume: trabalho-ativo velho vira issues sem duplicar; provedor 429 passa para o próximo", "origem": "pedido do dono 2026-11-09 (#3272)", "tipo": "unit", "teste": "tests/unit/passagem-homologacao.test.js", "variaveis": ["claude-fora", "jules-fora", "429"], "obrigatorio": false, "nota": "vira obrigatorio quando o teste do #3272 entrar"}
+  ]
+}

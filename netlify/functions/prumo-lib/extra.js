@@ -226,14 +226,14 @@ async function agirExtra(acao, body, c) {
       return [200, await resumoOrcamento(mes)];
     }
     case 'avaliar_carteira': {
-      const [itens, objetivos, orc] = await Promise.all([listar(base.collection('carteira')), listar(base.collection('objetivos')), lerOrcamento()]);
+      const [itens, objetivos, orc] = await Promise.all([c.listarCarteira(), listar(base.collection('objetivos')), lerOrcamento()]);
       const fixas = orc ? orc.fixas.reduce((s, f) => s + f.valor, 0) : 0;
       return [200, avaliarCarteira(itens, objetivos, fixas)];
     }
     case 'consultor': {
       const msg = texto(body.mensagem, 1000);
       if (!msg) return [400, { error: 'Escreva sua pergunta.' }];
-      const [itens, objetivosBrutos, hist, hs, orc] = await Promise.all([listar(base.collection('carteira')), listar(base.collection('objetivos')), listar(base.collection('historico')), holerites(), resumoOrcamento(agoraIso.slice(0, 7))]);
+      const [itens, objetivosBrutos, hist, hs, orc] = await Promise.all([c.listarCarteira(), listar(base.collection('objetivos')), listar(base.collection('historico')), holerites(), resumoOrcamento(agoraIso.slice(0, 7))]);
       const objetivos = c.progressoObjetivos(objetivosBrutos, itens);
       const ctx = contextoConsultor({ carteira: itens, objetivos, historico: c.resumoHistorico(hist), holerites: hs, orcamento: orc, avaliacao: avaliarCarteira(itens, objetivosBrutos, orc.fixas) });
       const historico = (Array.isArray(body.historico) ? body.historico.slice(-10) : [])

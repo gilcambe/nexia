@@ -63,7 +63,7 @@ async function agirInvestimentos(acao, body, c) {
   const { base, listar, salvar, apagar, agoraIso } = c;
   switch (acao) {
     case 'invest_visao': {
-      const [itens, divs] = await Promise.all([listar(base.collection('carteira')), listar(base.collection('dividendos'))]);
+      const [itens, divs] = await Promise.all([c.listarCarteira(), listar(base.collection('dividendos'))]);
       return [200, visao(itens, divs, agoraIso)];
     }
     case 'invest_simular': {
@@ -92,7 +92,7 @@ async function agirInvestimentos(acao, body, c) {
     case 'invest_dividendo_listar': return [200, { dividendos: (await listar(base.collection('dividendos'))).sort((a, b) => String(b.data).localeCompare(String(a.data))) }];
     case 'invest_analise': {
       // Só observações sobre a carteira do próprio usuário e sobre dados com fonte. Nada de "compre/venda".
-      const itens = await listar(base.collection('carteira'));
+      const itens = await c.listarCarteira();
       const v = visao(itens, [], agoraIso);
       const obs = [...v.concentracao.alertas];
       for (const x of v.itens) if (x.cotacao && x.cotacao.desatualizada) obs.push(`A cotação de ${x.nome} está desatualizada (fonte: ${x.cotacao.fonte || 'sem fonte'}).`);

@@ -194,7 +194,7 @@ async function agirDoc(acao, body, c) {
       const mes = texto(body.mes, 7) || agoraIso.slice(0, 7);
       if (!MES.test(mes)) return [400, { error: 'O mês precisa estar no formato AAAA-MM.' }];
       const fin = require('./financas');
-      const [lancsTodos, carteira, pontos, cartoes, contas, limites, dividas] = await Promise.all([listar(col), listar(base.collection('carteira')), listar(base.collection('pontos')), listar(base.collection('cartoes')), listar(base.collection('contas')), listar(base.collection('limites')), listar(base.collection('dividas'))]);
+      const [lancsTodos, carteira, pontos, cartoes, contas, limites, dividas] = await Promise.all([listar(col), c.listarCarteira(), listar(base.collection('pontos')), listar(base.collection('cartoes')), listar(base.collection('contas')), listar(base.collection('limites')), listar(base.collection('dividas'))]);
       const lancs = lancsTodos.filter((x) => x.perfil !== 'pj'); // PJ nunca entra nos totais pessoais
       const cfgDiv = await base.collection('config').doc('dividas').get();
       const resDiv = require('./dividas').resumoDividas(dividas, !!(cfgDiv && cfgDiv.exists && cfgDiv.data().sem_dividas), doMesReceitas(lancs, mes));

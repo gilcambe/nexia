@@ -89,7 +89,7 @@ jobs:
             sha=$(jq -r .head.sha <<<"$pr")
             # CI do último commit: tudo concluído e verde, e o job principal precisa existir.
             runs=$(gh api "repos/$REPO/commits/$sha/check-runs?per_page=100" --jq '[.check_runs[] | select(.name != "Merge automático" and .name != "Testar com login")]')
-            if ! jq -e 'any(.[]; .name == "Typecheck, testes e build") and all(.[]; .status == "completed" and (.conclusion == "success" or .conclusion == "skipped" or .conclusion == "neutral"))' <<<"$runs" >/dev/null; then
+            if ! jq -e 'any(.[]; .name == "Typecheck, testes e build") and any(.[]; .name == "Homologação") and all(.[]; .status == "completed" and (.conclusion == "success" or .conclusion == "skipped" or .conclusion == "neutral"))' <<<"$runs" >/dev/null; then
               echo "PR #$n: CI ainda não está verde em ${sha:0:7}; fica para a próxima."
               continue
             fi

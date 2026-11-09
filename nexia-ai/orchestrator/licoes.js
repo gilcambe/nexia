@@ -20,6 +20,7 @@ const LICOES = Object.freeze([
   'Se a mesma parte falhou 3 vezes, não tente a 4ª igual: divida em pedaços menores, copie uma página parecida que já funciona (ex.: vp-cotacoes.html para páginas de painel do Viajante Pro) ou peça ajuda. Exemplo real: #2623 ficou 11 tentativas presa.',
   'Mensagens de chat precisam de ordem estável: grave um número crescente (ordem) além da data, porque duas mensagens podem ter o mesmo milissegundo; e para "só as novas" filtre pelo id da última, não use startAfter com id em orderBy de data.',
   'Entregue só o que a tarefa pede, nos arquivos que ela cita. Exemplo real: para #2717 (motivos da fila na Central) o PR #2835 criou um workflow nexia-pipeline.yml que ninguém pediu; isso conta como falha.',
+  'Homologação (#3264): nenhuma versão é publicada sem o check "Homologação" verde; todo bug do dono vira caso em homologacao/catalogo com teste que falha no código antigo e passa no novo, no mesmo PR (ex.: #3267 ativos duplicados, tests/unit/prumo-homologacao.test.js).',
 ]);
 
 const TEXTO = `LIÇÕES APRENDIDAS (erros reais de tarefas anteriores; não repita):\n${LICOES.map(l => `- ${l}`).join('\n')}`;
