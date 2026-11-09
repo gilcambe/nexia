@@ -20,3 +20,13 @@ test('PAN2. Conversa.tsx possui o botão de voltar sem md:hidden', () => {
   assert.ok(code.includes('data-testid="cx-voltar"'), 'deve conter cx-voltar');
   assert.ok(!/className="[^"]*md:hidden[^"]*"\s*aria-label="Voltar"/.test(code), 'botão voltar não deve ter md:hidden');
 });
+
+test('PAN3. Paineis.tsx contém botão cx-tentar-3 e função tentarAlgumas para 3 travadas (#2304)', () => {
+  const file = path.join(__dirname, '../../src/pages/cortex/Paineis.tsx');
+  const code = fs.readFileSync(file, 'utf8');
+  assert.ok(code.includes('data-testid="cx-tentar-3"'), 'deve conter o botão cx-tentar-3');
+  assert.ok(code.includes('Tentar 3 travadas'), 'texto do botão deve ser Tentar 3 travadas');
+  assert.ok(code.includes('.slice(0, 3)'), 'deve selecionar até 3 tarefas travadas');
+  assert.ok(code.includes('setTimeout(r, 1500)') || code.includes('1500'), 'deve esperar 1,5s entre chamadas');
+  assert.ok(code.includes('Mandei ${travadas.length} para a fila. Toque de novo para mandar mais 3.'), 'deve exibir mensagem ao usuário');
+});

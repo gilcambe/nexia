@@ -168,23 +168,16 @@ export function Tarefas({ abrir }: { abrir: (n: number) => void }) {
   };
 
   const tentarAlgumas = async () => {
+    const travadas = itens.filter((t) => t.situacao === "travado").slice(0, 3);
+    if (!travadas.length) return;
+    if (!confirm(`Tentar de novo ${travadas.length} tarefa(s) travada(s)? As outras ficam esperando.`)) return;
     setMsg(null);
-    setErro(undefined);
-    try {
-      const travadas = itens.filter((t) => t.situacao === "travado").slice(0, 3);
-      if (!travadas.length) {
-        setMsg("Nenhuma tarefa travada encontrada.");
-        return;
-      }
-      for (const t of travadas) {
-        await agir({ acao: "tentar", n: t.numero });
-        await new Promise((resolve) => setTimeout(resolve, 1500));
-      }
-      setMsg(`Tentativa concluída para ${travadas.length} tarefa(s) travada(s).`);
-      carregar();
-    } catch (e) {
-      setErro((e as Error).message);
+    for (const t of travadas) {
+      try { await agir({ acao: "tentar", n: t.numero }); } catch (e) { setErro((e as Error).message); break; }
+      await new Promise((r) => setTimeout(r, 1500));
     }
+    setMsg(`Mandei ${travadas.length} para a fila. Toque de novo para mandar mais 3.`);
+    carregar();
   };
 
   const handleJulesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -231,6 +224,10 @@ export function Tarefas({ abrir }: { abrir: (n: number) => void }) {
         <button type="button" onClick={tentarAlgumas} data-testid="cx-tentar-algumas"
           className="h-10 px-4 rounded-xl bg-[var(--cx-ac)] text-black text-xs font-semibold shrink-0">Tentar travadas</button>
       </div>
+      {(f === "travadas" || (f as string) === "travados") && itens.some((t) => t.situacao === "travado") && (
+        <button type="button" onClick={tentarAlgumas} data-testid="cx-tentar-3"
+          className="mb-4 h-11 px-5 rounded-xl bg-[var(--cx-ac)] text-black font-semibold">Tentar 3 travadas</button>
+      )}
       {f === "travadas" && itens.length > 0 && (
         <button type="button" onClick={tentarAlgumas} data-testid="cx-tentar-travadas"
           className="w-full mb-4 h-11 rounded-xl bg-[var(--cx-ac)] text-black font-semibold text-sm flex items-center justify-center gap-2">
