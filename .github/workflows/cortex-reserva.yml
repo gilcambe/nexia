@@ -198,10 +198,25 @@ jobs:
           done
           echo "ok=0" >> "$GITHUB_OUTPUT"
       - name: Testar
+        id: testar
         if: steps.aplicar.outputs.ok == '1'
-        run: npm test
+        continue-on-error: true
+        run: npm test 2>&1 | tee "$RUNNER_TEMP/teste.txt"; exit "${PIPESTATUS[0]}"
+      - name: Guardar o trabalho mesmo com teste vermelho
+        # Antes, teste vermelho jogava fora tudo o que a IA escreveu. Agora o ramo fica salvo e a issue diz o que falhou,
+        # para a próxima IA (ou a Claude) só consertar o teste em vez de começar do zero.
+        if: steps.aplicar.outputs.ok == '1' && steps.testar.outcome == 'failure'
+        run: |
+          git add -A
+          git reset -q -- '.aider*' .gitignore 2>/dev/null || true
+          git commit -q -m "Reserva (${{ steps.aplicar.outputs.conta }}): issue #$NUMERO (testes vermelhos, falta consertar)"
+          RAMO="nexia/reserva-$NUMERO-$GITHUB_RUN_NUMBER"
+          git push -q origin "$RAMO"
+          FALHAS=$(grep -E '^not ok|Cannot find module|AssertionError' "$RUNNER_TEMP/teste.txt" | head -8 | sed 's/^/    /')
+          gh issue comment "$NUMERO" --body "$(printf 'Reserva (%s) escreveu o código, mas os testes ficaram vermelhos. O trabalho está salvo no ramo `%s`; falta só consertar:\n\n%s\n' "${{ steps.aplicar.outputs.conta }}" "$RAMO" "$FALHAS")"
+          exit 1
       - name: Abrir PR
-        if: steps.aplicar.outputs.ok == '1'
+        if: steps.aplicar.outputs.ok == '1' && steps.testar.outcome == 'success'
         env:
           GITHUB_APP_ID: ${{ secrets.NEXIA_GITHUB_APP_ID }}
           GITHUB_APP_PRIVATE_KEY: ${{ secrets.NEXIA_GITHUB_APP_PRIVATE_KEY }}
