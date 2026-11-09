@@ -12,6 +12,7 @@ const REPO = '/repos/gilcambe/nexia';
 // passou disso, volta ao Cortex (pode ir ao Jules de novo depois).
 const ESPERA_JULES_H = 1;
 const IGNORAR = ['cortex-dividido', 'cortex-alerta', 'so-humano', 'vez-do-claude'];
+const IGNORAR_ULTIMA_CHANCE = ['so-humano', 'vez-do-dono', 'esperando-dono', 'cortex-alerta', 'jules-ultima-chance'];
 // Pedido do dono (07/11): repositórios PRIVADOS de outros produtos com issues cortex-fila próprias. O código deles
 // não pode vir para este repo público, então o Jules trabalha direto lá (base main). 1 envio por repo a cada 15 min.
 const reposExtras = (env) => String(env.JULES_REPOS_EXTRA == null ? 'gilcambe/avaya-gsd' : env.JULES_REPOS_EXTRA)
@@ -54,14 +55,32 @@ const PARADA_MIN = 15;
 const mexeEmWorkflow = (i) => /\.github\/workflows\//.test(`${i.title || ''}\n${i.body || ''}`);
 
 // Decide o que fazer com as issues travadas (função pura, testada).
-function decidir(issues, prs, agora, nomes, { claudeLigado = true, vezDoClaude = [] } = {}) {
+function decidir(issues, prs, agora, nomes, { claudeLigado = true, vezDoClaude = [], precisaDeVoce = [] } = {}) {
   const recusado = (p) => (p.labels || []).some(l => (l.name || l) === 'revisor-recusou');
   const prDe = (n) => prs.some(p => !recusado(p) && new RegExp(`#${n}(?!\\d)`).test(`${p.title || ''}\n${p.body || ''}`));
   const travadas = issues.filter(i => !i.pull_request && nomes(i).includes('cortex-travado') && !nomes(i).some(n => IGNORAR.includes(n)));
   const planejadas = issues.filter(i => !i.pull_request && nomes(i).includes('cortex-jules') && !nomes(i).includes('jules-enviado') && !nomes(i).some(n => IGNORAR.includes(n)));
   // Travada primeiro (já falhou no Cortex), depois a parte grande do plano; sem repetir número.
-  const lista = [...travadas.filter(i => !nomes(i).includes('jules-enviado')), ...planejadas]
-    .filter((i, k, a) => a.findIndex(x => x.number === i.number) === k).slice(0, MAX_ENVIOS).map(i => i.number);
+  const listaTravadas = [...travadas.filter(i => !nomes(i).includes('jules-enviado')), ...planejadas]
+    .filter((i, k, a) => a.findIndex(x => x.number === i.number) === k);
+  
+  const lista = listaTravadas.slice(0, MAX_ENVIOS).map(i => i.number);
+
+  // Se sobrou vaga e o Jules tem cota, pega issues "precisa-de-voce" antigas
+  const ultimaChanceParaVoltar = precisaDeVoce.filter(i => nomes(i).includes('jules-ultima-chance') && !prDe(i.number) && (agora - Date.parse(i.updated_at || 0)) / 36e5 >= ESPERA_JULES_H);
+
+  let precisaEnviar = [];
+  if (lista.length < MAX_ENVIOS) {
+    const vagasRestantes = MAX_ENVIOS - lista.length;
+    const candidatasPrecisa = precisaDeVoce
+      .filter(i => !i.pull_request && !mexeEmWorkflow(i) && !prDe(i.number) && !nomes(i).some(n => IGNORAR_ULTIMA_CHANCE.includes(n)))
+      .sort((a, b) => Date.parse(a.created_at || 0) - Date.parse(b.created_at || 0)); // mais antiga para mais nova
+    precisaEnviar = candidatasPrecisa.slice(0, vagasRestantes).map(i => i.number);
+    for (const n of precisaEnviar) {
+      if (!lista.includes(n)) lista.push(n);
+    }
+  }
+
   const voltar = travadas.filter(i => nomes(i).includes('jules-enviado') && !prDe(i.number)
     && (agora - Date.parse(i.updated_at || 0)) / 36e5 >= ESPERA_JULES_H);
   const segunda = voltar.filter(i => nomes(i).includes('cortex-retomada'));
@@ -80,6 +99,8 @@ function decidir(issues, prs, agora, nomes, { claudeLigado = true, vezDoClaude =
   return {
     enviar: lista[0] || null,
     enviarLista: lista,
+    precisaEnviar,
+    ultimaChanceVoltar: ultimaChanceParaVoltar.map(i => i.number),
     retomar: voltar.filter(i => !nomes(i).includes('cortex-retomada')).map(i => i.number),
     // #1958: antes do Claude, as IAs conectadas na Central tentam uma vez (rótulo reserva-tentou).
     reserva: segunda.filter(i => !nomes(i).includes('reserva-tentou')).map(i => i.number),
@@ -99,18 +120,26 @@ async function rodar(at, { env = process.env, fetchFn = fetch } = {}) {
   if (!p.temToken) return { skipped: 'sem token do GitHub' };
   const travadas = await p.gh(`${REPO}/issues?state=open&labels=cortex-travado&per_page=100&sort=created&direction=asc`);
   const planejadas = await p.gh(`${REPO}/issues?state=open&labels=cortex-jules&per_page=50&sort=created&direction=asc`).catch(() => []);
+  const precisaDeVoceIssues = await p.gh(`${REPO}/issues?state=open&labels=precisa-de-voce&per_page=50&sort=created&direction=asc`).catch(() => []);
   const pl = Array.isArray(planejadas) ? planejadas : [];
   const issues = [...pl, ...(Array.isArray(travadas) ? travadas : []).filter(t => !pl.some(x => x.number === t.number))];
+  const precisaDeVoceList = Array.isArray(precisaDeVoceIssues) ? precisaDeVoceIssues : [];
   const prs = await p.gh(`${REPO}/pulls?state=open&per_page=100`);
   const chave = await p.gh(`${REPO}/issues/${INTERRUPTOR_CLAUDE}`).catch(() => null);
   const claudeLigado = !!(chave && chave.state === 'open');
   const vez = claudeLigado ? [] : await p.gh(`${REPO}/issues?state=open&labels=vez-do-claude&per_page=50&sort=updated&direction=asc`).catch(() => []);
-  const d = decidir(issues || [], prs || [], at, nomes, { claudeLigado, vezDoClaude: Array.isArray(vez) ? vez : [] });
-  const out = { retomadas: [], reserva: [], humano: [], revolta: [], precisa: [] };
-  const todas = [...(issues || []), ...(Array.isArray(vez) ? vez : [])];
+  const d = decidir(issues || [], prs || [], at, nomes, { claudeLigado, vezDoClaude: Array.isArray(vez) ? vez : [], precisaDeVoce: precisaDeVoceList });
+  const out = { retomadas: [], reserva: [], humano: [], revolta: [], precisa: [], ultimaChanceVoltar: [] };
+  const todas = [...(issues || []), ...(Array.isArray(vez) ? vez : []), ...precisaDeVoceList];
   const tirar = (n, l) => p.gh(`${REPO}/issues/${n}/labels/${encodeURIComponent(l)}`, { method: 'DELETE' }).catch(() => null);
   const por = (n, ls) => p.gh(`${REPO}/issues/${n}/labels`, { method: 'POST', body: JSON.stringify({ labels: ls }) }).catch(() => null);
   const comentar = (n, body) => p.gh(`${REPO}/issues/${n}/comments`, { method: 'POST', body: JSON.stringify({ body }) }).catch(() => null);
+
+  for (const n of d.ultimaChanceVoltar) {
+    await por(n, ['precisa-de-voce']);
+    await comentar(n, 'O Jules não abriu PR em 1 h para esta tarefa da última chance. Ela voltou para o rótulo "Precisa de você".');
+    out.ultimaChanceVoltar.push(n);
+  }
 
   for (const n of d.retomar) {
     const i = issues.find(x => x.number === n);
@@ -167,9 +196,21 @@ async function rodar(at, { env = process.env, fetchFn = fetch } = {}) {
   };
   for (const n of d.enviarLista) {
     if (julesSemCota) { await paraReserva(n, 'O Jules está sem cota hoje.'); continue; }
-    const r = await mandarParaJules(p, n, 'o robô (automático, tarefa travada)', { env, fetchFn });
+    
+    // Se for uma tarefa de precisa-de-voce (última chance), ajustamos os rótulos antes de enviar
+    const isUltimaChance = d.precisaEnviar.includes(n);
+    if (isUltimaChance) {
+      await tirar(n, 'precisa-de-voce');
+      await por(n, ['jules-ultima-chance']);
+      await comentar(n, '🔁 Vigia: o Jules tem cota de novo, então mandei esta tarefa parada para ele tentar mais uma vez. Se não sair PR em 1 h, volta para "Precisa de você".');
+    }
+
+    const r = await mandarParaJules(p, n, isUltimaChance ? 'o robô (automático, última chance)' : 'o robô (automático, tarefa travada)', { env, fetchFn });
     out.enviados.push({ issue: n, status: r.status, ...(r.status === 200 ? { link: r.corpo.link } : { erro: r.corpo.error }) });
-    if (r.status === 502) { julesSemCota = /\(429\)|Limite/.test(String(r.corpo.error)); await paraReserva(n, julesSemCota ? 'O Jules está sem cota hoje.' : 'O Jules recusou a tarefa.'); }
+    if (r.status === 502) { 
+      julesSemCota = /\(429\)|Limite/.test(String(r.corpo.error)); 
+      await paraReserva(n, julesSemCota ? 'O Jules está sem cota hoje.' : 'O Jules recusou a tarefa.'); 
+    }
   }
   if (!out.enviados.length) out.enviados = 0;
   const extras = (await rodarExtras(p, env, fetchFn, nomes, mandarParaJules)).filter(x => x.enviados !== 0);
