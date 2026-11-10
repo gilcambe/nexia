@@ -934,7 +934,7 @@ exports.handler = async function (event, context) {
   }
 
   // ── Painel premium (Fase 1): ações novas, em arquivo separado ──
-  const painel = await require('./viajante-pro-painel').acoesPainel({ acao, body, contaRef, res, now, aleatorio });
+  const painel = await require('./viajante-pro-painel').acoesPainel({ acao, body, contaRef, res, now, aleatorio, db });
   if (painel) return painel;
 
   return res(400, { error: `Ação não reconhecida: ${acao}` });

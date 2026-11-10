@@ -204,15 +204,27 @@ function mesesAtras(now, n) {
   return out;
 }
 
-async function resumo(contaRef, body, now) {
+async function resumo(contaRef, body, now, db) {
   const dias = [7, 30, 90, 365].includes(parseInt(body.dias, 10)) ? parseInt(body.dias, 10) : 30;
   const desde = new Date(now - dias * 86400000).toISOString();
   const hj = hoje(now);
-  const [cotacoes, viagens, extras, docs, ativs] = await Promise.all([
+  const [cotacoes, viagens, extras, docs, ativs, lancs, tarefas] = await Promise.all([
     todos(contaRef.collection('cotacoes')), todos(contaRef.collection('viagens')),
     todos(contaRef.collection('clientes')), todos(contaRef.collection('documentos')),
-    todos(contaRef.collection('atividades')),
+    todos(contaRef.collection('atividades')), todos(contaRef.collection('lancamentos')),
+    todos(contaRef.collection('tarefas')),
   ]);
+  const { resumoFinanceiro, situacao } = require('./viajante-pro-fase2');
+  const fin = resumoFinanceiro(lancs, viagens, now, desde.slice(0, 10), hj);
+  const pagAtrasados = lancs.filter(l => situacao(l, hj) === 'atrasado');
+  const tarefasAbertas = tarefas.filter(t => t.status !== 'concluida');
+  const tarefasAtrasadas = tarefasAbertas.filter(t => t.data && t.data < hj);
+  const tarefasHoje = tarefasAbertas.filter(t => t.data === hj);
+  let leadsNovos = 0;
+  if (db) {
+    const todosLeads = process.env.VP_LEADS_TODOS === '1';
+    try { leadsNovos = (await todos(db.collection('nexia_leads'))).filter(l => (todosLeads || /viajante/i.test(`${l.site || ''} ${l.origem || ''} ${l.produto || ''} ${l.pagina || ''}`)) && (l.status || 'novo') === 'novo').length; } catch { leadsNovos = 0; }
+  }
 
   const clientes = montarClientes(cotacoes, viagens, extras);
   const abertas = cotacoes.filter(c => !FECHADAS.has(statusCotacao(c)));
@@ -288,6 +300,14 @@ async function resumo(contaRef, body, now) {
       ticket_medio: aprovPeriodo.length ? Math.round((vendido / aprovPeriodo.length) * 100) / 100 : null,
       margem_estimada: comValor.length ? Math.round(margem * 100) / 100 : null,
       conversas_sem_resposta: semResposta.length,
+      recebido_periodo: fin.recebido,
+      a_receber: fin.a_receber,
+      atrasado_receber: fin.atrasado_receber,
+      a_pagar: fin.a_pagar,
+      tem_financeiro: lancs.length > 0,
+      tarefas_hoje: tarefasHoje.length,
+      leads_novos: leadsNovos,
+      tarefas_atrasadas: tarefasAtrasadas.length,
     },
     serie,
     origem,
@@ -306,6 +326,9 @@ async function resumo(contaRef, body, now) {
       cotacoes_vencidas: vencidas.map(resumoCot),
       servicos_pendentes: servicosPendentes.slice(0, 6).map(resumoViagem),
       documentos_vencendo: docsVencendo.slice(0, 6).map(d => ({ id: d.id, nome: d.nome, validade: d.validade, vinculo: d.vinculo })),
+      pagamentos_atrasados: pagAtrasados.slice(0, 8).map(l => ({ id: l.id, tipo: l.tipo, descricao: l.descricao, valor: num(l.valor), vencimento: l.vencimento })),
+      tarefas_atrasadas: tarefasAtrasadas.slice(0, 6).map(t => ({ id: t.id, titulo: t.titulo, data: t.data })),
+      tarefas_hoje: tarefasHoje.slice(0, 8).map(t => ({ id: t.id, titulo: t.titulo, hora: t.hora, prioridade: t.prioridade })),
     },
   };
 }
@@ -313,8 +336,8 @@ async function resumo(contaRef, body, now) {
 /**
  * Executa uma ação do painel premium. Devolve a resposta (via res) ou null se a ação não é daqui.
  */
-async function acoesPainel({ acao, body, contaRef, res, now, aleatorio }) {
-  if (acao === 'painel-resumo') return res(200, { ok: true, ...(await resumo(contaRef, body, now)) });
+async function acoesPainel({ acao, body, contaRef, res, now, aleatorio, db }) {
+  if (acao === 'painel-resumo') return res(200, { ok: true, ...(await resumo(contaRef, body, now, db)) });
 
   // ── Cotações ──
   if (acao === 'cotacao-detalhe') {
@@ -499,6 +522,13 @@ async function acoesPainel({ acao, body, contaRef, res, now, aleatorio }) {
     ];
     return res(200, { ok: true, resultados });
   }
+
+  // ── Fase 2: financeiro, agenda/tarefas, leads ──
+  const f2 = await require('./viajante-pro-fase2').acoesFase2({
+    acao, body, contaRef, res, now, aleatorio, db,
+    atividade: (tipo, texto, ref) => registrarAtividade(contaRef, now, aleatorio, tipo, texto, ref),
+  });
+  if (f2) return f2;
 
   return null;
 }

@@ -148,3 +148,10 @@ Seguindo `Especificacao_Backend_Premium_ViajantePro.docx`. Decisões do dono: Fa
 **Testes:** `hostinger/viajante-pro/test/painel.test.js` (7 casos: números reais, cotação→viagem, clientes sem duplicar, upload/permissões, limite 20 MB, app sem dados internos) + teste clicando como pessoa no Chrome (login, criar cotação, converter, upload, chat, voltar) + fotos celular/computador sem erro no console.
 
 **Próximas fases:** 2) Financeiro, Agenda/Tarefas, Leads/funil, Notificações por e-mail · 3) Fornecedores, Concierge VIP, Relatórios PDF/Excel, Marketing · 4) Usuários e permissões, auditoria completa, integrações (WhatsApp).
+
+## 10. Painel premium — Fase 2 (10/11/2026)
+- **Financeiro** (`/viajante-pro/admin#/financeiro`): lançamentos a receber e a pagar com categoria (venda, sinal, parcela, comissão, fornecedor, despesa, imposto, taxa, reembolso), forma, vencimento e parcelamento (divide em centavos, soma exata, um vencimento por mês). Recebido ≠ vendido; a receber, atrasados e a pagar separados; saldo do mês; comissões; fluxo de caixa (3 meses para trás + previsão); **margem por viagem** (vendido × custos lançados, com aviso de "vendido sem lançamento"). Aba Financeiro em cada viagem.
+- **Agenda e tarefas**: tarefas com data, hora, prioridade, responsável e vínculo; grupos Atrasadas / Hoje / Próximas / Concluídas; calendário do mês (toque no dia cria tarefa).
+- **Leads do site**: contatos do formulário (`/api/leads`) com etapas (novo, em conversa, qualificado, virou cliente, perdido), próxima ação, motivo de perda e botão **Virar cotação** (sem redigitar).
+- Dashboard e notificações: recebido/a receber/atrasados/a pagar, pagamentos atrasados, tarefas de hoje e atrasadas, leads novos; ações rápidas "Registrar pagamento" e "Criar tarefa".
+- Testes: `test/fase2.test.js` (5 casos) + teste clicando no Chrome (parcelas, pagar, tarefa, concluir, lead → cotação, voltar) + regressão da Fase 1.

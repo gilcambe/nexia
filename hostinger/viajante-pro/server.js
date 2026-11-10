@@ -25,6 +25,8 @@ function carregarEnv(arquivo) {
   }
 }
 carregarEnv(path.join(AQUI, '.env'));
+// Banco exclusivo da Viajante Pro: todos os leads gravados aqui são dela.
+if (process.env.VP_LEADS_TODOS === undefined) process.env.VP_LEADS_TODOS = '1';
 
 // No pacote de deploy os arquivos do site ficam em ./app; no repositório, na raiz.
 const RAIZ = process.env.VP_RAIZ

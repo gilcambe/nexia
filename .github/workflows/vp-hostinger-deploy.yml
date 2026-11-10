@@ -14,6 +14,7 @@ on:
       - 'hostinger/viajante-pro/**'
       - 'netlify/functions/viajante-pro.js'
       - 'netlify/functions/viajante-pro-painel.js'
+      - 'netlify/functions/viajante-pro-fase2.js'
       - 'netlify/functions/leads.js'
       - 'clientes/viajantepro.js'
       - 'lib/routes.js'

@@ -59,6 +59,11 @@
     pessoa: '<circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 0 0-16 0"/>',
     estrela: '<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>',
     funil: '<polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>',
+    carteira: '<path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/>',
+    tarefa: '<rect x="3" y="5" width="6" height="6" rx="1"/><path d="m3 17 2 2 4-4"/><path d="M13 6h8"/><path d="M13 12h8"/><path d="M13 18h8"/>',
+    imã: '<path d="m6 15-4-4 6.75-6.77a7.79 7.79 0 0 1 11 11L13 22l-4-4 6.39-6.36a2.14 2.14 0 0 0-3-3L6 15"/><path d="m5 8 4 4"/><path d="m12 15 4 4"/>',
+    entrada: '<path d="M12 5v14"/><path d="m19 12-7 7-7-7"/>',
+    saida: '<path d="M12 19V5"/><path d="m5 12 7-7 7 7"/>',
   };
   function ic(nome, cls) { return '<svg class="ic' + (cls ? ' ' + cls : '') + '" viewBox="0 0 24 24" aria-hidden="true">' + (P[nome] || '') + '</svg>'; }
   function pintarIcones(raiz) {
@@ -200,16 +205,20 @@
     { id: 'dashboard', rot: 'Dashboard', i: 'painel' },
     { grupo: 'Comercial' },
     { id: 'clientes', rot: 'Clientes', i: 'clientes' },
+    { id: 'leads', rot: 'Leads do site', i: 'imã', cont: 'lead' },
     { id: 'cotacoes', rot: 'Cotações', i: 'cotacao', cont: 'cot' },
     { grupo: 'Operação' },
     { id: 'viagens', rot: 'Viagens e reservas', i: 'aviao' },
     { id: 'conversas', rot: 'Conversas', i: 'conversa', cont: 'conv' },
+    { id: 'agenda', rot: 'Agenda e tarefas', i: 'tarefa', cont: 'tar' },
     { id: 'documentos', rot: 'Documentos', i: 'pasta' },
+    { grupo: 'Gestão' },
+    { id: 'financeiro', rot: 'Financeiro', i: 'carteira', cont: 'fin' },
     { grupo: 'Agência' },
     { id: 'site', rot: 'Site da agência', i: 'globo' },
     { id: 'config', rot: 'Configurações', i: 'ajustes' },
   ];
-  var contadores = { cot: 0, conv: 0 };
+  var contadores = { cot: 0, conv: 0, lead: 0, tar: 0, fin: 0 };
   function desenharMenu(ativo) {
     $('#menu-nav').innerHTML = MENU.map(function (m) {
       if (m.grupo) return '<div class="grupo">' + esc(m.grupo) + '</div>';
@@ -280,6 +289,9 @@
     ultimoResumo = r;
     contadores.cot = r.kpis.cotacoes_novas || 0;
     contadores.conv = r.kpis.conversas_sem_resposta || 0;
+    contadores.tar = (r.kpis.tarefas_hoje || 0) + (r.kpis.tarefas_atrasadas || 0);
+    contadores.fin = (r.alertas.pagamentos_atrasados || []).length;
+    contadores.lead = r.kpis.leads_novos || 0;
     desenharMenu(rotaAtual().split('/')[0]);
     var itens = notificacoes(r);
     var n = $('#notif-n');
@@ -289,10 +301,14 @@
   function notificacoes(r) {
     var it = [];
     (r.listas.conversas_sem_resposta || []).forEach(function (c) { it.push({ cor: 'b', i: 'conversa', t: 'Mensagem sem resposta · ' + c.viagemNome, s: c.texto, href: 'conversas/' + c.viagemId }); });
+    if (r.kpis.leads_novos) it.push({ cor: 'a', i: 'imã', t: r.kpis.leads_novos + ' lead(s) novo(s) do site', s: 'Contatos esperando retorno', href: 'leads' });
     if (r.kpis.cotacoes_novas) it.push({ cor: 'a', i: 'cotacao', t: r.kpis.cotacoes_novas + ' cotação(ões) nova(s) aguardando atendimento', s: 'Pedidos recebidos pelo site', href: 'cotacoes' });
     (r.alertas.cotacoes_vencendo || []).forEach(function (c) { it.push({ cor: 'a', i: 'relogio', t: 'Proposta vence em ' + dataBR(c.validade), s: c.codigo + ' · ' + c.nome, href: 'cotacoes/' + c.id }); });
     (r.alertas.cotacoes_vencidas || []).forEach(function (c) { it.push({ cor: 'v', i: 'alerta', t: 'Proposta vencida', s: c.codigo + ' · ' + c.nome, href: 'cotacoes/' + c.id }); });
     (r.alertas.servicos_pendentes || []).forEach(function (v) { it.push({ cor: 'a', i: 'aviao', t: 'Reservas a confirmar', s: v.nome + ' · ' + dataBR(v.datas && v.datas.inicio), href: 'viagens/' + v.id }); });
+    (r.alertas.pagamentos_atrasados || []).forEach(function (l) { it.push({ cor: 'v', i: 'carteira', t: (l.tipo === 'receber' ? 'Recebimento atrasado · ' : 'Pagamento atrasado · ') + moeda(l.valor), s: l.descricao + ' · venceu ' + dataBR(l.vencimento), href: 'financeiro' }); });
+    (r.alertas.tarefas_atrasadas || []).forEach(function (t) { it.push({ cor: 'v', i: 'tarefa', t: 'Tarefa atrasada', s: t.titulo + ' · ' + dataBR(t.data), href: 'agenda' }); });
+    (r.alertas.tarefas_hoje || []).forEach(function (t) { it.push({ cor: 'b', i: 'tarefa', t: 'Tarefa para hoje' + (t.hora ? ' às ' + t.hora : ''), s: t.titulo, href: 'agenda' }); });
     (r.alertas.documentos_vencendo || []).forEach(function (d) { it.push({ cor: 'v', i: 'pasta', t: 'Documento vence em ' + dataBR(d.validade), s: d.nome, href: 'documentos' }); });
     return it;
   }
@@ -411,6 +427,9 @@
           kpi('cotacoes', 'alta', k.ticket_medio == null ? '—' : moedaCurta(k.ticket_medio), 'Ticket médio', 'por proposta aprovada', false, k.ticket_medio == null) +
           kpi('cotacoes', 'estrela', k.margem_estimada == null ? '—' : moedaCurta(k.margem_estimada), 'Margem estimada', 'venda − custo das aprovadas com itens', true, k.margem_estimada == null) +
         '</div>' +
+        '<section class="card" style="margin-bottom:14px"><div class="card-cab"><h2>' + ic('carteira', 'p') + 'Financeiro no período</h2><a class="ver" href="#/financeiro">Abrir financeiro</a></div><div class="card-corpo">' +
+          (k.tem_financeiro ? '<div class="totais" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr));margin:0"><div class="venda"><small>Recebido</small><b>' + moeda(k.recebido_periodo) + '</b></div><div><small>A receber</small><b>' + moeda(k.a_receber) + '</b></div><div><small>Recebimentos atrasados</small><b style="color:' + (k.atrasado_receber ? 'var(--vermelho)' : 'inherit') + '">' + moeda(k.atrasado_receber) + '</b></div><div><small>A pagar</small><b>' + moeda(k.a_pagar) + '</b></div></div><p style="margin:10px 0 0;font-size:12.5px;color:var(--texto-2)">Vendido é o valor das propostas aprovadas; recebido é o que já entrou no caixa.</p>'
+            : '<p style="margin:0;color:var(--texto-2)">Nenhum lançamento ainda. Registre recebimentos e pagamentos em <a href="#/financeiro">Financeiro</a> para ver recebido, a receber e atrasados aqui.</p>') + '</div></section>' +
         '<div class="grade g2" style="margin-bottom:14px">' +
           '<section class="card"><div class="card-cab"><h2>' + ic('alta', 'p') + 'Evolução — últimos 6 meses</h2></div><div class="card-corpo">' + grafEvolucao(r.serie) + '</div></section>' +
           '<section class="card"><div class="card-cab"><h2>' + ic('funil', 'p') + 'Origem dos pedidos</h2></div><div class="card-corpo">' + grafRosca(r.origem) + '</div></section>' +
@@ -429,6 +448,8 @@
             '<a class="rapida" href="#/viagens/nova">' + ic('aviao') + 'Nova viagem</a>' +
             '<a class="rapida" href="#/conversas">' + ic('mandar') + 'Enviar mensagem</a>' +
             '<a class="rapida" href="#/documentos">' + ic('enviar_arq') + 'Enviar documento</a>' +
+            '<a class="rapida" href="#/financeiro/novo">' + ic('carteira') + 'Registrar pagamento</a>' +
+            '<a class="rapida" href="#/agenda/nova">' + ic('tarefa') + 'Criar tarefa</a>' +
             '<a class="rapida" href="#/site">' + ic('lapis') + 'Editar site</a>' +
           '</div></div></section>' +
         '</div>';
@@ -774,7 +795,7 @@
       var wpp = whatsLink(v.whatsapp, 'Olá! Aqui está o app da sua viagem ' + v.nome + ' com roteiro, documentos e chat com a agência: ' + link);
       $('#conteudo').innerHTML = '<div class="cabeca"><div class="t"><h2>' + esc(v.nome) + ' ' + tag(v.status || 'confirmada', STATUS_VIA) + '</h2><p>' + ic('local', 'p') + ' ' + esc(v.destino) + ' · ' + dataBR(v.datas && v.datas.inicio) + ' a ' + dataBR(v.datas && v.datas.fim) + (v.cotacao_id ? ' · <a href="#/cotacoes/' + encodeURIComponent(v.cotacao_id) + '">ver cotação</a>' : '') + '</p></div></div>' +
         '<section class="card" style="margin-bottom:14px"><div class="card-corpo"><b style="display:flex;gap:8px;align-items:center;margin-bottom:8px">' + ic('link', 'p') + 'App do passageiro</b><div class="link-app"><code>' + esc(link) + '</code><button class="btn p" id="b-copiar" type="button">' + ic('copiar', 'p') + 'Copiar</button></div><div class="contatos">' + (wpp ? '<a class="btn p" target="_blank" rel="noopener" href="' + esc(wpp) + '">' + ic('telefone', 'p') + 'Enviar por WhatsApp</a>' : '') + '<a class="btn p" target="_blank" rel="noopener" href="' + esc(link) + '">' + ic('abrir', 'p') + 'Abrir como o passageiro</a></div></div></section>' +
-        '<div class="abas"><button class="on" data-aba="resumo">' + ic('cotacao', 'p') + 'Resumo</button><button data-aba="servicos">' + ic('aviao', 'p') + 'Serviços<span class="n">' + (v.servicos || []).length + '</span></button><button data-aba="pax">' + ic('roteiro', 'p') + 'Passageiros e roteiro</button><button data-aba="docs">' + ic('pasta', 'p') + 'Documentos</button><button data-aba="chat">' + ic('conversa', 'p') + 'Conversa</button></div><div id="aba"></div>';
+        '<div class="abas"><button class="on" data-aba="resumo">' + ic('cotacao', 'p') + 'Resumo</button><button data-aba="servicos">' + ic('aviao', 'p') + 'Serviços<span class="n">' + (v.servicos || []).length + '</span></button><button data-aba="pax">' + ic('roteiro', 'p') + 'Passageiros e roteiro</button><button data-aba="docs">' + ic('pasta', 'p') + 'Documentos</button><button data-aba="chat">' + ic('conversa', 'p') + 'Conversa</button><button data-aba="fin">' + ic('carteira', 'p') + 'Financeiro</button></div><div id="aba"></div>';
       $('#b-copiar').addEventListener('click', function () { (navigator.clipboard ? navigator.clipboard.writeText(link) : Promise.reject()).then(function () { aviso('Link copiado.'); }, function () { prompt('Copie o link:', link); }); });
       var campo = function (idc, rot, val, tipo, cls) { return '<div class="campo ' + (cls || '') + '"><label for="' + idc + '">' + rot + '</label><input id="' + idc + '" type="' + (tipo || 'text') + '" value="' + esc(val == null ? '' : val) + '"></div>'; };
       var abas = {
@@ -833,6 +854,7 @@
         },
         docs: function () { $('#aba').innerHTML = '<p style="margin:0 0 12px;color:var(--texto-2);font-size:13.5px">' + ic('olho', 'p') + ' Marque "Visível no app" para o passageiro baixar (vouchers, bilhetes, seguro, roteiro).</p><div id="docs-via"></div>'; blocoDocumentos($('#docs-via'), 'viagem', id); },
         chat: function () { $('#aba').innerHTML = '<div id="chat-via"></div>'; blocoChat($('#chat-via'), id); },
+        fin: function () { $('#aba').innerHTML = '<div id="fin-via"></div>'; blocoFinanceiroViagem($('#fin-via'), v); },
       };
       $$('.abas button').forEach(function (b) { b.addEventListener('click', function () { pararTimers(); $$('.abas button').forEach(function (x) { x.classList.remove('on'); }); b.classList.add('on'); abas[b.getAttribute('data-aba')](); }); });
       abas.resumo();
@@ -1015,6 +1037,243 @@
         if (t !== 'geral' && !idv) { aviso('Escolha a qual ' + ({ cliente: 'cliente', cotacao: 'cotação', viagem: 'viagem' }[t]) + ' o arquivo pertence.', true); return null; }
         return { vinculo_tipo: t, vinculo_id: idv, categoria: $('#d-cat').value };
       }, navegar);
+      render();
+    });
+  };
+
+  // ───────────────────────── Fase 2: Financeiro ─────────────────────────
+  var CAT_FIN = {
+    receber: { venda: 'Venda de viagem', sinal: 'Sinal / entrada', parcela: 'Parcela', comissao: 'Comissão a receber', reembolso_recebido: 'Reembolso recebido', outro: 'Outra receita' },
+    pagar: { fornecedor: 'Fornecedor', comissao: 'Comissão a pagar', despesa: 'Despesa operacional', imposto: 'Imposto', taxa: 'Taxa / tarifa', reembolso: 'Reembolso ao cliente', outro: 'Outra despesa' },
+  };
+  var FORMAS = { pix: 'PIX', cartao: 'Cartão', boleto: 'Boleto', transferencia: 'Transferência', dinheiro: 'Dinheiro', outro: 'Outro' };
+  var SIT = { pendente: 'A vencer', atrasado: 'Atrasado', pago: 'Pago', cancelado: 'Cancelado' };
+  var SIT_CLS = { pendente: 'enviada', atrasado: 'recusada', pago: 'aprovada', cancelado: 'cat' };
+  function modalLancamento(l, viagens, aoSalvar) {
+    l = l || {}; var novo = !l.id; var tipo = l.tipo || 'receber';
+    var vOpts = '<option value="">— Nenhuma —</option>' + (viagens || []).map(function (v) { return '<option value="' + esc(v.id) + '"' + (v.id === l.viagem_id ? ' selected' : '') + '>' + esc(v.nome) + '</option>'; }).join('');
+    modal('<h3>' + (novo ? 'Novo lançamento' : 'Editar lançamento') + '</h3><form id="f-lanc" class="form duas">' +
+      '<div class="campo largo"><span class="rot">Tipo</span><div class="chips" style="margin:0"><button type="button" class="chip' + (tipo === 'receber' ? ' on' : '') + '" data-t="receber">' + ic('entrada', 'p') + ' A receber</button><button type="button" class="chip' + (tipo === 'pagar' ? ' on' : '') + '" data-t="pagar">' + ic('saida', 'p') + ' A pagar</button></div></div>' +
+      '<div class="campo largo"><label for="l-desc">Descrição *</label><input id="l-desc" value="' + esc(l.descricao) + '" placeholder="Ex.: Pacote Paris — Ricardo" required></div>' +
+      '<div class="campo"><label for="l-valor">Valor (R$) *</label><input id="l-valor" inputmode="decimal" value="' + (l.valor ? String(l.valor).replace('.', ',') : '') + '" required></div>' +
+      '<div class="campo"><label for="l-venc">Vencimento</label><input id="l-venc" type="date" value="' + esc(l.vencimento || hojeISO()) + '"></div>' +
+      '<div class="campo"><label for="l-cat">Categoria</label><select id="l-cat"></select></div>' +
+      '<div class="campo"><label for="l-forma">Forma</label><select id="l-forma"><option value="">—</option>' + opcoes(FORMAS, l.forma) + '</select></div>' +
+      (novo ? '<div class="campo"><label for="l-parc">Parcelas</label><input id="l-parc" type="number" min="1" max="36" value="1"><span class="ajuda">Divide o valor e cria um vencimento por mês.</span></div>' : '<div class="campo"><label>Parcela</label><input disabled value="' + esc(l.parcela || '—') + '"></div>') +
+      '<div class="campo"><label for="l-status">Situação</label><select id="l-status">' + opcoes({ pendente: 'Em aberto', pago: 'Pago / recebido', cancelado: 'Cancelado' }, l.status || 'pendente') + '</select></div>' +
+      '<div class="campo"><label for="l-pagoem">Pago em</label><input id="l-pagoem" type="date" value="' + esc(l.pago_em || '') + '"></div>' +
+      '<div class="campo largo"><label for="l-viagem">Viagem</label><select id="l-viagem">' + vOpts + '</select></div>' +
+      '<div class="campo"><label for="l-cli">E-mail do cliente</label><input id="l-cli" type="email" value="' + esc(l.cliente_email || '') + '"></div>' +
+      '<div class="campo"><label for="l-forn">Fornecedor</label><input id="l-forn" value="' + esc(l.fornecedor || '') + '"></div>' +
+      '<div class="campo largo"><label for="l-obs">Observações</label><textarea id="l-obs" style="min-height:60px">' + esc(l.observacoes || '') + '</textarea></div>' +
+      '</form><div class="rod">' + (novo ? '' : '<button class="btn perigo" id="l-excluir" type="button">' + ic('lixo', 'p') + 'Excluir</button>') + '<button class="btn" data-fechar>Cancelar</button><button class="btn ouro" id="l-salvar" type="button">' + ic('ok', 'p') + 'Salvar</button></div>',
+      function (f, fechar) {
+        function cats() { $('#l-cat', f).innerHTML = opcoes(CAT_FIN[tipo], l.categoria && CAT_FIN[tipo][l.categoria] ? l.categoria : (tipo === 'receber' ? 'venda' : 'fornecedor')); }
+        cats();
+        $$('[data-t]', f).forEach(function (b) { b.addEventListener('click', function () { tipo = b.getAttribute('data-t'); $$('[data-t]', f).forEach(function (x) { x.classList.toggle('on', x === b); }); cats(); }); });
+        $('#l-status', f).addEventListener('change', function () { if (this.value === 'pago' && !$('#l-pagoem', f).value) $('#l-pagoem', f).value = hojeISO(); });
+        $('#l-viagem', f).addEventListener('change', function () { var v = (viagens || []).filter(function (x) { return x.id === this.value; }, this)[0]; if (v && !$('#l-cli', f).value) $('#l-cli', f).value = v.cliente_email || v.email || ''; });
+        $('#l-salvar', f).addEventListener('click', function () {
+          var b = this; ocupado(b, true);
+          var g = function (s) { var e = $(s, f); return e ? e.value : undefined; };
+          api('fin-salvar', { id: l.id, tipo: tipo, descricao: g('#l-desc'), valor: g('#l-valor'), vencimento: g('#l-venc'), categoria: g('#l-cat'), forma: g('#l-forma'), parcelas: g('#l-parc'), status: g('#l-status'), pago_em: g('#l-pagoem'), viagem_id: g('#l-viagem'), cliente_email: g('#l-cli'), fornecedor: g('#l-forn'), observacoes: g('#l-obs') })
+            .then(function () { aviso('Lançamento salvo.'); fechar(); buscarResumo().catch(function () {}); aoSalvar(); }).catch(function (er) { aviso(er.message, true); ocupado(b, false); });
+        });
+        var ex = $('#l-excluir', f);
+        if (ex) ex.addEventListener('click', function () { fechar(); confirmar('Excluir este lançamento?', l.descricao + ' · ' + moeda(l.valor), 'Excluir').then(function (s) { if (s) api('fin-excluir', { id: l.id, confirmar: true }).then(function () { aviso('Lançamento excluído.'); aoSalvar(); }).catch(function (er) { aviso(er.message, true); }); }); });
+      });
+  }
+  function tabelaLancamentos(l) {
+    if (!l.length) return vazio('carteira', 'Nenhum lançamento', 'Registre recebimentos (vendas, sinais, parcelas) e pagamentos (fornecedores, comissões, despesas).');
+    return '<table class="tabela resp"><thead><tr><th>Descrição</th><th>Vencimento</th><th>Categoria</th><th class="num">Valor</th><th>Situação</th></tr></thead><tbody>' + l.map(function (x) {
+      return '<tr class="clica" data-lanc="' + esc(x.id) + '"><td class="principal-col"><span style="display:inline-flex;align-items:center;gap:8px"><span style="color:' + (x.tipo === 'receber' ? 'var(--verde)' : 'var(--vermelho)') + '">' + ic(x.tipo === 'receber' ? 'entrada' : 'saida', 'p') + '</span>' + esc(x.descricao) + (x.parcela ? ' <small style="color:var(--texto-2)">(' + esc(x.parcela) + ')</small>' : '') + '</span></td><td data-r="Vencimento">' + (dataBR(x.vencimento) || '—') + (x.status === 'pago' && x.pago_em ? '<br><small style="color:var(--texto-2)">pago ' + dataBR(x.pago_em) + '</small>' : '') + '</td><td data-r="Categoria">' + esc((CAT_FIN[x.tipo] || {})[x.categoria] || x.categoria) + (x.fornecedor ? '<br><small style="color:var(--texto-2)">' + esc(x.fornecedor) + '</small>' : '') + '</td><td class="num" data-r="Valor" style="font-weight:600;color:' + (x.tipo === 'receber' ? 'var(--verde)' : 'var(--texto)') + '">' + (x.tipo === 'pagar' ? '− ' : '') + moeda(x.valor) + '</td><td data-r="Situação"><span class="tag ' + SIT_CLS[x.situacao] + '">' + SIT[x.situacao] + '</span></td></tr>';
+    }).join('') + '</tbody></table>';
+  }
+  TELAS.financeiro = function (param, vivo) {
+    titulo('Financeiro');
+    var hj = hojeISO();
+    var ini = hj.slice(0, 8) + '01';
+    var pm = hj.split('-').map(Number), fimMes = hj.slice(0, 8) + ('0' + new Date(pm[0], pm[1], 0).getDate()).slice(-2);
+    return Promise.all([api('fin-listar'), api('fin-resumo', { inicio: ini, fim: fimMes }), api('viagem-listar')]).then(function (rs) {
+      if (!vivo()) return;
+      var todos = rs[0].lancamentos || [], r = rs[1], viagens = rs[2].viagens || [];
+      var filtro = 'aberto';
+      var recarregar = function () { navegar(); };
+      $('#conteudo').innerHTML = '<div class="cabeca"><div class="t"><h2>Financeiro</h2><p>Recebido, a receber, a pagar e margem por viagem — em reais.</p><div class="linha-ouro"></div></div><div class="acoes"><button class="btn ouro" id="b-lanc" type="button">' + ic('mais', 'p') + 'Novo lançamento</button></div></div>' +
+        '<div class="kpis">' +
+          '<div class="card kpi"><div class="topo-kpi"><span class="ico">' + ic('entrada') + '</span></div><div class="valor">' + moeda(r.recebido) + '</div><div class="rot">Recebido no mês</div><div class="det">o que já entrou no caixa</div></div>' +
+          '<div class="card kpi"><div class="topo-kpi"><span class="ico navy">' + ic('relogio') + '</span></div><div class="valor">' + moeda(r.a_receber) + '</div><div class="rot">A receber (em dia)</div><div class="det"><b>' + moeda(r.a_receber_periodo) + '</b> vencem neste mês</div></div>' +
+          '<div class="card kpi"><div class="topo-kpi"><span class="ico" style="background:var(--vermelho-bg);color:var(--vermelho)">' + ic('alerta') + '</span></div><div class="valor" style="color:' + (r.atrasado_receber ? 'var(--vermelho)' : 'var(--navy)') + '">' + moeda(r.atrasado_receber) + '</div><div class="rot">Recebimentos atrasados</div><div class="det"><b>' + r.qtd_atrasados_receber + '</b> lançamento(s)</div></div>' +
+          '<div class="card kpi"><div class="topo-kpi"><span class="ico navy">' + ic('saida') + '</span></div><div class="valor">' + moeda(r.a_pagar + r.atrasado_pagar) + '</div><div class="rot">A pagar</div><div class="det">' + (r.atrasado_pagar ? '<b style="color:var(--vermelho)">' + moeda(r.atrasado_pagar) + '</b> atrasado' : 'nada atrasado') + '</div></div>' +
+        '</div>' +
+        '<div class="grade g2" style="margin-bottom:14px"><section class="card"><div class="card-cab"><h2>' + ic('alta', 'p') + 'Fluxo de caixa</h2></div><div class="card-corpo">' + grafFluxo(r.fluxo) + '</div></section>' +
+        '<section class="card"><div class="card-cab"><h2>' + ic('carteira', 'p') + 'Resumo do mês</h2></div><div class="card-corpo"><ul class="lista">' +
+          '<li><div class="linha"><span class="meio"><b>Entrou</b></span><b style="color:var(--verde)">' + moeda(r.recebido) + '</b></div></li>' +
+          '<li><div class="linha"><span class="meio"><b>Saiu</b></span><b>− ' + moeda(r.pago) + '</b></div></li>' +
+          '<li><div class="linha"><span class="meio"><b>Saldo do mês</b></span><b style="color:' + (r.saldo_periodo < 0 ? 'var(--vermelho)' : 'var(--navy)') + '">' + moeda(r.saldo_periodo) + '</b></div></li>' +
+          '<li><div class="linha"><span class="meio"><b>Comissões a receber</b><small>todas em aberto e pagas</small></span><b>' + moeda(r.comissoes_receber) + '</b></div></li>' +
+          '<li><div class="linha"><span class="meio"><b>Comissões a pagar</b></span><b>' + moeda(r.comissoes_pagar) + '</b></div></li>' +
+        '</ul></div></section></div>' +
+        '<section class="card" style="margin-bottom:14px"><div class="card-cab"><h2>' + ic('aviao', 'p') + 'Margem por viagem</h2></div><div class="card-corpo">' + (r.por_viagem.length ? '<table class="tabela resp"><thead><tr><th>Viagem</th><th class="num">Vendido</th><th class="num">Recebido</th><th class="num">A receber</th><th class="num">Custos</th><th class="num">Margem</th></tr></thead><tbody>' + r.por_viagem.map(function (v) {
+          return '<tr class="clica" data-href="viagens/' + encodeURIComponent(v.id) + '"><td class="principal-col">' + esc(v.nome) + (v.falta_lancar ? '<br><small style="color:var(--ambar)">' + moeda(v.falta_lancar) + ' vendidos ainda sem lançamento</small>' : '') + '</td><td class="num" data-r="Vendido">' + (v.vendido ? moeda(v.vendido) : '—') + '</td><td class="num" data-r="Recebido">' + moeda(v.recebido) + '</td><td class="num" data-r="A receber">' + moeda(v.a_receber) + '</td><td class="num" data-r="Custos">' + (v.custos ? moeda(v.custos) + (v.custo_fonte === 'viagem' ? '<br><small style="color:var(--texto-2)">estimado</small>' : '') : '—') + '</td><td class="num" data-r="Margem" style="font-weight:600;color:' + (v.margem == null ? 'inherit' : v.margem < 0 ? 'var(--vermelho)' : 'var(--verde)') + '">' + (v.margem == null ? '—' : moeda(v.margem)) + '</td></tr>';
+        }).join('') + '</tbody></table>' : vazio('aviao', 'Sem viagens com valores', 'Converta uma cotação aprovada ou informe o valor vendido na viagem.')) + '</div></section>' +
+        '<div class="chips">' + [['aberto', 'Em aberto'], ['atrasado', 'Atrasados'], ['receber', 'A receber'], ['pagar', 'A pagar'], ['pago', 'Pagos'], ['todos', 'Todos']].map(function (f) { return '<button class="chip' + (f[0] === filtro ? ' on' : '') + '" data-f="' + f[0] + '">' + f[1] + '</button>'; }).join('') + '</div>' +
+        '<section class="card"><div id="lista-fin"></div></section>';
+      function render() {
+        var l = todos.filter(function (x) {
+          if (filtro === 'aberto') return x.situacao === 'pendente' || x.situacao === 'atrasado';
+          if (filtro === 'atrasado') return x.situacao === 'atrasado';
+          if (filtro === 'receber' || filtro === 'pagar') return x.tipo === filtro && x.situacao !== 'cancelado';
+          if (filtro === 'pago') return x.situacao === 'pago';
+          return true;
+        });
+        $('#lista-fin').innerHTML = tabelaLancamentos(l);
+      }
+      $$('.chip[data-f]').forEach(function (b) { b.addEventListener('click', function () { $$('.chip[data-f]').forEach(function (x) { x.classList.remove('on'); }); b.classList.add('on'); filtro = b.getAttribute('data-f'); render(); }); });
+      $('#lista-fin').addEventListener('click', function (e) { var tr = e.target.closest('tr[data-lanc]'); if (tr) modalLancamento(todos.filter(function (x) { return x.id === tr.getAttribute('data-lanc'); })[0], viagens, recarregar); });
+      $('#conteudo').addEventListener('click', function (e) { var tr = e.target.closest('tr[data-href]'); if (tr) ir(tr.getAttribute('data-href')); });
+      $('#b-lanc').addEventListener('click', function () { modalLancamento(null, viagens, recarregar); });
+      render();
+      if (param === 'novo') modalLancamento(null, viagens, recarregar);
+    });
+  };
+  function grafFluxo(f) {
+    var W = 640, H = 220, e = 50, b = 30, t = 14;
+    var max = Math.max.apply(null, f.map(function (m) { return Math.max(m.entrou + m.previsto_entrar, m.saiu + m.previsto_sair); }).concat([1]));
+    var passo = (W - e - 10) / f.length, bw = Math.min(22, passo * .3);
+    var y = function (v) { return t + (H - t - b) * (1 - v / max); };
+    var g = '';
+    for (var i = 0; i <= 4; i++) { var yy = t + (H - t - b) * i / 4; g += '<line x1="' + e + '" x2="' + (W - 10) + '" y1="' + yy + '" y2="' + yy + '" stroke="#efe9df"/><text x="' + (e - 6) + '" y="' + (yy + 4) + '" text-anchor="end">' + esc(moedaCurta(max * (1 - i / 4)).replace(/R\$\s?/, '').replace(/^0,00$/, '0')) + '</text>'; }
+    var hj = hojeISO().slice(0, 7);
+    f.forEach(function (m, i) {
+      var cx = e + passo * i + passo / 2;
+      var barra = function (x, real, prev, cor) {
+        var yr = y(real), yp = y(real + prev);
+        return '<rect x="' + x + '" y="' + yr + '" width="' + bw + '" height="' + (H - b - yr) + '" rx="4" fill="' + cor + '"><title>' + moeda(real) + '</title></rect>' + (prev ? '<rect x="' + x + '" y="' + yp + '" width="' + bw + '" height="' + (yr - yp) + '" rx="4" fill="' + cor + '" opacity=".28"><title>previsto ' + moeda(prev) + '</title></rect>' : '');
+      };
+      g += barra(cx - bw - 2, m.entrou, m.previsto_entrar, '#2f7d5b') + barra(cx + 2, m.saiu, m.previsto_sair, '#b0413e');
+      var mm = m.mes.split('-'); g += '<text x="' + cx + '" y="' + (H - 10) + '" text-anchor="middle"' + (m.mes === hj ? ' style="font-weight:700;fill:#142238"' : '') + '>' + MESES[+mm[1] - 1] + '</text>';
+    });
+    return '<svg class="graf" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Fluxo de caixa">' + g + '</svg><div class="legenda"><span><i style="background:#2f7d5b"></i>Entradas</span><span><i style="background:#b0413e"></i>Saídas</span><span><i style="background:#2f7d5b;opacity:.3"></i>Previsto (em aberto)</span></div>';
+  }
+  function blocoFinanceiroViagem(el, v) {
+    el.innerHTML = carregando();
+    Promise.all([api('fin-listar'), api('viagem-listar')]).then(function (rs) {
+      var l = (rs[0].lancamentos || []).filter(function (x) { return x.viagem_id === v.id; });
+      var rec = l.filter(function (x) { return x.tipo === 'receber' && x.status === 'pago'; }).reduce(function (t, x) { return t + num(x.valor); }, 0);
+      var aRec = l.filter(function (x) { return x.tipo === 'receber' && x.status === 'pendente'; }).reduce(function (t, x) { return t + num(x.valor); }, 0);
+      var cus = l.filter(function (x) { return x.tipo === 'pagar' && x.status !== 'cancelado'; }).reduce(function (t, x) { return t + num(x.valor); }, 0);
+      el.innerHTML = '<div class="totais" style="grid-template-columns:repeat(auto-fit,minmax(130px,1fr));margin:0 0 14px"><div class="venda"><small>Vendido</small><b>' + (v.valor_total ? moeda(v.valor_total) : '—') + '</b></div><div><small>Recebido</small><b style="color:var(--verde)">' + moeda(rec) + '</b></div><div><small>A receber</small><b>' + moeda(aRec) + '</b></div><div><small>Custos lançados</small><b>' + moeda(cus) + '</b></div></div>' +
+        '<div class="acoes" style="margin-bottom:12px"><button class="btn ouro p" id="fv-rec" type="button">' + ic('entrada', 'p') + 'Registrar recebimento</button><button class="btn p" id="fv-pag" type="button">' + ic('saida', 'p') + 'Registrar custo</button></div><section class="card" id="fv-lista">' + tabelaLancamentos(l) + '</section>';
+      var recarregar = function () { blocoFinanceiroViagem(el, v); };
+      var base = { viagem_id: v.id, cliente_email: v.cliente_email || v.email || '' };
+      $('#fv-rec', el).addEventListener('click', function () { modalLancamento(Object.assign({ tipo: 'receber', categoria: 'venda', descricao: v.nome }, base), rs[1].viagens, recarregar); });
+      $('#fv-pag', el).addEventListener('click', function () { modalLancamento(Object.assign({ tipo: 'pagar', categoria: 'fornecedor', descricao: '' }, base), rs[1].viagens, recarregar); });
+      $('#fv-lista', el).addEventListener('click', function (e) { var tr = e.target.closest('tr[data-lanc]'); if (tr) modalLancamento(l.filter(function (x) { return x.id === tr.getAttribute('data-lanc'); })[0], rs[1].viagens, recarregar); });
+    }).catch(function (e) { el.innerHTML = vazio('alerta', 'Erro ao abrir o financeiro', e.message); });
+  }
+
+  // ───────────────────────── Fase 2: Agenda e tarefas ─────────────────────────
+  var PRIOR = { baixa: 'Baixa', media: 'Média', alta: 'Alta' };
+  function modalTarefa(t, aoSalvar) {
+    t = t || {}; var nova = !t.id;
+    modal('<h3>' + (nova ? 'Nova tarefa' : 'Tarefa') + '</h3><form id="f-tar" class="form duas">' +
+      '<div class="campo largo"><label for="t-tit">O que fazer *</label><input id="t-tit" value="' + esc(t.titulo) + '" placeholder="Ex.: Emitir bilhetes da família Silva" required></div>' +
+      '<div class="campo"><label for="t-data">Data</label><input id="t-data" type="date" value="' + esc(t.data || hojeISO()) + '"></div>' +
+      '<div class="campo"><label for="t-hora">Hora</label><input id="t-hora" type="time" value="' + esc(t.hora || '') + '"></div>' +
+      '<div class="campo"><label for="t-pri">Prioridade</label><select id="t-pri">' + opcoes(PRIOR, t.prioridade || 'media') + '</select></div>' +
+      '<div class="campo"><label for="t-resp">Responsável</label><input id="t-resp" value="' + esc(t.responsavel || '') + '"></div>' +
+      '<div class="campo largo"><label for="t-desc">Detalhes</label><textarea id="t-desc" style="min-height:70px">' + esc(t.descricao || '') + '</textarea></div>' +
+      (t.vinculo ? '<div class="campo largo"><span class="rot">Ligada a</span><a href="#/' + ({ cliente: 'clientes/', cotacao: 'cotacoes/', viagem: 'viagens/' }[t.vinculo.tipo] || '') + encodeURIComponent(t.vinculo.id) + '" data-fechar>' + esc({ cliente: 'Cliente', cotacao: 'Cotação', viagem: 'Viagem' }[t.vinculo.tipo] || '') + ' · abrir</a></div>' : '') +
+      '</form><div class="rod">' + (nova ? '' : '<button class="btn perigo" id="t-excl" type="button">' + ic('lixo', 'p') + 'Excluir</button>' + (t.status === 'concluida' ? '<button class="btn" id="t-reabrir" type="button">Reabrir</button>' : '<button class="btn" id="t-ok" type="button">' + ic('ok', 'p') + 'Concluir</button>')) + '<button class="btn" data-fechar>Cancelar</button><button class="btn ouro" id="t-salvar" type="button">Salvar</button></div>',
+      function (f, fechar) {
+        var salvar = function (extra) {
+          return api('tarefa-salvar', Object.assign({ id: t.id, titulo: $('#t-tit', f).value, data: $('#t-data', f).value, hora: $('#t-hora', f).value, prioridade: $('#t-pri', f).value, responsavel: $('#t-resp', f).value, descricao: $('#t-desc', f).value, vinculo: t.vinculo }, extra || {}))
+            .then(function () { fechar(); buscarResumo().catch(function () {}); aoSalvar(); }).catch(function (er) { aviso(er.message, true); });
+        };
+        $('#t-salvar', f).addEventListener('click', function () { salvar().then(function () { aviso('Tarefa salva.'); }); });
+        var okb = $('#t-ok', f); if (okb) okb.addEventListener('click', function () { salvar({ status: 'concluida' }).then(function () { aviso('Tarefa concluída.'); }); });
+        var rb = $('#t-reabrir', f); if (rb) rb.addEventListener('click', function () { salvar({ status: 'aberta' }); });
+        var ex = $('#t-excl', f); if (ex) ex.addEventListener('click', function () { fechar(); confirmar('Excluir a tarefa?', t.titulo, 'Excluir').then(function (s) { if (s) api('tarefa-excluir', { id: t.id }).then(function () { aviso('Tarefa excluída.'); buscarResumo().catch(function () {}); aoSalvar(); }); }); });
+      });
+  }
+  var mesAgenda = null;
+  TELAS.agenda = function (param, vivo) {
+    titulo('Agenda e tarefas');
+    return api('tarefa-listar').then(function (j) {
+      if (!vivo()) return;
+      var ts = j.tarefas || [], hj = hojeISO();
+      var abertas = ts.filter(function (t) { return t.status !== 'concluida'; });
+      var grupos = [
+        ['Atrasadas', abertas.filter(function (t) { return t.data && t.data < hj; }), 'recusada'],
+        ['Hoje', abertas.filter(function (t) { return t.data === hj; }), 'em_andamento'],
+        ['Próximas', abertas.filter(function (t) { return !t.data || t.data > hj; }), 'enviada'],
+        ['Concluídas recentemente', ts.filter(function (t) { return t.status === 'concluida'; }).sort(function (a, b) { return String(b.concluida_em).localeCompare(String(a.concluida_em)); }).slice(0, 10), 'aprovada'],
+      ];
+      mesAgenda = mesAgenda || hj.slice(0, 7);
+      var recarregar = function () { navegar(); };
+      var linhaT = function (t) { return '<li><button type="button" class="linha" data-tar="' + esc(t.id) + '" style="width:100%;background:none;border:0;text-align:left;cursor:pointer"><span class="av' + (t.prioridade === 'alta' ? '' : ' navy') + '" style="' + (t.status === 'concluida' ? 'background:var(--verde-bg);color:var(--verde)' : '') + '">' + ic(t.status === 'concluida' ? 'ok' : 'tarefa', 'p') + '</span><span class="meio"><b style="' + (t.status === 'concluida' ? 'text-decoration:line-through;color:var(--texto-2)' : '') + '">' + esc(t.titulo) + '</b><small>' + (t.data ? dataBR(t.data) : 'Sem data') + (t.hora ? ' às ' + esc(t.hora) : '') + (t.responsavel ? ' · ' + esc(t.responsavel) : '') + '</small></span><span class="dir">' + (t.prioridade === 'alta' ? '<span class="tag recusada">Alta</span>' : '') + '</span></button></li>'; };
+      $('#conteudo').innerHTML = '<div class="cabeca"><div class="t"><h2>Agenda e tarefas</h2><p>Prazos, emissões, check-ins, pagamentos e retornos aos clientes.</p><div class="linha-ouro"></div></div><div class="acoes"><button class="btn ouro" id="b-tar" type="button">' + ic('mais', 'p') + 'Nova tarefa</button></div></div>' +
+        '<div class="grade g2"><div class="grade" style="gap:14px">' + grupos.map(function (g) { return g[1].length ? '<section class="card"><div class="card-cab"><h3><span class="tag ' + g[2] + '">' + g[1].length + '</span> ' + g[0] + '</h3></div><div class="card-corpo"><ul class="lista">' + g[1].map(linhaT).join('') + '</ul></div></section>' : ''; }).join('') +
+        (ts.length ? '' : '<section class="card">' + vazio('tarefa', 'Nenhuma tarefa', 'Crie lembretes de emissões, pagamentos, documentos e retornos.', '<button class="btn ouro p" id="b-tar2" type="button">Criar tarefa</button>') + '</section>') + '</div>' +
+        '<section class="card"><div class="card-cab"><h3>' + ic('calendario', 'p') + '<span id="cal-tit"></span></h3><button class="ibtn" id="cal-ant" aria-label="Mês anterior" style="transform:rotate(180deg)">' + ic('seta', 'p') + '</button><button class="ibtn" id="cal-prox" aria-label="Próximo mês">' + ic('seta', 'p') + '</button></div><div class="card-corpo" id="cal"></div></section></div>';
+      function cal() {
+        var p = mesAgenda.split('-').map(Number), primeiro = new Date(p[0], p[1] - 1, 1), dias = new Date(p[0], p[1], 0).getDate();
+        $('#cal-tit').textContent = primeiro.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+        var h = '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;font-size:12px;text-align:center">' + ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map(function (d) { return '<b style="color:var(--texto-2);padding:4px 0">' + d + '</b>'; }).join('');
+        for (var i = 0; i < primeiro.getDay(); i++) h += '<span></span>';
+        for (var d = 1; d <= dias; d++) {
+          var iso = mesAgenda + '-' + ('0' + d).slice(-2);
+          var doDia = abertas.filter(function (t) { return t.data === iso; });
+          h += '<button type="button" data-dia="' + iso + '" style="aspect-ratio:1;border-radius:10px;border:1px solid ' + (iso === hj ? 'var(--ouro)' : 'var(--areia)') + ';background:' + (doDia.length ? 'var(--ouro-claro)' : '#fff') + ';cursor:pointer;font-weight:' + (iso === hj ? '700' : '500') + ';position:relative">' + d + (doDia.length ? '<span style="position:absolute;bottom:3px;left:50%;transform:translateX(-50%);font-size:9px;color:#8a6a30">' + doDia.length + '</span>' : '') + '</button>';
+        }
+        $('#cal').innerHTML = h + '</div><p style="font-size:12.5px;color:var(--texto-2);margin:10px 0 0">Toque num dia para criar uma tarefa nele.</p>';
+      }
+      cal();
+      $('#cal-ant').addEventListener('click', function () { var p = mesAgenda.split('-').map(Number); mesAgenda = new Date(Date.UTC(p[0], p[1] - 2, 1)).toISOString().slice(0, 7); cal(); });
+      $('#cal-prox').addEventListener('click', function () { var p = mesAgenda.split('-').map(Number); mesAgenda = new Date(Date.UTC(p[0], p[1], 1)).toISOString().slice(0, 7); cal(); });
+      $('#cal').addEventListener('click', function (e) { var b = e.target.closest('[data-dia]'); if (b) modalTarefa({ data: b.getAttribute('data-dia') }, recarregar); });
+      $('#conteudo').addEventListener('click', function (e) { var b = e.target.closest('[data-tar]'); if (b) modalTarefa(ts.filter(function (t) { return t.id === b.getAttribute('data-tar'); })[0], recarregar); });
+      $('#b-tar').addEventListener('click', function () { modalTarefa(null, recarregar); });
+      var b2 = $('#b-tar2'); if (b2) b2.addEventListener('click', function () { modalTarefa(null, recarregar); });
+      if (param === 'nova') modalTarefa(null, recarregar);
+    });
+  };
+
+  // ───────────────────────── Fase 2: Leads do site ─────────────────────────
+  var ETAPAS = { novo: 'Novo', conversando: 'Em conversa', testando: 'Qualificado', cliente: 'Virou cliente', perdido: 'Perdido' };
+  var ETAPA_CLS = { novo: 'nova', conversando: 'em_preparacao', testando: 'em_negociacao', cliente: 'aprovada', perdido: 'recusada' };
+  TELAS.leads = function (_p, vivo) {
+    titulo('Leads do site');
+    return api('lead-listar').then(function (j) {
+      if (!vivo()) return;
+      var ls = j.leads || [];
+      var filtro = 'abertos';
+      contadores.lead = ls.filter(function (l) { return (l.status || 'novo') === 'novo'; }).length; desenharMenu('leads');
+      $('#conteudo').innerHTML = '<div class="cabeca"><div class="t"><h2>Leads do site</h2><p>Contatos deixados no site. Qualifique, registre a próxima ação e transforme em cotação sem cadastrar de novo.</p><div class="linha-ouro"></div></div></div>' +
+        '<div class="chips">' + [['abertos', 'Em aberto']].concat(Object.keys(ETAPAS).map(function (k) { return [k, ETAPAS[k]]; })).concat([['todos', 'Todos']]).map(function (f) { var n = ls.filter(function (l) { var s = l.status || 'novo'; return f[0] === 'todos' || (f[0] === 'abertos' ? s !== 'cliente' && s !== 'perdido' : s === f[0]); }).length; return '<button class="chip' + (f[0] === filtro ? ' on' : '') + '" data-f="' + f[0] + '">' + f[1] + '<span class="n">' + n + '</span></button>'; }).join('') + '</div><section class="card"><div class="card-corpo" id="lista-leads"></div></section>';
+      function render() {
+        var l = ls.filter(function (x) { var s = x.status || 'novo'; return filtro === 'todos' || (filtro === 'abertos' ? s !== 'cliente' && s !== 'perdido' : s === filtro); });
+        $('#lista-leads').innerHTML = l.length ? '<ul class="lista">' + l.map(function (x) {
+          var wpp = whatsLink(x.whatsapp, 'Olá ' + String(x.nome || '').split(' ')[0] + ', aqui é da Viajante Pro. Recebemos seu contato pelo site!');
+          return '<li data-lead="' + esc(x.id) + '"><div class="linha" style="flex-wrap:wrap"><span class="av">' + esc(iniciais(x.nome)) + '</span><span class="meio" style="min-width:180px"><b>' + esc(x.nome) + ' <span class="tag ' + ETAPA_CLS[x.status || 'novo'] + '">' + ETAPAS[x.status || 'novo'] + '</span></b><small>' + esc([x.email, x.whatsapp].filter(Boolean).join(' · ')) + ' · ' + esc(relativo(x.criado_em)) + (x.utm && x.utm.source ? ' · via ' + esc(x.utm.source) : '') + '</small>' + (x.mensagem ? '<small style="white-space:normal">“' + esc(x.mensagem) + '”</small>' : '') + (x.proxima_acao ? '<small style="color:var(--ouro)">Próxima ação: ' + esc(x.proxima_acao) + '</small>' : '') + '</span><span class="acoes">' + (wpp ? '<a class="btn p" target="_blank" rel="noopener" href="' + esc(wpp) + '">' + ic('telefone', 'p') + 'WhatsApp</a>' : '') + '<button class="btn p" data-a="etapa">' + ic('funil', 'p') + 'Etapa</button><button class="btn p ouro" data-a="cotar">' + ic('nova_cot', 'p') + 'Virar cotação</button></span></div></li>';
+        }).join('') + '</ul>' : vazio('imã', 'Nenhum lead nesta etapa', 'Contatos do formulário do site aparecem aqui.');
+      }
+      $$('.chip[data-f]').forEach(function (b) { b.addEventListener('click', function () { $$('.chip[data-f]').forEach(function (x) { x.classList.remove('on'); }); b.classList.add('on'); filtro = b.getAttribute('data-f'); render(); }); });
+      $('#lista-leads').addEventListener('click', function (e) {
+        var b = e.target.closest('button[data-a]'); if (!b) return;
+        var lead = ls.filter(function (x) { return x.id === b.closest('li').getAttribute('data-lead'); })[0];
+        if (b.getAttribute('data-a') === 'cotar') {
+          api('cotacao-criar', { nome: lead.nome, email: lead.email || '', whatsapp: lead.whatsapp || '', canal: 'site', observacoes_internas: lead.mensagem ? 'Mensagem do lead: ' + lead.mensagem : '' })
+            .then(function (r) { return api('lead-atualizar', { id: lead.id, status: 'cliente' }).then(function () { aviso('Cotação criada a partir do lead.'); ir('cotacoes/' + encodeURIComponent(r.cotacao.id)); }); }).catch(function (er) { aviso(er.message, true); });
+          return;
+        }
+        modal('<h3>Etapa do lead</h3><div class="form"><div class="campo"><label for="ld-st">Etapa</label><select id="ld-st">' + opcoes(ETAPAS, lead.status || 'novo') + '</select></div><div class="campo"><label for="ld-prox">Próxima ação</label><input id="ld-prox" value="' + esc(lead.proxima_acao || '') + '" placeholder="Ex.: ligar quinta às 10h"></div><div class="campo"><label for="ld-mot">Motivo da perda (se perdido)</label><input id="ld-mot" value="' + esc(lead.motivo_perda || '') + '"></div><div class="campo"><label for="ld-nota">Anotações</label><textarea id="ld-nota">' + esc(lead.nota || '') + '</textarea></div></div><div class="rod"><button class="btn" data-fechar>Cancelar</button><button class="btn ouro" id="ld-ok">Salvar</button></div>', function (f, fechar) {
+          $('#ld-ok', f).addEventListener('click', function () {
+            api('lead-atualizar', { id: lead.id, status: $('#ld-st', f).value, proxima_acao: $('#ld-prox', f).value, motivo_perda: $('#ld-mot', f).value, nota: $('#ld-nota', f).value }).then(function () { aviso('Lead atualizado.'); fechar(); navegar(); }).catch(function (er) { aviso(er.message, true); });
+          });
+        });
+      });
       render();
     });
   };
