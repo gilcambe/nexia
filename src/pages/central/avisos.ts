@@ -46,16 +46,27 @@ export function calcularAvisos(d: Dados): Aviso[] {
       });
     }
   }
-  if (d.banco && !d.banco.ok) a.push(d.banco.cheio ? {
-    cor: "vermelho", texto: "O banco de dados chegou no limite grátis de hoje", aba: "sistema",
-    oque: "O Firebase grátis tem um limite de leituras por dia, e ele acabou.", impacto: "Algumas telas podem não carregar até o limite voltar.",
-    passos: ["Não precisa fazer nada: o limite volta sozinho por volta das 4h (horário de Brasília).", "Enquanto isso, o banco reserva (D1) segura o que dá."], sozinho: true,
-  } : {
-    cor: "vermelho", texto: "O banco de dados não respondeu", aba: "sistema",
-    oque: "O Firebase não respondeu na última conferência.", impacto: "Telas que leem dados podem falhar.",
-    passos: ["Toque em \"Conferir agora\" daqui a 1 minuto.", "Se continuar, abra o Firebase pelo link e veja se aparece algum aviso vermelho.", "Se aparecer, me mande um print."],
-    link: { rotulo: "Abrir o Firebase", url: "https://console.firebase.google.com/project/nexia-c8710" },
-  });
+  if (d.banco && !d.banco.ok) {
+    const isCota = d.banco.cheio || (d.banco.motivo && /limite grátis|cota|exhausted/i.test(d.banco.motivo));
+    if (isCota) {
+      a.push({
+        cor: "amarelo",
+        texto: "Os bancos acabaram a cota de hoje. A fila volta sozinha (D1 à meia-noite UTC, Firestore às 7h UTC)",
+        aba: "sistema",
+        oque: "O limite grátis de leituras/gravações do dia foi atingido nos bancos de dados.",
+        impacto: "Novas tarefas do Cortex esperam a cota voltar, sem queimar execuções.",
+        passos: ["Não precisa fazer nada: a cota volta sozinha nos horários programados."],
+        sozinho: true,
+      });
+    } else {
+      a.push({
+        cor: "vermelho", texto: "O banco de dados não respondeu", aba: "sistema",
+        oque: "O Firebase não respondeu na última conferência.", impacto: "Telas que leem dados podem falhar.",
+        passos: ["Toque em \"Conferir agora\" daqui a 1 minuto.", "Se continuar, abra o Firebase pelo link e veja se aparece algum aviso vermelho.", "Se aparecer, me mande um print."],
+        link: { rotulo: "Abrir o Firebase", url: "https://console.firebase.google.com/project/nexia-c8710" },
+      });
+    }
+  }
   for (const r of d.robos?.robos || []) if (r.situacao === "erro") a.push({
     cor: "amarelo", texto: `O robô "${r.nome}" deu erro na última vez`, aba: "sistema",
     oque: `A última rodada do robô "${r.nome}" (${r.arquivo}) terminou com erro.`,

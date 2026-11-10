@@ -97,6 +97,18 @@ test('CF-Q1. sonda de cota: sem conta segue; 429/RESOURCE_EXHAUSTED segura; outr
   assert.equal((await sondarCota(env, async () => { throw new Error('rede'); }, tok)).ok, true);
 });
 
+test('CF-Q2. sonda D1: 429 ou free tier daily row read limit retorna ok: false; sucesso retorna ok: true', async () => {
+  const env = { NEXIA_D1_TOKEN: 'tok', NEXIA_D1_ACCOUNT_ID: 'acc', NEXIA_D1_DATABASE_ID: 'db' };
+  const fetch429 = async () => ({ status: 429, text: async () => 'free tier daily row read limit exceeded' });
+  const r1 = await sondarCota(env, fetch429);
+  assert.strictEqual(r1.ok, false);
+  assert.match(r1.motivo, /limite grátis do D1 acabou/);
+
+  const fetchOk = async () => ({ status: 200, text: async () => '{"success":true}' });
+  const r2 = await sondarCota(env, fetchOk);
+  assert.strictEqual(r2.ok, true);
+});
+
 test('CF13. partes criadas pela própria fila (github-actions[bot]) são despachadas, uma de cada vez e em ordem', () => {
   const parte = (n, k) => issue(n, ['cortex-parte'], { author_association: 'CONTRIBUTOR', user: { login: 'github-actions[bot]' }, title: `[Parte ${k}/2 de #359] Bezsan: fontes` });
   const a = decidir({ issues: [parte(364, 1), parte(365, 2)], runs: [], agora: AGORA });

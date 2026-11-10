@@ -131,6 +131,7 @@ async function main() {
     if (!client && cl.status === 409) client = ((await api('/nexia/clients')).json.items || []).find(c => c.slug === `teste-automatico${PROJ}`);
     if (!client) {
       report(false, 'Vault: criar cliente', `${cl.status} ${cl.json && (cl.json.error || '')} ${(cl.json && cl.json.causa) || ''}`);
+      report(false, 'Vault: criar projeto', 'não testado: cliente não foi criado');
       throw new Error('Falha ao criar cliente de teste');
     }
     report(true, 'Vault: criar cliente', `${cl.status} ${cl.json && (cl.json.error || '')} ${(cl.json && cl.json.causa) || ''}`);
@@ -197,7 +198,7 @@ async function main() {
     if (!RAPIDO) {
       const t0 = Date.now();
       const bc = await api('/body-coach-ai', { method: 'POST', body: { message: 'Como estou hoje?', role: 'coach', context: { name: 'Teste', readinessScore: 70 } } });
-      report(bc.status === 200 && !!(bc.json && bc.json.reply), 'Body Coach: coach responde', `${bc.status} ${Math.round((Date.now() - t0) / 1000)}s ${bc.json ? (bc.json.error || `${bc.json.model || ''}: ${bc.json.reply}`) : bc.text}`);
+      report(bc.status === 200 && !!(bc.json && bc.json.reply), 'Body Coach: coach responde', `${bc.status} ${Math.round((Date.now() - t0) / 1000)}s ${bc.json ? (bc.json.model || '') : ''} ${bc.json && bc.json.reply ? 'OK' : bc.text}`);
     }
 
     // Execução do orquestrador (opcional: a tarefa vem do input)
