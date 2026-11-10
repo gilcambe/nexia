@@ -13,17 +13,19 @@ function fornecedores(lista, env, robos = [], testesVagas = []) {
     const robo = f.robo ? robos.find((r) => r.arquivo === f.robo) : null;
     let situacao = 'ok';
     
-    // Verificação de teste real da vaga usando o módulo/dados ia-vagas se aplicável
+    // Verificação do último teste real da vaga usando o módulo ia-vagas
     const testeRecente = f.id ? testesVagas.find((t) => t.vagaId === f.id && (agora - (t.quando || t.timestamp || 0)) <= LIMITE_24H) : null;
     
     if (f.chave && !temChave(env, f.chave)) {
       situacao = 'desligado';
-    } else if (f.id && testesVagas.length > 0 && !testeRecente) {
-      situacao = 'nao testado';
+    } else if (f.id) {
+      if (!testeRecente) {
+        situacao = 'nao testado';
+      } else {
+        situacao = testeRecente.situacao || 'ok';
+      }
     } else if (robo) {
       situacao = robo.situacao === 'erro' ? 'erro' : robo.situacao === 'nunca' ? 'desligado' : 'ok';
-    } else if (f.id && testesVagas.length > 0 && testeRecente && testeRecente.situacao) {
-      situacao = testeRecente.situacao;
     }
 
     // chave = só o NOME da variável; chaveEstado diz se existe. O valor nunca sai do servidor (#1872).
