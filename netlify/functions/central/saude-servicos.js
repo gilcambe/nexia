@@ -1,4 +1,5 @@
 'use strict';
+'use strict';
 // Central NEXIA: saúde dos serviços principais de infraestrutura (Cortex, Firebase, Cloudflare, GitHub, Vault).
 // Cada serviço é verificado individualmente e retorna { id, ok, ms, motivo, conferidoEm }.
 // Os resultados são salvos em Cloudflare D1 ou Firestore no documento saude_servicos/estado
