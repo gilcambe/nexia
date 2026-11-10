@@ -6,7 +6,7 @@
 
 function createHandler(deps = {}) {
   const getMw = deps.getMw || (() => require('./middleware'));
-const { verifyBearerToken } = getMw();
+  const { verifyBearerToken } = getMw();
   const now = deps.now || (() => Date.now());
 
   return async (event) => {
