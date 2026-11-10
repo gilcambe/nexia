@@ -76,7 +76,7 @@ function createHandler(deps = {}) {
     }
 
     // PBK3: backup geral do master só devolve contagens, sem identificar ninguém
-    if (acao === 'backup_diario' || path.endsWith('/prumo-backup') || path.includes('/cron') || path.includes('/backup') || method === 'SCHEDULE') {
+    if (path.endsWith('/prumo-backup') || path.endsWith('/prumo-backup/') || acao === 'backup_diario' || path.includes('/cron') || (path.includes('/backup') && !path.includes('/prumo-admin/')) || method === 'SCHEDULE') {
       if (method === 'SCHEDULE' || cronHeader) {
         // Execução automática de cron
         const timestamp = new Date().toISOString();
