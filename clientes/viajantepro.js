@@ -10,7 +10,7 @@ const VIAJANTE_PRO = {
   viajantepro: {
     nome: 'Viajante Pro',
     senhas_iniciais: [
-      // ADMIN01 (dono do sistema / suporte)
+      // senha inicial do painel (só vale até a primeira troca de senha em Cotações > Trocar senha)
       { salt: 'd3451e7f34a8549290d4cda5b069c80b', hash: '0752321472aaccfe5e23961d97417d85e6b25587c15a30b6f71e8a2ac650a35c' },
     ],
     versao: 1,

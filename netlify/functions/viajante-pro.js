@@ -597,7 +597,8 @@ exports.handler = async function (event, context) {
     const hashCalculado = await hashSenha(senha, conta.senha_salt);
     let valido = iguais(hashCalculado, conta.senha_hash);
 
-    if (!valido && Array.isArray(cadastro.senhas_iniciais)) {
+    // Senha inicial só vale até a agência trocar a senha (depois disso, só a senha nova entra).
+    if (!valido && !conta.senha_personalizada && Array.isArray(cadastro.senhas_iniciais)) {
       for (const si of cadastro.senhas_iniciais) {
         const hc = await hashSenha(senha, si.salt);
         if (iguais(hc, si.hash)) { valido = true; break; }

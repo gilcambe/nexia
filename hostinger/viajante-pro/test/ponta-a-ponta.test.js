@@ -96,6 +96,19 @@ test('painel: login, cotações, trocar senha, viagens, chat, fotos e site', asy
   r = await api({ acao: 'trocar-senha', token, senha_atual: 'senha-teste-1', senha_nova: 'senha-teste-2' });
   assert.equal(r.status, 200, JSON.stringify(r.j));
   assert.equal((await api({ acao: 'entrar', senha: 'senha-teste-2' })).status, 200);
+  // senha inicial do cadastro deixa de valer depois da troca
+  {
+    const { VIAJANTE_PRO } = require(path.resolve(__dirname, '..', '..', '..', 'clientes', 'viajantepro.js'));
+    const ini = VIAJANTE_PRO.viajantepro.senhas_iniciais[0];
+    const conta = db.collection('viajante_contas').doc('viajantepro');
+    const original = (await conta.get()).data();
+    await conta.set({ ...original, senha_personalizada: false, senha_hash: ini.hash, senha_salt: ini.salt });
+    assert.equal((await api({ acao: 'entrar', senha: 'ADMIN01' })).status, 200, 'antes de trocar, a inicial entra');
+    r = await api({ acao: 'entrar', senha: 'ADMIN01' });
+    assert.equal((await api({ acao: 'trocar-senha', token: r.j.token, senha_nova: 'senha-teste-3' })).status, 200);
+    assert.equal((await api({ acao: 'entrar', senha: 'ADMIN01' })).status, 401, 'depois de trocar, a inicial NÃO entra');
+    assert.equal((await api({ acao: 'entrar', senha: 'senha-teste-3' })).status, 200);
+  }
 
   r = await api({ acao: 'viagem-criar', token, nome: 'Família Silva', destino: 'Gramado', datas: { inicio: '2026-12-20', fim: '2026-12-27' }, passageiros: [{ nome: 'Ana', email: 'ana@exemplo.com' }], roteiro: [{ dia: 1, descricao: 'Chegada' }] });
   assert.equal(r.status, 200, JSON.stringify(r.j));
