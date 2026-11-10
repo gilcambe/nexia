@@ -370,7 +370,7 @@ function decidir({ issues, runs, agora = Date.now(), pistas = PISTAS, prs = [], 
   };
   const rodando = validas.filter(i => nomes(i).includes(L.rodando));
   for (const i of fila) {
-    // Parte grande do plano vai para o Jules (cloudflare/jules-auto.js). Se ele não aceitar em 3 h (limite do dia), volta ao Cortex.
+    // Parte grande do plano vai para o Jules (cloudflare/jules-auto.js). Se he não aceitar em 3 h (limite do dia), volta ao Cortex.
     if (nomes(i).includes(L.jules)) {
       if (!nomes(i).includes('jules-enviado') && !mexeEmWorkflow(i) && minutos(agora, i.updated_at) > plano.JULES_DESISTE_MIN) acoes.push({ tipo: 'jules-volta', numero: i.number });
       continue;
@@ -427,7 +427,20 @@ async function sondarUm(txt, fetchImpl, tokenImpl) {
 
 // Vale se QUALQUER banco do rodízio (B, C) ainda tem cota de leitura e escrita.
 async function sondarCota(env = process.env, fetchImpl = (...a) => fetch(...a), tokenImpl = null) {
-  if (env.NEXIA_D1_TOKEN && env.NEXIA_D1_ACCOUNT_ID) return { ok: true, motivo: 'banco de reserva D1 ativo' }; // o Vault cai nele sozinho quando o Firebase estoura
+  if (env.NEXIA_D1_TOKEN && env.NEXIA_D1_ACCOUNT_ID) {
+    try {
+      const dbId = env.NEXIA_D1_DATABASE_ID || 'nexia-cortex';
+      const r = await fetchImpl(`https://api.cloudflare.com/client/v4/accounts/${env.NEXIA_D1_ACCOUNT_ID}/d1/database/${dbId}/query`, {
+        method: 'POST', headers: { Authorization: `Bearer ${env.NEXIA_D1_TOKEN}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sql: 'SELECT 1' }),
+      });
+      const c = await r.text();
+      if (r.status === 429 || /free tier daily row read limit|RESOURCE_EXHAUSTED/i.test(c)) {
+        return { ok: false, motivo: 'limite grátis do D1 acabou (volta às 00:00 UTC)' };
+      }
+      return { ok: true, motivo: 'banco de reserva D1 ativo' };
+    } catch (e) { return { ok: true, motivo: `sonda do D1 falhou (${e.message})` }; }
+  }
   const textos = ['B', 'C'].map(l => (env[`FIREBASE_SERVICE_ACCOUNT_${l}`] || '').trim()).filter(Boolean);
   if (!textos.length) {
     const b64 = (env.FIREBASE_SERVICE_ACCOUNT_BASE64 || '').replace(/\s/g, '');
@@ -612,7 +625,7 @@ async function executar(token, acao, dividir) {
     await gh(token, 'PATCH', `/issues/${n}`, { state: 'closed', state_reason: 'completed' });
   } else if (acao.tipo === 'reserva-volta') {
     // #803: novo dia, nova cota: volta para a fila do zero (tentativa-N, sem-entrega-N e travado saem).
-    for (const l of acao.rotulos.filter(x => x === L.semCota || x === L.travado || x === L.rodando || /^(tentativa|sem-entrega|pista)-\d+$/.test(x) || (acao.motivo === 'cofre' && x === 'reserva-tentou'))) await delLabel(l).catch(() => null);
+    for (const l of acao.rotulos.filter(x => x === L.semCota || x === L.travado || x === L.rodando || /^(tentativa|sem-entrega|pista)-\d+$/.test(x) || (acao.motivo === 'cofre' && x === 'reserva-tentout'))) await delLabel(l).catch(() => null);
     await comentar(acao.motivo === 'cofre'
       ? 'Esta tarefa travou por erro de ambiente, não por culpa dela (Cofre fora do ar, PR #2221, ou limpeza do teste com login, PR #2301). Ela volta para a fila do zero.'
       : 'Novo dia: a cota das IAs voltou. A tarefa voltou para a fila do zero.');

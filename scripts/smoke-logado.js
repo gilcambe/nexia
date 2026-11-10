@@ -131,6 +131,7 @@ async function main() {
     if (!client && cl.status === 409) client = ((await api('/nexia/clients')).json.items || []).find(c => c.slug === `teste-automatico${PROJ}`);
     if (!client) {
       report(false, 'Vault: criar cliente', `${cl.status} ${cl.json && (cl.json.error || '')} ${(cl.json && cl.json.causa) || ''}`);
+      report(false, 'Vault: criar projeto', 'não testado: cliente não foi criado');
       throw new Error('Falha ao criar cliente de teste');
     }
     report(true, 'Vault: criar cliente', `${cl.status} ${cl.json && (cl.json.error || '')} ${(cl.json && cl.json.causa) || ''}`);
@@ -260,8 +261,18 @@ async function main() {
     const donoDoRepo = project && project.id;
     const apagarProjeto = !!projetoCriado && projetoCriado !== donoDoRepo;
     const apagarCliente = !!clienteCriado && (!projetoCriado || apagarProjeto);
-    if (apagarProjeto) console.log(`limpeza: projeto de teste ${await deleteTestRecord(api, 'projects', projetoCriado).catch(() => false) ? 'apagado' : 'não apagado (segue)'}`);
-    if (apagarCliente) console.log(`limpeza: cliente de teste ${await deleteTestRecord(api, 'clients', clienteCriado).catch(() => false) ? 'apagado' : 'não apagado (segue)'}`);
+    if (apagarProjeto) {
+      const pObj = await api(`/nexia/projects/${projetoCriado}`).then(r => r.json && r.json.record);
+      if (pObj && String(pObj.slug || '').startsWith('site-teste-cortex')) {
+        console.log(`limpeza: projeto de teste ${await deleteTestRecord(api, 'projects', projetoCriado).catch(() => false) ? 'apagado' : 'não apagado (segue)'}`);
+      }
+    }
+    if (apagarCliente) {
+      const cObj = await api(`/nexia/clients/${clienteCriado}`).then(r => r.json && r.json.record);
+      if (cObj && String(cObj.slug || '').startsWith('teste-automatico')) {
+        console.log(`limpeza: cliente de teste ${await deleteTestRecord(api, 'clients', clienteCriado).catch(() => false) ? 'apagado' : 'não apagado (segue)'}`);
+      }
+    }
     console.log(`limpeza: usuário de teste ${await deleteTestUser(sa).catch(() => false) ? 'apagado' : 'não apagado (segue)'}`);
   }
 

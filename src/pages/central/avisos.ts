@@ -47,9 +47,9 @@ export function calcularAvisos(d: Dados): Aviso[] {
     }
   }
   if (d.banco && !d.banco.ok) a.push(d.banco.cheio ? {
-    cor: "vermelho", texto: "O banco de dados chegou no limite grátis de hoje", aba: "sistema",
-    oque: "O Firebase grátis tem um limite de leituras por dia, e ele acabou.", impacto: "Algumas telas podem não carregar até o limite voltar.",
-    passos: ["Não precisa fazer nada: o limite volta sozinho por volta das 4h (horário de Brasília).", "Enquanto isso, o banco reserva (D1) segura o que dá."], sozinho: true,
+    cor: "amarelo", texto: "Os bancos acabaram a cota de hoje. A fila volta sozinha (D1 à meia-noite UTC, Firestore às 7h UTC)", aba: "sistema",
+    oque: "O limite grátis dos bancos acabou.", impacto: "A fila aguarda o resgate automático.",
+    passos: ["Não precisa fazer nada: o limite volta sozinho."], sozinho: true,
   } : {
     cor: "vermelho", texto: "O banco de dados não respondeu", aba: "sistema",
     oque: "O Firebase não respondeu na última conferência.", impacto: "Telas que leem dados podem falhar.",
