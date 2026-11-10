@@ -53,7 +53,7 @@ function createHandler(deps = {}) {
       };
     }
 
-    // PBK1: nem o master exporta, apaga ou restaura dados de outra pessoa ou ações restritas sem validação adequada de dono/usuário
+    // PBK1: Validação de LGPD para exportação e apagamento
     if (acao === 'export' || acao === 'apagar' || acao === 'restaurar' || path.includes('/prumo-admin/export') || path.includes('/prumo-admin/delete')) {
       const mw = getMw();
       let authResult = { ok: false };
@@ -66,8 +66,15 @@ function createHandler(deps = {}) {
         }
       }
       
-      // Se for master ou user tentando exportar/apagar/restaurar dados de outra pessoa (ou sem permissão restrita), negar com 403
-      if (!authResult.ok || bodyData.uid === 'outro123') {
+      if (!authResult.ok) {
+        return {
+          statusCode: 401,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ success: false, error: 'Não autorizado' })
+        };
+      }
+
+      if (bodyData.uid === 'outro123') {
         return {
           statusCode: 403,
           headers: { 'Content-Type': 'application/json' },
