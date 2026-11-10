@@ -51,6 +51,14 @@ test('estadoTarefa: precisaVoce com tentativa-3 e cortex-travado', () => {
   assert.strictEqual(res.precisaVoce, true);
 });
 
+test('estadoTarefa: precisaVoce com tentativa-3 e state travada exigido', () => {
+  const agora = Date.now();
+  const issue = { state: 'open', labels: ['cortex-fila', 'cortex-travado', 'tentativa-3'], updated_at: new Date(agora - 5 * 60 * 1000).toISOString() };
+  const res = estadoTarefa(issue, agora, { minutosParada: 30, maxTentativas: 3 });
+  assert.strictEqual(res.estado, 'travada');
+  assert.strictEqual(res.precisaVoce, true);
+});
+
 test('estadoTarefa: concluida', () => {
   const issue = { state: 'closed', labels: ['cortex-fila', 'cortex-feito'], updated_at: new Date().toISOString() };
   const res = estadoTarefa(issue, Date.now(), { minutosParada: 30, maxTentativas: 3 });
