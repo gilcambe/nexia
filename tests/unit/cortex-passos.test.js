@@ -87,3 +87,55 @@ test('PS4. Architect não chama github.get_file em arquivos novos inexistentes',
   assert.strictEqual(r.status, 'done');
   assert.strictEqual(calledPaths.length, 0, 'não chamou get_file para arquivo novo');
 });
+
+test('PS5. #3354: get_file com UPSTREAM_NOT_FOUND não gasta passos do agente', async () => {
+  let callCount = 0;
+  const router = {
+    capabilities: () => ({ available: true, tool_call: true }),
+    async toolCall() {
+      callCount++;
+      if (callCount <= 3) {
+        return { tool_calls: [{ id: `c_${callCount}`, name: 'github__get_file', input: { path: `inexistente_${callCount}.js` } }], usage: {} };
+      }
+      return { text: 'ARQUIVOS: existente.js\nPronto.', tool_calls: [], usage: {} };
+    },
+  };
+  const gateway = {
+    describe: () => [{ name: 'github.get_file', risk: 'LOW', description: 'ler', input_schema: { type: 'object' } }],
+    async invoke() {
+      return { status: 'failed', error: { code: 'UPSTREAM_NOT_FOUND', message: 'Not found' } };
+    },
+  };
+  // Com max_steps = 16 do architect, se os 3 get_file falhos não contam, ele consegue continuar e terminar com done
+  const meter = createMeter({ max_steps: 16, max_tool_calls: 50, max_tokens: 1e9, max_ms: 60000 });
+  const r = await runAgent({ agentId: 'architect', goal: 'Analise', router, gateway, ctx: {}, projectId: 'p1', meter });
+  assert.strictEqual(r.status, 'done');
+  assert.match(r.text, /existente\.js/);
+});
+
+test('PS6. #3354: Architect simulado que bate no limite devolve parcial e a execução continua', async () => {
+  let step = 0;
+  const router = {
+    capabilities: () => ({ available: true, tool_call: true }),
+    async toolCall() {
+      step++;
+      return {
+        text: `Analisando passo ${step}. Plano parcial: alterar src/limites.js.`,
+        tool_calls: [{ id: `c_${step}`, name: 'github__get_file', input: { path: 'src/limites.js' } }],
+        usage: {},
+      };
+    },
+  };
+  const gateway = {
+    describe: () => [{ name: 'github.get_file', risk: 'LOW', description: 'ler', input_schema: { type: 'object' } }],
+    async invoke() {
+      return { status: 'succeeded', result: { path: 'src/limites.js', content: '// limites' } };
+    },
+  };
+  const meter = createMeter({ max_steps: 100, max_tool_calls: 100, max_tokens: 1e9, max_ms: 60000 });
+  const r = await runAgent({ agentId: 'architect', goal: 'Analise', router, gateway, ctx: {}, projectId: 'p1', meter });
+  assert.strictEqual(r.status, 'done');
+  assert.strictEqual(r.partial, true);
+  assert.match(r.text, /^parcial:/);
+  assert.match(r.text, /src\/limites\.js/);
+});

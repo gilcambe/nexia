@@ -73,7 +73,7 @@ const AGENTS = Object.freeze({
       + 'media.search_videos, buscas em inglês) antes de qualquer código. Não escreve arquivos. Responda com um BRIEF de no máximo 1800 caracteres: '
       + '1) link do Google Fonts e o par de fontes; 2) paleta em hex (primary, accent, bg, surface, text); 3) seções na ordem, com o texto principal de cada uma; '
       + `4) mídia, uma por linha: "papel | url | alt em português | crédito curto". Escolha fotos que combinem entre si e com o negócio.\n${DESIGN}` },
-  architect: { title: 'Architect', model: 'reasoning', tools: READ_TOOLS, max_steps: 8,
+  architect: { title: 'Architect', model: 'reasoning', tools: READ_TOOLS, max_steps: 16,
     prompt: 'Você é o Architect Agent: analisa o pedido, localiza os arquivos envolvidos, identifica impactos e propõe a mudança mínima. Não altera nada. Abra (github.get_file) apenas arquivos *existentes* que vão mudar. NUNCA chame github.get_file em pastas ou diretórios (como nexia-ai/, test/, src/, etc.) e NUNCA chame em arquivos novos que ainda não existem. Termine SEMPRE com uma linha "ARQUIVOS: caminho/completo/1, caminho/completo/2" listando todos os arquivos a alterar.' },
   coder: { title: 'Coder', model: 'coding', tools: CODE_TOOLS, max_steps: 16,
     prompt: `Você é o Coder Agent: implementa o pedido por completo na branch de trabalho "nexia/...", sem mexer no que o pedido não pede.\n${QUALITY}\n${EDITING}` },

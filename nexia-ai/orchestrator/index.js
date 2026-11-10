@@ -273,7 +273,11 @@ function createOrchestrator(deps) {
       /* economia de escrita: o 'running' do passo vai junto com o commit do fim do passo */
       const r = await runAgent({ agentId, goal, context: `${await getContext()}${extraCtx}`, router, gateway, ctx: agentCtx(ctx, agentId), projectId: project.id, meter, ...opts });
       const base = { tool_call_ids: addIds(i, r.tool_call_ids), ...(r.model ? { model: r.model } : {}) };
-      if (r.status === 'done') { stepDone(i, { ...base, summary: r.report ? `${r.report.verdict}: ${r.report.findings.map(f => `[${f.severity}] ${f.file ? `${f.file}: ` : ''}${f.message}`).join(' | ') || 'sem problemas'}` : r.text }); return r; }
+      if (r.status === 'done') {
+        const textSummary = r.partial ? `etapa architect: parcial. ${r.text}` : r.text;
+        stepDone(i, { ...base, summary: r.report ? `${r.report.verdict}: ${r.report.findings.map(f => `[${f.severity}] ${f.file ? `${f.file}: ` : ''}${f.message}`).join(' | ') || 'sem problemas'}` : textSummary });
+        return r;
+      }
       if (r.status === 'waiting_approval') { stepWait(i, { ...base, summary: r.text }); stop = { status: 'waiting_approval', result_summary: `Aguardando aprovação humana em /aprovacoes: ${r.pending.tool}.` }; return r; }
       stepFail(i, { ...base, error_code: r.error_code, summary: r.text });
       stop = { status: 'failed', error_code: r.error_code, result_summary: `O agente ${agentId} falhou: ${r.text}` };
@@ -522,11 +526,23 @@ function createOrchestrator(deps) {
         const diffRef = `${repo ? repo.default_branch : 'main'}...${state.work_branch}`;
 
         if (action === 'agent:analyze' || action === 'agent:answer') {
+          let extraArchitectPrompt = '';
+          if (action === 'agent:analyze' && plan[i].agent === 'architect') {
+            const citadosNoPedido = filesIn(message);
+            const existentes = [];
+            for (const path of citadosNoPedido) {
+              const g = await tool(ctx, state, 'architect', 'github.get_file', { path, ref: repo ? repo.default_branch : undefined });
+              if (g && g.status === 'succeeded') existentes.push(path);
+            }
+            if (existentes.length) {
+              extraArchitectPrompt = `\n\nArquivos citados no pedido que REALMENTE existem no repositório:\n${existentes.map(p => `- ${p}`).join('\n')}\nNão chame github.get_file em caminhos inventados nem arquivos que ainda não existem.`;
+            }
+          }
           await runA(i, plan[i].agent, action === 'agent:answer'
             ? `Pedido do usuário: "${message}"\nResponda com base nas ferramentas de leitura. Cite as evidências (ids, arquivos, SHAs).`
             : plan[i].agent === 'designer'
               ? `Pedido do usuário: "${message}"\nTipo: ${buildKind(message) === 'system' ? 'sistema (interface de uso diário)' : 'site'}. Veja no repositório onde os arquivos vão ficar e devolva o BRIEF visual com fontes, paleta, seções e mídia real (busque fotos${buildKind(message) === 'site' ? ' — pelo menos 6' : ' se fizer sentido'}). Não altere nada.`
-              : `Pedido do usuário: "${message}"\nAnalise o repositório do projeto, localize os arquivos envolvidos e descreva a mudança mínima (arquivos e o que muda). Não altere nada. Última linha: "ARQUIVOS: " e os caminhos completos de todos os arquivos a alterar, separados por vírgula.`);
+              : `Pedido do usuário: "${message}"\nAnalise o repositório do projeto, localize os arquivos envolvidos e descreva a mudança mínima (arquivos e o que muda). Não altere nada. Última linha: "ARQUIVOS: " e os caminhos completos de todos os arquivos a alterar, separados por vírgula.${extraArchitectPrompt}`);
         } else if (action === 'design_spec') {
           await designSpec(i);
         } else if (action === 'create_branch') {

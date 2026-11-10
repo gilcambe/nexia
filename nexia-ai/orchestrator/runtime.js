@@ -399,7 +399,9 @@ async function runAgent(o) {
     pushResults('Lendo os arquivos citados no pedido (pré-carregados pelo NEXIA).', calls.map(() => 'github.get_file'), r.results);
   }
 
-  for (let turn = 0; turn < (agent.max_steps || 8); turn++) {
+  const maxSteps = agent.max_steps || 8;
+  let notFoundFreeSteps = 0;
+  for (let turn = 0; turn < maxSteps; turn++) {
     o.meter.check();
     let out;
     let desc;
@@ -475,10 +477,23 @@ async function runAgent(o) {
     const r = await runCalls(calls, out, model);
     if (r.stop) return r.stop;
     if (viaText) for (const e of (calls.find(c => c.id === 'text_edit') || { input: { edits: [] } }).input.edits) applied.add(JSON.stringify([e.path, e.find, e.replace]));
+    // Issue #3354: Um github.get_file que dá UPSTREAM_NOT_FOUND não conta como passo (até um teto de segurança).
+    const allNotFound = r.results.length > 0 && r.results.every(res => res.tool === 'github.get_file' && (res.error === 'UPSTREAM_NOT_FOUND' || res.error === 'NOT_FOUND'));
+    if (allNotFound && notFoundFreeSteps < maxSteps) {
+      notFoundFreeSteps++;
+      turn--; // não consome este passo
+    }
     // Perto do limite de passos sem nada gravado (MAX_STEPS/NO_CHANGES): pede para gravar já o que tem.
-    const maxSteps = agent.max_steps || 8;
     if (canWrite && branch && !wrote && maxSteps >= 4 && turn === maxSteps - 3) r.results.push({ tool: 'nexia.aviso', ok: true, note: LAST_STEPS(branch) });
     pushResults(viaText ? `${String(out.text || '').slice(0, 1500)}\n[o NEXIA aplicou os blocos de edição do texto]` : out.text, calls.map(c => fromModelName(c.name)), r.results);
+  }
+  // Issue #3354: Quando o Architect chegar ao limite, não falhar a execução se tiver plano parcial.
+  if (o.agentId === 'architect') {
+    const assistantTexts = messages.filter(m => m.role === 'assistant' && typeof m.content === 'string').map(m => m.content.replace(/\(o NEXIA executou:[^)]*\)/g, '').trim()).filter(Boolean);
+    const combined = assistantTexts.join('\n\n').trim();
+    if (combined.length > 0) {
+      return { status: 'done', text: `parcial: ${clip(combined, 1800)}`, partial: true, tool_call_ids: toolCallIds };
+    }
   }
   return { status: 'failed', error_code: 'MAX_STEPS', text: `O agente ${agent.title} não terminou dentro do limite de passos.`, tool_call_ids: toolCallIds };
 }
