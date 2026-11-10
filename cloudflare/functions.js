@@ -58,6 +58,7 @@ const LOADERS = {
   'central': () => require('../netlify/functions/central.js'),
   'conheca': () => require('../netlify/functions/conheca.js'),
   'pedidos': () => require('../netlify/functions/pedidos.js'),
+  'prumo-backup': () => require('../netlify/functions/prumo-backup.js'),
   'nexia-api': () => require('../nexia-ai/api/index.js'),
 };
 
