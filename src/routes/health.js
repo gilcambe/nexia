@@ -1,4 +1,5 @@
 'use strict';
+// health route handler
 
 module.exports = async function health(req, res) {
   const url = new URL(req.url, `http://${req.headers.host}`);
