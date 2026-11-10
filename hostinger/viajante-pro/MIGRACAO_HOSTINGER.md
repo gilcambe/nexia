@@ -104,10 +104,10 @@ Nenhum workflow foi desativado (o `deploy-cloudflare.yml` publica todos os produ
 ## 7. Checklist de validação
 | Item | Local (servidor real + banco SQLite + SMTP falso) | Hostinger (domínio temporário) |
 |---|---|---|
-| Páginas abrem nas mesmas rotas, `/` = landing | ✅ teste automático | ⬜ |
-| Código da API, `.env`, `package.json` não podem ser baixados | ✅ | ⬜ |
-| Cotação do site grava e manda e-mail (remetente, destino, responder-para, link do painel) | ✅ | ⬜ e-mail chegando de verdade |
-| Login do painel (senha certa/errada), sessão inválida bloqueada | ✅ | ⬜ |
+| Páginas abrem nas mesmas rotas, `/` = landing | ✅ teste automático | ✅ 10/11 (honeydew-boar-615951.hostingersite.com) |
+| Código da API, `.env`, `package.json` não podem ser baixados | ✅ | ✅ (404/403) |
+| Cotação do site grava e manda e-mail (remetente, destino, responder-para, link do painel) | ✅ | ✅ grava no MySQL · ⬜ e-mail (depois da virada, quando as caixas existirem) |
+| Login do painel (senha certa/errada), sessão inválida bloqueada | ✅ | ✅ senha errada recusada · ⬜ senha certa (agência) |
 | Trocar senha | ✅ | ⬜ |
 | Cotações: listar e mudar status | ✅ | ⬜ |
 | Viagens: criar, editar, listar, excluir | ✅ | ⬜ |
@@ -116,8 +116,8 @@ Nenhum workflow foi desativado (o `deploy-cloudflare.yml` publica todos os produ
 | Editar site (CMS) e landing lendo o conteúdo | ✅ | ⬜ |
 | Área do passageiro: código por e-mail, entrar, perfil, solicitação | ✅ | ⬜ |
 | Formulário antigo `/api/leads` e páginas antigas gravando via `/api/vp-docs` (sem expor leitura) | ✅ | ⬜ |
-| `/saude` com banco ok | ✅ | ⬜ |
-| Celular e computador, console sem erros, visual igual lado a lado | — (sem navegador no ambiente de testes) | ⬜ |
+| `/saude` com banco ok | ✅ | ✅ `{"banco":"ok","driver":"mysql"}` |
+| Celular e computador, console sem erros, visual igual lado a lado | — | ✅ landing idêntica à versão atual no celular; sem erros dos nossos arquivos |
 | Testes antigos do Viajante (`tests/unit/viajante*`) | ✅ 25/25 | — |
 
 ## 8. Pendências (depois)
