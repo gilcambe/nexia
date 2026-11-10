@@ -39,8 +39,11 @@ const { verifyBearerToken } = getMw();
     if (!body || typeof body !== 'object' || Array.isArray(body)) body = {};
 
     // Verifica autenticação e role "master" obrigatoriamente
-    // Verifica autenticação e role "master" obrigatoriamente
-    const { ok, role } = verifyBearerToken(event); // Verificando se precisa de await
+    const authResult = verifyBearerToken(event);
+    const auth = authResult instanceof Promise ? await authResult : authResult;
+    const ok = auth && auth.ok;
+    const role = auth && auth.role;
+    if (!ok || role !== 'master') {
     if (!ok || role !== 'master') {
       return res(403, { error: 'Acesso restrito a administradores master.' });
     }
