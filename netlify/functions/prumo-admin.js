@@ -44,7 +44,6 @@ const { verifyBearerToken } = getMw();
     const ok = auth && auth.ok;
     const role = auth && auth.role;
     if (!ok || role !== 'master') {
-    if (!ok || role !== 'master') {
       return res(403, { error: 'Acesso restrito a administradores master.' });
     }
 
