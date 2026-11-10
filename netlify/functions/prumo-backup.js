@@ -169,4 +169,4 @@ async function restoreTest(backupData) {
   return { restored: true, timestamp: backupData.timestamp, integrity: 'verified' };
 }
 
-exports.handler = createHandler();
+exports.handler = createHandler();\n
