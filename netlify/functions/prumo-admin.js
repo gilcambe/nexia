@@ -38,13 +38,11 @@ function createHandler(deps = {}) {
     }
     if (!body || typeof body !== 'object' || Array.isArray(body)) body = {};
 
-    // Verifica autenticação e role "master" obrigatoriamente (seguindo padrão de agenda.js)
+    // Verifica se o usuário tem role "master"; caso contrário responde 403
     const authResult = verifyBearerToken(event);
     const auth = authResult instanceof Promise ? await authResult : authResult;
-    const ok = auth && auth.ok;
-    const role = auth && auth.role;
-    if (!ok || role !== 'master') {
-      return res(403, { error: 'Acesso restrito a administradores master.' });
+    if (!auth || !auth.ok || auth.role !== 'master') {
+      return res(403, { error: 'Acesso restrito a master.' });
     }
 
     return res(200, { ok: true, message: 'Painel Prumo Admin.', timestamp: now() });
