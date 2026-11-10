@@ -7,6 +7,7 @@ const assert = require('node:assert/strict');
 const crypto = require('node:crypto');
 const path = require('node:path');
 
+process.env.VP_NAO_LIGAR = '1';
 const { criarApp } = require('../server');
 const { sqliteDriver } = require('../lib/drivers');
 

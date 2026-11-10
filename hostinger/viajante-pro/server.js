@@ -249,7 +249,9 @@ function criarApp(opcoes = {}) {
   return { servidor, db, driver, PAGINAS };
 }
 
-if (require.main === module) {
+// Liga sempre, inclusive quando a Hostinger (LiteSpeed/lsnode) carrega este arquivo com require().
+// Só os testes e o gerador de seed pedem para NÃO ligar (VP_NAO_LIGAR=1).
+if (process.env.VP_NAO_LIGAR !== '1') {
   const { servidor, driver } = criarApp();
   // A Hostinger (LiteSpeed) pode passar PORT como número ou como caminho de socket; os dois funcionam no listen().
   const bruto = process.env.PORT;

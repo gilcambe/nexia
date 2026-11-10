@@ -4,6 +4,7 @@
 // Uso: node scripts/gerar-seed.js   (precisa do Node 22+, por causa do node:sqlite)
 const fs = require('node:fs');
 const path = require('node:path');
+process.env.VP_NAO_LIGAR = '1';
 const { criarApp } = require('../server');
 const { sqliteDriver } = require('../lib/drivers');
 const { VIAJANTE_PRO } = require(path.join(process.env.VP_RAIZ || path.resolve(__dirname, '..', '..', '..'), 'clientes', 'viajantepro.js'));
