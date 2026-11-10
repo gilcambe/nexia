@@ -251,7 +251,11 @@ function criarApp(opcoes = {}) {
 
 if (require.main === module) {
   const { servidor, driver } = criarApp();
-  const porta = Number(process.env.PORT) || 3000;
+  // A Hostinger (LiteSpeed) pode passar PORT como número ou como caminho de socket; os dois funcionam no listen().
+  const bruto = process.env.PORT;
+  const porta = bruto ? (/^\d+$/.test(bruto) ? Number(bruto) : bruto) : 3000;
+  process.on('uncaughtException', e => console.error('[erro não tratado]', e && e.stack));
+  process.on('unhandledRejection', e => console.error('[promessa rejeitada]', e && (e.stack || e)));
   driver.preparar()
     .then(() => console.log('[banco] pronto (' + driver.tipo + ')'))
     .catch(e => console.error('[banco] não conectou:', e.message, '— confira DB_HOST/DB_NAME/DB_USER/DB_PASS no .env'));
