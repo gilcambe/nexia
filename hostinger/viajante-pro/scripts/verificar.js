@@ -10,6 +10,8 @@ const precisa = [
   'viajante-pro/vp-landing.html',
   'viajante-pro/app/index.html',
   'netlify/functions/viajante-pro.js',
+  'netlify/functions/viajante-pro-painel.js',
+  'viajante-pro/painel/index.html',
   'netlify/functions/leads.js',
   'clientes/viajantepro.js',
   'lib/routes.js',

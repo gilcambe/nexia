@@ -627,7 +627,12 @@ exports.handler = async function (event, context) {
     if (!achados.docs.length) return res(404, { error: 'Viagem não encontrada. Peça um link novo à agência.' });
     const viagemDoc = achados.docs[0];
     const vRef = contaRef.collection('viagens').doc(viagemDoc.id);
-    if (acao === 'app-viagem') return res(200, { ok: true, viagem: viagemDoc.data() });
+    if (acao === 'app-viagem') {
+      // o passageiro não vê dados internos da agência (custos, valores, observações)
+      const { custo_total, valor_total, observacoes_internas, cotacao_id, ...publica } = viagemDoc.data();
+      if (Array.isArray(publica.servicos)) publica.servicos = publica.servicos.filter(x => x.status !== 'cancelada').map(({ observacoes, ...x }) => x);
+      return res(200, { ok: true, viagem: publica });
+    }
     if (acao === 'app-chat-listar') {
       return res(200, { ok: true, mensagens: await listarMensagens(vRef, str(body.desde, 64)) });
     }
@@ -927,6 +932,10 @@ exports.handler = async function (event, context) {
 
     return res(200, { ok: true, conversas });
   }
+
+  // ── Painel premium (Fase 1): ações novas, em arquivo separado ──
+  const painel = await require('./viajante-pro-painel').acoesPainel({ acao, body, contaRef, res, now, aleatorio });
+  if (painel) return painel;
 
   return res(400, { error: `Ação não reconhecida: ${acao}` });
 };

@@ -128,3 +128,23 @@ Nenhum workflow foi desativado (o `deploy-cloudflare.yml` publica todos os produ
 5. Recuperar senha do **painel** por e-mail não existe hoje (só "Trocar senha" logado); a área do passageiro já usa código por e-mail.
 6. Depois da virada, apagar o banco antigo do WordPress e revisar as issues pausadas (a maioria vira obsoleta: #3299, #3357–#3363, #3393–#3399).
 7. Validar `seed.sql`/`schema.sql` num MySQL real (no ambiente de testes só havia SQLite) — feito no passo 2 do hPanel.
+
+
+## 9. Painel premium — Fase 1 (10/11/2026)
+Seguindo `Especificacao_Backend_Premium_ViajantePro.docx`. Decisões do dono: Fase 1 primeiro; arquivos = guardar e baixar; uma senha só por enquanto.
+
+**Entregue**
+- `viajante-pro/painel/` (abre em `/viajante-pro/admin`): visual Luxury Clean (marinho #142238, marfim, champanhe #B18A4A, Inter + Playfair), ícones lineares de uma família só,
+  menu lateral (recolhe no computador, gaveta no celular), barra inferior no celular, **botão voltar**, busca global, notificações reais, abertura KERNEX 2 s + animação oficial do logo (reaproveitadas).
+- Dashboard com números **reais** (fórmulas em `netlify/functions/viajante-pro-painel.js` → `resumo`): clientes, cotações abertas e valor em aberto, próximas viagens, conversas sem resposta,
+  vendido no período, conversão (aprovadas ÷ recebidas), ticket médio, margem estimada; evolução 6 meses, origem, destinos procurados × vendidos, alertas, atividades. Sem dado = "—", nunca 0% inventado.
+- Cotações: itens (voo/hotel/transfer/passeio/seguro…) com custo e preço, desconto, taxas, margem ao vivo, validade, condições, 8 status da especificação, histórico, **Gerar PDF** (impressão com a marca), **Converter em viagem**, excluir com confirmação.
+- Viagens: status, serviços com localizador, passageiros, roteiro, valores, boas-vindas e contato de emergência para o app, link do app (copiar/WhatsApp), documentos, conversa.
+- Clientes (CRM) montados das cotações e viagens **sem duplicar** + cadastro manual: VIP, etiquetas, preferências, ocasiões, observações, histórico e documentos.
+- Documentos: upload (arrastar ou tocar) de PDF, fotos, Excel, CSV, Word, PowerPoint até 20 MB; guardados no MySQL em partes de 512 KB (sobrevivem a deploys e entram no backup); ligados a cliente/cotação/viagem; liberar ao passageiro; HTML/SVG/JS recusados.
+- App do passageiro refeito (mobile first): Hoje (contagem regressiva, boas-vindas, próximos compromissos), Roteiro, Reservas (com localizador para copiar), Documentos liberados, Conversa (fila sem internet), Mostre ao Motorista, SOS (envia localização). Passageiro **não vê** custos, valores nem observações internas.
+- Painel anterior preservado em `/viajante-pro/painel-classico`.
+
+**Testes:** `hostinger/viajante-pro/test/painel.test.js` (7 casos: números reais, cotação→viagem, clientes sem duplicar, upload/permissões, limite 20 MB, app sem dados internos) + teste clicando como pessoa no Chrome (login, criar cotação, converter, upload, chat, voltar) + fotos celular/computador sem erro no console.
+
+**Próximas fases:** 2) Financeiro, Agenda/Tarefas, Leads/funil, Notificações por e-mail · 3) Fornecedores, Concierge VIP, Relatórios PDF/Excel, Marketing · 4) Usuários e permissões, auditoria completa, integrações (WhatsApp).

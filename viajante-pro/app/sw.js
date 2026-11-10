@@ -1,9 +1,10 @@
-// Viajante Pro App — Service Worker v1
-var CACHE_VERSION = 'vp-app-v1';
+// Viajante Pro App — Service Worker v2 (app refeito, mobile first)
+var CACHE_VERSION = 'vp-app-v2';
 var APP_FILES = [
   './',
   'index.html',
   'app.js',
+  'app.css',
   'manifest.webmanifest',
   'icone-192.png',
   'icone-512.png',

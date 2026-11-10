@@ -33,7 +33,7 @@ for (const f of ['package.json', 'server.js', '.env.example', 'lib', 'public', '
   copiar(path.join(APP, f), path.join(DEST, f));
 }
 // 2) o site e a API, do jeito que estão no repositório (sem nenhuma mudança)
-for (const f of ['viajante-pro', 'core', 'netlify/functions/viajante-pro.js', 'netlify/functions/leads.js', 'clientes/viajantepro.js', 'lib/routes.js']) {
+for (const f of ['viajante-pro', 'core', 'netlify/functions/viajante-pro.js', 'netlify/functions/viajante-pro-painel.js', 'netlify/functions/leads.js', 'clientes/viajantepro.js', 'lib/routes.js']) {
   copiar(path.join(REPO, f), path.join(DEST, 'app', f));
 }
 fs.writeFileSync(path.join(DEST, 'LEIA-ME.txt'),

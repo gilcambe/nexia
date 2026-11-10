@@ -116,7 +116,8 @@ test('Viajante Pro Backend — Login e Sessão Admin', async () => {
 test('Viajante Pro Config & Rotas — Registros em lib/routes.js e clientes/viajantepro.js', () => {
   assert.equal(API_ROUTES['/api/viajante-pro'], 'viajante-pro');
   assert.equal(TENANT_PAGES['/viajante-pro'][1], 'vp-landing.html');
-  assert.equal(TENANT_PAGES['/vp/admin'][1], 'vp-admin.html');
+  assert.equal(TENANT_PAGES['/vp/admin'][1], 'index.html'); // painel premium
+  assert.equal(TENANT_PAGES['/viajante-pro/painel-classico'][1], 'vp-admin.html'); // painel anterior preservado
   assert.equal(TENANT_PAGES['/viajante-pro/app'][1], 'index.html');
   assert.ok(VIAJANTE_PRO.viajantepro);
 });

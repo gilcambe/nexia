@@ -36,15 +36,16 @@ test('PWA Viajante Pro: arquivos do app existem e possuem conteúdo válido', ()
   assert.strictEqual(manifestJson.display, 'standalone');
 
   const swContent = fs.readFileSync(swJs, 'utf8');
-  assert.ok(swContent.includes('vp-app-v1'), 'sw.js deve declarar a versão do cache');
+  assert.match(swContent, /vp-app-v\d+/, 'sw.js deve declarar a versão do cache');
 });
 
 test('PWA Viajante Pro: rotas registradas em TENANT_PAGES', () => {
   assert.deepStrictEqual(TENANT_PAGES['/viajante-pro/app'], ['viajante-pro/app', 'index.html']);
   assert.deepStrictEqual(TENANT_PAGES['/vp/passageiro'], ['viajante-pro', 'vp-passenger.html']);
   assert.deepStrictEqual(TENANT_PAGES['/viajante-pro/pax'], ['viajante-pro', 'vp-passenger.html']);
-  assert.deepStrictEqual(TENANT_PAGES['/vp/admin'], ['viajante-pro', 'vp-admin.html']);
-  assert.deepStrictEqual(TENANT_PAGES['/viajante-pro/admin'], ['viajante-pro', 'vp-admin.html']);
+  assert.deepStrictEqual(TENANT_PAGES['/vp/admin'], ['viajante-pro/painel', 'index.html']);
+  assert.deepStrictEqual(TENANT_PAGES['/viajante-pro/admin'], ['viajante-pro/painel', 'index.html']);
+  assert.deepStrictEqual(TENANT_PAGES['/viajante-pro/painel-classico'], ['viajante-pro', 'vp-admin.html']);
   assert.deepStrictEqual(TENANT_PAGES['/viajante-pro'], ['viajante-pro', 'vp-landing.html']);
   assert.deepStrictEqual(TENANT_PAGES['/vp'], ['viajante-pro', 'vp-landing.html']);
 });
@@ -77,7 +78,7 @@ test('App do Viajante (app.js): usa API real por token e sem dados inventados (#
   assert.ok(!appJs.includes('dadosPadrao'), 'Não deve conter a função dadosPadrao');
   assert.ok(!appJs.includes('Carlos Eduardo'), 'Não deve conter Carlos Eduardo inventado');
   assert.ok(!appJs.includes('982100'), 'Não deve conter Apólice #982100');
-  assert.ok(appJs.includes('app_obter'), 'Deve conter chamada app_obter na API');
+  assert.ok(appJs.includes("acao: 'app-viagem'"), 'Deve usar a ação real app-viagem da API (app_obter nunca existiu)');
   assert.ok(appJs.includes('mostrarMensagem'), 'Deve implementar mostrarMensagem');
   assert.ok(appJs.includes('converter'), 'Deve implementar converter');
 });

@@ -122,19 +122,24 @@ function criarApp(opcoes = {}) {
     return null;
   }
 
-  function lerCorpo(req, limite = 12 * 1024 * 1024) {
+  function lerBuffer(req, limite = 12 * 1024 * 1024) {
     return new Promise((resolve, reject) => {
       const partes = [];
       let total = 0;
+      let parou = false;
       req.on('data', c => {
+        if (parou) return;
         total += c.length;
-        if (total > limite) { reject(Object.assign(new Error('grande demais'), { status: 413 })); req.destroy(); return; }
+        if (total > limite) { parou = true; reject(Object.assign(new Error('grande demais'), { status: 413 })); req.resume(); return; }
         partes.push(c);
       });
-      req.on('end', () => resolve(Buffer.concat(partes).toString('utf8')));
+      req.on('end', () => { if (!parou) resolve(Buffer.concat(partes)); });
       req.on('error', reject);
     });
   }
+  const lerCorpo = async (req, limite) => (await lerBuffer(req, limite)).toString('utf8');
+  const responderJson = (res, status, corpo) => { res.writeHead(status, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }); res.end(JSON.stringify(corpo)); };
+  const rotaArquivos = require('./lib/arquivos').criarArquivos({ db, driver, lerBuffer, json: responderJson });
 
   async function chamarFuncao(fn, req, res, url) {
     const corpo = ['GET', 'HEAD', 'OPTIONS'].includes(req.method) ? '' : await lerCorpo(req);
@@ -204,6 +209,7 @@ function criarApp(opcoes = {}) {
     if (p === '/api/viajante-pro') return chamarFuncao(vpApi.handler, req, res, url);
     if (p === '/api/leads') return chamarFuncao(leadsApi, req, res, url);
     if (p === '/api/vp-docs') return vpDocs(req, res);
+    if (p === '/api/vp-arquivos') return rotaArquivos(req, res, url);
     if (p === '/api/firebase-config') {
       res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
       return res.end(JSON.stringify({ apiKey: 'hostinger', projectId: 'viajante-pro', authDomain: req.headers.host || 'viajante.pro', hostinger: true }));

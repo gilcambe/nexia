@@ -14,6 +14,14 @@ const SQL_TABELA_MYSQL = `CREATE TABLE IF NOT EXISTS vp_documentos (
   KEY idx_colecao (colecao)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`;
 
+// Arquivos (documentos) em partes de até 512 KB: cabe em qualquer max_allowed_packet e sobrevive aos deploys.
+const SQL_PARTES_MYSQL = `CREATE TABLE IF NOT EXISTS vp_arquivo_partes (
+  arquivo_id VARCHAR(64)  NOT NULL,
+  parte      INT          NOT NULL,
+  dados      MEDIUMBLOB   NOT NULL,
+  PRIMARY KEY (arquivo_id, parte)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`;
+
 function mysqlDriver(cfg) {
   let mysql;
   try { mysql = require('mysql2/promise'); } catch (e) {
@@ -31,7 +39,15 @@ function mysqlDriver(cfg) {
   });
   return {
     tipo: 'mysql',
-    async preparar() { await pool.query(SQL_TABELA_MYSQL); },
+    async preparar() { await pool.query(SQL_TABELA_MYSQL); await pool.query(SQL_PARTES_MYSQL); },
+    async parteGravar(id, n, buf) {
+      await pool.execute('INSERT INTO vp_arquivo_partes (arquivo_id, parte, dados) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE dados = VALUES(dados)', [id, n, buf]);
+    },
+    async partesLer(id) {
+      const [rows] = await pool.execute('SELECT dados FROM vp_arquivo_partes WHERE arquivo_id = ? ORDER BY parte', [id]);
+      return rows.map(r => Buffer.from(r.dados));
+    },
+    async partesApagar(id) { await pool.execute('DELETE FROM vp_arquivo_partes WHERE arquivo_id = ?', [id]); },
     async ler(caminho) {
       const [rows] = await pool.execute('SELECT dados FROM vp_documentos WHERE caminho = ?', [caminho]);
       return rows.length ? rows[0].dados : null;
@@ -59,6 +75,10 @@ function sqliteDriver(arquivo = ':memory:') {
     caminho TEXT PRIMARY KEY, colecao TEXT NOT NULL, doc_id TEXT NOT NULL, dados TEXT NOT NULL,
     criado_em TEXT NOT NULL DEFAULT (strftime('%Y-%m-%d %H:%M:%f','now')), atualizado_em TEXT)`);
   db.exec('CREATE INDEX IF NOT EXISTS idx_colecao ON vp_documentos(colecao)');
+  db.exec('CREATE TABLE IF NOT EXISTS vp_arquivo_partes (arquivo_id TEXT NOT NULL, parte INTEGER NOT NULL, dados BLOB NOT NULL, PRIMARY KEY (arquivo_id, parte))');
+  const pGravar = db.prepare('INSERT INTO vp_arquivo_partes (arquivo_id, parte, dados) VALUES (?, ?, ?) ON CONFLICT(arquivo_id, parte) DO UPDATE SET dados = excluded.dados');
+  const pLer = db.prepare('SELECT dados FROM vp_arquivo_partes WHERE arquivo_id = ? ORDER BY parte');
+  const pApagar = db.prepare('DELETE FROM vp_arquivo_partes WHERE arquivo_id = ?');
   const sLer = db.prepare('SELECT dados FROM vp_documentos WHERE caminho = ?');
   const sListar = db.prepare('SELECT doc_id, dados FROM vp_documentos WHERE colecao = ? ORDER BY criado_em, doc_id');
   const sGravar = db.prepare(`INSERT INTO vp_documentos (caminho, colecao, doc_id, dados) VALUES (?, ?, ?, ?)
@@ -71,10 +91,13 @@ function sqliteDriver(arquivo = ':memory:') {
     async listar(c) { return sListar.all(c); },
     async gravar(c, col, id, json) { sGravar.run(c, col, id, json); },
     async apagar(c) { sApagar.run(c); },
+    async parteGravar(id, n, buf) { pGravar.run(id, n, buf); },
+    async partesLer(id) { return pLer.all(id).map(r => Buffer.from(r.dados)); },
+    async partesApagar(id) { pApagar.run(id); },
     async saude() { return true; },
     async fechar() { db.close(); },
     _todos() { return db.prepare('SELECT caminho, colecao, doc_id, dados FROM vp_documentos ORDER BY criado_em, caminho').all(); },
   };
 }
 
-module.exports = { mysqlDriver, sqliteDriver, SQL_TABELA_MYSQL };
+module.exports = { mysqlDriver, sqliteDriver, SQL_TABELA_MYSQL, SQL_PARTES_MYSQL };
