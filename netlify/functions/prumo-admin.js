@@ -38,7 +38,7 @@ function createHandler(deps = {}) {
     }
     if (!body || typeof body !== 'object' || Array.isArray(body)) body = {};
 
-    // Verifica autenticação e role "master" obrigatoriamente
+    // Verifica autenticação e role "master" obrigatoriamente (seguindo padrão de agenda.js)
     const authResult = verifyBearerToken(event);
     const auth = authResult instanceof Promise ? await authResult : authResult;
     const ok = auth && auth.ok;
