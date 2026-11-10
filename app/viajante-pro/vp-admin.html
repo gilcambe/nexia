@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Painel — Viajante Pro</title><meta name="robots" content="noindex">
+<link rel="icon" href="/viajante-pro/img/vp-oficial.jpg">
+<style>
+:root{--bg:#0a0c14;--card:#12162a;--line:rgba(255,255,255,.08);--txt:#e8ecf4;--mut:#94a3b8;--gold:#d4af37;--ok:#22c55e;--err:#ef4444}
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;background:var(--bg);color:var(--txt);overflow-x:hidden}
+header{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--bg);z-index:2}
+header img{width:40px;height:40px;border-radius:8px}header b{flex:1}
+main{max-width:1000px;margin:0 auto;padding:16px}
+a{color:var(--gold)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px;overflow-wrap:anywhere}
+input,button{font:inherit;font-size:16px;min-height:44px;border-radius:10px;border:1px solid var(--line);background:#0e1222;color:var(--txt);padding:8px 12px}
+button{background:var(--gold);color:#111;font-weight:700;border:0;cursor:pointer}button.sec{background:transparent;color:var(--txt);border:1px solid var(--line)}
+.linha{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.mut{color:var(--mut);font-size:.9rem}.erro{color:var(--err)}
+.grade{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:12px}
+.num{font-size:2rem;font-weight:800;color:var(--gold)}
+.atalhos{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:12px}
+.atalho{display:block;text-decoration:none;color:var(--txt)}.atalho b{display:block;margin-bottom:4px;color:var(--gold)}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}
+ul{list-style:none;margin:0;padding:0}li{padding:8px 0;border-bottom:1px solid var(--line)}li:last-child{border:0}
+.badge{display:inline-block;border-radius:6px;padding:1px 8px;font-size:.8rem;background:#3a2f12;color:#ffe2a8}
+.oculto{display:none!important}
+</style>
+</head>
+<body>
+<header><img src="/viajante-pro/img/vp-oficial.jpg" alt="Viajante Pro"><b>Painel da agência</b><button id="sair" class="sec oculto" type="button">Sair</button></header>
+<main>
+  <form id="login" class="card"><h2>Entrar</h2><p class="mut">Use a senha da agência.</p><div class="linha"><input id="senha" type="password" placeholder="Senha" required autocomplete="current-password"><button>Entrar</button></div><p id="erro" class="erro"></p></form>
+
+  <section id="pg-dashboard" class="oculto">
+    <div class="grade">
+      <div class="card"><div class="num" id="nCotNovas">–</div><div class="mut">Cotações novas</div></div>
+      <div class="card"><div class="num" id="nViajando">–</div><div class="mut">Clientes viajando agora</div></div>
+      <div class="card"><div class="num" id="nProximas">–</div><div class="mut">Viagens nos próximos 30 dias</div></div>
+      <div class="card"><div class="num" id="nNaoLidas">–</div><div class="mut">Mensagens não lidas</div></div>
+    </div>
+    <div class="atalhos">
+      <a class="card atalho" href="/viajante-pro/cotacoes"><b>📋 Cotações</b><span class="mut">Pedidos do site, status e WhatsApp do cliente.</span></a>
+      <a class="card atalho" href="/viajante-pro/viagens"><b>✈️ Viagens e Conversas</b><span class="mut">Criar viagem, link do app do viajante e chat.</span></a>
+      <a class="card atalho" href="/viajante-pro/editar"><b>✏️ Editar o site</b><span class="mut">Textos, destinos e fotos da página principal.</span></a>
+      <a class="card atalho" href="/viajante-pro/" target="_blank" rel="noopener"><b>🌐 Ver o site</b><span class="mut">Abre o site como o cliente vê.</span></a>
+    </div>
+    <div class="cols">
+      <div class="card"><h3>Últimas cotações</h3><ul id="lCot"><li class="mut">Carregando…</li></ul></div>
+      <div class="card"><h3>Próximas viagens</h3><ul id="lVia"><li class="mut">Carregando…</li></ul></div>
+      <div class="card"><h3>Conversas</h3><ul id="lChat"><li class="mut">Carregando…</li></ul></div>
+    </div>
+    <div class="card"><h3>Trocar a senha da agência</h3><form id="trocarSenhaForm" class="linha"><input id="novaSenha" type="password" placeholder="Nova senha (mín. 6)" minlength="6" required autocomplete="new-password"><button>Trocar</button></form><p id="senhaMsg" class="mut"></p></div>
+    <div class="linha"><button id="atualizar" class="sec" type="button">Atualizar</button><span id="atualizado" class="mut"></span></div>
+  </section>
+</main>
+<script>
+(function () {
+  'use strict';
+  var API = '/api/viajante-pro?site=viajantepro';
+  var $ = function (id) { return document.getElementById(id); };
+  var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
+  var token = ''; try { token = localStorage.getItem('vp_admin_token') || ''; } catch (e) {}
+  function api(corpo) {
+    return fetch(API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(Object.assign({ token: token }, corpo)) })
+      .then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) { if (r.status === 401 && corpo.acao !== 'entrar') sair(); if (!r.ok) throw new Error(j.error || 'Erro ' + r.status); return j; }); });
+  }
+  function sair() { token = ''; try { localStorage.removeItem('vp_admin_token'); } catch (e) {} $('pg-dashboard').classList.add('oculto'); $('sair').classList.add('oculto'); $('login').classList.remove('oculto'); }
+  function dia(s) { var d = new Date(String(s || '').slice(0, 10) + 'T12:00:00'); return isNaN(d) ? null : d; }
+  function dataBR(s) { var d = dia(s); return d ? d.toLocaleDateString('pt-BR') : '—'; }
+  function erroEm(id, e) { $(id).innerHTML = '<li class="erro">' + esc(e.message) + '</li>'; }
+
+  function carregar() {
+    var hoje = dia(new Date().toISOString()), em30 = new Date(hoje.getTime() + 30 * 864e5);
+    api({ acao: 'cotacao-listar' }).then(function (j) {
+      var c = j.cotacoes || [];
+      $('nCotNovas').textContent = c.filter(function (x) { return !x.status || /^nova$/i.test(x.status); }).length;
+      $('lCot').innerHTML = c.slice(0, 5).map(function (x) {
+        return '<li><b>' + esc(x.codigo) + '</b> <span class="badge">' + esc(x.status || 'nova') + '</span><br>' + esc(x.nome) + ' → ' + esc(x.destino || 'a definir') + '<br><span class="mut">' + esc(new Date(x.criado_em).toLocaleString('pt-BR')) + '</span></li>';
+      }).join('') || '<li class="mut">Nenhuma cotação ainda.</li>';
+    }).catch(function (e) { erroEm('lCot', e); });
+    api({ acao: 'viagem-listar' }).then(function (j) {
+      var v = j.viagens || [];
+      var agora = v.filter(function (x) { var i = dia(x.datas && x.datas.inicio), f = dia(x.datas && x.datas.fim); return i && f && i <= hoje && hoje <= f; });
+      var prox = v.filter(function (x) { var i = dia(x.datas && x.datas.inicio); return i && i > hoje && i <= em30; });
+      $('nViajando').textContent = agora.length; $('nProximas').textContent = prox.length;
+      var lista = agora.concat(v.filter(function (x) { var i = dia(x.datas && x.datas.inicio); return i && i > hoje; }).sort(function (a, b) { return dia(a.datas.inicio) - dia(b.datas.inicio); })).slice(0, 6);
+      $('lVia').innerHTML = lista.map(function (x) {
+        var ja = agora.indexOf(x) >= 0;
+        return '<li><b>' + esc(x.nome) + '</b> → ' + esc(x.destino) + (ja ? ' <span class="badge">viajando</span>' : '') + '<br><span class="mut">' + dataBR(x.datas && x.datas.inicio) + ' a ' + dataBR(x.datas && x.datas.fim) + '</span></li>';
+      }).join('') || '<li class="mut">Nenhuma viagem futura. Crie em Viagens e Conversas.</li>';
+    }).catch(function (e) { erroEm('lVia', e); });
+    api({ acao: 'chat-conversas' }).then(function (j) {
+      var c = j.conversas || [];
+      $('nNaoLidas').textContent = c.reduce(function (s, x) { return s + (x.naoLidas || 0); }, 0);
+      $('lChat').innerHTML = c.filter(function (x) { return x.ultimaMensagem; }).slice(0, 6).map(function (x) {
+        return '<li><a href="/viajante-pro/viagens">' + esc(x.viagemNome) + '</a>' + (x.naoLidas ? ' <span class="badge">' + x.naoLidas + ' nova(s)</span>' : '') + '<br><span class="mut">' + esc(String(x.ultimaMensagem.texto || '').slice(0, 80)) + '</span></li>';
+      }).join('') || '<li class="mut">Nenhuma conversa ainda.</li>';
+    }).catch(function (e) { erroEm('lChat', e); });
+    $('atualizado').textContent = 'Atualizado às ' + new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  }
+  function entrou() { $('login').classList.add('oculto'); $('pg-dashboard').classList.remove('oculto'); $('sair').classList.remove('oculto'); carregar(); }
+  $('login').addEventListener('submit', function (ev) {
+    ev.preventDefault(); $('erro').textContent = '';
+    api({ acao: 'entrar', senha: $('senha').value }).then(function (j) { token = j.token; try { localStorage.setItem('vp_admin_token', token); } catch (e) {} entrou(); })
+      .catch(function (e) { $('erro').textContent = e.message; });
+  });
+  $('trocarSenhaForm').addEventListener('submit', function (ev) {
+    ev.preventDefault(); $('senhaMsg').textContent = '';
+    api({ acao: 'trocar-senha', senha: $('novaSenha').value }).then(function () { $('senhaMsg').textContent = 'Senha trocada ✓'; $('novaSenha').value = ''; })
+      .catch(function (e) { $('senhaMsg').textContent = e.message; });
+  });
+  $('atualizar').addEventListener('click', carregar);
+  $('sair').addEventListener('click', sair);
+  if (token) entrou();
+})();
+</script>
+<script src="/viajante-pro/abertura-kernex.js?v=3" data-produto="VIAJANTE PRO" defer></script>
+<script src="/viajante-pro/vp-marca.js?v=3" defer></script>
+</body>
+</html>

@@ -1,0 +1,19 @@
+{
+  "name": "viajante-pro-hostinger",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Viajante Pro na Hostinger (Node.js + MySQL + SMTP). Mesmas páginas e mesma API; só a infraestrutura muda.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "build": "node scripts/verificar.js",
+    "test": "node --test test/*.test.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "mysql2": "^3.11.0",
+    "nodemailer": "^7.0.10"
+  }
+}

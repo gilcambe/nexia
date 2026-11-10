@@ -1,0 +1,3 @@
+Pacote do Viajante Pro para a Hostinger (app Node.js).
+Gerado automaticamente a partir de gilcambe/nexia (develop). NÃO edite aqui: edite no repositório.
+Como publicar e configurar: MIGRACAO_HOSTINGER.md no repositório.

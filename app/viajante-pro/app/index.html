@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0f1b2e">
+  <meta name="robots" content="noindex">
+  <title>Minha viagem · Viajante Pro</title>
+  <link rel="manifest" href="/viajante-pro/app/manifest.webmanifest">
+  <link rel="icon" type="image/png" href="/viajante-pro/app/icone-192.png">
+  <link rel="apple-touch-icon" href="/viajante-pro/app/icone-192.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/viajante-pro/app/app.css?v=2">
+</head>
+<body>
+  <header class="topo">
+    <div class="logo"><img src="/viajante-pro/img/vp-oficial.jpg" alt="Viajante Pro"></div>
+    <div class="marca">
+      <b>Viajante Pro</b>
+      <span><i class="ponto" id="badge-status-rede" title="Online"></i><span id="carimbo-atualizacao">Carregando dados…</span></span>
+    </div>
+    <button id="btn-instalar" class="btn-instalar oculto" type="button">Instalar</button>
+    <button id="tab-emergencia" class="btn-sos" type="button" data-aba="emergencia" aria-label="Emergência"><svg class="ic p" data-i="alerta"></svg>SOS</button>
+  </header>
+
+  <main>
+    <div class="extras" id="extras">
+      <button id="tab-motorista" type="button" data-aba="motorista"><svg class="ic p" data-i="carro"></svg>Mostre ao Motorista</button>
+      <button id="tab-hotel-carro" type="button" data-aba="voos"><svg class="ic p" data-i="hotel"></svg>Hotel e transfers</button>
+      <button id="btn-whats-agencia" type="button"><svg class="ic p" data-i="telefone"></svg>Falar com a agência</button>
+    </div>
+    <div id="app-conteudo" aria-live="polite"></div>
+  </main>
+
+  <nav class="nav" aria-label="Seções da viagem">
+    <button id="tab-hoje" type="button" data-aba="hoje" class="ativo"><svg class="ic" data-i="casa"></svg>Hoje</button>
+    <button id="tab-roteiro" type="button" data-aba="roteiro"><svg class="ic" data-i="roteiro"></svg>Roteiro</button>
+    <button id="tab-voos" type="button" data-aba="voos"><svg class="ic" data-i="aviao"></svg>Reservas</button>
+    <button id="tab-documentos" type="button" data-aba="documentos"><svg class="ic" data-i="pasta"></svg>Documentos</button>
+    <button id="tab-conversa" type="button" data-aba="conversa"><svg class="ic" data-i="conversa"></svg>Conversa<span class="n oculto" id="n-conversa"></span></button>
+  </nav>
+  <div id="avisos"></div>
+
+  <script src="/viajante-pro/app/app.js?v=2"></script>
+  <script src="/viajante-pro/abertura-kernex.js?v=3" data-produto="VIAJANTE PRO" defer></script>
+  <script src="/viajante-pro/vp-marca.js?v=3" defer></script>
+</body>
+</html>

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#142238">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Painel · Viajante Pro</title>
+  <link rel="icon" href="/viajante-pro/img/vp-oficial.jpg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/viajante-pro/painel/painel.css?v=1">
+</head>
+<body>
+  <!-- Login: a animação oficial do logo (vp-marca.js) roda nesta imagem depois da abertura KERNEX -->
+  <section id="tela-login" class="login oculto" aria-labelledby="login-titulo">
+    <div class="login-caixa">
+      <div class="login-logo"><img src="/viajante-pro/img/vp-oficial.jpg" alt="Viajante Pro" width="148" height="148"></div>
+      <h1 id="login-titulo">Painel da agência</h1>
+      <p class="sub">Gestão completa das suas viagens, clientes e propostas.</p>
+      <form id="form-login" autocomplete="on">
+        <label for="senha">Senha de acesso</label>
+        <input id="senha" name="password" type="password" autocomplete="current-password" placeholder="Digite a senha da agência" required>
+        <button class="btn ouro" type="submit" id="btn-entrar">Entrar no painel</button>
+        <div class="erro" id="login-erro" role="alert"></div>
+      </form>
+      <div class="rodape">Ambiente seguro · Viajante Pro</div>
+    </div>
+  </section>
+
+  <div id="app" class="app oculto">
+    <aside class="menu" id="menu" aria-label="Menu principal">
+      <div class="menu-cab">
+        <div class="menu-logo"><img src="/viajante-pro/img/vp-oficial.jpg" alt="" width="52" height="52"></div>
+        <div class="menu-marca"><b>Viajante Pro</b><span>Travel Agency</span></div>
+      </div>
+      <nav id="menu-nav"></nav>
+      <div class="menu-pe">
+        <button class="btn" type="button" id="btn-sair"><svg class="ic" data-i="sair"></svg><span class="txt">Sair</span></button>
+      </div>
+    </aside>
+    <div class="veu" id="veu"></div>
+
+    <main class="principal">
+      <header class="topo">
+        <button class="ibtn" id="btn-menu" type="button" aria-label="Abrir menu"><svg class="ic" data-i="menu"></svg></button>
+        <button class="ibtn" id="btn-recolher" type="button" aria-label="Recolher menu"><svg class="ic" data-i="menu"></svg></button>
+        <button class="ibtn oculto" id="btn-voltar" type="button" aria-label="Voltar"><svg class="ic" data-i="voltar"></svg></button>
+        <h1 id="titulo">Dashboard</h1>
+        <div class="busca" role="search">
+          <svg class="ic" data-i="busca"></svg>
+          <input id="busca-global" type="search" placeholder="Buscar clientes, viagens ou cotações…" autocomplete="off" aria-label="Busca global">
+        </div>
+        <span class="estado" id="estado"><i></i><span>Conectado</span></span>
+        <button class="ibtn" id="btn-buscar-celular" type="button" aria-label="Buscar"><svg class="ic" data-i="busca"></svg></button>
+        <button class="ibtn" id="btn-atualizar" type="button" aria-label="Atualizar"><svg class="ic" data-i="atualizar"></svg></button>
+        <button class="ibtn" id="btn-notif" type="button" aria-label="Notificações"><svg class="ic" data-i="sino"></svg><span class="bolinha oculto" id="notif-n"></span></button>
+      </header>
+      <div class="card notifs oculto" id="notifs" role="dialog" aria-label="Notificações"></div>
+      <div class="conteudo" id="conteudo" tabindex="-1"></div>
+    </main>
+
+    <nav class="nav-baixo" id="nav-baixo" aria-label="Navegação rápida"></nav>
+  </div>
+
+  <div id="avisos" aria-live="polite"></div>
+
+  <!-- Abertura KERNEX (2 s, uma vez por sessão) + animação oficial do logo Viajante Pro -->
+  <script src="/viajante-pro/abertura-kernex.js?v=3" data-produto="VIAJANTE PRO" defer></script>
+  <script src="/viajante-pro/vp-marca.js?v=3" defer></script>
+  <script src="/viajante-pro/painel/painel.js?v=1" defer></script>
+</body>
+</html>
