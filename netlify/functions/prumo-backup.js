@@ -8,6 +8,7 @@
  */
 
 async function exportData() {
+  console.log('[PRUMO-BACKUP] Exportando dados sensíveis com segurança');
   const timestamp = new Date().toISOString();
   return {
     timestamp,
