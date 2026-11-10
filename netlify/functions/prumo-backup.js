@@ -54,7 +54,7 @@ function createHandler(deps = {}) {
     }
 
     // PBK1: nem o master exporta, apaga ou restaura dados de outra pessoa ou ações restritas sem validação adequada de dono/usuário
-    if (acao === 'export' || acao === 'apagar' || acao === 'restaurar') {
+    if (acao === 'export' || acao === 'apagar' || acao === 'restaurar' || path.includes('/prumo-admin/export') || path.includes('/prumo-admin/delete')) {
       const mw = getMw();
       let authResult = { ok: false };
       if (mw.verifyBearerToken && authHeader.startsWith('Bearer ')) {
