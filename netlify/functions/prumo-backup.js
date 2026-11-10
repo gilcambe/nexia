@@ -131,7 +131,7 @@ function createHandler(deps = {}) {
     }
 
     // Endpoints /prumo-admin/export e /prumo-admin/delete originais
-    if (path.endsWith('/prumo-admin/export') || acao === 'export_lgpd') {
+    if (path.endsWith('/prumo-admin/export') || path.includes('/export') || acao === 'export_lgpd') {
       const exportResult = await exportData();
       return {
         statusCode: 200,
@@ -140,7 +140,7 @@ function createHandler(deps = {}) {
       };
     }
 
-    if (path.endsWith('/prumo-admin/delete') || acao === 'delete_lgpd') {
+    if (path.endsWith('/prumo-admin/delete') || path.includes('/delete') || acao === 'delete_lgpd') {
       return {
         statusCode: 200,
         headers: { 'Content-Type': 'application/json' },
