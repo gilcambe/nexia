@@ -6,6 +6,7 @@
 
 function createHandler(deps = {}) {
   const getMw = deps.getMw || (() => require('./middleware'));
+const { verifyBearerToken } = getMw();
   const now = deps.now || (() => Date.now());
 
   return async (event) => {
@@ -38,8 +39,9 @@ function createHandler(deps = {}) {
     if (!body || typeof body !== 'object' || Array.isArray(body)) body = {};
 
     // Verifica autenticação e role "master" obrigatoriamente
-    const auth = headers.authorization ? await getMw().verifyBearerToken(event) : { ok: false };
-    if (!auth.ok || auth.role !== 'master') {
+    // Verifica autenticação e role "master" obrigatoriamente
+    const { ok, role } = verifyBearerToken(event); // Verificando se precisa de await
+    if (!ok || role !== 'master') {
       return res(403, { error: 'Acesso restrito a administradores master.' });
     }
 
