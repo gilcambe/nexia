@@ -99,6 +99,195 @@ const MIME_TYPES = {
   '.woff2': 'font/woff2', '.ttf': 'font/ttf',
 };
 
+// ─── AJUDANTE & BUSCA NO MANUAL ───────────────────────────────────
+function sanitizarTexto(texto) {
+  if (typeof texto !== 'string') return '';
+  return texto
+    .replace(/(?:gsk_|AIza[0-9A-Za-z-_]{35}|sk-[a-zA-Z0-9]{20,}|Bearer\s+[A-Za-z0-9._-]{10,})/g, '[REDACTED]')
+    .replace(/(?:api[_-]?key|secret|token)["']?\s*[:=]\s*["']?[A-Za-z0-9-_]{8,}["']?/gi, '$1: [REDACTED]');
+}
+
+function buscarNoManual(pergunta) {
+  try {
+    const manualPath = path.join(ROOT, 'docs', 'MANUAL-CENTRAL-E-CORTEX.md');
+    if (!fs.existsSync(manualPath)) {
+      return 'Não sei responder com as informações disponíveis. Consulte a seção relevante em docs/MANUAL-CENTRAL-E-CORTEX.md.';
+    }
+    const conteudo = fs.readFileSync(manualPath, 'utf8');
+    const blocos = conteudo.split(/\n\s*\n/).map(b => b.trim()).filter(Boolean);
+    if (!blocos.length) {
+      return 'Não sei responder com as informações disponíveis. Consulte a seção relevante em docs/MANUAL-CENTRAL-E-CORTEX.md.';
+    }
+
+    const palavrasPergunta = (pergunta || '')
+      .toLowerCase()
+      .replace(/[^\p{L}\p{N}\s]/gu, ' ')
+      .split(/\s+/)
+      .filter(w => w.length > 2);
+
+    if (!palavrasPergunta.length) {
+      return 'Não sei responder sem uma pergunta clara. Consulte a seção relevante em docs/MANUAL-CENTRAL-E-CORTEX.md.';
+    }
+
+    let melhorParagrafo = null;
+    let maxPontos = 0;
+    let secaoCorrespondente = 'Visão Geral';
+
+    for (const bloco of blocos) {
+      const matchHeader = bloco.match(/^#+\s*(.+)$/m);
+      if (matchHeader) {
+        secaoCorrespondente = matchHeader[1].trim();
+      }
+      const palavrasBloco = bloco
+        .toLowerCase()
+        .replace(/[^\p{L}\p{N}\s]/gu, ' ')
+        .split(/\s+/)
+        .filter(w => w.length > 2);
+
+      let pontos = 0;
+      for (const pq of palavrasPergunta) {
+        for (const pb of palavrasBloco) {
+          if (pq === pb) {
+            pontos += 2;
+          } else if (pq.length >= 4 && (pb.startsWith(pq) || pq.startsWith(pb))) {
+            pontos += 1;
+          }
+        }
+      }
+
+      if (pontos > maxPontos) {
+        maxPontos = pontos;
+        melhorParagrafo = bloco;
+      }
+    }
+
+    if (maxPontos > 0 && melhorParagrafo) {
+      return sanitizarTexto(melhorParagrafo);
+    }
+
+    return `Não sei responder com as informações disponíveis. Consulte a seção relevante em docs/MANUAL-CENTRAL-E-CORTEX.md (${secaoCorrespondente}).`;
+  } catch {
+    return 'Não sei responder no momento. Consulte a seção relevante em docs/MANUAL-CENTRAL-E-CORTEX.md.';
+  }
+}
+
+async function freeIAHelper(pergunta) {
+  if (!pergunta || typeof pergunta !== 'string' || !pergunta.trim()) {
+    return 'Não sei responder sem uma pergunta válida. Consulte docs/MANUAL-CENTRAL-E-CORTEX.md.';
+  }
+
+  const promptSistema = 'Você é o Ajudante da Central e do Cortex. Responda em português simples e direto. Nunca exponha chaves ou dados confidenciais. Se não souber com certeza, responda que não sabe e cite a seção correspondente em docs/MANUAL-CENTRAL-E-CORTEX.md.';
+
+  // 1. Workers AI
+  const cfAccount = process.env.CLOUDFLARE_ACCOUNT_ID || process.env.CF_ACCOUNT_ID;
+  const cfToken = process.env.CLOUDFLARE_API_TOKEN || process.env.CF_API_TOKEN;
+  if (cfAccount && cfToken) {
+    try {
+      const resp = await fetch(`https://api.cloudflare.com/client/v4/accounts/${cfAccount}/ai/run/@cf/meta/llama-3.1-8b-instruct`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${cfToken}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages: [{ role: 'system', content: promptSistema }, { role: 'user', content: pergunta }] }),
+        signal: AbortSignal.timeout(6000),
+      });
+      if (resp.ok) {
+        const j = await resp.json();
+        const texto = j?.result?.response;
+        if (texto && typeof texto === 'string' && texto.trim()) return sanitizarTexto(texto.trim());
+      }
+    } catch {}
+  }
+
+  // 2. Groq
+  const groqKey = process.env.GROQ_API_KEY;
+  if (groqKey) {
+    try {
+      const resp = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${groqKey}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'llama-3.1-8b-instant',
+          messages: [{ role: 'system', content: promptSistema }, { role: 'user', content: pergunta }],
+          max_tokens: 400,
+        }),
+        signal: AbortSignal.timeout(6000),
+      });
+      if (resp.ok) {
+        const j = await resp.json();
+        const texto = j?.choices?.[0]?.message?.content;
+        if (texto && typeof texto === 'string' && texto.trim()) return sanitizarTexto(texto.trim());
+      }
+    } catch {}
+  }
+
+  // 3. Gemini
+  const geminiKey = process.env.GEMINI_API_KEY;
+  if (geminiKey) {
+    try {
+      const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          system_instruction: { parts: [{ text: promptSistema }] },
+          contents: [{ parts: [{ text: pergunta }] }],
+        }),
+        signal: AbortSignal.timeout(6000),
+      });
+      if (resp.ok) {
+        const j = await resp.json();
+        const texto = j?.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (texto && typeof texto === 'string' && texto.trim()) return sanitizarTexto(texto.trim());
+      }
+    } catch {}
+  }
+
+  // 4. OpenRouter grátis
+  const openRouterKey = process.env.OPENROUTER_API_KEY;
+  if (openRouterKey) {
+    try {
+      const resp = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${openRouterKey}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'meta-llama/llama-3.1-8b-instruct:free',
+          messages: [{ role: 'system', content: promptSistema }, { role: 'user', content: pergunta }],
+          max_tokens: 400,
+        }),
+        signal: AbortSignal.timeout(6000),
+      });
+      if (resp.ok) {
+        const j = await resp.json();
+        const texto = j?.choices?.[0]?.message?.content;
+        if (texto && typeof texto === 'string' && texto.trim()) return sanitizarTexto(texto.trim());
+      }
+    } catch {}
+  }
+
+  // 5. Mistral
+  const mistralKey = process.env.MISTRAL_API_KEY;
+  if (mistralKey) {
+    try {
+      const resp = await fetch('https://api.mistral.ai/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${mistralKey}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'mistral-small-latest',
+          messages: [{ role: 'system', content: promptSistema }, { role: 'user', content: pergunta }],
+          max_tokens: 400,
+        }),
+        signal: AbortSignal.timeout(6000),
+      });
+      if (resp.ok) {
+        const j = await resp.json();
+        const texto = j?.choices?.[0]?.message?.content;
+        if (texto && typeof texto === 'string' && texto.trim()) return sanitizarTexto(texto.trim());
+      }
+    } catch {}
+  }
+
+  // Fallback para o manual
+  return buscarNoManual(pergunta);
+}
+
 // ─── CARREGA FUNCTIONS ────────────────────────────────────────────
 const FUNCTIONS_DIR = path.join(ROOT, 'netlify', 'functions');
 const loadedFunctions = {};
@@ -229,9 +418,35 @@ const server = http.createServer((req, res) => {
       }
       chunks.push(c);
     });
-    req.on('end', () => {
+    req.on('end', async () => {
+      const raw = Buffer.concat(chunks);
+      let payload = {};
+      try { payload = JSON.parse(raw.toString('utf8')); } catch {}
+      const acao = payload.acao || (parsedUrl.query && parsedUrl.query.acao);
+
+      if ((pathname === '/api/pedidos' || pathname === '/.netlify/functions/pedidos') && acao === 'ajudante') {
+        const pergunta = payload.pergunta || (parsedUrl.query && parsedUrl.query.pergunta) || '';
+        try {
+          const resposta = await freeIAHelper(pergunta);
+          res.writeHead(200, {
+            'Content-Type': 'application/json; charset=utf-8',
+            'Access-Control-Allow-Origin': getCorsOrigin(req.headers) || '*',
+            'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Tenant-Id',
+          });
+          return res.end(JSON.stringify({ ok: true, resposta, texto: resposta }));
+        } catch {
+          const fallback = buscarNoManual(pergunta);
+          res.writeHead(200, {
+            'Content-Type': 'application/json; charset=utf-8',
+            'Access-Control-Allow-Origin': getCorsOrigin(req.headers) || '*',
+          });
+          return res.end(JSON.stringify({ ok: true, resposta: fallback, texto: fallback }));
+        }
+      }
+
       const fnName = resolveFunctionName(pathname);
-      runFunction(fnName, req, res, Buffer.concat(chunks));
+      runFunction(fnName, req, res, raw);
     });
     return;
   }
@@ -288,7 +503,7 @@ function startKeepalive() {
 
 // ─── START ────────────────────────────────────────────────────────
 loadFunctions();
-module.exports = { server, resolveFunctionName };
+module.exports = { server, resolveFunctionName, buscarNoManual, freeIAHelper, sanitizarTexto };
 if (require.main !== module) return;
 server.listen(PORT, () => {
   console.log('\n[NEXIA OS v60] Servidor unificado na porta', PORT);
