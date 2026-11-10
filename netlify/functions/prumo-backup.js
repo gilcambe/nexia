@@ -133,10 +133,11 @@ function createHandler(deps = {}) {
     // Endpoints /prumo-admin/export e /prumo-admin/delete originais
     if (path.endsWith('/prumo-admin/export') || path.includes('/export') || acao === 'export_lgpd') {
       const exportResult = await exportData();
+      const restoreCheck = await restoreTest(exportResult);
       return {
         statusCode: 200,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ lgpdAction: 'export', success: true, message: 'Dados exportados com sucesso.', data: exportResult })
+        body: JSON.stringify({ lgpdAction: 'export', success: true, message: 'Dados exportados com sucesso.', data: exportResult, restoreTest: restoreCheck })
       };
     }
 
