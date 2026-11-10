@@ -11,3 +11,4 @@ module.exports = async function health(req, res) {
 
   return res.status(404).json({ ok: false, erro: 'rota não encontrada' });
 };
+// health route
