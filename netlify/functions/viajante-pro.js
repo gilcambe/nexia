@@ -124,7 +124,7 @@ async function enviarEmailBrevo(env, cotacao) {
     <p><strong>Datas:</strong> ${esc(c.dataIda || 'A definir')} até ${esc(c.dataVolta || 'A definir')} (${esc(c.flexibilidade)})</p>
     <p><strong>Observações:</strong> ${esc(c.observacoes || 'Sem observações')}</p>
     <hr>
-    <p>Veja e responda no painel: https://nexia.gcbezerra.workers.dev/viajante-pro/cotacoes</p>
+    <p>Veja e responda no painel: ${esc(String(env.VP_PAINEL_URL || 'https://nexia.gcbezerra.workers.dev').replace(/\/+$/, ''))}/viajante-pro/cotacoes</p>
     <p><em>Este e-mail foi gerado automaticamente pelo sistema de cotações da Viajante Pro.</em></p>
   `;
   return enviarBrevo(env, {

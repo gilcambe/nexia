@@ -1,0 +1,64 @@
+# Viajante Pro -> Hostinger (app Node.js do plano Business do cliente).
+# A cada push que mexe no Viajante Pro: testa, monta o pacote e atualiza a branch
+# deploy/hostinger-viajante. A Hostinger está ligada a essa branch e publica sozinha (push -> publica).
+# Também deixa um .zip para baixar (Actions > esta execução > Artifacts), para subir à mão se precisar.
+# Nenhum segredo é usado aqui: senhas do banco e do e-mail ficam só na Hostinger.
+name: Viajante Pro - deploy Hostinger
+
+on:
+  push:
+    branches: [develop, migracao/hostinger-viajante]
+    paths:
+      - 'viajante-pro/**'
+      - 'core/**'
+      - 'hostinger/viajante-pro/**'
+      - 'netlify/functions/viajante-pro.js'
+      - 'netlify/functions/leads.js'
+      - 'clientes/viajantepro.js'
+      - 'lib/routes.js'
+      - '.github/workflows/vp-hostinger-deploy.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: vp-hostinger-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Testar (servidor + banco + e-mail, ponta a ponta)
+        working-directory: hostinger/viajante-pro
+        run: node --no-warnings --test test/*.test.js
+
+      - name: Montar pacote
+        run: node hostinger/viajante-pro/scripts/montar-pacote.js "$RUNNER_TEMP/pacote"
+
+      - name: Guardar .zip
+        uses: actions/upload-artifact@v4
+        with:
+          name: viajante-pro-hostinger
+          path: ${{ runner.temp }}/pacote
+          retention-days: 14
+
+      - name: Publicar na branch de deploy
+        env:
+          ORIGEM: ${{ github.ref_name }}
+        run: |
+          cd "$RUNNER_TEMP/pacote"
+          git init -q -b deploy/hostinger-viajante
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -q -m "Viajante Pro Hostinger: pacote de ${ORIGEM}@${GITHUB_SHA::7}"
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${GITHUB_REPOSITORY}.git" deploy/hostinger-viajante
+          echo "### Pacote publicado em deploy/hostinger-viajante (de ${ORIGEM}@${GITHUB_SHA::7})" >> "$GITHUB_STEP_SUMMARY"
