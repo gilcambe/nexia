@@ -32,6 +32,8 @@ jobs:
       GH_TOKEN: ${{ secrets.NEXIA_JOBS_TOKEN || secrets.GITHUB_TOKEN }}
       GITHUB_MODELS_TOKEN: ${{ github.token }}
       GITHUB_TOKEN_ACAO: ${{ github.token }}
+      GITHUB_APP_ID: ${{ secrets.NEXIA_GITHUB_APP_ID }}
+      GITHUB_APP_PRIVATE_KEY: ${{ secrets.NEXIA_GITHUB_APP_PRIVATE_KEY }}
       IA_VAGAS_CONFIG: ${{ vars.IA_VAGAS_CONFIG }}
       GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
       GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
