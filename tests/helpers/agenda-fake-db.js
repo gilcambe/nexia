@@ -28,6 +28,7 @@ function fakeDb() {
       doc: (id) => docRef(`${p}/${id || 'auto' + (++n)}`),
       add: async (d) => { const r = docRef(`${p}/auto${++n}`); await r.create(d); return r; },
       where: (f, op, v) => colRef(p, [...filtros, [f, op, v]]),
+      limit: (n) => colRef(p, filtros), // como no Firestore; o falso não precisa cortar a lista
       get: async () => {
         // Igual ao Firestore de verdade: filtro de intervalo em um campo + filtro em OUTRO campo exige índice composto.
         const campoIntervalo = filtros.filter(([, op]) => op === '>=' || op === '<=').map(([f]) => f);
