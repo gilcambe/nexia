@@ -4,6 +4,7 @@ import { haQuanto, reais, useCentral } from "./api";
 import { Cartao, Sinal, Numero, Botao, Carregando } from "./ui";
 import type { Cor } from "./ui";
 import Produtos from "./Produtos";
+import NovoCliente from "./NovoCliente";
 
 // Aba Clientes: quem já compra (empresas e personais), quem está interessado (contatos) e os produtos no ar.
 const PERSONAL: Record<Personal["situacao"], { cor: Cor; frase: string }> = {
@@ -191,6 +192,7 @@ export default function Clientes({ d, erros }: { d: Dados; erros: Partial<Record
       </Cartao>
 
       <h2 className="font-semibold text-base pt-2">Produtos e sites</h2>
+      <NovoCliente />
       <Produtos d={d} />
     </div>
   );
