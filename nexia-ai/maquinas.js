@@ -67,9 +67,10 @@ function createMaquinas({ env = process.env, driver, agora = () => new Date() } 
   }
 
   /** Enfileira tarefa leve (usada pelo provedor `local`, #1864). */
-  async function criarTarefa({ tipo = 'texto', modelo = '', mensagens = [] }) {
+  // max_tokens (11/11/2026): tarefas de código do executor de contrato pedem resposta maior; o agente repassa ao Ollama.
+  async function criarTarefa({ tipo = 'texto', modelo = '', mensagens = [], max_tokens = 0 }) {
     const id = `t${Date.now().toString(36)}${crypto.randomBytes(3).toString('hex')}`;
-    await d().apply([up(`tarefas_locais/${id}`, { tipo, modelo, mensagens, status: 'pendente' })]);
+    await d().apply([up(`tarefas_locais/${id}`, { tipo, modelo, mensagens, ...(max_tokens ? { max_tokens: Math.min(8192, Number(max_tokens) || 0) } : {}), status: 'pendente' })]);
     return id;
   }
 
