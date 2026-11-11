@@ -54,7 +54,7 @@ function createHandler(deps = {}) {
     }
 
     // PBK1: Validação de LGPD para exportação e apagamento
-    if (acao === 'export' || acao === 'apagar' || acao === 'restaurar' || path.includes('/prumo-admin/export') || path.includes('/prumo-admin/delete')) {
+    if (acao === 'export' || acao === 'apagar' || acao === 'restaurar' || path.endsWith('/prumo-admin/export') || path.endsWith('/prumo-admin/delete') || path.includes('/prumo-admin/export') || path.includes('/prumo-admin/delete')) {
       const mw = getMw();
       let authResult = { ok: false };
       if (mw.verifyBearerToken && authHeader.startsWith('Bearer ')) {
