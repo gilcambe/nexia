@@ -34,7 +34,7 @@ const LOCACOES = {
   'splash-teste': {
     nome: 'Splash TESTE',
     versao: 1,
-    // Código de primeiro acesso DESATIVADO em 11/11/2026 (o valor tinha vazado em comentário público). Para reativar: node scripts/locacao-codigo.js ou viagem equivalente.
+    // Código de primeiro acesso DESATIVADO em 11/11/2026 (o valor tinha vazado em comentário público). Para reativar: node scripts/locacao-codigo.js (locação) ou node scripts/viagem-codigo.js (viagens).
     config: {
       nome: 'Splash TESTE (não é o site real)',
       whatsapp: '5511941247074',
