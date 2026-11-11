@@ -7,6 +7,7 @@ import jobs from '../nexia-ai/jobs/index.js';
 import { corpoIa } from './corpoIa.js';
 import lembretes from './lembretes.js';
 import saude from './saude.js';
+import saudeServicos from '../netlify/functions/saude-servicos.js';
 import julesAuto from './jules-auto.js';
 import cacheBorda from './cacheBorda.js';
 import { VazaoController } from '../src/durable/VazaoController.js';
