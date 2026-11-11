@@ -53,7 +53,11 @@ async function degrauClaudePro(c, issue) {
   try {
     execFileSync('claude', ['-p', prompt, '--model', 'sonnet', '--permission-mode', 'acceptEdits', '--allowedTools', 'Read', 'Edit', 'Write', 'Glob', 'Grep', '--disallowedTools', 'Bash', 'WebFetch', 'WebSearch'],
       { stdio: 'pipe', timeout: 15 * 60e3, env: { ...process.env } });
-  } catch (e) { console.log(`  claude-pro: não terminou (${String(e.message).slice(0, 120)})`); }
+  } catch (e) {
+    // Mostra a causa (saída do Claude Code), nunca o comando inteiro nem chaves.
+    const saida = `${String(e.stderr || '')} ${String(e.stdout || '')}`.replace(/(sk-ant-|oauth|token)[^\s]*/gi, '***').trim().slice(-800);
+    console.log(`  claude-pro: não terminou (código ${e.status ?? '-'}${e.signal ? ', ' + e.signal : ''}): ${saida || 'sem saída'}`);
+  }
   // Desfaz qualquer arquivo fora do contrato e devolve o teste original.
   const mudados = git('status', '--porcelain', '-uall').split('\n').filter(Boolean).map(l => l.slice(3).trim());
   for (const f of mudados) {
