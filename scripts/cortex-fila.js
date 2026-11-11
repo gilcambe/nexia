@@ -555,6 +555,12 @@ async function executar(token, acao, dividir) {
     await gh(token, 'POST', '/actions/workflows/teste-humano.yml/dispatches', { ref: 'develop' });
     await gh(token, 'PATCH', `/issues/${n}`, { state: 'closed', state_reason: 'completed' });
   } else if (acao.tipo === 'despachar') {
+    // 11/11/2026: tarefa com contrato (Arquivos + Teste) vai para o executor de contrato (1 IA + teste decide),
+    // não para os 7 agentes (12% de sucesso medido). Sai da fila antiga; o executor rotula contrato-pr/contrato-falhou.
+    if (require('../nexia-ai/contrato/executor').lerContrato(acao.tarefa).ok) {
+      const d = await gh(token, 'POST', '/actions/workflows/cortex-contrato.yml/dispatches', { ref: 'develop', inputs: { numero: String(n) } });
+      if (d.status === 204) { await delLabel(L.fila); await addLabel('cortex-contrato'); await limparPistas(); return; }
+    }
     await limparPistas(acao.pista);
     await addLabel(L.rodando); await addLabel(`pista-${acao.pista}`);
     const d = await gh(token, 'POST', '/actions/workflows/smoke-logado.yml/dispatches', {
