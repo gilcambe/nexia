@@ -9,6 +9,9 @@ const { validateJob, contextFor, sweepAllTenants } = require('./index');
  * @param {object} rawJob  pedido vindo do workflow (JSON)
  * @param {{ db?, vault?, orchestrator?, sourceFactory?, now? }} [deps]  injeção para testes
  */
+// Execução que já não existe (apagada, de outro tenant ou de um teste antigo): não é falha do Cortex.
+// Só no banco de origem; na troca de banco por cota, NOT_FOUND continua sendo erro.
+const isOrfao = (job, e) => job.kind.startsWith('execution.') && !!e && e.code === 'NOT_FOUND' && /^Execution:/.test(String(e.message || ''));
 const isQuota = e => !!e && (e.code === 8 || e.code === 'RESOURCE_EXHAUSTED' || /RESOURCE_EXHAUSTED|Quota exceeded/i.test(String(e.message || '')));
 
 async function runJob(rawJob, deps = {}) {
@@ -18,7 +21,7 @@ async function runJob(rawJob, deps = {}) {
   // Vault/Cortex podem viver em um segundo projeto grátis (FIREBASE_SERVICE_ACCOUNT_B); sem ele, é o mesmo banco.
   const vdb = deps.vdb || (deps.db ? deps.db : require('../../netlify/functions/firebase-vault').vaultDb());
   try {
-    return await runWith(job, deps, db, vdb);
+    return await runWith(job, deps, db, vdb, { orfao: true });
   } catch (e) {
     // Cota grátis do banco B (Vault/Cortex) esgotada: na hora, roda de novo no banco principal (outro projeto grátis).
     if (!isQuota(e)) throw e;
@@ -35,7 +38,7 @@ function bothExhausted(e) {
     { code: 'QUOTA_BOTH', cause: e });
 }
 
-async function runWith(job, deps, db, vdb) {
+async function runWith(job, deps, db, vdb, opcoes = {}) {
   const { createVault } = require('../vault');
   const auditSink = require('../vault/audit-file').createFileAuditSink(process.env.NEXIA_AUDIT_FILE);
   const vault = deps.vault || createVault({ db: vdb, ...(vdb !== db ? { tenantDb: db } : {}), ...(auditSink ? { auditSink } : {}) });
@@ -73,7 +76,11 @@ async function runWith(job, deps, db, vdb) {
   const ctx = contextFor(job);
   if (job.kind.startsWith('execution.')) {
     const action = job.kind.slice('execution.'.length);
-    const r = await orchestrator[action](ctx, job.id);
+    let r;
+    try { r = await orchestrator[action](ctx, job.id); } catch (e) {
+      if (opcoes.orfao && isOrfao(job, e)) { console.warn('[nexia-job] execução não existe mais; tarefa órfã descartada', job.id); return { kind: job.kind, id: job.id, status: 'orphan_skipped' }; }
+      throw e;
+    }
     return { kind: job.kind, id: job.id, status: r && r.status };
   }
 
@@ -85,4 +92,4 @@ async function runWith(job, deps, db, vdb) {
   return { kind: job.kind, id: job.id, snapshot: !!(r && r.snapshot) };
 }
 
-module.exports = { runJob, isQuota, bothExhausted };
+module.exports = { runJob, isQuota, isOrfao, bothExhausted };
