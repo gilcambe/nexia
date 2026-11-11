@@ -11,8 +11,8 @@ const N = Number(process.env.NUMERO);
 const TOKEN = process.env.GH_TOKEN || process.env.GITHUB_TOKEN;
 const CONFIAVEIS = new Set(['OWNER', 'MEMBER', 'COLLABORATOR']);
 
-async function gh(method, rota, body) {
-  const r = await fetch(`https://api.github.com/repos/${REPO}${rota}`, { method, headers: { Authorization: `Bearer ${TOKEN}`, Accept: 'application/vnd.github+json', 'Content-Type': 'application/json' }, body: body ? JSON.stringify(body) : undefined });
+async function gh(method, rota, body, token = TOKEN) {
+  const r = await fetch(`https://api.github.com/repos/${REPO}${rota}`, { method, headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json', 'Content-Type': 'application/json' }, body: body ? JSON.stringify(body) : undefined });
   const t = await r.text(); let j = null; try { j = JSON.parse(t); } catch { /* vazio */ }
   return { status: r.status, json: j };
 }
@@ -65,9 +65,23 @@ function modelos() {
   git('add', '--', ...r.arquivos);
   git('commit', '-m', `Contrato #${N}: ${String(issue.title).slice(0, 60)}\n\nTeste de aceitação: ${c.teste}\nIA: ${r.modelo} (${r.tentativas} tentativa(s))`);
   git('push', 'origin', ramo);
-  const pr = await gh('POST', '/pulls', { title: `Contrato #${N}: ${String(issue.title).slice(0, 70)}`, head: ramo, base: 'develop',
-    body: `Fecha #${N}\n\nEntregue pelo executor de contrato: o teste de aceitação \`${c.teste}\` falhava antes e passa agora.\nIA: ${r.modelo}; ${r.tentativas} tentativa(s); ${seg} s.\nArquivos: ${r.arquivos.map(f => `\`${f}\``).join(', ')}\n\n${hist}` });
-  await comentar(`✅ Teste de aceitação passou com ${r.modelo} em ${seg} s. PR: #${pr.json && pr.json.number}`);
+  const dadosPr = { title: `Contrato #${N}: ${String(issue.title).slice(0, 70)}`, head: ramo, base: 'develop',
+    body: `Fecha #${N}\n\nEntregue pelo executor de contrato: o teste de aceitação \`${c.teste}\` falhava antes e passa agora.\nIA: ${r.modelo}; ${r.tentativas} tentativa(s); ${seg} s.\nArquivos: ${r.arquivos.map(f => `\`${f}\``).join(', ')}\n\n${hist}` };
+  // 11/11: a 1ª prova abriu o ramo mas o PR voltou vazio. Mostra o erro exato e tenta a chave do próprio Actions.
+  let pr = await gh('POST', '/pulls', dadosPr);
+  if (pr.status !== 201 && process.env.GITHUB_TOKEN_ACAO) {
+    console.log(`PR com a chave principal falhou (${pr.status}: ${(pr.json && pr.json.message) || '-'}); tentando a chave do Actions`);
+    pr = await gh('POST', '/pulls', dadosPr, process.env.GITHUB_TOKEN_ACAO);
+  }
+  if (pr.status !== 201) {
+    const msg = `${pr.status}: ${(pr.json && (pr.json.message + ' ' + JSON.stringify(pr.json.errors || ''))) || '-'}`.slice(0, 300);
+    await comentar(`✅ Teste de aceitação passou com ${r.modelo} em ${seg} s, mas não consegui abrir o PR (${msg}). O código está no ramo \`${ramo}\`.`);
+    await rotular('contrato-sem-pr');
+    console.error(`PR falhou: ${msg}`);
+    process.exitCode = 1;
+    return;
+  }
+  await comentar(`✅ Teste de aceitação passou com ${r.modelo} em ${seg} s. PR: #${pr.json.number}`);
   await rotular('contrato-pr');
-  console.log(`PR #${pr.json && pr.json.number}`);
+  console.log(`PR #${pr.json.number}`);
 })().catch(e => { console.error(e); process.exit(1); });
