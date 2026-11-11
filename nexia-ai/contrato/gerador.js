@@ -59,7 +59,7 @@ function conferir(p) {
  */
 async function gerar(o) {
   const log = o.log || (() => {});
-  let tentativas = 0, ultimo = '';
+  let tentativas = 0, ultimo = '', responderam = 0;
   for (const m of o.modelos) {
     for (let k = 0; k < 2; k++) {
       tentativas++;
@@ -67,6 +67,7 @@ async function gerar(o) {
       try {
         out = await o.router.chat(m, { system: SISTEMA, messages: [{ role: 'user', content: `PEDIDO:\n${String(o.pedido).slice(0, 6000)}${ultimo ? `\n\nA TENTATIVA ANTERIOR FOI RECUSADA: ${ultimo}` : ''}` }], maxTokens: 4000 });
       } catch (e) { log(`${m.provider}/${m.model}: sem resposta`); break; }
+      responderam++;
       const p = extrairJson(out && out.text);
       if (!p) { ultimo = 'responda só com o JSON pedido'; continue; }
       if (p.testavel === false) return { ok: false, nao_testavel: true, motivo: String(p.motivo || 'sem motivo').slice(0, 300), tentativas, modelo: `${m.provider}/${m.model}` };
@@ -87,6 +88,7 @@ async function gerar(o) {
       };
     }
   }
+  if (!responderam) return { ok: false, sem_cota: true, motivo: 'nenhuma IA respondeu (sem cota agora)', tentativas };
   return { ok: false, motivo: `nenhuma IA gerou um teste válido (${ultimo})`, tentativas };
 }
 

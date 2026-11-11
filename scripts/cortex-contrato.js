@@ -74,10 +74,17 @@ function modelos() {
     await rotular(rotulo); await rotular('cortex-fila');
     await gh('DELETE', `/issues/${N}/labels/cortex-contrato`);
   };
+  // Nenhuma IA respondeu (429/402/410): não é falha. Fica esperando a cota; o vigia do fluxo redispara em 30 min.
+  const aguardarCota = async det => {
+    await comentar(`⏳ Todas as IAs grátis estão sem cota ou fora do ar agora${det ? ` (${det})` : ''}. Não conto como falha: tento de novo sozinho em 30 min.`);
+    await rotular('contrato-aguardando-cota');
+    for (const l of ['contrato-falhou', 'contrato-nao-testavel']) await gh('DELETE', `/issues/${N}/labels/${l}`);
+  };
   if (!c.ok && !/^\s*(?:[-*]\s*)?\**Arquivos\**\s*:/im.test(texto) && process.env.CONTRATO_GERAR !== '0') {
     const { gerar } = require('../nexia-ai/contrato/gerador');
     const checarSintaxe = f => { try { execFileSync(process.execPath, ['--check', f], { stdio: 'pipe' }); return true; } catch { return false; } };
     gerado = await gerar({ pedido: texto, raiz: process.cwd(), router, modelos: lista, rodarTeste, checarSintaxe, log: s => console.log('  gerador: ' + s) });
+    if (!gerado.ok && gerado.sem_cota) return aguardarCota('ao gerar o teste');
     if (!gerado.ok) return voltarParaFila(gerado.nao_testavel ? `Não dá para provar com teste automático (${gerado.motivo}).` : `Não consegui gerar um teste válido: ${gerado.motivo}.`, 'contrato-nao-testavel');
     c = gerado.contrato;
     await comentar(`📝 Contrato gerado por ${gerado.modelo}: arquivos ${c.arquivos.map(a => `\`${a}\``).join(', ')}; teste \`${c.teste}\` (falha hoje, passou nos portões).`);
@@ -88,6 +95,7 @@ function modelos() {
   const r = await executar({ contrato: c, raiz: process.cwd(), router, modelos: lista, rodarTeste, porModelo: 2, log: s => console.log('  ' + s) });
   const seg = Math.round((Date.now() - t0) / 1000);
   const hist = r.historico.map((h, i) => `${i + 1}. ${h.modelo}: ${h.erro ? 'sem resposta' : h.aplicados.length ? `aplicou ${h.aplicados.join(', ')}; teste ${h.teste ? 'passou' : 'falhou'}` : 'nada aplicado'}${h.recusas && h.recusas.length ? ` (recusas: ${h.recusas.slice(0, 2).join('; ')})` : ''}`).join('\n');
+  if (!r.ok && r.sem_cota) return aguardarCota(r.historico.map(h => h.erro).filter(Boolean).slice(0, 3).join('; ').slice(0, 200));
   if (!r.ok && gerado) {
     try { require('node:fs').unlinkSync(gerado.testeArquivo); } catch { /* já saiu */ }
     return voltarParaFila(`Nenhuma IA fez o teste gerado passar (${r.tentativas} tentativa(s) em ${seg} s).\n${hist}`, 'contrato-falhou');

@@ -79,3 +79,11 @@ test('CT5. teste que já passa antes não prova nada: contrato recusado sem gast
   assert.match(out.motivo, /já passa/);
   assert.equal(r.vistos.length, 0);
 });
+
+test('CT6. todas as IAs sem resposta (429/402): resultado é "sem cota", não falha da tarefa', async () => {
+  const raiz = repo();
+  const out = await executar({ contrato: lerContrato(CORPO), raiz, router: roteiro([new Error('groq 429'), new Error('google 429')]), modelos: M, rodarTeste: rodar(raiz) });
+  assert.equal(out.ok, false);
+  assert.equal(out.sem_cota, true);
+  assert.match(out.motivo, /sem cota/);
+});
