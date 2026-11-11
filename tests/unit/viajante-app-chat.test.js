@@ -5,7 +5,9 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const fake = require('../helpers/agenda-fake-db.js');
 globalThis.__NEXIA_FIRESTORE_MOCK__ = fake.fakeDb ? fake.fakeDb() : fake();
-const { handler } = require('../../netlify/functions/viajante-pro');
+const { handler, hashSenha } = require('../../netlify/functions/viajante-pro');
+const { VIAJANTE_PRO } = require('../../clientes/viajantepro');
+const senhaFicticia = (async () => { VIAJANTE_PRO.viajantepro.senhas_iniciais = [{ salt: 'ee'.repeat(16), hash: await hashSenha('TESTE01', 'ee'.repeat(16)) }]; })();
 
 async function api(body) {
   const r = await handler({ httpMethod: 'POST', headers: {}, body: JSON.stringify(body), queryStringParameters: { site: 'viajantepro' } }, {});
@@ -13,7 +15,8 @@ async function api(body) {
 }
 
 test('viajante abre o app pelo link e conversa com a agência sem senha', async () => {
-  const { json: { token } } = await api({ acao: 'entrar', senha: 'ADMIN01' });
+  await senhaFicticia;
+  const { json: { token } } = await api({ acao: 'entrar', senha: 'TESTE01' });
   assert.ok(token);
   const criada = await api({ acao: 'viagem-criar', token, nome: 'Ana', destino: 'Lisboa', datas: { inicio: '2026-12-01', fim: '2026-12-10' } });
   assert.equal(criada.status, 200);

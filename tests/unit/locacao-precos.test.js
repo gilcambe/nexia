@@ -9,27 +9,27 @@ const { fakeDb } = require('../helpers/agenda-fake-db.js');
 let ipN = 0;
 async function montar() {
   const db = fakeDb();
-  const cadastro = { ...LOCACOES.splash, codigo_salt: 'aa'.repeat(16), codigo_hash: await hashSenha('CODIGO123', 'aa'.repeat(16)) };
+  const cadastro = { ...LOCACOES.splash, senhas_iniciais: [{ salt: 'bb'.repeat(16), hash: await hashSenha('TESTE01', 'bb'.repeat(16)) }, { salt: 'cc'.repeat(16), hash: await hashSenha('DONA01', 'cc'.repeat(16)) }], codigo_salt: 'aa'.repeat(16), codigo_hash: await hashSenha('CODIGO123', 'aa'.repeat(16)) };
   const h = createHandler({ getDb: () => db, getMw: () => ({ verifyBearerToken: async () => ({ ok: false }) }), getCadastro: s => (s === 'splash' ? cadastro : undefined), getLista: () => ({ splash: cadastro }), now: () => Date.parse('2026-10-12T12:00:00Z') });
   const post = body => h({ httpMethod: 'POST', headers: { 'cf-connecting-ip': '79.3.' + ((ipN >> 8) & 255) + '.' + (ipN++ & 255) }, body: JSON.stringify({ site: 'splash', ...body }) }).then(r => ({ status: r.statusCode, json: JSON.parse(r.body || '{}') }));
   const get = q => h({ httpMethod: 'GET', headers: {}, queryStringParameters: { site: 'splash', ...q } }).then(r => JSON.parse(r.body));
   return { post, get };
 }
 
-test('PRECO1. senhas iniciais ADMIN01 e AMANDA01 entram; trocar a senha desliga as iniciais', async () => {
+test('PRECO1. senhas iniciais TESTE01 e DONA01 entram; trocar a senha desliga as iniciais', async () => {
   const a = await montar();
-  for (const s of ['ADMIN01', 'amanda01', ' Admin01 ']) assert.equal((await a.post({ acao: 'entrar', senha: s })).status, 200, s);
+  for (const s of ['TESTE01', 'dona01', ' Teste01 ']) assert.equal((await a.post({ acao: 'entrar', senha: s })).status, 200, s);
   assert.equal((await a.post({ acao: 'entrar', senha: 'errada123' })).status, 400, 'sem senha criada ainda pede o primeiro acesso');
-  const tok = (await a.post({ acao: 'entrar', senha: 'AMANDA01' })).json.token;
-  assert.equal((await a.post({ acao: 'trocar-senha', token: tok, senha_atual: 'AMANDA01', senha_nova: 'minhaSenha77' })).status, 200);
-  assert.equal((await a.post({ acao: 'entrar', senha: 'AMANDA01' })).status, 401, 'inicial deixa de valer');
-  assert.equal((await a.post({ acao: 'entrar', senha: 'ADMIN01' })).status, 401);
+  const tok = (await a.post({ acao: 'entrar', senha: 'DONA01' })).json.token;
+  assert.equal((await a.post({ acao: 'trocar-senha', token: tok, senha_atual: 'DONA01', senha_nova: 'minhaSenha77' })).status, 200);
+  assert.equal((await a.post({ acao: 'entrar', senha: 'DONA01' })).status, 401, 'inicial deixa de valer');
+  assert.equal((await a.post({ acao: 'entrar', senha: 'TESTE01' })).status, 401);
   assert.equal((await a.post({ acao: 'entrar', senha: 'minhaSenha77' })).status, 200);
 });
 
 test('PRECO2. diária muda entre semana, fim de semana e promoção; extra com promoção; pedido usa o valor certo', async () => {
   const a = await montar();
-  const tok = (await a.post({ acao: 'entrar', senha: 'ADMIN01' })).json.token;
+  const tok = (await a.post({ acao: 'entrar', senha: 'TESTE01' })).json.token;
   const cfg = await a.post({ acao: 'config', token: tok, config: {
     unidades: [{ id: 'santa-adelia', nome: 'Splash Santa Adélia', valor_semana: 500, valor_fds: 900 }, { id: 'santa-barbara', nome: 'Splash Santa Bárbara', valor_diaria: 700, terceiro: true, comissao: { tipo: 'percentual', valor: 10 } }],
     extras: [{ id: 'decoracao', nome: 'Decoração', valor: 400, valor_promo: 300, ativo: true }],

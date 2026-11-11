@@ -44,7 +44,7 @@ Fotos ficam em base64 no Firestore (máx. 600 KB cada). Comprovantes do cliente 
 3. A sessão da IA pode não alcançar `*.pages.dev`/workers.dev por curl/WebFetch (lista de domínios permitidos); peça ao Gildivan para abrir e conferir, e diga isso a ele.
 
 ## 5. Acesso (senhas)
-- Painel só pede SENHA (sem usuário). Senhas iniciais (só hash em `clientes/locacoes.js`): **ADMIN01** (dono do sistema) e **AMANDA01** (Amanda). Maiúsculas/minúsculas não importam.
+- Painel só pede SENHA (sem usuário). Senhas iniciais: REMOVIDAS em 11/11/2026 (tinham vazado neste documento público). Acesso novo só por código de primeiro acesso gerado por `scripts/locacao-codigo.js` (Amanda). Maiúsculas/minúsculas não importam.
   Valem até alguém trocar a senha em "Conta" no painel (`trocar-senha` grava `senha_personalizada:true` e desliga as iniciais). Depois disso só vale a senha nova.
   Para "resetar": subir `versao` em `clientes/locacoes.js` e gerar novo código com `node scripts/locacao-codigo.js`, ou remover `senha_personalizada` no Firestore.
 - Antes o Gildivan já criou uma senha pelo código de 1º acesso (`75P84-YNJXJ`, uso único). Ela segue valendo junto com as iniciais até a troca.
