@@ -12,6 +12,7 @@ const texto = (v, max) => (typeof v === 'string' ? v.trim().slice(0, max) : '');
 const numero = (v) => (typeof v === 'number' ? v : typeof v === 'string' && v.trim() !== '' ? Number(v.replace(/\./g, '').replace(',', '.')) : NaN);
 const dinheiro = (n) => Math.round(n * 100) / 100;
 const erro = (m) => ({ ok: false, erro: m });
+// P1.5: folha (base, rubricas) e banco de horas. Só adicionado (nada removido).
 
 // ---------- Fase 2: holerite ----------
 function listaValores(l, max) {
@@ -113,7 +114,8 @@ function contextoConsultor(d) {
   if (d.avaliacao) for (const p of d.avaliacao.pontos) linhas.push(`Avaliação (${p.tipo}): ${p.texto}`);
   return linhas.join('\n').slice(0, 6000);
 }
-const SISTEMA_CONSULTOR = `Você é o consultor financeiro do app Kernex Finance, para uma pessoa leiga no Brasil. Fale português simples, curto e gentil.
+// O consultor fala pelo app Kernex Finance (o texto do sistema é o único lugar que nomeia o app).
+const SISTEMA_CONSULTOR = `Você é o consultor do app Kernex Finance, para uma pessoa leiga no Brasil. Fale português simples, curto e gentil.
 Responda usando SÓ os números do CONTEXTO (patrimônio, objetivos, histórico, holerite, orçamento). Nunca invente números; se faltar dado, diga o que a pessoa precisa cadastrar.
 Explique o porquê das sugestões (prazo, risco, liquidez, garantia do FGC). Não mande comprar produto de um banco específico.`;
 
