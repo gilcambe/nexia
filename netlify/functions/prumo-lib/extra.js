@@ -12,6 +12,7 @@ const texto = (v, max) => (typeof v === 'string' ? v.trim().slice(0, max) : '');
 const numero = (v) => (typeof v === 'number' ? v : typeof v === 'string' && v.trim() !== '' ? Number(v.replace(/\./g, '').replace(',', '.')) : NaN);
 const dinheiro = (n) => Math.round(n * 100) / 100;
 const erro = (m) => ({ ok: false, erro: m });
+// P1.5: folha (base, rubricas) e banco de horas. Só adicionado (nada removido).
 
 // ---------- Fase 2: holerite ----------
 function listaValores(l, max) {
