@@ -297,6 +297,14 @@ function devePedirReserva(acao, ls, env = process.env) {
   if (acao.tipo === 'reenfileirar' && !['failure', 'timed_out'].includes(acao.conclusao)) return false;
   return !(ls || []).includes('reserva-tentou');
 }
+// Contrato primeiro (11/11/2026): com contrato vai direto; sem contrato, o executor tenta GERAR o teste. Marcada
+// contrato-nao-testavel/contrato-falhou (já tentou e voltou), ou CONTRATO_GERAR=0, segue o caminho antigo.
+function vaiParaContrato(acao, env = process.env) {
+  if (require('../nexia-ai/contrato/executor').lerContrato(acao.tarefa).ok) return true;
+  if (env.CONTRATO_GERAR === '0') return false;
+  const ls = acao.rotulos || [];
+  return !ls.includes('contrato-nao-testavel') && !ls.includes('contrato-falhou');
+}
 async function chamarReserva(token, n) {
   const d = await gh(token, 'POST', '/actions/workflows/cortex-reserva.yml/dispatches', { ref: 'develop', inputs: { numero: String(n) } });
   if (d.status !== 204) return false;
@@ -389,7 +397,7 @@ function decidir({ issues, runs, agora = Date.now(), pistas = PISTAS, prs = [], 
     if (pausada || ativas >= pistas) break;
     let pista = 1; while (pistasEmUso.has(pista)) pista++;
     pistasEmUso.add(pista); ativas++; rodando.push(i);
-    acoes.push({ tipo: 'despachar', numero: i.number, pista, tarefa: String(i.body || '').replace(/<!-- cortex-plano [\s\S]*?-->\n?/, '').trim() });
+    acoes.push({ tipo: 'despachar', numero: i.number, pista, rotulos: nomes(i), tarefa: String(i.body || '').replace(/<!-- cortex-plano [\s\S]*?-->\n?/, '').trim() });
   }
   // Reenfileirados neste ciclo voltam à fila no próximo (o rótulo "rodando" sai agora).
   return acoes;
@@ -557,7 +565,7 @@ async function executar(token, acao, dividir) {
   } else if (acao.tipo === 'despachar') {
     // 11/11/2026: tarefa com contrato (Arquivos + Teste) vai para o executor de contrato (1 IA + teste decide),
     // não para os 7 agentes (12% de sucesso medido). Sai da fila antiga; o executor rotula contrato-pr/contrato-falhou.
-    if (require('../nexia-ai/contrato/executor').lerContrato(acao.tarefa).ok) {
+    if (vaiParaContrato(acao)) {
       const d = await gh(token, 'POST', '/actions/workflows/cortex-contrato.yml/dispatches', { ref: 'develop', inputs: { numero: String(n) } });
       if (d.status === 204) { await delLabel(L.fila); await addLabel('cortex-contrato'); await limparPistas(); return; }
     }
@@ -939,5 +947,5 @@ async function main() {
   }
 }
 
-module.exports = { ultimoRotuloEm, travadasPeloCofre, entregaComprovada, MAX_RECUPERAR_POR_CICLO, FORA_DA_RECUPERACAO, soPipelineModelo, assinaturaDoSmoke, errosDeAmbiente, mexeEmWorkflow, planejarComIA, revisarParte, dadosDoPlanejador, corrigirCiDosPrs, reservaVolta, reservasQueVoltam, travouAntesDoConserto, devePedirReserva, entregouAlgo, depoisSemEntrega, MAX_SEM_ENTREGA, rascunhosParados, candidatosRascunho, MSG_RASCUNHO_PARADO, tokenDaApp, TENTATIVAS_ATE_DIVIDIR, caminhosDoPedido, sondarCota, decidir, precisaTesteFinal, precisaDividir, paisConcluidos, dividirComIA, MAX_TENTATIVAS, validarCortexFeito, reabrirFeitosInvalidos };
+module.exports = { vaiParaContrato, ultimoRotuloEm, travadasPeloCofre, entregaComprovada, MAX_RECUPERAR_POR_CICLO, FORA_DA_RECUPERACAO, soPipelineModelo, assinaturaDoSmoke, errosDeAmbiente, mexeEmWorkflow, planejarComIA, revisarParte, dadosDoPlanejador, corrigirCiDosPrs, reservaVolta, reservasQueVoltam, travouAntesDoConserto, devePedirReserva, entregouAlgo, depoisSemEntrega, MAX_SEM_ENTREGA, rascunhosParados, candidatosRascunho, MSG_RASCUNHO_PARADO, tokenDaApp, TENTATIVAS_ATE_DIVIDIR, caminhosDoPedido, sondarCota, decidir, precisaTesteFinal, precisaDividir, paisConcluidos, dividirComIA, MAX_TENTATIVAS, validarCortexFeito, reabrirFeitosInvalidos };
 if (require.main === module) main().catch(e => { console.error(e.message); process.exit(1); });
