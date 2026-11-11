@@ -87,3 +87,22 @@ test('PS4. Architect não chama github.get_file em arquivos novos inexistentes',
   assert.strictEqual(r.status, 'done');
   assert.strictEqual(calledPaths.length, 0, 'não chamou get_file para arquivo novo');
 });
+
+test('PS4. já gravou na branch e estourou o limite de passos: segue (done) para os gates em vez de falhar', async () => {
+  let n = 0;
+  const router = {
+    capabilities: () => ({ available: true, tool_call: true }),
+    async toolCall() {
+      n++;
+      if (n === 1) return { tool_calls: [{ id: 'w1', name: 'github__edit_files', input: { branch: 'nexia/ps4', message: 'm', edits: [{ path: 'a.js', find: 'x', replace: 'y' }] } }], usage: {} };
+      return { tool_calls: [{ id: `c${n}`, name: 'github__get_file', input: { path: 'a.js' } }], usage: {} };
+    },
+  };
+  const gateway = { describe: () => ['github.get_file', 'github.edit_files'].map(name => ({ name, risk: 'LOW', description: name, input_schema: { type: 'object' } })),
+    async invoke() { return { tool_call: { id: 't' }, status: 'succeeded', result: { path: 'a.js', size: 1, content: 'y' } }; } };
+  const meter = createMeter({ max_steps: 100, max_tool_calls: 100, max_tokens: 1e9, max_ms: 60000 });
+  const r = await runAgent({ agentId: 'coder', goal: 'Mude a.js', branch: 'nexia/ps4', router, gateway, ctx: {}, projectId: 'p1', meter });
+  assert.strictEqual(r.status, 'done');
+  assert.strictEqual(r.limite_passos, true);
+  assert.match(r.text, /nexia\/ps4/);
+});

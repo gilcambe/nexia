@@ -480,6 +480,8 @@ async function runAgent(o) {
     if (canWrite && branch && !wrote && maxSteps >= 4 && turn === maxSteps - 3) r.results.push({ tool: 'nexia.aviso', ok: true, note: LAST_STEPS(branch) });
     pushResults(viaText ? `${String(out.text || '').slice(0, 1500)}\n[o NEXIA aplicou os blocos de edição do texto]` : out.text, calls.map(c => fromModelName(c.name)), r.results);
   }
+  // Já gravou na branch e só faltou fechar: segue para CI, revisão e segurança (os gates decidem), em vez de jogar o trabalho fora.
+  if (canWrite && branch && wrote) return { status: 'done', text: `O agente ${agent.title} gravou as mudanças na branch ${branch} e atingiu o limite de passos; segue para os testes e a revisão.`, tool_call_ids: toolCallIds, limite_passos: true };
   return { status: 'failed', error_code: 'MAX_STEPS', text: `O agente ${agent.title} não terminou dentro do limite de passos.`, tool_call_ids: toolCallIds };
 }
 
