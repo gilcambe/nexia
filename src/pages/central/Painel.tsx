@@ -128,7 +128,9 @@ export default function Painel({ d, erros, avisos, ir, conferir, carregando, abr
   const produtos = d.lista?.produtos || [];
   const saudeDe = (id: string) => medidos.find((m) => m.id === id);
   const cotas = (d.cotas?.itens || []).filter((c) => c.pct != null);
-  const maiorCota = cotas.slice().sort((a, b) => (b.pct || 0) - (a.pct || 0))[0];
+  // #3446: o servidor já calcula qual cota está mais pesada hoje (maior porcentagem).
+  // Sem esse dado (versão antiga do servidor), cai no cálculo local, como antes.
+  const maiorCota = d.cotas?.usoServidor || cotas.slice().sort((a, b) => (b.pct || 0) - (a.pct || 0))[0];
   const usoIa = (d.clientes?.usoIa?.porProvedor || []).filter((p) => p.usado > 0);
   const totalIa = usoIa.reduce((s, p) => s + p.usado, 0);
   const forn = d.empresa?.fornecedores || [];
@@ -497,7 +499,7 @@ export default function Painel({ d, erros, avisos, ir, conferir, carregando, abr
               valor={medidos.length ? noAr : null} sub={`de ${medidos.length} sites medidos agora`}
               pct={medidos.length ? (noAr / medidos.length) * 100 : null} barra="bg-emerald-500" conta={`${noAr} de ${medidos.length} sites responderam`} />
             <Numero titulo="Uso do servidor hoje" icone="ia" cor="from-sky-500 to-blue-600" onClick={() => ir("sistema")}
-              valor={maiorCota ? `${Math.round(maiorCota.pct || 0)}%` : null} sub={maiorCota ? `o mais usado hoje: ${maiorCota.nome}` : ""}
+              valor={maiorCota ? `${Math.round(maiorCota.pct || 0)}%` : null} sub={maiorCota ? `o que mais pesa hoje: ${maiorCota.nome}` : ""}
               pct={maiorCota ? maiorCota.pct : null} barra={maiorCota && (maiorCota.pct || 0) >= 80 ? "bg-amber-500" : "bg-sky-500"}
               conta={maiorCota ? `${maiorCota.usado} de ${maiorCota.limite}` : ""} />
             <Numero titulo="Alertas" icone="alerta" cor="from-orange-400 to-amber-500" onClick={() => abrirAlerta(null)}
