@@ -9,3 +9,14 @@
 1. **Rollback do Deployment**: No painel do provedor de hospedagem (Cloudflare Pages/Workers), faça o rollback imediato para o último deployment estável.
 2. **Reverter Commit**: Execute `git revert <sha>` do commit problemático na branch principal ou abra um PR de reversão para atualizar a versão em produção com segurança.
 3. **Boas práticas de segurança**: Sempre trabalhe em branches `nexia/...`, abra um Pull Request para revisão e realize o deploy apenas via pipeline automatizado para evitar instabilidades.
+
+## Comandos rápidos de recuperação
+- **Ver último deployment estável**: abra o painel do Cloudflare (Workers & Pages) e confira a data/hora de cada publicação.
+- **Voltar uma versão**: use o botão "Rollback" do deployment anterior no painel.
+- **Reverter um commit**: `git revert <sha>` e depois abra um PR para `develop`.
+- **Acionar o deploy**: só o pipeline (`deploy-cloudflare.yml`) publica; não faça deploy manual.
+
+## Checklist final
+1. Endpoint `/api/prumo` respondeu OK após a ação?
+2. Nenhuma issue de alerta ficou aberta sem resposta?
+3. PR de reversão revisado e registrado no Vault?
