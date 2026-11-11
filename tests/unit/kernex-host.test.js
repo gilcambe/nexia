@@ -27,3 +27,11 @@ test('KX3. outros caminhos e outros domínios não mudam', async () => {
   const post = await call('https://cortex.kernex.com.br/', { method: 'POST' });
   assert.notStrictEqual(post.status, 302);
 });
+
+test('KX4. raiz de ces.kernex.com.br vai para /ces/landing; caminhos do CES não mudam', async () => {
+  const r = await call('https://ces.kernex.com.br/');
+  assert.strictEqual(r.status, 302);
+  assert.strictEqual(r.headers.get('Location'), 'https://ces.kernex.com.br/ces/landing');
+  const p = await call('https://ces.kernex.com.br/ces/admin');
+  assert.notStrictEqual(p.status, 302);
+});

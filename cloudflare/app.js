@@ -203,6 +203,7 @@ const BODY_COACH_PREFIX = '/body-coach';
 const HOME_POR_HOST = {
   'bodycoach.kernex.com.br': BODY_COACH_PREFIX + '/',
   'cortex.kernex.com.br': '/cortex',
+  'ces.kernex.com.br': '/ces/landing', // CES no padrão de domínio KERNEX (11/11/2026)
 };
 
 const extOf = p => { const m = /\.[^./]+$/.exec(p); return m ? m[0].toLowerCase() : ''; };
