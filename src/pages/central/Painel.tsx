@@ -391,7 +391,7 @@ export default function Painel({ d, erros, avisos, ir, conferir, carregando, abr
           {[
             { t: "Tarefas", v: cx ? cx.fazendo.length : null, s: cx ? `rodando · ${cx.naFila} na fila` : "", i: "cortex", c: "text-violet-600 bg-violet-50", a: () => ir("cortex") },
             { t: "Sites no ar", v: medidos.length ? `${noAr}/${medidos.length}` : null, s: medidos.length && noAr < medidos.length ? `${medidos.length - noAr} fora do ar` : "todos respondendo", i: "tenants", c: "text-emerald-600 bg-emerald-50", a: () => ir("clientes") },
-            { t: "Uso do servidor hoje", v: maiorCota ? `${Math.round(maiorCota.pct || 0)}%` : null, s: maiorCota ? maiorCota.nome : "", i: "ia", c: "text-sky-600 bg-sky-50", a: () => ir("sistema") },
+            { t: "Uso do servidor hoje", v: usoServidor ? `${Math.round(usoServidor.pct || 0)}%` : null, s: usoServidor ? usoServidor.nome : "", i: "ia", c: "text-sky-600 bg-sky-50", a: () => ir("sistema") },
             { t: "Alertas", v: d.saude ? avisos.length : null, s: avisos.length ? "precisam de você" : "nada pendente", i: "alerta", c: "text-amber-600 bg-amber-50", a: () => abrirAlerta(null) },
           ].map((n) => (
             <button key={n.t} onClick={n.a} className="rounded-2xl bg-white border border-slate-200/80 p-3.5 text-left cursor-pointer active:bg-slate-50 shadow-[0_1px_2px_rgba(15,23,42,0.05)]">
@@ -503,9 +503,9 @@ export default function Painel({ d, erros, avisos, ir, conferir, carregando, abr
               valor={medidos.length ? noAr : null} sub={`de ${medidos.length} sites medidos agora`}
               pct={medidos.length ? (noAr / medidos.length) * 100 : null} barra="bg-emerald-500" conta={`${noAr} de ${medidos.length} sites responderam`} />
             <Numero titulo="Uso do servidor hoje" icone="ia" cor="from-sky-500 to-blue-600" onClick={() => ir("sistema")}
-              valor={maiorCota ? `${Math.round(maiorCota.pct || 0)}%` : null} sub={maiorCota ? `o que mais pesa hoje: ${maiorCota.nome}` : ""}
-              pct={maiorCota ? maiorCota.pct : null} barra={maiorCota && (maiorCota.pct || 0) >= 80 ? "bg-amber-500" : "bg-sky-500"}
-              conta={maiorCota ? `${maiorCota.usado} de ${maiorCota.limite}` : ""} />
+              valor={usoServidor ? `${Math.round(usoServidor.pct || 0)}%` : null} sub={usoServidor ? `${usoServidor.nome} · ${usoServidor.usado} de ${usoServidor.limite}` : ""}
+              pct={usoServidor ? usoServidor.pct : null} barra={usoServidor && (usoServidor.pct || 0) >= 80 ? "bg-amber-500" : "bg-sky-500"}
+              conta={usoServidor ? `${usoServidor.usado} de ${usoServidor.limite}` : ""} />
             <Numero titulo="Alertas" icone="alerta" cor="from-orange-400 to-amber-500" onClick={() => abrirAlerta(null)}
               valor={d.saude ? avisos.length : null} sub={avisos.length ? "precisam de você" : "nada pendente"} />
           </div>
