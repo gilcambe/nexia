@@ -55,10 +55,6 @@ export default {
       r => console.log('[saude-historico]', JSON.stringify(r)),
       e => console.error('[saude-historico]', e && e.message),
     ));
-    // Saúde Serviços: checagem de serviços a cada 5 min.
-    ctx.waitUntil(require('../netlify/functions/saude-servicos').executarCron(process.env, (...a) => fetch(...a)).then(
-      r => console.log('[saude-servicos-cron]', JSON.stringify(r)),
-      e => console.error('[saude-servicos-cron]', e && e.message),
-    ));
+
   },
 };
