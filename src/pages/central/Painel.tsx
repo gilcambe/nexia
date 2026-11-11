@@ -131,10 +131,10 @@ export default function Painel({ d, erros, avisos, ir, conferir, carregando, abr
   // #3446: o servidor já calcula qual cota está mais pesada hoje (maior porcentagem).
   // Sem esse dado (versão antiga do servidor), cai no cálculo local, como antes.
   const maiorCota = d.cotas?.usoServidor || cotas.slice().sort((a, b) => (b.pct || 0) - (a.pct || 0))[0];
-  // Cartão "Uso do servidor hoje" (#3446): mostra a porcentagem de leituras do Firestore
-  // (a cota que o servidor mede de verdade). Sem esse dado, cai no maior uso do dia.
-  const leituras = cotas.find((c) => c.id === "leituras");
-  const usoServidor = leituras || maiorCota;
+  // Cartão "Uso do servidor hoje": mostra a porcentagem de leituras do Firestore, que o servidor
+  // já expõe em d.cotas.usoServidor (lib/cotas.js, usoServidorHoje). Sem esse dado (versão antiga
+  // do servidor ou leituras não medidas), cai no maior uso do dia.
+  const usoServidor = d.cotas?.usoServidor || maiorCota;
   const usoIa = (d.clientes?.usoIa?.porProvedor || []).filter((p) => p.usado > 0);
   const totalIa = usoIa.reduce((s, p) => s + p.usado, 0);
   const forn = d.empresa?.fornecedores || [];
