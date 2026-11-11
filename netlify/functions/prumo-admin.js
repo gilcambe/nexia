@@ -3,6 +3,7 @@
 // NEXIA Prumo Admin — painel de administração do Prumo (restrito a master).
 // Segue a estrutura padrão (semelhante a agenda.js), verificando a role "master"
 // e retornando 403 se o usuário não for master.
+// Ação: listar pedidos pendentes do Prumo (master) para o painel.
 
 function createHandler(deps = {}) {
   const getMw = deps.getMw || (() => require('./middleware'));
