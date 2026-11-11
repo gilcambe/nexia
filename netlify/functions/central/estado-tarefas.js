@@ -136,7 +136,7 @@ function estadoTarefa(issue, agora = Date.now(), cfg = {}) {
   }
 
   // 4) Se tarefa tem rótulo precisa‑de‑voce, definir precisaVoce=true e excluir das contagens de travadas
-  const precisaVoceLabel = has('precisa-de-voce') || has('precisa_de_voce') || has('precisa‑de‑voce') || has('precisa-de-voce'.normalize('NFC'));
+  const precisaVoceLabel = has('precisa-de-voce') || has('precisa_de_voce') || has('precisa‑de‑voce') || has('precisa-de-voce'.normalize('NFC')) || has('precisa-de-você');
   const precisaVoce =
     precisaVoceLabel ||
     (estado === 'travada' &&
