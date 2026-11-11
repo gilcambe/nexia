@@ -39,6 +39,7 @@ async function usadosHoje() {
   try { return (await r.json()).total_count || 0; } catch { return 0; }
 }
 async function degrauClaudePro(c, issue) {
+  if (String(process.env.CONTRATO_DEGRAUS || '').trim() === 'pc') { console.log('  claude-pro: pulado (prova só do PC2)'); return null; }
   const regra = regraClaude(process.env, await usadosHoje());
   if (!regra.usar) { console.log(`  claude-pro: ${regra.motivo}`); return null; }
   // 1ª prova real (11/11): "Not logged in". Chave colada com espaço/quebra de linha ou texto a mais é comum:
@@ -109,7 +110,8 @@ function modelos() {
     .filter(d => { const k = `${d.provider}/${d.model}`; if (vistos.has(k)) return false; vistos.add(k); try { return router.capabilities(d).available !== false; } catch { return false; } });
   // CONTRATO_DEGRAUS=0 pula as grátis (teste do último degrau, plano Claude Pro); vazio = 6.
   const n = String(process.env.CONTRATO_DEGRAUS || '').trim();
-  const lista = intercalar(todos.filter(d => d.provider !== 'maquinas')).slice(0, n === '' ? 6 : Math.max(0, Math.min(12, Number(n) || 0)));
+  // CONTRATO_DEGRAUS=pc: só o PC2 (prova do degrau local).
+  const lista = n === 'pc' ? [] : intercalar(todos.filter(d => d.provider !== 'maquinas')).slice(0, n === '' ? 6 : Math.max(0, Math.min(12, Number(n) || 0)));
   // Último degrau GRÁTIS (11/11/2026): o PC2 do dono (Ollama, sem limite de cota), pela fila "maquinas" — o PC busca
   // a tarefa, nada fica aberto. Lento (CPU), por isso só depois das IAs da internet e antes do plano Claude Pro.
   // CONTRATO_PC=0 desliga; CONTRATO_PC_MODELO troca o modelo (padrão qwen3:8b). No teste "só Claude" (degraus=0) não entra.

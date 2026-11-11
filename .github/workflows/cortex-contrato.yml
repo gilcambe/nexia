@@ -12,7 +12,7 @@ on:
         description: Número da issue com o contrato
         required: true
       degraus:
-        description: 'Quantas IAs grátis tentar antes do Claude Pro (vazio = 6; 0 = só o Claude, para teste)'
+        description: 'Quantas IAs grátis tentar antes do Claude Pro (vazio = 6; 0 = só o Claude; pc = só o PC2, para teste)'
         required: false
         default: ''
 
