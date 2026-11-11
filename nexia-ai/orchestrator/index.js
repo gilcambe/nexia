@@ -138,7 +138,20 @@ function soCriaArquivos(message) {
 }
 
 // ── Planos por intenção ──────────────────────────────────────────────────────
-function planFor(intent, message) {
+// Plano gravado (pelo Worker) e plano do executor podem ser de VERSÕES diferentes (11/11/2026: o executor direto
+// mudou o nº de etapas e o Worker antigo seguia gravando 7 -> ORCHESTRATOR_ERROR 'action' de undefined).
+// Regra: se nada começou ainda, vale o plano novo inteiro; se já começou, vale o plano gravado (não muda no meio).
+function alinharPlano(exe, plan, steps, planoComArchitect) {
+  const semAcao = p => ({ agent: p.agent, goal: p.goal });
+  if (exe.status === 'planned') {
+    if (steps.length === plan.length) return { plan, steps: steps.map((s, k) => ({ ...s, ...semAcao(plan[k]) })) };
+    return { plan, steps: plan.map(p => ({ ...semAcao(p), status: 'pending' })) };
+  }
+  if (steps.length !== plan.length && planoComArchitect && planoComArchitect.length === steps.length) return { plan: planoComArchitect, steps };
+  return { plan, steps };
+}
+
+function planFor(intent, message, opcoes = {}) {
   const sp = specialistFor(message);
   const P = (agent, goal, action) => ({ agent, goal, action });
   switch (intent) {
@@ -148,7 +161,7 @@ function planFor(intent, message) {
         ? [P('coder', 'Criar a branch de trabalho "nexia/..."', 'create_branch'),
           P('designer', 'Escrever textos, fontes, cores e seções e buscar fotos reais (spec do Site Kit)', 'design_spec'),
           P(sp, 'Gerar o código com o NEXIA Site Kit e salvar na branch', 'agent:implement')]
-        : pedeArquivoConcreto(message)
+        : pedeArquivoConcreto(message) && !opcoes.comArchitect
           // EXECUTOR DIRETO (11/11/2026, Cortex v2): o pedido já diz QUAIS arquivos mudar (a fila divide e nomeia
           // até 4 arquivos). Sem Architect, que estourava MAX_STEPS procurando arquivos. Revisão e segurança continuam
           // (qualidade: o ciclo revisor -> correção segue valendo).
@@ -231,7 +244,7 @@ function createOrchestrator(deps) {
   /** Executa os passos a partir do primeiro não concluído. */
   async function advance(ctx, exe, req) {
     const message = exe.request_text || exe.request_summary;
-    const plan = planFor(exe.intent, message);
+    let plan = planFor(exe.intent, message);
     const meter = createMeter({ ...DEFAULT_BUDGET, ...(exe.budget || {}) });
     const project = await vault.Project.get(ctx, exe.project_id);
     const repo = project.primary_repository_id ? await vault.Repository.get(ctx, project.primary_repository_id)
@@ -250,7 +263,7 @@ function createOrchestrator(deps) {
     let steps = exe.plan.map(s => ({ ...s }));
     // O plano gravado pelo site (Worker) pode ser de uma versão anterior à do executor: antes do primeiro
     // passo, os nomes de agente e objetivo seguem o plano que vai rodar de fato.
-    if (exe.status === 'planned' && steps.length === plan.length) steps = steps.map((s, k) => ({ ...s, agent: plan[k].agent, goal: plan[k].goal }));
+    ({ plan, steps } = alinharPlano(exe, plan, steps, planFor(exe.intent, message, { comArchitect: true })));
     let stop = null;          // { status, error_code?, result_summary?, question? }
     let checks = null;
 
@@ -930,4 +943,4 @@ function usageOf(meter, prev = {}) {
 function clip(t, n) { const s = String(t); return s.length <= n ? s : `${s.slice(0, n - 1)}…`; }
 function clean(o) { return Object.fromEntries(Object.entries(o).filter(([, v]) => v !== undefined && v !== null && v !== '')); }
 
-module.exports = { buildKind, createOrchestrator, classifyIntent, filesIn, noCommitNudge, soCriaArquivos, planFor, specialistFor, workBranchFor, DEFAULT_BUDGET };
+module.exports = { alinharPlano, buildKind, createOrchestrator, classifyIntent, filesIn, noCommitNudge, soCriaArquivos, planFor, specialistFor, workBranchFor, DEFAULT_BUDGET };
