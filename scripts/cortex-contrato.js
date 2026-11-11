@@ -16,6 +16,14 @@ async function gh(method, rota, body, token = TOKEN) {
   const t = await r.text(); let j = null; try { j = JSON.parse(t); } catch { /* vazio */ }
   return { status: r.status, json: j };
 }
+async function tokenDaApp() {
+  if (!process.env.GITHUB_APP_ID || !process.env.GITHUB_APP_PRIVATE_KEY) return null;
+  const { createAuth } = require('../nexia-ai/github-adapter/auth');
+  const [owner, repo] = REPO.split('/');
+  const auth = createAuth({ env: process.env, fetchImpl: fetch, apiBase: 'https://api.github.com' });
+  const h = await auth.headersFor({ owner, repo }, { write: true, permissions: { contents: 'write', pull_requests: 'write' } });
+  return String(h.Authorization || '').replace(/^Bearer /, '') || null;
+}
 const git = (...a) => execFileSync('git', a, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
 const comentar = corpo => gh('POST', `/issues/${N}/comments`, { body: `${corpo}\n\n---\n_Executor de contrato do Cortex (teste decide)_` });
 const rotular = l => gh('POST', `/issues/${N}/labels`, { labels: [l] });
@@ -68,7 +76,12 @@ function modelos() {
   const dadosPr = { title: `Contrato #${N}: ${String(issue.title).slice(0, 70)}`, head: ramo, base: 'develop',
     body: `Fecha #${N}\n\nEntregue pelo executor de contrato: o teste de aceitação \`${c.teste}\` falhava antes e passa agora.\nIA: ${r.modelo}; ${r.tentativas} tentativa(s); ${seg} s.\nArquivos: ${r.arquivos.map(f => `\`${f}\``).join(', ')}\n\n${hist}` };
   // 11/11: a 1ª prova abriu o ramo mas o PR voltou vazio. Mostra o erro exato e tenta a chave do próprio Actions.
-  let pr = await gh('POST', '/pulls', dadosPr);
+  // A GitHub App do NEXIA abre o PR (e o CI roda nele). A NEXIA_JOBS_TOKEN não pode abrir PR (403) e a chave do
+  // Actions abre, mas o GitHub NÃO roda o CI em PR aberto por ela (visto em 3491-3496): é só o último recurso.
+  let pr = { status: 0, json: null };
+  try { const app = await tokenDaApp(); if (app) pr = await gh('POST', '/pulls', dadosPr, app); } catch (e) { console.log(`App do NEXIA indisponível (${e.message})`); }
+  if (pr.status !== 201) pr = await gh('POST', '/pulls', dadosPr);
+  const semCi = pr.status !== 201;
   if (pr.status !== 201 && process.env.GITHUB_TOKEN_ACAO) {
     console.log(`PR com a chave principal falhou (${pr.status}: ${(pr.json && pr.json.message) || '-'}); tentando a chave do Actions`);
     pr = await gh('POST', '/pulls', dadosPr, process.env.GITHUB_TOKEN_ACAO);
@@ -81,7 +94,8 @@ function modelos() {
     process.exitCode = 1;
     return;
   }
-  await comentar(`✅ Teste de aceitação passou com ${r.modelo} em ${seg} s. PR: #${pr.json.number}`);
+  await comentar(`✅ Teste de aceitação passou com ${r.modelo} em ${seg} s. PR: #${pr.json.number}${semCi ? ' (aberto pela chave do Actions: o CI NÃO roda sozinho neste PR; precisa de nova execução)' : ''}`);
+  if (semCi) await rotular('contrato-sem-ci');
   await rotular('contrato-pr');
   console.log(`PR #${pr.json.number}`);
 })().catch(e => { console.error(e); process.exit(1); });
