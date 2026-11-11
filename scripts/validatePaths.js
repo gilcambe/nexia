@@ -14,7 +14,9 @@ function validatePaths(paths) {
     }
   }
   if (missing.length > 0) {
-    console.log(`Missing paths: ${missing.join(', ')}`);
+    console.error(`Arquivos ausentes: ${missing.join(', ')}`);
+    console.error('Missing paths: ' + missing.join(', '));
+    console.error(`Task aborted: requested paths do not exist: ${missing.join(', ')}`);
     throw new Error(`Task aborted: requested paths do not exist: ${missing.join(', ')}`);
   }
   console.log('all paths valid');
