@@ -63,6 +63,9 @@ function createHandler(deps = {}) {
         let body = {};
         try { body = JSON.parse(event.body || '{}') || {}; } catch { return res(400, { error: 'Pedido inválido.' }); }
         if (body.acao === 'testar-ias') return res(200, { ias: await empresa.testarIAs(getRouter(), getIAs()), em: new Date().toISOString() });
+        // Cadastro de cliente sem PR (regra dos 20 projetos/hora). Só master chega aqui.
+        if (body.acao === 'cliente-criar') { const r = await require('./central/clientes-cadastro').criar(body, { getDb }); return res(r.status, r.corpo); }
+        if (body.acao === 'cliente-listar') return res(200, { clientes: await require('./central/clientes-cadastro').listar({ getDb }) });
         const gh = getGithub();
         // #1958: Conectar IAs. A chave nunca volta na resposta nem vai para log.
         if (body.acao === 'vaga-salvar' || body.acao === 'vaga-apagar') {
