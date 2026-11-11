@@ -9,6 +9,6 @@ test('mexeEmWorkflow: #3171 deve retornar false', () => {
 });
 
 test('mexeEmWorkflow: #2389 deve retornar true', () => {
-  const i = { title: 'Atualizar workflow do github', body: 'Modificar .github/workflows/deploy.yml' };
+  const i = { title: 'Atualizar workflow do github e cortex-plano', body: 'Modificar .github/workflows/deploy.yml e listar arquivos de cortex-plano: .github/workflows/foo.yml' };
   assert.strictEqual(mexeEmWorkflow(i), true);
 });
