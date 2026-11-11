@@ -38,10 +38,12 @@ function createHandler(deps = {}) {
     }
     if (!body || typeof body !== 'object' || Array.isArray(body)) body = {};
 
-    // Verifica se o usuário tem role "master"; caso contrário responde 403
-    const authResult = verifyBearerToken(event);
-    const auth = authResult instanceof Promise ? await authResult : authResult;
-    if (!auth || !auth.ok || auth.role !== 'master') {
+    // Autenticação (Bearer): sem token válido é 401; logado, mas sem role "master", é 403.
+    const auth = await verifyBearerToken(event);
+    if (!auth || !auth.ok) {
+      return res(401, { error: 'Autenticação necessária.' });
+    }
+    if (auth.role !== 'master') {
       return res(403, { error: 'Acesso restrito a master.' });
     }
 
