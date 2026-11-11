@@ -44,7 +44,10 @@ async function degrauClaudePro(c, issue) {
   // 1ª prova real (11/11): "Not logged in". Chave colada com espaço/quebra de linha ou texto a mais é comum:
   // limpa e mostra só o formato (nunca a chave).
   const bruta = String(process.env.CLAUDE_CODE_OAUTH_TOKEN || '');
-  const chave = bruta.trim().split(/\s+/).find(p => /^sk-ant-oat/.test(p)) || bruta.trim();
+  // A chave não tem espaço; no terminal ela quebra em várias linhas e a cópia traz as quebras: junta tudo
+  // e pega do "sk-ant-oat" até o fim da chave (2ª prova: só a 1ª linha, 68 caracteres → 401).
+  const junta = bruta.replace(/\s+/g, '');
+  const chave = (junta.match(/sk-ant-oat[A-Za-z0-9_-]+/) || [junta])[0];
   process.env.CLAUDE_CODE_OAUTH_TOKEN = chave;
   console.log(`  claude-pro: chave com ${chave.length} caracteres; formato ${/^sk-ant-oat\d{2}-/.test(chave) ? 'ok (sk-ant-oat..)' : 'INESPERADO (gere de novo com: claude setup-token)'}${bruta !== chave ? '; havia espaço ou texto a mais (limpei)' : ''}`);
   const fs = require('node:fs');
