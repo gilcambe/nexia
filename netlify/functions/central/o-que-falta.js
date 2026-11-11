@@ -42,6 +42,23 @@ function montar({ abertas = [], fechadas = [], prs = [], agora = Date.now() }) {
       .map((i) => ({ tipo: 'issue', numero: i.number, titulo: String(i.title || '').slice(0, 120), link: i.html_url, quando: i.updated_at, motivo: 'Precisa de você' })),
   ];
 
+  const seteDiasMs = 7 * 24 * 3600 * 1000;
+  const issuesFechadas = fechadas.filter((i) => !i.pull_request && i.closed_at && agora - Date.parse(i.closed_at) <= seteDiasMs && i.state_reason !== 'not_planned');
+  const prsJuntados = prs.filter((p) => p.merged_at && agora - Date.parse(p.merged_at) <= seteDiasMs);
+
+  const numIssuesSeteDias = new Set(issuesFechadas.map((i) => i.number));
+  const prsCitadosSeteDias = new Set();
+  for (const p of prsJuntados) {
+    const txt = `${p.title || ''}\n${p.body || ''}`;
+    const matches = txt.matchAll(/#(\d+)/g);
+    for (const m of matches) {
+      prsCitadosSeteDias.add(Number(m[1]));
+    }
+  }
+
+  const todasConcluidasNum = new Set([...numIssuesSeteDias, ...prsCitadosSeteDias]);
+  const totalConcluidas = todasConcluidasNum.size;
+
   const prontos = fechadas
     .filter((i) => i.closed_at && agora - Date.parse(i.closed_at) <= SETENTA_E_DUAS_H && (!i.pull_request || (i.pull_request && i.pull_request.merged_at)) && i.state_reason !== 'not_planned')
     .sort((a, b) => Date.parse(b.closed_at) - Date.parse(a.closed_at))
@@ -55,6 +72,7 @@ function montar({ abertas = [], fechadas = [], prs = [], agora = Date.now() }) {
       travadas: issues.filter((i) => nomes(i).includes('cortex-travado')).length,
       partesNaFila: Object.values(partesAbertas).reduce((s, n) => s + n, 0),
       esperandoVoce: esperandoVoce.length, prontos72h: prontos.length,
+      feitas7dias: totalConcluidas, prsJuntados7dias: prsJuntados.length,
       pausada: issues.some((i) => nomes(i).includes('fila-pausada')),
     },
     esperandoVoce, comCortex, prontos, em: new Date(agora).toISOString(),
