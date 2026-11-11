@@ -109,23 +109,27 @@ async function salvarEstado(db, itens, { at = Date.now() } = {}) {
 
 /** Consulta o último estado gravado */
 async function obterEstado(db) {
-  if (!db) return null;
+  if (!db || typeof db.collection !== 'function') return null;
   const ref = db.collection(COLECAO).doc(DOC);
+  if (!ref || typeof ref.get !== 'function') return null;
   const snap = await ref.get();
-  if (!snap.exists) return null;
-  return snap.data();
+  const existe = snap && typeof snap.exists === 'boolean' ? snap.exists : !!snap;
+  if (!existe) return null;
+  return typeof snap.data === 'function' ? snap.data() : snap;
 }
 
 /** Cria o handler Netlify Functions / Worker */
 function createHandler(deps = {}) {
   const getMw = deps.getMw || (() => require('../middleware'));
-  const abrirBanco = deps.abrirBanco || (() => {
-    try {
-      return require('./saude-historico').abrirBanco(deps.env || process.env);
-    } catch {
-      return null;
-    }
-  });
+  const     abrirBanco = deps.abrirBanco || (() => {
+      try {
+        const mod = require('./saude-historico');
+        if (!mod || typeof mod.abrirBanco !== 'function') return null;
+        return mod.abrirBanco(deps.env || process.env);
+      } catch {
+        return null;
+      }
+    });
 
   return async (event = {}) => {
     const method = String(event.httpMethod || 'GET').toUpperCase();
@@ -140,11 +144,14 @@ function createHandler(deps = {}) {
 
     if (method === 'OPTIONS') return { statusCode: 204, headers: cors, body: '' };
 
-    // Verificação de autenticação caso seja chamada externa pelo navegador
+    // Verificação de autenticação caso seja chamada externa pelo navegador.
+    // A leitura do token é rejeitada quando devolve promessa (não use await solto).
     const isCron = event.isCron || (event.headers && event.headers['x-nexia-cron']);
     if (!isCron) {
-      const auth = await getMw().verifyBearerToken(event).catch(() => ({ ok: false }));
-      if (!auth.ok || auth.role !== 'master') {
+      const mw = getMw();
+      const token = mw && typeof mw.verifyBearerToken === 'function' ? mw.verifyBearerToken(event) : null;
+      const auth = token ? await Promise.resolve(token) : { ok: false };
+      if (!auth || !auth.ok || auth.role !== 'master') {
         return res(403, { error: 'Só o administrador da NEXIA consulta a saúde dos serviços.' });
       }
     }
