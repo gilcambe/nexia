@@ -145,7 +145,7 @@ function alinharPlano(exe, plan, steps, planoComArchitect) {
   const semAcao = p => ({ agent: p.agent, goal: p.goal });
   if (exe.status === 'planned') {
     if (steps.length === plan.length) return { plan, steps: steps.map((s, k) => ({ ...s, ...semAcao(plan[k]) })) };
-    return { plan, steps: plan.map(p => ({ ...semAcao(p), status: 'pending' })) };
+    return { plan, steps: plan.map((p, k) => ({ step: k + 1, ...semAcao(p), status: 'pending' })) }; // 'step' é obrigatório no cofre
   }
   if (steps.length !== plan.length && planoComArchitect && planoComArchitect.length === steps.length) return { plan: planoComArchitect, steps };
   return { plan, steps };

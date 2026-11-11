@@ -31,3 +31,16 @@ test('PV3. mesma versão: nada muda', () => {
   const r = alinharPlano({ status: 'running' }, novo, novo.map(p => ({ ...p, status: 'pending' })));
   assert.equal(r.plan, novo);
 });
+
+test('PV4. etapas do plano novo passam no formato do cofre (step obrigatório, sem action)', () => {
+  const schemas = require('../../nexia-ai/vault/schemas.js');
+  const { validateEntity } = require('../../nexia-ai/vault/validate.js');
+  const S = (schemas.SCHEMAS || schemas).Execution || (schemas.schemas || {}).Execution;
+  assert.ok(S, 'schema Execution encontrado');
+  const novo = planFor('change', msg);
+  const r = alinharPlano({ status: 'planned' }, novo, velho.map(s => ({ ...s })));
+  r.steps.forEach((s, k) => assert.equal(s.step, k + 1));
+  const res = validateEntity(S, { plan: r.steps }, { partial: true });
+  const erros = res && (res.errors || res.erros || (res.ok === false ? res : null));
+  assert.ok(!erros || (Array.isArray(erros) && erros.length === 0), 'cofre recusou: ' + JSON.stringify(erros));
+});
