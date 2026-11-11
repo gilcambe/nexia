@@ -35,15 +35,25 @@ function rodarTeste(cmd) {
   catch (e) { return Promise.resolve({ ok: false, saida: (String(e.stdout || '') + String(e.stderr || '')).slice(-6000) }); }
 }
 
+// Redundância (11/11, lote em linguagem natural): os 4 degraus eram todos do Groq e, com 5 tarefas juntas, o limite
+// do Groq derrubou 2. A escada alterna fornecedores: 1º de cada fornecedor, depois o 2º de cada, e assim por diante.
+function intercalar(lista) {
+  const por = new Map();
+  for (const d of lista) { if (!por.has(d.provider)) por.set(d.provider, []); por.get(d.provider).push(d); }
+  const filas = [...por.values()], out = [];
+  for (let i = 0; filas.some(f => f.length > i); i++) for (const f of filas) if (f[i]) out.push(f[i]);
+  return out;
+}
+
 function modelos() {
   const { listFor } = require('../nexia-ai/orchestrator/models');
   const { getRouter } = require('../nexia-ai/model-router');
   const router = getRouter();
   const vistos = new Set();
   // Só IAs grátis (regra do dono: Claude no mínimo). CONTRATO_CLAUDE=1 põe o Claude como ÚLTIMO degrau.
-  const lista = [...listFor('coding'), ...listFor('reasoning')].filter(d => d.provider !== 'anthropic')
-    .filter(d => { const k = `${d.provider}/${d.model}`; if (vistos.has(k)) return false; vistos.add(k); try { return router.capabilities(d).available !== false; } catch { return false; } })
-    .slice(0, Number(process.env.CONTRATO_DEGRAUS) || 4);
+  const todos = [...listFor('coding'), ...listFor('reasoning')].filter(d => d.provider !== 'anthropic')
+    .filter(d => { const k = `${d.provider}/${d.model}`; if (vistos.has(k)) return false; vistos.add(k); try { return router.capabilities(d).available !== false; } catch { return false; } });
+  const lista = intercalar(todos).slice(0, Number(process.env.CONTRATO_DEGRAUS) || 6);
   if (process.env.CONTRATO_CLAUDE === '1') lista.push({ provider: 'anthropic', model: 'claude-sonnet-5-5' });
   return { router, lista };
 }
