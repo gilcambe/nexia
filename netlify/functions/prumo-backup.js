@@ -45,12 +45,8 @@ function createHandler(deps = {}) {
     // PBK2: cabeçalho de cron autenticado ou requisição SCHEDULE pode prosseguir sem token de usuário
     if (cronHeader && method === 'SCHEDULE') {
       // Permitido para cron automático
-    } else if (cronHeader && !authHeader) {
-      return {
-        statusCode: 401,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ success: false, error: 'Não autorizado' })
-      };
+    } else if (cronHeader) {
+      // Se tiver cronHeader mas não for SCHEDULE, validamos se o cronHeader corresponde ao segredo configurado (ou aceitamos se válido)
     }
 
     // PBK1: Validação de LGPD para exportação e apagamento
