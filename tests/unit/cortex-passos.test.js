@@ -106,3 +106,20 @@ test('PS4. já gravou na branch e estourou o limite de passos: segue (done) para
   assert.strictEqual(r.limite_passos, true);
   assert.match(r.text, /nexia\/ps4/);
 });
+
+test('PS5. Reviewer perto do limite de passos recebe o aviso para dar o veredito (report_findings)', async () => {
+  const seen = [];
+  const router = {
+    capabilities: () => ({ available: true, tool_call: true }),
+    async toolCall(desc, req) {
+      seen.push(String(req.messages[req.messages.length - 1].content));
+      return { tool_calls: [{ id: `c${seen.length}`, name: 'github__get_file', input: { path: 'a.js' } }], usage: {} };
+    },
+  };
+  const gateway = { describe: () => ['github.get_file'].map(name => ({ name, risk: 'LOW', description: name, input_schema: { type: 'object' } })),
+    async invoke() { return { tool_call: { id: 't' }, status: 'succeeded', result: { path: 'a.js', size: 1, content: 'x' } }; } };
+  const meter = createMeter({ max_steps: 100, max_tool_calls: 100, max_tokens: 1e9, max_ms: 60000 });
+  await runAgent({ agentId: 'reviewer', goal: 'Revise', branch: 'nexia/ps5', router, gateway, ctx: {}, projectId: 'p1', meter });
+  assert.strictEqual(seen.length, 12, 'reviewer agora tem 12 passos');
+  assert.ok(seen.some(m => /report_findings com verdict/.test(m)), 'recebeu o aviso do veredito');
+});
