@@ -89,3 +89,11 @@ test('PL7. teste real #1538: rascunho da própria parte não a segura; falha de 
   const [r] = decidir({ issues: [rodando], runs: [{ id: 9, name: 'Cortex #402', status: 'completed', conclusion: 'failure' }], agora: AGORA });
   assert.deepEqual([r.tipo, r.parte, /docs\/cortex\/x\.md/.test(r.corpo)], ['reenfileirar', true, true]);
 });
+
+test('PL8. 11/11: tarefa comum que cita arquivo e falha também leva o corpo para conferir a entrega (sem PR duplicado)', () => {
+  const corpo = 'Pedido: Criar arquivo src/routes/health.js que responde GET /api/prumo.\n\nArquivos desta parte (mexa SÓ neles): `src/routes/health.js`';
+  const i = { number: 503, title: 'health', body: corpo, state: 'open', created_at: '2026-11-11T10:00:00Z', updated_at: '2026-11-11T10:00:00Z', author_association: 'OWNER', user: { login: 'gilcambe' },
+    labels: ['cortex-fila', 'cortex-rodando', 'pista-1', 'tentativa-1'].map(name => ({ name })) };
+  const [r] = decidir({ issues: [i], runs: [{ id: 9, name: 'Cortex #503', status: 'completed', conclusion: 'failure' }], agora: AGORA });
+  assert.deepEqual([r.tipo, r.conferirEntrega, r.parte, /src\/routes\/health\.js/.test(r.corpo), r.desde], ['reenfileirar', true, undefined, true, '2026-11-11T10:00:00Z']);
+});
