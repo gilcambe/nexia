@@ -11,6 +11,10 @@ on:
       numero:
         description: Número da issue com o contrato
         required: true
+      degraus:
+        description: 'Quantas IAs grátis tentar antes do Claude Pro (vazio = 6; 0 = só o Claude, para teste)'
+        required: false
+        default: ''
 
 permissions:
   contents: write
@@ -29,6 +33,7 @@ jobs:
     timeout-minutes: 30
     env:
       NUMERO: ${{ inputs.numero || github.event.issue.number }}
+      CONTRATO_DEGRAUS: ${{ inputs.degraus }}
       GH_TOKEN: ${{ secrets.NEXIA_JOBS_TOKEN || secrets.GITHUB_TOKEN }}
       GITHUB_MODELS_TOKEN: ${{ github.token }}
       GITHUB_TOKEN_ACAO: ${{ github.token }}
