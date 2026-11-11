@@ -148,9 +148,15 @@ function planFor(intent, message) {
         ? [P('coder', 'Criar a branch de trabalho "nexia/..."', 'create_branch'),
           P('designer', 'Escrever textos, fontes, cores e seções e buscar fotos reais (spec do Site Kit)', 'design_spec'),
           P(sp, 'Gerar o código com o NEXIA Site Kit e salvar na branch', 'agent:implement')]
-        : [P('architect', 'Analisar o pedido, localizar arquivos e propor a mudança mínima', 'agent:analyze'),
-          P('coder', 'Criar a branch de trabalho "nexia/..."', 'create_branch'),
-          P(sp, 'Implementar a mudança na branch de trabalho', 'agent:implement')]),
+        : pedeArquivoConcreto(message)
+          // EXECUTOR DIRETO (11/11/2026, Cortex v2): o pedido já diz QUAIS arquivos mudar (a fila divide e nomeia
+          // até 4 arquivos). Sem Architect, que estourava MAX_STEPS procurando arquivos. Revisão e segurança continuam
+          // (qualidade: o ciclo revisor -> correção segue valendo).
+          ? [P('coder', 'Criar a branch de trabalho "nexia/..."', 'create_branch'),
+            P(sp, 'Implementar a mudança nos arquivos citados no pedido', 'agent:implement')]
+          : [P('architect', 'Analisar o pedido, localizar arquivos e propor a mudança mínima', 'agent:analyze'),
+            P('coder', 'Criar a branch de trabalho "nexia/..."', 'create_branch'),
+            P(sp, 'Implementar a mudança na branch de trabalho', 'agent:implement')]),
       P('reviewer', 'Revisar o diff contra o pedido', 'agent:review'),
       P('security', 'Revisar o diff quanto a segurança', 'agent:security'),
       P('devops', 'Abrir o PR (rascunho) para a branch padrão', 'create_pr'),
