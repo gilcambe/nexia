@@ -6,7 +6,7 @@ module.exports = async function health(req, res) {
   const acao = url.searchParams.get('acao');
   const path = url.pathname;
 
-  if (acao === 'saude' || path.endsWith('/api/prumo')) {
+  if (acao === 'saude') {
     return res.json({ ok: true, hora: new Date().toISOString() });
   }
 
