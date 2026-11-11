@@ -43,19 +43,25 @@ function montar({ abertas = [], fechadas = [], prs = [], agora = Date.now() }) {
   ];
 
   const seteDiasMs = 7 * 24 * 3600 * 1000;
-  const issuesFechadas = fechadas.filter((i) => !i.pull_request && i.closed_at && agora - Date.parse(i.closed_at) <= seteDiasMs && i.state_reason !== 'not_planned');
-  const prsJuntados = prs.filter((p) => p.merged_at && agora - Date.parse(p.merged_at) <= seteDiasMs);
+  // Filtra issues fechadas nos últimos 7 dias, que não sejam PRs e com state_reason diferente de 'not_planned'
+  const issuesFechadas7dias = fechadas.filter(
+    (i) => !i.pull_request && i.closed_at && agora - Date.parse(i.closed_at) <= seteDiasMs && i.state_reason !== 'not_planned'
+  );
+  // Filtra PRs juntados nos últimos 7 dias
+  const prsJuntados7dias = prs.filter((p) => p.merged_at && agora - Date.parse(p.merged_at) <= seteDiasMs);
 
-  const numIssuesSeteDias = new Set(issuesFechadas.map((i) => i.number));
+  const numIssuesSeteDias = new Set(issuesFechadas7dias.map((i) => i.number));
   const prsCitadosSeteDias = new Set();
-  for (const p of prsJuntados) {
-    const txt = `${p.title || ''}\n${p.body || ''}`;
-    const matches = txt.matchAll(/#(\d+)/g);
+  for (const p of prsJuntados7dias) {
+    const txt = `${p.title || ''}\\n${p.body || ''}`;
+    // Procura por menções de issues (ex: #123) no título e corpo do PR
+    const matches = txt.matchAll(/#(\\d+)/g);
     for (const m of matches) {
       prsCitadosSeteDias.add(Number(m[1]));
     }
   }
 
+  // Combina issues fechadas e PRs que citaram issues, removendo duplicatas
   const todasConcluidasNum = new Set([...numIssuesSeteDias, ...prsCitadosSeteDias]);
   const totalConcluidas = todasConcluidasNum.size;
 
