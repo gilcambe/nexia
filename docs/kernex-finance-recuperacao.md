@@ -8,4 +8,3 @@
 ## Como voltar à versão anterior
 1. **Rollback do Deployment**: No painel do provedor de hospedagem (Cloudflare Pages/Workers), faça o rollback imediato para o último deployment estável.
 2. **Reverter Commit**: Execute `git revert <sha>` do commit problemático na branch principal ou abra um PR de reversão para atualizar a versão em produção com segurança.
-
