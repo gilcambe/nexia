@@ -51,7 +51,14 @@ const MAX_ENVIOS = 3;
 const INTERRUPTOR_CLAUDE = 2036;
 const MAX_VOLTAS_VIGIA = 2;
 const PARADA_MIN = 15;
-const mexeEmWorkflow = (i) => /\.github\/workflows\//.test(`${i.title || ''}\n${i.body || ''}`);
+const mexeEmWorkflow = (i) => {
+  const t = (i.title || '').toLowerCase();
+  const b = (i.body || '').toLowerCase();
+  const lista = (i.arquivos || i.files || []);
+  const mencionaWorkflow = /\.github\/workflows\//.test(`${t}\n${b}`);
+  const mencionaCortexPlano = t.includes('cortex-plano') || b.includes('cortex-plano') || lista.some(f => (typeof f === 'string' ? f : f.filename || '').includes('cortex-plano'));
+  return mencionaWorkflow && mencionaCortexPlano;
+};
 
 // Decide o que fazer com as issues travadas (função pura, testada).
 function decidir(issues, prs, agora, nomes, { claudeLigado = true, vezDoClaude = [] } = {}) {
