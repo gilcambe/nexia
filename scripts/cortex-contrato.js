@@ -28,6 +28,47 @@ const git = (...a) => execFileSync('git', a, { encoding: 'utf8', stdio: ['ignore
 const comentar = corpo => gh('POST', `/issues/${N}/comments`, { body: `${corpo}\n\n---\n_Executor de contrato do Cortex (teste decide)_` });
 const rotular = l => gh('POST', `/issues/${N}/labels`, { labels: [l] });
 
+// ── Último degrau: plano Claude Pro do dono (11/11/2026, autorizado: "sim, ligue") ──
+// Oficial: `claude setup-token` → segredo CLAUDE_CODE_OAUTH_TOKEN. A cota é a MESMA que o dono usa no dia a dia,
+// por isso: só depois de todas as grátis, no máximo CONTRATO_CLAUDE_DIA tarefas por dia (padrão 5), modelo Sonnet,
+// só ferramentas de ler/editar arquivo (sem terminal) e, no fim, tudo fora dos arquivos do contrato é desfeito.
+const { regraClaude } = require('../nexia-ai/contrato/claude-pro');
+async function usadosHoje() {
+  const hoje = new Date().toISOString().slice(0, 10);
+  const r = await fetch(`https://api.github.com/search/issues?q=${encodeURIComponent(`repo:${REPO} label:contrato-claude updated:>=${hoje}`)}&per_page=1`, { headers: { Authorization: `Bearer ${TOKEN}`, Accept: 'application/vnd.github+json' } });
+  try { return (await r.json()).total_count || 0; } catch { return 0; }
+}
+async function degrauClaudePro(c, issue) {
+  const regra = regraClaude(process.env, await usadosHoje());
+  if (!regra.usar) { console.log(`  claude-pro: ${regra.motivo}`); return null; }
+  const fs = require('node:fs');
+  const testes = Object.fromEntries(c.testes.map(t => [t, fs.existsSync(t) ? fs.readFileSync(t, 'utf8') : null]));
+  const prompt = [
+    `Tarefa do Cortex KERNEX (issue #${N}): ${String(issue.title).slice(0, 200)}`,
+    c.pedido.slice(0, 4000),
+    `Mexa SOMENTE nestes arquivos: ${c.arquivos.join(', ')}. NÃO altere o teste ${c.testes.join(', ')}.`,
+    `O teste de aceitação é: ${c.teste}. Leia o teste, implemente o que falta e termine. Responda só "pronto".`,
+  ].join('\n\n');
+  const t0 = Date.now();
+  try {
+    execFileSync('claude', ['-p', prompt, '--model', 'sonnet', '--permission-mode', 'acceptEdits', '--allowedTools', 'Read', 'Edit', 'Write', 'Glob', 'Grep', '--disallowedTools', 'Bash', 'WebFetch', 'WebSearch'],
+      { stdio: 'pipe', timeout: 15 * 60e3, env: { ...process.env } });
+  } catch (e) { console.log(`  claude-pro: não terminou (${String(e.message).slice(0, 120)})`); }
+  // Desfaz qualquer arquivo fora do contrato e devolve o teste original.
+  const mudados = git('status', '--porcelain', '-uall').split('\n').filter(Boolean).map(l => l.slice(3).trim());
+  for (const f of mudados) {
+    if (c.arquivos.includes(f) || c.testes.includes(f)) continue;
+    try { git('checkout', '--', f); } catch { try { fs.rmSync(f, { recursive: true, force: true }); } catch { /* já saiu */ } }
+  }
+  for (const [t, v] of Object.entries(testes)) if (v !== null) fs.writeFileSync(t, v);
+  await rotular('contrato-claude');
+  const tr = await rodarTeste(c.teste);
+  const seg = Math.round((Date.now() - t0) / 1000);
+  console.log(`  claude-pro: teste ${tr.ok ? 'PASSOU' : 'falhou'} (${seg} s)`);
+  const arquivos = c.arquivos.filter(f => mudados.includes(f) || git('status', '--porcelain', '--', f));
+  return { ok: tr.ok, modelo: 'claude-code/sonnet (plano Pro)', arquivos, hist: { modelo: 'claude-code/sonnet (plano Pro)', aplicados: arquivos, recusas: [], teste: tr.ok } };
+}
+
 function rodarTeste(cmd) {
   const env = { ...process.env }; delete env.NODE_TEST_CONTEXT;
   for (const k of Object.keys(env)) if (/KEY|TOKEN|SECRET|VAGA_/.test(k)) delete env[k];   // o teste não vê chave nenhuma
@@ -92,7 +133,12 @@ function modelos() {
   if (!c.ok) { await comentar(`Contrato inválido: ${c.erros.join('; ')}.\nModelo:\n\`\`\`\nO que fazer...\nArquivos: \`caminho/arquivo.js\`\nTeste: \`node --test tests/unit/x.test.js\`\n\`\`\``); await rotular('contrato-invalido'); return; }
   console.log(`#${N}: ${c.arquivos.join(', ')} | ${c.teste} | degraus: ${lista.map(d => `${d.provider}/${d.model}`).join(' > ')}`);
   const t0 = Date.now();
-  const r = await executar({ contrato: c, raiz: process.cwd(), router, modelos: lista, rodarTeste, porModelo: 2, log: s => console.log('  ' + s) });
+  let r = await executar({ contrato: c, raiz: process.cwd(), router, modelos: lista, rodarTeste, porModelo: 2, log: s => console.log('  ' + s) });
+  if (!r.ok) {
+    // Último degrau: o plano Claude Pro do dono (CLAUDE_CODE_OAUTH_TOKEN), com teto diário. Só quando as grátis não resolveram.
+    const rc = await degrauClaudePro(c, issue);
+    if (rc) { r.historico.push(rc.hist); if (rc.ok) r = { ...r, ok: true, modelo: rc.modelo, arquivos: rc.arquivos, sem_cota: false }; }
+  }
   const seg = Math.round((Date.now() - t0) / 1000);
   const hist = r.historico.map((h, i) => `${i + 1}. ${h.modelo}: ${h.erro ? 'sem resposta' : h.aplicados.length ? `aplicou ${h.aplicados.join(', ')}; teste ${h.teste ? 'passou' : 'falhou'}` : 'nada aplicado'}${h.recusas && h.recusas.length ? ` (recusas: ${h.recusas.slice(0, 2).join('; ')})` : ''}`).join('\n');
   if (!r.ok && r.sem_cota) return aguardarCota(r.historico.map(h => h.erro).filter(Boolean).slice(0, 3).join('; ').slice(0, 200));

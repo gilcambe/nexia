@@ -32,6 +32,10 @@ jobs:
       GH_TOKEN: ${{ secrets.NEXIA_JOBS_TOKEN || secrets.GITHUB_TOKEN }}
       GITHUB_MODELS_TOKEN: ${{ github.token }}
       GITHUB_TOKEN_ACAO: ${{ github.token }}
+      # Último degrau: plano Claude Pro do dono (claude setup-token). Teto diário em vars.CONTRATO_CLAUDE_DIA (padrão 5).
+      CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+      CONTRATO_CLAUDE_DIA: ${{ vars.CONTRATO_CLAUDE_DIA }}
+      CONTRATO_CLAUDE_PRO: ${{ vars.CONTRATO_CLAUDE_PRO }}
       GITHUB_APP_ID: ${{ secrets.NEXIA_GITHUB_APP_ID }}
       GITHUB_APP_PRIVATE_KEY: ${{ secrets.NEXIA_GITHUB_APP_PRIVATE_KEY }}
       IA_VAGAS_CONFIG: ${{ vars.IA_VAGAS_CONFIG }}
@@ -79,5 +83,8 @@ jobs:
           node-version: 20
           cache: npm
       - run: npm ci --ignore-scripts
+      - name: Claude Code (só se o plano Pro estiver ligado)
+        if: env.CLAUDE_CODE_OAUTH_TOKEN != ''
+        run: npm install -g @anthropic-ai/claude-code@2.1.312
       - name: Executar o contrato
         run: node scripts/cortex-contrato.js
