@@ -28,6 +28,7 @@ const LOADERS = {
   'event-processor': () => require('../netlify/functions/event-processor.js'),
   'internal-agents': () => require('../netlify/functions/internal-agents.js'),
   'leads': () => require('../netlify/functions/leads.js'),
+  'propostas': () => require('../netlify/functions/propostas.js'),
   'agenda': () => require('../netlify/functions/agenda.js'),
   'locacao': () => require('../netlify/functions/locacao.js'),
   'nutri': () => require('../netlify/functions/nutri.js'),
