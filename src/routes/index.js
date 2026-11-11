@@ -1,7 +1,7 @@
 'use strict';
 
-const health = require('./health'); // health route
+const health = require('./health');
 
 module.exports = function (app) {
-  app.get('/api/prumo', health); // health route
+  app.get('/api/prumo', health);
 };
