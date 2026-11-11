@@ -47,3 +47,20 @@ test('PM4. sem token fica indisponível; o roteador registra o provedor', () => 
   const r = createRouter({ env: {} });
   assert.equal(r.capabilities({ provider: 'maquinas', model: 'qwen2.5:1.5b' }).available, false);
 });
+
+test('PM9. tarefa de código (11/11/2026): manda max_tokens ao PC e espera até 12 min, não 90 s', async () => {
+  const driver = createMemoryDriver();
+  const mq = createMaquinas({ env, driver });
+  await mq.pulso('PC2', { ollamaOk: true, modelos: ['qwen3:8b'] });
+  let t = 0, vista = null;
+  const p = createMaquinasProvider({ env, maquinas: mq, agora: () => t, esperar: async (ms) => {
+    t += ms;
+    if (!vista) vista = await mq.pegarTarefa('PC2');
+    if (t > 5 * 60 * 1000 && vista) await mq.resultado('PC2', { id: vista.id, texto: 'ARQUIVO: lib/a.js', tokens: 900 });
+  } });
+  const r = await p.chat('qwen3:8b', { messages: [{ role: 'user', content: 'faça' }], maxTokens: 8000 });
+  assert.equal(r.text, 'ARQUIVO: lib/a.js');
+  assert.equal(vista.max_tokens, 8000);
+  assert.equal(vista.tipo, 'codigo');
+  assert.equal(p.capabilities().max_output_tokens, 8192);
+});

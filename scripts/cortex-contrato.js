@@ -109,7 +109,12 @@ function modelos() {
     .filter(d => { const k = `${d.provider}/${d.model}`; if (vistos.has(k)) return false; vistos.add(k); try { return router.capabilities(d).available !== false; } catch { return false; } });
   // CONTRATO_DEGRAUS=0 pula as grátis (teste do último degrau, plano Claude Pro); vazio = 6.
   const n = String(process.env.CONTRATO_DEGRAUS || '').trim();
-  const lista = intercalar(todos).slice(0, n === '' ? 6 : Math.max(0, Math.min(12, Number(n) || 0)));
+  const lista = intercalar(todos.filter(d => d.provider !== 'maquinas')).slice(0, n === '' ? 6 : Math.max(0, Math.min(12, Number(n) || 0)));
+  // Último degrau GRÁTIS (11/11/2026): o PC2 do dono (Ollama, sem limite de cota), pela fila "maquinas" — o PC busca
+  // a tarefa, nada fica aberto. Lento (CPU), por isso só depois das IAs da internet e antes do plano Claude Pro.
+  // CONTRATO_PC=0 desliga; CONTRATO_PC_MODELO troca o modelo (padrão qwen3:8b). No teste "só Claude" (degraus=0) não entra.
+  const pc = { provider: 'maquinas', model: process.env.CONTRATO_PC_MODELO || 'qwen3:8b' };
+  if (n !== '0' && process.env.CONTRATO_PC !== '0') { try { if (router.capabilities(pc).available !== false) lista.push(pc); } catch { /* sem PC configurado */ } }
   if (process.env.CONTRATO_CLAUDE === '1') lista.push({ provider: 'anthropic', model: 'claude-sonnet-5-5' });
   return { router, lista };
 }

@@ -16,14 +16,17 @@ function createMaquinasProvider({ env = process.env, maquinas, esperaMaxMs = ESP
   return {
     id: 'maquinas',
     available: ligado,
-    capabilities: () => ({ chat: true, streaming: false, tool_call: false, vision: false, structured_output: false, max_output_tokens: 1024 }),
+    capabilities: () => ({ chat: true, streaming: false, tool_call: false, vision: false, structured_output: false, max_output_tokens: 8192 }),
     async chat(model, req = {}) {
       if (!ligado()) throw new ModelError(CODES.NO_API_KEY, 'maquinas: NEXIA_MAQUINA_TOKEN ou D1 não configurado', { provider: 'maquinas' });
       const online = (await mq().listar()).filter((x) => x.online && x.ollamaOk !== false);
       if (!online.length) throw new ModelError(CODES.UPSTREAM, 'maquinas: nenhum PC online agora', { provider: 'maquinas', model, semMaquina: true });
       const mensagens = [...(req.system ? [{ role: 'system', content: String(req.system) }] : []), ...(req.messages || []).map((x) => ({ role: x.role, content: String(x.content || '') }))];
-      const id = await mq().criarTarefa({ tipo: 'texto', modelo: model, mensagens });
-      const fim = agora() + esperaMaxMs;
+      // Resposta longa (código) roda devagar na CPU do PC: espera proporcional, até 12 min.
+      const maxTok = Math.min(8192, Number(req.maxTokens) || 0);
+      const id = await mq().criarTarefa({ tipo: maxTok > 1024 ? 'codigo' : 'texto', modelo: model, mensagens, ...(maxTok ? { max_tokens: maxTok } : {}) });
+      const espera = maxTok > 1024 ? Math.max(esperaMaxMs, 12 * 60 * 1000) : esperaMaxMs;
+      const fim = agora() + espera;
       while (agora() < fim) {
         await esperar(intervaloMs);
         const t = await mq().lerTarefa(id);
@@ -32,7 +35,7 @@ function createMaquinasProvider({ env = process.env, maquinas, esperaMaxMs = ESP
         }
         if (t && t.status === 'erro') throw new ModelError(CODES.UPSTREAM, 'maquinas: o PC devolveu erro', { provider: 'maquinas', model });
       }
-      const e = new ModelError(CODES.UPSTREAM, 'maquinas: o PC não respondeu em 90 s', { provider: 'maquinas', model });
+      const e = new ModelError(CODES.UPSTREAM, `maquinas: o PC não respondeu em ${Math.round(espera / 1000)} s`, { provider: 'maquinas', model });
       e.isTimeout = true;
       throw e;
     },
