@@ -78,7 +78,7 @@ function montar({ abertas = [], fechadas = [], prs = [], agora = Date.now() }) {
       travadas: issues.filter((i) => nomes(i).includes('cortex-travado')).length,
       partesNaFila: Object.values(partesAbertas).reduce((s, n) => s + n, 0),
       esperandoVoce: esperandoVoce.length, prontos72h: prontos.length,
-      feitas7dias: totalConcluidas, prsJuntados7dias: prsJuntados.length,
+      feitas7dias: totalConcluidas, prsJuntados7dias: prsJuntados7dias.length, itensConcluidos7dias: [...Array.from(todasConcluidasNum).map(n => ({ numero: n })), ...issuesFechadas7dias.map(i => ({ tipo: 'issue', numero: i.number, titulo: String(i.title || '').slice(0, 120), link: i.html_url, quando: i.closed_at })), ...prsJuntados7dias.map(p => ({ tipo: 'pr', numero: p.number, titulo: String(p.title || '').slice(0, 120), link: p.html_url, quando: p.merged_at }))],
       pausada: issues.some((i) => nomes(i).includes('fila-pausada')),
     },
     esperandoVoce, comCortex, prontos, em: new Date(agora).toISOString(),
