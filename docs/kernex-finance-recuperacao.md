@@ -4,6 +4,7 @@
 1. **Verificar Issues Abertas**: Consulte a aba de issues no GitHub do projeto para verificar se há alertas automáticos ou manuais sobre indisponibilidade.
 2. **Testar Endpoint de Saúde**: Verifique se o endpoint `/api/prumo` está respondendo corretamente. Caso retorne erro 5xx, timeout ou falha de conexão, o serviço está fora do ar.
 3. **Monitoramento de Workflows**: Confira as execuções recentes no GitHub Actions para identificar falhas nos testes ou no deploy.
+4. **Alertas de Segurança**: Verifique se o workflow `gitleaks.yml` ou alertas de segurança do GitHub ( aba Security > Code scanning) acusaram exposição de segredos ou falha crítica.
 
 ## Como voltar à versão anterior
 1. **Rollback do Deployment**: No painel do provedor de hospedagem (Cloudflare Pages/Workers), faça o rollback imediato para o último deployment estável.
@@ -15,6 +16,7 @@
 - **Voltar uma versão**: use o botão "Rollback" do deployment anterior no painel.
 - **Reverter um commit**: `git revert <sha>` e depois abra um PR para `develop`.
 - **Acionar o deploy**: só o pipeline (`deploy-cloudflare.yml`) publica; não faça deploy manual.
+- **Segurança**: Nunca force push (`git push --force`) na branch padrão; nunca altere secrets ou regras do Firestore sem autorização explícita do dono.
 
 ## Checklist final
 1. Endpoint `/api/prumo` respondeu OK após a ação?
