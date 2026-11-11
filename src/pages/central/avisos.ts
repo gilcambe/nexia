@@ -10,6 +10,7 @@ export interface Aviso {
   link?: { rotulo: string; url: string };
   conserto?: string;
   sozinho?: boolean; // resolve sozinho, sem o dono fazer nada
+  checadoEm?: string; // ISO date da última checagem do aviso; usado para saber se já passou do prazo
 }
 export type Aba = "inicio" | "falta" | "clientes" | "dinheiro" | "divulgar" | "cortex" | "prs" | "sistema" | "mais";
 
@@ -49,7 +50,7 @@ export function calcularAvisos(d: Dados): Aviso[] {
   if (d.banco && !d.banco.ok) a.push(d.banco.cheio ? {
     cor: "vermelho", texto: "O banco de dados chegou no limite grátis de hoje", aba: "sistema",
     oque: "O Firebase grátis tem um limite de leituras por dia, e ele acabou.", impacto: "Algumas telas podem não carregar até o limite voltar.",
-    passos: ["Não precisa fazer nada: o limite volta sozinho por volta das 4h (horário de Brasília).", "Enquanto isso, o banco reserva (D1) segura o que dá."], sozinho: true,
+    passos: ["Não precisa fazer nada: o limite volta sozinho por volta das 4h (horário de Brasília).", "Enquanto isso, o banco reserva (D1) segura o que dá."], sozinho: true, checadoEm: d.saude?.quando || undefined,
   } : {
     cor: "vermelho", texto: "O banco de dados não respondeu", aba: "sistema",
     oque: "O Firebase não respondeu na última conferência.", impacto: "Telas que leem dados podem falhar.",
@@ -77,7 +78,7 @@ export function calcularAvisos(d: Dados): Aviso[] {
       "Para ajudar, conecte mais IAs grátis em \"IA e Infraestrutura\" → Conectar IAs.",
       "Para ver cada uma, abra a aba Cortex.",
     ],
-    sozinho: true,
+    sozinho: true, checadoEm: d.saude?.quando || undefined,
   });
   if (d.dinheiro?.avisos7) a.push({
     cor: "amarelo", texto: `${d.dinheiro.avisos7} aviso${d.dinheiro.avisos7 > 1 ? "s" : ""} de pagamento Pix nos últimos 7 dias (confira e libere)`, aba: "dinheiro",
