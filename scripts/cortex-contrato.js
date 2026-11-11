@@ -94,7 +94,9 @@ function modelos() {
   // Só IAs grátis (regra do dono: Claude no mínimo). CONTRATO_CLAUDE=1 põe o Claude como ÚLTIMO degrau.
   const todos = [...listFor('coding'), ...listFor('reasoning')].filter(d => d.provider !== 'anthropic')
     .filter(d => { const k = `${d.provider}/${d.model}`; if (vistos.has(k)) return false; vistos.add(k); try { return router.capabilities(d).available !== false; } catch { return false; } });
-  const lista = intercalar(todos).slice(0, Number(process.env.CONTRATO_DEGRAUS) || 6);
+  // CONTRATO_DEGRAUS=0 pula as grátis (teste do último degrau, plano Claude Pro); vazio = 6.
+  const n = String(process.env.CONTRATO_DEGRAUS || '').trim();
+  const lista = intercalar(todos).slice(0, n === '' ? 6 : Math.max(0, Math.min(12, Number(n) || 0)));
   if (process.env.CONTRATO_CLAUDE === '1') lista.push({ provider: 'anthropic', model: 'claude-sonnet-5-5' });
   return { router, lista };
 }
