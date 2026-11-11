@@ -18,6 +18,70 @@ const STATUS: { id: string; label: string; color: string }[] = [
   { id: "perdido", label: "Perdido", color: "text-red-400" },
 ];
 const wa = (n: string) => `https://wa.me/${n.length <= 11 ? "55" + n : n}`;
+// KERNEX Propostas: produtos prontos que a KERNEX vende (o preço é definido em cada proposta).
+const PRODUTOS_PROPOSTA = [
+  { id: "kernex-eventos", nome: "KERNEX Eventos (espaço de eventos/lazer)" },
+  { id: "kernex-viagens", nome: "KERNEX Viagens (agência de viagens)" },
+];
+type Criada = { link: string; whatsapp_url: string; texto: string };
+
+function Proposta({ lead, getToken, onCriada }: { lead: Lead; getToken: () => Promise<string | null>; onCriada: () => void }) {
+  const [aberto, setAberto] = useState(false);
+  const [produto, setProduto] = useState(lead.produto === "kernex-viagens" ? "kernex-viagens" : "kernex-eventos");
+  const [valor, setValor] = useState("");
+  const [mensalidade, setMensalidade] = useState("");
+  const [dias, setDias] = useState("7");
+  const [condicoes, setCondicoes] = useState("");
+  const [criada, setCriada] = useState<Criada | null>(null);
+  const [erro, setErro] = useState<string | null>(null);
+  const [enviando, setEnviando] = useState(false);
+  const num = (s: string) => Number(s.replace(/\./g, "").replace(",", "."));
+  const criar = async () => {
+    setEnviando(true); setErro(null);
+    try {
+      const token = await getToken();
+      if (!token) throw new Error("Faça login para continuar.");
+      const res = await fetch(apiPath("/propostas"), { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ acao: "criar", lead_id: lead.id, produto, valor: num(valor), mensalidade: mensalidade ? num(mensalidade) : 0, validade_dias: Number(dias), condicoes }) });
+      const b = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(b.error || `HTTP ${res.status}`);
+      setCriada(b as Criada); onCriada();
+    } catch (e) { setErro((e as Error).message); } finally { setEnviando(false); }
+  };
+  if (!lead.whatsapp) return null;
+  if (!aberto) return <button onClick={() => setAberto(true)} className="text-xs text-nexia-cyan underline cursor-pointer" data-testid="fazer-proposta">Fazer proposta</button>;
+  const campo = "bg-[#0a0a0f] border border-nexia-border rounded-lg px-2 py-1 text-xs";
+  return (
+    <div className="rounded-lg border border-nexia-border p-3 space-y-2" data-testid="proposta-form">
+      {!criada ? (
+        <>
+          <div className="grid gap-2 sm:grid-cols-2">
+            <select className={campo} value={produto} onChange={(e) => setProduto(e.target.value)} aria-label="Produto da proposta">
+              {PRODUTOS_PROPOSTA.map((p) => <option key={p.id} value={p.id}>{p.nome}</option>)}
+            </select>
+            <input className={campo} value={valor} onChange={(e) => setValor(e.target.value)} placeholder="Valor (R$), ex.: 1490" inputMode="decimal" aria-label="Valor" />
+            <input className={campo} value={mensalidade} onChange={(e) => setMensalidade(e.target.value)} placeholder="Mensalidade (R$, opcional)" inputMode="decimal" aria-label="Mensalidade" />
+            <select className={campo} value={dias} onChange={(e) => setDias(e.target.value)} aria-label="Validade">
+              {["3", "7", "15", "30"].map((d) => <option key={d} value={d}>Válida por {d} dias</option>)}
+            </select>
+          </div>
+          <input className={`${campo} w-full`} value={condicoes} onChange={(e) => setCondicoes(e.target.value)} maxLength={600} placeholder="Condições (ex.: entrada + 2x no Pix; no ar em 24 h)" aria-label="Condições" />
+          <div className="flex gap-3 items-center">
+            <button onClick={criar} disabled={enviando || !(num(valor) > 0)} className="text-xs bg-nexia-cyan text-black rounded-lg px-3 py-1 disabled:opacity-50 cursor-pointer">{enviando ? "Criando..." : "Criar proposta"}</button>
+            <button onClick={() => setAberto(false)} className="text-xs text-nexia-muted cursor-pointer">Cancelar</button>
+          </div>
+        </>
+      ) : (
+        <div className="space-y-2 text-xs" data-testid="proposta-criada">
+          <p>Proposta criada. Link: <a className="text-nexia-cyan underline break-all" href={criada.link} target="_blank" rel="noopener noreferrer">{criada.link}</a></p>
+          <p className="text-nexia-muted whitespace-pre-wrap">{criada.texto}</p>
+          <a className="inline-block bg-green-500 text-black rounded-lg px-3 py-1 font-semibold" href={criada.whatsapp_url} target="_blank" rel="noopener noreferrer"><i className="ri-whatsapp-line" /> Enviar no WhatsApp</a>
+        </div>
+      )}
+      {erro && <p className="text-red-400 text-xs" role="alert">{erro}</p>}
+    </div>
+  );
+}
 const fmt = (iso: string) => new Date(iso).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo", dateStyle: "short", timeStyle: "short" });
 
 export default function LeadsPage() {
@@ -133,6 +197,7 @@ export default function LeadsPage() {
                     {l.utm && Object.keys(l.utm).length > 0 && <span className="text-nexia-muted">origem: {Object.entries(l.utm).map(([k, v]) => `${k}=${v}`).join(" ")}</span>}
                   </div>
                   {l.mensagem && <p className="text-nexia-muted whitespace-pre-wrap">{l.mensagem}</p>}
+                  <Proposta lead={l} getToken={getToken} onCriada={() => { if (l.status === "novo") setItems((xs) => (xs || []).map((x) => (x.id === l.id ? { ...x, status: "conversando" } : x))); }} />
                   <div className="flex gap-2">
                     <input defaultValue={l.nota || ""} placeholder="Anotação (ex.: ligar sexta)" aria-label={`Anotação de ${l.nome}`} maxLength={1000}
                       onBlur={(e) => { if (e.target.value !== (l.nota || "")) mudar(l.id, { nota: e.target.value }); }}
