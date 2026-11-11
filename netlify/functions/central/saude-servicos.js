@@ -92,7 +92,11 @@ async function verificarServicos(deps = {}) {
 
 /** Salva o estado atual das checagens no banco D1 ou Firestore */
 async function salvarEstado(db, itens, { at = Date.now() } = {}) {
-  if (!db) return { skipped: 'sem banco' };
+  // Banco nulo ou sem o método usado na chamada: nada a gravar, mas a checagem segue válida.
+  if (!db || typeof db.execute !== 'function') {
+    console.log('[saude-servicos] salvamento ignorado: banco indisponível (D1/Firestore)');
+    return { skipped: 'sem banco' };
+  }
   const conferidoEm = new Date(at).toISOString();
   const servicos = {};
   for (const item of itens) {
@@ -150,7 +154,15 @@ function createHandler(deps = {}) {
       const db = deps.db || abrirBanco();
       let gravacao = null;
       if (db) {
-        gravacao = await salvarEstado(db, itens);
+        try {
+          gravacao = await salvarEstado(db, itens);
+        } catch (eGrav) {
+          // Falha ao gravar não derruba a resposta: as checagens já foram feitas.
+          gravacao = { ok: false, erro: String((eGrav && eGrav.message) || eGrav).slice(0, 160) };
+        }
+        console.log(`[saude-servicos] salvamento em ${COLECAO}/${DOC}: ${gravacao && gravacao.ok ? 'ok' : JSON.stringify(gravacao)}`);
+      } else {
+        console.log('[saude-servicos] salvamento ignorado: nenhum banco configurado');
       }
       return res(200, {
         ok: itens.every((i) => i.ok),
