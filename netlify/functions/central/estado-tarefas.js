@@ -73,7 +73,7 @@ function estadoTarefa(issue, agora = Date.now(), cfg = {}) {
   const workflowAlterado = arquivosAlterados.some((f) => {
     const caminho = typeof f === 'string' ? f : f.filename || f.path || '';
     return caminho.startsWith('.github/workflows/') && caminho.endsWith('.yml');
-  });
+  }) || has('workflow-alterado') || has('workflow-pendente');
 
   const prAbertoCitado = issue.pull_request_number || issue.pr_number || (issue.pull_request && issue.pull_request.number) || null;
 
@@ -135,7 +135,7 @@ function estadoTarefa(issue, agora = Date.now(), cfg = {}) {
   }
 
   // 4) Se tarefa tem rótulo precisa‑de‑voce, definir precisaVoce=true e excluir das contagens de travadas
-  const precisaVoceLabel = has('precisa-de-voce') || has('precisa_de_voce');
+  const precisaVoceLabel = has('precisa-de-voce') || has('precisa_de_voce') || has('precisa‑de‑voce');
   const precisaVoce =
     precisaVoceLabel ||
     (estado === 'travada' &&
