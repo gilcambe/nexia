@@ -50,11 +50,7 @@ export default {
       r => console.log('[jules-auto]', JSON.stringify(r)),
       e => console.error('[jules-auto]', e && e.message),
     ));
-    // Central: histórico de saúde (1 amostra por hora por rota pública, 30 dias).
-    ctx.waitUntil(saude.rodar(at).then(
-      r => console.log('[saude-historico]', JSON.stringify(r)),
-      e => console.error('[saude-historico]', e && e.message),
-    ));
+    
 
   },
 };
