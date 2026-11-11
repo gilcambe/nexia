@@ -115,7 +115,9 @@ async function executar(o) {
     }
   }
   restaurar(original, raiz);
-  return { ok: false, motivo: 'nenhuma IA fez o teste passar', tentativas, historico };
+  // Nenhuma IA respondeu (cota/limite/fora do ar): não é falha da tarefa, é espera (o vigia redispara).
+  const semCota = historico.length > 0 && historico.every(h => h.erro);
+  return { ok: false, motivo: semCota ? 'nenhuma IA respondeu (sem cota agora)' : 'nenhuma IA fez o teste passar', sem_cota: semCota, tentativas, historico };
 }
 
 module.exports = { lerContrato, executar, aplicar, montarPedido, SISTEMA, TESTE_OK };

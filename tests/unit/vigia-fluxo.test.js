@@ -21,3 +21,12 @@ test('VF2. repete só uma vez, só recente e nunca deploy/produção', () => {
   assert.equal(podeRepetir(run({ updated_at: '2026-11-11T10:00:00Z' }), AGORA), false);
   assert.equal(podeRepetir(run({ conclusion: 'cancelled' }), AGORA), false);
 });
+
+test('VF3. contrato esperando cota volta a rodar depois de 30 min (e só ele)', () => {
+  const { deveRedisparar } = require('../../scripts/vigia-fluxo');
+  const i = o => ({ state: 'open', labels: [{ name: 'contrato-aguardando-cota' }], updated_at: '2026-11-11T15:00:00Z', ...o });
+  assert.equal(deveRedisparar(i(), AGORA), true);
+  assert.equal(deveRedisparar(i({ updated_at: '2026-11-11T15:45:00Z' }), AGORA), false);
+  assert.equal(deveRedisparar(i({ labels: [{ name: 'cortex-fila' }] }), AGORA), false);
+  assert.equal(deveRedisparar(i({ state: 'closed' }), AGORA), false);
+});

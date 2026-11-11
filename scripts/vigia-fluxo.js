@@ -26,8 +26,16 @@ function podeRepetir(run, agora = Date.now()) {
   return agora - Date.parse(run.updated_at || run.created_at) < 3 * 3600e3;
 }
 
-async function gh(method, rota, { texto = false } = {}) {
-  const r = await fetch(`https://api.github.com/repos/${REPO}${rota}`, { method, headers: { Authorization: `Bearer ${TOKEN}`, Accept: 'application/vnd.github+json' } });
+/** Função pura: contrato esperando cota há 30 min ou mais volta a rodar. */
+function deveRedisparar(issue, agora = Date.now()) {
+  if (!issue || issue.pull_request || issue.state !== 'open') return false;
+  const ls = (issue.labels || []).map(l => l.name || l);
+  if (!ls.includes('contrato-aguardando-cota')) return false;
+  return agora - Date.parse(issue.updated_at) >= 30 * 60e3;
+}
+
+async function gh(method, rota, { texto = false, body } = {}) {
+  const r = await fetch(`https://api.github.com/repos/${REPO}${rota}`, { method, headers: { Authorization: `Bearer ${TOKEN}`, Accept: 'application/vnd.github+json', 'Content-Type': 'application/json' }, body: body ? JSON.stringify(body) : undefined });
   if (texto) return { status: r.status, texto: r.ok ? await r.text() : '' };
   let j = null; try { j = await r.json(); } catch { /* vazio */ }
   return { status: r.status, json: j };
@@ -52,10 +60,20 @@ async function main() {
     console.log(`${r.status === 201 ? 'repetida' : 'não repetiu (' + r.status + ')'}: ${run.name} #${run.id} (${run.head_branch})`);
     if (r.status === 201) repetidas++;
   }
-  const linha = `Vigia do fluxo: ${candidatas.length} falhas recentes; ${repetidas} repetidas por ambiente; ${codigo} de código (o teste decide, não repito).`;
+  // Contratos esperando cota das IAs: redispara (até 5 por ciclo), para o fluxo nunca parar por falta de cota.
+  const esperando = ((await gh('GET', '/issues?state=open&labels=contrato-aguardando-cota&per_page=50')).json || []).filter(i => deveRedisparar(i));
+  let redisparados = 0;
+  for (const i of esperando.slice(0, 5)) {
+    if (process.env.VIGIA_SIMULAR === '1') { console.log(`(simulação) redispararia contrato #${i.number}`); redisparados++; continue; }
+    await gh('DELETE', `/issues/${i.number}/labels/contrato-aguardando-cota`);
+    const d = await gh('POST', '/actions/workflows/cortex-contrato.yml/dispatches', { body: { ref: 'develop', inputs: { numero: String(i.number) } } });
+    console.log(`contrato #${i.number}: ${d.status === 204 ? 'redisparado' : 'não redisparou (' + d.status + ')'}`);
+    if (d.status === 204) redisparados++;
+  }
+  const linha = `Vigia do fluxo: ${candidatas.length} falhas recentes; ${repetidas} repetidas por ambiente; ${codigo} de código (o teste decide, não repito); ${redisparados} contrato(s) redisparado(s) após espera de cota.`;
   console.log(linha);
   if (process.env.GITHUB_STEP_SUMMARY) require('fs').appendFileSync(process.env.GITHUB_STEP_SUMMARY, `### ${linha}\n`);
 }
 
-module.exports = { eAmbiente, podeRepetir };
+module.exports = { eAmbiente, podeRepetir, deveRedisparar };
 if (require.main === module) main().catch(e => { console.error(e); process.exit(1); });
