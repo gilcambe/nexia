@@ -6,6 +6,8 @@
 // A resposta de saude traz o horario atual no formato ISO 8601 (new Date().toISOString()).
 function responderSaude(req, res) {
   // Horario no formato ISO 8601 (ex.: 2026-01-31T12:34:56.789Z).
+  // Sem cache: o horario tem que ser o do pedido, nao um valor guardado por um proxy.
+  if (typeof res.set === 'function') res.set('Cache-Control', 'no-store');
   return res.status(200).json({ ok: true, hora: new Date().toISOString() });
 }
 
