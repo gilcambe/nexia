@@ -2,7 +2,7 @@
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { handler, limparConteudoViajante } = require('../../netlify/functions/viajante-pro');
+const { handler, limparConteudoViajante, hashSenha } = require('../../netlify/functions/viajante-pro');
 const { VIAJANTE_PRO } = require('../../clientes/viajantepro');
 const { API_ROUTES, TENANT_PAGES } = require('../../lib/routes');
 
@@ -75,7 +75,7 @@ test('Viajante Pro Backend — Login e Sessão Admin', async () => {
   // Mock do Firestore para login e sessões
   const docData = {
     nome: 'Viajante Pro',
-    senha_hash: '0752321472aaccfe5e23961d97417d85e6b25587c15a30b6f71e8a2ac650a35c', // ADMIN01
+    senha_hash: await hashSenha('TESTE01', 'd3451e7f34a8549290d4cda5b069c80b'), // senha fictícia do teste
     senha_salt: 'd3451e7f34a8549290d4cda5b069c80b',
   };
 
@@ -100,11 +100,11 @@ test('Viajante Pro Backend — Login e Sessão Admin', async () => {
   }, {});
   assert.equal(resErr.statusCode, 401);
 
-  // Login com senha correta (ADMIN01)
+  // Login com senha correta (fictícia do teste)
   const resOk = await handler({
     httpMethod: 'POST',
     queryStringParameters: { site: 'viajantepro' },
-    body: JSON.stringify({ acao: 'entrar', senha: 'ADMIN01' }),
+    body: JSON.stringify({ acao: 'entrar', senha: 'TESTE01' }),
   }, {});
   assert.equal(resOk.statusCode, 200);
 

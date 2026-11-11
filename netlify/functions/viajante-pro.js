@@ -26,6 +26,9 @@ const subtle = () => globalThis.crypto.subtle;
 const hex = buf => [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, '0')).join('');
 const aleatorio = n => hex(globalThis.crypto.getRandomValues(new Uint8Array(n)));
 
+// Hashes de senhas iniciais que vazaram em comentário público (11/11/2026): nunca mais aceitas.
+const SENHAS_VAZADAS = new Set(["0752321472aaccfe5e23961d97417d85e6b25587c15a30b6f71e8a2ac650a35c","692ff6b63c04bd3227af63f93b72136ec186fe14f7938d5cbd157b85299318b9","3fce054c8c8429bbe1597656e9d715bbdfa0acb7fb2cb5f4291d2218e5cc3090"]);
+
 async function hashSenha(senha, salt) {
   const key = await subtle().importKey('raw', new TextEncoder().encode(senha), 'PBKDF2', false, ['deriveBits']);
   const bits = await subtle().deriveBits({ name: 'PBKDF2', hash: 'SHA-256', salt: new TextEncoder().encode(salt), iterations: PBKDF2_ITER }, key, 256);
@@ -280,8 +283,8 @@ exports.handler = async function (event, context) {
   if (!cDoc.exists) {
     const salt = aleatorio(16);
     const senhaInicial = cadastro.senhas_iniciais && cadastro.senhas_iniciais[0];
-    const sHash = senhaInicial ? senhaInicial.hash : await hashSenha('ADMIN01', salt);
-    const sSalt = senhaInicial ? senhaInicial.salt : salt;
+    const sHash = senhaInicial ? senhaInicial.hash : null; // sem senha padrão no código (11/11/2026)
+    const sSalt = senhaInicial ? senhaInicial.salt : null;
     await contaRef.set({
       nome: cadastro.nome,
       versao: cadastro.versao || 1,
@@ -593,6 +596,9 @@ exports.handler = async function (event, context) {
   if (acao === 'entrar') {
     const senha = String(body.senha || '');
     if (!senha) return res(400, { error: 'Senha é obrigatória.' });
+    if (!conta.senha_hash || SENHAS_VAZADAS.has(conta.senha_hash)) {
+      return res(403, { error: 'Esta senha foi desativada por segurança. Peça ao suporte KERNEX uma nova senha.', senha_desativada: true });
+    }
 
     const hashCalculado = await hashSenha(senha, conta.senha_salt);
     let valido = iguais(hashCalculado, conta.senha_hash);
@@ -931,4 +937,6 @@ exports.handler = async function (event, context) {
 };
 
 exports.limparConteudoViajante = limparConteudoViajante;
+exports.hashSenha = hashSenha;
+exports.SENHAS_VAZADAS = SENHAS_VAZADAS;
 exports.__email = { enviarEmailBrevo, enviarCodigoBrevo, __resetRemetenteCache };

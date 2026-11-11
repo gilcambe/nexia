@@ -5,12 +5,15 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const fake = require('../helpers/agenda-fake-db.js');
 globalThis.__NEXIA_FIRESTORE_MOCK__ = fake.fakeDb ? fake.fakeDb() : fake();
-const { handler } = require('../../netlify/functions/viajante-pro');
+const { handler, hashSenha } = require('../../netlify/functions/viajante-pro');
+const { VIAJANTE_PRO } = require('../../clientes/viajantepro');
+const senhaFicticia = (async () => { VIAJANTE_PRO.viajantepro.senhas_iniciais = [{ salt: 'ee'.repeat(16), hash: await hashSenha('TESTE01', 'ee'.repeat(16)) }]; })();
 
 const chamar = (body, metodo = 'POST', q = {}) => handler({ httpMethod: metodo, headers: {}, body: body ? JSON.stringify(body) : '', queryStringParameters: { site: 'viajantepro', ...q } }, {});
 
 test('salva destinos com foto e vídeo e o site lê de volta', async () => {
-  const { token } = JSON.parse((await chamar({ acao: 'entrar', senha: 'ADMIN01' })).body);
+  await senhaFicticia;
+  const { token } = JSON.parse((await chamar({ acao: 'entrar', senha: 'TESTE01' })).body);
   const png = 'data:image/png;base64,' + Buffer.from('foto-teste').toString('base64');
   const foto = JSON.parse((await chamar({ acao: 'foto-enviar', token, dados: png })).body);
   assert.ok(foto.url.includes('foto='));

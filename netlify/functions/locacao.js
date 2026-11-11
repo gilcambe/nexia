@@ -978,7 +978,7 @@ function createHandler(deps = {}) {
         return res(200, { ok: true, token: await novaSessao() });
       }
 
-      // Senhas iniciais (ex.: ADMIN01 e AMANDA01) valem até alguém trocar a senha em "Sua Conta".
+      // Senhas iniciais (cadastradas só como hash em clientes/locacoes.js) valem até alguém trocar a senha em "Sua Conta".
       const confereInicial = async txt => {
         if (dados.senha_personalizada === true || !Array.isArray(cadastro.senhas_iniciais) || typeof txt !== 'string') return false;
         const norm = txt.trim().toUpperCase().slice(0, 100);

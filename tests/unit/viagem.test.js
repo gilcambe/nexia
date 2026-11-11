@@ -250,9 +250,11 @@ test('VIAGEM5. Link do app, conversa sem duplicar, site e senhas iniciais', asyn
   const handler = createHandler({ getDb: () => db });
   const post = async (b) => { const r = await handler({ httpMethod: 'POST', body: JSON.stringify({ site: 'viajantepro', ...b }) }); return { status: r.statusCode, ...JSON.parse(r.body) }; };
 
-  // senha inicial do cadastro (clientes/viagens.js)
+  // senha inicial FICTÍCIA só neste teste (as reais foram removidas do cadastro em 11/11/2026)
+  const { VIAGENS } = require('../../clientes/viagens.js');
+  VIAGENS.viajantepro.senhas_iniciais = [{ salt: 'dd'.repeat(16), hash: await hashSenha('TESTE01', 'dd'.repeat(16)) }];
   assert.strictEqual((await post({ acao: 'login', senha: 'errada' })).status, 401);
-  const { token } = await post({ acao: 'login', senha: 'VIAJANTE01' });
+  const { token } = await post({ acao: 'login', senha: 'TESTE01' });
   assert.ok(token);
 
   const salvo = await post({ acao: 'viagem_salvar', token, viagem: {
