@@ -50,6 +50,11 @@ export default {
       r => console.log('[jules-auto]', JSON.stringify(r)),
       e => console.error('[jules-auto]', e && e.message),
     ));
+    // Saúde serviços: checagem a cada 5 min via cron existente.
+    ctx.waitUntil(saudeServicos.executarCron(process.env, (...args) => fetch(...args)).then(
+      r => console.log('[saude-servicos-cron]', JSON.stringify(r)),
+      e => console.error('[saude-servicos-cron]', e && e.message),
+    ));
     
 
   },
