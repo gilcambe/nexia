@@ -43,7 +43,8 @@ function createHandler(deps = {}) {
     if (!auth || !auth.ok) {
       return res(401, { error: 'Autenticação necessária.' });
     }
-    if (auth.role !== 'master') {
+    const role = String(auth.role || '').trim().toLowerCase();
+    if (role !== 'master') {
       return res(403, { error: 'Acesso restrito a master.' });
     }
 
