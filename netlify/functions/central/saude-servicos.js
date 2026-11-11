@@ -122,15 +122,17 @@ async function obterEstado(db) {
 /** Cria o handler Netlify Functions / Worker */
 function createHandler(deps = {}) {
   const getMw = deps.getMw || (() => require('../middleware'));
-  const     abrirBanco = deps.abrirBanco || (() => {
-      try {
-        const mod = require('./saude-historico');
-        if (!mod || typeof mod.abrirBanco !== 'function') return null;
-        return mod.abrirBanco(deps.env || process.env);
-      } catch {
-        return null;
-      }
-    });
+  const abrirBanco = deps.abrirBanco || (() => {
+    try {
+      // eslint-disable-next-line global-require
+      const mod = require('./saude-historico');
+      if (!mod || typeof mod.abrirBanco !== 'function') return null;
+      const db = mod.abrirBanco();
+      return db && typeof db.collection === 'function' ? db : null;
+    } catch {
+      return null;
+    }
+  });
 
   return async (event = {}) => {
     const method = String(event.httpMethod || 'GET').toUpperCase();
