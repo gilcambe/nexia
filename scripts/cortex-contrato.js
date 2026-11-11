@@ -41,6 +41,12 @@ async function usadosHoje() {
 async function degrauClaudePro(c, issue) {
   const regra = regraClaude(process.env, await usadosHoje());
   if (!regra.usar) { console.log(`  claude-pro: ${regra.motivo}`); return null; }
+  // 1ª prova real (11/11): "Not logged in". Chave colada com espaço/quebra de linha ou texto a mais é comum:
+  // limpa e mostra só o formato (nunca a chave).
+  const bruta = String(process.env.CLAUDE_CODE_OAUTH_TOKEN || '');
+  const chave = bruta.trim().split(/\s+/).find(p => /^sk-ant-oat/.test(p)) || bruta.trim();
+  process.env.CLAUDE_CODE_OAUTH_TOKEN = chave;
+  console.log(`  claude-pro: chave com ${chave.length} caracteres; formato ${/^sk-ant-oat\d{2}-/.test(chave) ? 'ok (sk-ant-oat..)' : 'INESPERADO (gere de novo com: claude setup-token)'}${bruta !== chave ? '; havia espaço ou texto a mais (limpei)' : ''}`);
   const fs = require('node:fs');
   const testes = Object.fromEntries(c.testes.map(t => [t, fs.existsSync(t) ? fs.readFileSync(t, 'utf8') : null]));
   const prompt = [
