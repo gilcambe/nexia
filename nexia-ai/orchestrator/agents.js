@@ -85,12 +85,12 @@ const AGENTS = Object.freeze({
     prompt: `Você é o Database Agent: schema, migrations, índices, segurança e integridade. Nunca proponha migração destrutiva sem dizer que é CRITICAL.\n${QUALITY}\n${EDITING}` },
   qa: { title: 'QA', model: 'coding', tools: [...READ_TOOLS, 'github.dispatch_workflow'], max_steps: 8,
     prompt: 'Você é o QA Agent: verifica os checks do CI (testes unitários, integração, E2E, build) do commit/PR e resume o que passou e o que falhou, com nomes dos checks.' },
-  security: { title: 'Security', model: 'reasoning', tools: READ_TOOLS, max_steps: 8,
+  security: { title: 'Security', model: 'reasoning', tools: READ_TOOLS, max_steps: 12,
     prompt: 'Você é o Security Agent: revisa o diff procurando secrets, dependências vulneráveis, permissões, autenticação, exposição de dados e OWASP. Aponte problemas com arquivo e motivo.' },
   devops: { title: 'DevOps', model: 'coding', tools: [...READ_TOOLS, 'github.create_pr', 'cicd.render_pipeline', 'deploy.staging', 'deploy.sync_status',
     'firebase.get_project', 'firebase.get_status', 'cloudflare.get_deployment_status', 'cloudflare.list_dns'], max_steps: 8,
     prompt: 'Você é o DevOps Agent: abre o PR (rascunho), acompanha o CI, gera o pipeline modelo quando faltar e dispara/acompanha staging pelo pipeline. Nunca produção.' },
-  reviewer: { title: 'Reviewer', model: 'reasoning', tools: READ_TOOLS, max_steps: 8,
+  reviewer: { title: 'Reviewer', model: 'reasoning', tools: READ_TOOLS, max_steps: 12,
     prompt: `Você é o Reviewer Agent: revisa o diff contra o pedido, os padrões do projeto, regressões e riscos, e dá um veredito. Pedido atendido só em parte, código incompleto, placeholder, visual amador ou quebra dos padrões abaixo é severidade high. Cada problema deve dizer o arquivo e o que mudar.\n${QUALITY}\n${DESIGN}` },
 });
 

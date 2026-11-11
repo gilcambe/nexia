@@ -211,6 +211,8 @@ const MAX_NUDGES = 2;
 const FAKE_CALL = /\[ferramentas pedidas:|\(o NEXIA executou:/i;
 const FAKE_CALL_HELP = 'Você escreveu em texto que ia usar uma ferramenta, mas não chamou nenhuma. Texto não executa nada. '
   + 'Chame a ferramenta de verdade (tool call) agora, ou dê a resposta final sem esse marcador.';
+// Reviewer/Security estouravam MAX_STEPS lendo arquivos (11/11: 10 de 26 falhas): perto do fim, pede o veredito já.
+const LAST_STEPS_VERDICT = 'ATENÇÃO: restam 2 passos. Pare de ler arquivos e chame agora report_findings com verdict e findings sobre o que já viu.';
 const LAST_STEPS = branch => `ATENÇÃO: restam 2 passos. Pare de ler arquivos e grave agora o que já tem com github.edit_files (ou github.commit_files) na branch ${branch}; uma mudança parcial gravada vale mais que nenhuma.`;
 function nudgeSave(branch, n, cut) {
   const b = branch || 'nexia/...';
@@ -478,6 +480,7 @@ async function runAgent(o) {
     // Perto do limite de passos sem nada gravado (MAX_STEPS/NO_CHANGES): pede para gravar já o que tem.
     const maxSteps = agent.max_steps || 8;
     if (canWrite && branch && !wrote && maxSteps >= 4 && turn === maxSteps - 3) r.results.push({ tool: 'nexia.aviso', ok: true, note: LAST_STEPS(branch) });
+    if (REPORTING_AGENTS.has(o.agentId) && maxSteps >= 4 && turn === maxSteps - 3) r.results.push({ tool: 'nexia.aviso', ok: true, note: LAST_STEPS_VERDICT });
     pushResults(viaText ? `${String(out.text || '').slice(0, 1500)}\n[o NEXIA aplicou os blocos de edição do texto]` : out.text, calls.map(c => fromModelName(c.name)), r.results);
   }
   // Já gravou na branch e só faltou fechar: segue para CI, revisão e segurança (os gates decidem), em vez de jogar o trabalho fora.
