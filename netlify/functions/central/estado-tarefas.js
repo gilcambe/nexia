@@ -56,9 +56,10 @@ function estadoTarefa(issue, agora = Date.now(), cfg = {}) {
   ) {
     ia = 'Jules';
   } else if (reservaVoltaLabel) {
-    // reserva-volta-1, reserva-volta-2, reserva-volta-3
     const numVolta = reservaVoltaLabel.replace('reserva-volta-', '');
-    ia = `Reserva Volta ${numVolta}`;
+    const provedoresReserva = ['Groq', 'Gemini', 'Mistral'];
+    const idx = (parseInt(numVolta, 10) - 1) % provedoresReserva.length;
+    ia = `Reserva Volta ${numVolta} (${provedoresReserva[idx]})`;
   } else if (
     has('reserva-tentou') ||
     has('reserva-volta') ||
@@ -73,7 +74,7 @@ function estadoTarefa(issue, agora = Date.now(), cfg = {}) {
   const workflowAlterado = arquivosAlterados.some((f) => {
     const caminho = typeof f === 'string' ? f : f.filename || f.path || '';
     return caminho.startsWith('.github/workflows/') && caminho.endsWith('.yml');
-  }) || has('workflow-alterado') || has('workflow-pendente');
+  });
 
   const prAbertoCitado = issue.pull_request_number || issue.pr_number || (issue.pull_request && issue.pull_request.number) || null;
 
@@ -135,12 +136,11 @@ function estadoTarefa(issue, agora = Date.now(), cfg = {}) {
   }
 
   // 4) Se tarefa tem rótulo precisa‑de‑voce, definir precisaVoce=true e excluir das contagens de travadas
-  const precisaVoceLabel = has('precisa-de-voce') || has('precisa_de_voce') || has('precisa‑de‑voce');
+  const precisaVoceLabel = has('precisa-de-voce') || has('precisa_de_voce') || has('precisa‑de‑voce') || has('precisa-de-voce'.normalize('NFC'));
   const precisaVoce =
     precisaVoceLabel ||
     (estado === 'travada' &&
-      (t >= maxTentativas ||
-        has('vez-do-dono') ||
+      (has('vez-do-dono') ||
         has('esperando-dono') ||
         has('so-humano')));
 
