@@ -62,6 +62,32 @@ const LOCACOES = {
       mensagem_pedido: 'Pedido de teste recebido com sucesso!',
     },
   },
+  // KERNEX Eventos — conta de DEMONSTRAÇÃO do modelo (dados fictícios; vendas). Código de primeiro acesso: só com o dono (aqui só o hash).
+  'demo-eventos': {
+    nome: 'KERNEX Eventos (demonstração)',
+    codigo_salt: '42bd65e145e76643122f0e9e99861b30',
+    codigo_hash: '645e7b183ba64693dbfb5ff5fa575669972322a1c44d279c06a51db134276c5b',
+    versao: 1,
+    config: {
+      nome: 'Espaço Exemplo — Eventos e Lazer',
+      whatsapp: '5511944037259', // WhatsApp da KERNEX: quem testar a demonstração fala com a KERNEX
+      instagram: '',
+      unidades: [
+        { id: 'unidade-1', nome: 'Unidade 1', endereco: 'Endereço de exemplo (demonstração)' },
+        { id: 'unidade-2', nome: 'Unidade 2', endereco: 'Endereço de exemplo (demonstração)' },
+      ],
+      extras: [
+        { id: 'decoracao', nome: 'Decoração', descricao: 'Decoração do espaço para a sua festa', valor: 0, ativo: true },
+      ],
+      sinal: { tipo: 'percentual', valor: 30 },
+      pix: { chave: '', titular: '' },
+      prazo_horas: 48,
+      antecedencia_dias: 0,
+      dias_a_frente: 365,
+      aviso: 'DEMONSTRAÇÃO KERNEX — este espaço é fictício; os pedidos não são reservas reais.',
+      mensagem_pedido: 'Pedido de demonstração recebido! Este espaço é fictício. Fale com a KERNEX para ter o seu.',
+    },
+  },
 };
 
 module.exports = { LOCACOES };
