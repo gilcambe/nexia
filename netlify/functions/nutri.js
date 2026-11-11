@@ -294,9 +294,7 @@ function painelDe(slug) {
 function createHandler(deps = {}) {
   const getDb = deps.getDb || (() => require('./firebase-init').db);
   const getMw = deps.getMw || (() => require('./middleware'));
-  const getCadastro = deps.getCadastro || (slug => {
-    try { return require('../../clientes/nutris.js').NUTRIS[slug]; } catch { return undefined; }
-  });
+  const getCadastro = deps.getCadastro || (slug => require('../../lib/cadastro-banco.js').buscarCadastro('nutri', slug, () => require('../../clientes/nutris.js').NUTRIS, getDb));
   const getLista = deps.getLista || (() => {
     try { return require('../../clientes/nutris.js').NUTRIS; } catch { return {}; }
   });
@@ -339,7 +337,7 @@ function createHandler(deps = {}) {
 
     const slug = str(method === 'GET' ? q.site : body.site, 40).toLowerCase();
     if (!SLUG_RE.test(slug)) return res(400, { error: 'Conta de nutricionista inválida.' });
-    const cadastro = getCadastro(slug);
+    const cadastro = await getCadastro(slug);
     if (!cadastro) return res(404, { error: 'Esta conta de nutricionista não existe.' });
     const db = getDb();
     if (!db) return res(503, { error: 'Serviço indisponível. Tente de novo em instantes.' });

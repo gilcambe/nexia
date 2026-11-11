@@ -79,9 +79,7 @@ function viagemPublica(v) {
 function createHandler(deps = {}) {
   const getDb = deps.getDb || (() => require('./firebase-init').db);
   const getMw = deps.getMw || (() => require('./middleware'));
-  const getCadastro = deps.getCadastro || (slug => {
-    try { return require('../../clientes/viagens.js').VIAGENS[slug]; } catch { return undefined; }
-  });
+  const getCadastro = deps.getCadastro || (slug => require('../../lib/cadastro-banco.js').buscarCadastro('viagem', slug, () => require('../../clientes/viagens.js').VIAGENS, getDb));
   const now = deps.now || (() => Date.now());
 
   return async (event) => {
@@ -109,7 +107,7 @@ function createHandler(deps = {}) {
     const slug = str(method === 'GET' ? q.site : body.site, 40).toLowerCase();
     if (!SLUG_RE.test(slug)) return res(400, { error: 'Conta de viagem inválida.' });
 
-    const cadastro = getCadastro(slug);
+    const cadastro = await getCadastro(slug);
     const db = getDb();
     if (!db) return res(503, { error: 'Serviço indisponível.' });
 

@@ -559,9 +559,7 @@ function painelDe(slug, cadastro = {}) {
 function createHandler(deps = {}) {
   const getDb = deps.getDb || (() => require('./firebase-init').db);
   const getMw = deps.getMw || (() => require('./middleware'));
-  const getCadastro = deps.getCadastro || (slug => {
-    try { return require('../../clientes/locacoes.js').LOCACOES[slug]; } catch { return undefined; }
-  });
+  const getCadastro = deps.getCadastro || (slug => require('../../lib/cadastro-banco.js').buscarCadastro('locacao', slug, () => require('../../clientes/locacoes.js').LOCACOES, getDb));
   const getLista = deps.getLista || (() => {
     try { return require('../../clientes/locacoes.js').LOCACOES; } catch { return {}; }
   });
@@ -604,7 +602,7 @@ function createHandler(deps = {}) {
 
     const slug = str(method === 'GET' ? q.site : body.site, 40).toLowerCase();
     if (!SLUG_RE.test(slug)) return res(400, { error: 'Conta de locação inválida.' });
-    const cadastro = getCadastro(slug);
+    const cadastro = await getCadastro(slug);
     if (!cadastro) return res(404, { error: 'Esta conta de locação não existe.' });
     const db = getDb();
     if (!db) return res(503, { error: 'Serviço indisponível. Tente de novo em instantes.' });
