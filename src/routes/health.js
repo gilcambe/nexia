@@ -1,15 +1,12 @@
 'use strict';
-// health route handler
 
 module.exports = async function health(req, res) {
-  const url = new URL(req.url, `http://${req.headers.host}`);
+  const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
   const acao = url.searchParams.get('acao');
-  const path = url.pathname;
 
   if (acao === 'saude') {
-    return res.json({ ok: true, hora: new Date().toISOString() });
+    return res.status(200).json({ ok: true, hora: new Date().toISOString() });
   }
 
-  return res.status(404).json({ ok: false, erro: 'rota não encontrada' });
+  return res.status(400).json({ ok: false, erro: 'Parâmetro acao=saude obrigatório' });
 };
-// health route
