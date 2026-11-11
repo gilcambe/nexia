@@ -134,7 +134,7 @@ function createHandler(deps = {}) {
       };
     }
 
-    // Endpoints /prumo-admin/export e /prumo-admin/delete originais
+    // Endpoints /prumo-admin/export e /prumo-admin/delete
     if (path.endsWith('/prumo-admin/export') || path.includes('/prumo-admin/export') || path.includes('/export') || acao === 'export_lgpd' || acao === 'export') {
       const exportResult = await exportData();
       const restoreCheck = await restoreTest(exportResult);
@@ -150,16 +150,6 @@ function createHandler(deps = {}) {
         statusCode: 200,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ lgpdAction: 'delete', success: true, message: 'Dados removidos com sucesso.' })
-      };
-    }
-
-    if (path.endsWith('/prumo-admin/export') || path.includes('/prumo-admin/export') || path.includes('/export') || acao === 'export_lgpd' || acao === 'export') {
-      const exportResult = await exportData();
-      const restoreCheck = await restoreTest(exportResult);
-      return {
-        statusCode: 200,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ lgpdAction: 'export', success: true, message: 'Dados exportados com sucesso.', data: exportResult, restoreTest: restoreCheck })
       };
     }
 
