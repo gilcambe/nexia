@@ -1,0 +1,31 @@
+# Vigia do fluxo (11/11/2026): repete sozinho, UMA vez, execução que falhou por ambiente (rede, espelho, instalação).
+# Falha de código não é repetida. Publicação em produção nunca é repetida.
+name: Vigia do fluxo
+
+on:
+  schedule:
+    - cron: '*/20 * * * *'
+  workflow_dispatch:
+
+permissions:
+  actions: write
+  contents: read
+
+concurrency:
+  group: vigia-fluxo
+  cancel-in-progress: false
+
+jobs:
+  vigia:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          sparse-checkout: scripts
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 20
+      - run: node scripts/vigia-fluxo.js
