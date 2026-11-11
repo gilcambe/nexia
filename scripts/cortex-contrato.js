@@ -53,14 +53,35 @@ function modelos() {
   const issue = (await gh('GET', `/issues/${N}`)).json;
   if (!issue || issue.pull_request) { console.error('issue não encontrada'); process.exit(2); }
   if (!CONFIAVEIS.has(issue.author_association)) { console.log(`#${N}: autor sem permissão (${issue.author_association}); ignorado`); return; }
-  const c = lerContrato(`${issue.title}\n\n${issue.body || ''}`);
-  if (!c.ok) { await comentar(`Contrato inválido: ${c.erros.join('; ')}.\nModelo:\n\`\`\`\nO que fazer...\nArquivos: \`caminho/arquivo.js\`\nTeste: \`node --test tests/unit/x.test.js\`\n\`\`\``); await rotular('contrato-invalido'); return; }
+  const texto = `${issue.title}\n\n${issue.body || ''}`;
+  let c = lerContrato(texto);
   const { router, lista } = modelos();
+  // Pedido SEM contrato (nenhuma linha "Arquivos:"): a IA gera o teste e os portões conferem (gerador.js).
+  // Se não der para virar contrato, a tarefa VOLTA para a fila no caminho antigo: o fluxo nunca para.
+  let gerado = null;
+  const voltarParaFila = async (motivo, rotulo) => {
+    await comentar(`↩️ ${motivo}\nA tarefa volta para a fila no caminho antigo.`);
+    await rotular(rotulo); await rotular('cortex-fila');
+    await gh('DELETE', `/issues/${N}/labels/cortex-contrato`);
+  };
+  if (!c.ok && !/^\s*(?:[-*]\s*)?\**Arquivos\**\s*:/im.test(texto) && process.env.CONTRATO_GERAR !== '0') {
+    const { gerar } = require('../nexia-ai/contrato/gerador');
+    const checarSintaxe = f => { try { execFileSync(process.execPath, ['--check', f], { stdio: 'pipe' }); return true; } catch { return false; } };
+    gerado = await gerar({ pedido: texto, raiz: process.cwd(), router, modelos: lista, rodarTeste, checarSintaxe, log: s => console.log('  gerador: ' + s) });
+    if (!gerado.ok) return voltarParaFila(gerado.nao_testavel ? `Não dá para provar com teste automático (${gerado.motivo}).` : `Não consegui gerar um teste válido: ${gerado.motivo}.`, 'contrato-nao-testavel');
+    c = gerado.contrato;
+    await comentar(`📝 Contrato gerado por ${gerado.modelo}: arquivos ${c.arquivos.map(a => `\`${a}\``).join(', ')}; teste \`${c.teste}\` (falha hoje, passou nos portões).`);
+  }
+  if (!c.ok) { await comentar(`Contrato inválido: ${c.erros.join('; ')}.\nModelo:\n\`\`\`\nO que fazer...\nArquivos: \`caminho/arquivo.js\`\nTeste: \`node --test tests/unit/x.test.js\`\n\`\`\``); await rotular('contrato-invalido'); return; }
   console.log(`#${N}: ${c.arquivos.join(', ')} | ${c.teste} | degraus: ${lista.map(d => `${d.provider}/${d.model}`).join(' > ')}`);
   const t0 = Date.now();
   const r = await executar({ contrato: c, raiz: process.cwd(), router, modelos: lista, rodarTeste, porModelo: 2, log: s => console.log('  ' + s) });
   const seg = Math.round((Date.now() - t0) / 1000);
   const hist = r.historico.map((h, i) => `${i + 1}. ${h.modelo}: ${h.erro ? 'sem resposta' : h.aplicados.length ? `aplicou ${h.aplicados.join(', ')}; teste ${h.teste ? 'passou' : 'falhou'}` : 'nada aplicado'}${h.recusas && h.recusas.length ? ` (recusas: ${h.recusas.slice(0, 2).join('; ')})` : ''}`).join('\n');
+  if (!r.ok && gerado) {
+    try { require('node:fs').unlinkSync(gerado.testeArquivo); } catch { /* já saiu */ }
+    return voltarParaFila(`Nenhuma IA fez o teste gerado passar (${r.tentativas} tentativa(s) em ${seg} s).\n${hist}`, 'contrato-falhou');
+  }
   if (!r.ok) {
     await comentar(`❌ Não entreguei: ${r.motivo}. ${r.tentativas} tentativa(s) em ${seg} s.\n${hist}`);
     await rotular('contrato-falhou');
@@ -70,7 +91,7 @@ function modelos() {
   const ramo = `cortex/contrato-${N}-${Date.now().toString(36)}`;
   git('config', 'user.name', 'Cortex KERNEX'); git('config', 'user.email', 'cortex@kernex.com.br');
   git('checkout', '-b', ramo);
-  git('add', '--', ...r.arquivos);
+  git('add', '--', ...r.arquivos, ...(gerado ? [gerado.testeArquivo] : []));   // teste gerado fica no CI para sempre
   git('commit', '-m', `Contrato #${N}: ${String(issue.title).slice(0, 60)}\n\nTeste de aceitação: ${c.teste}\nIA: ${r.modelo} (${r.tentativas} tentativa(s))`);
   git('push', 'origin', ramo);
   const dadosPr = { title: `Contrato #${N}: ${String(issue.title).slice(0, 70)}`, head: ramo, base: 'develop',
