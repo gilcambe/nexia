@@ -13,14 +13,19 @@ function responderErro(req, res) {
 }
 
 module.exports = async function health(req, res) {
-  const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
-  const acao = url.searchParams.get('acao');
+  try {
+    const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
+    const acao = url.searchParams.get('acao');
 
-  if (acao === 'saude') {
-    return responderSaude(req, res);
+    if (acao === 'saude') {
+      return responderSaude(req, res);
+    }
+
+    return responderErro(req, res);
+  } catch (err) {
+    console.error('[health] erro ao responder /api/prumo:', err && err.message ? err.message : err);
+    return res.status(500).json({ ok: false, erro: 'Erro interno ao verificar a saúde.' });
   }
-
-  return responderErro(req, res);
 };
 
 module.exports.responderSaude = responderSaude;
