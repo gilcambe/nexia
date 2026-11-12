@@ -54,7 +54,3 @@ module.exports = {
   registrarPassagem,
   listarPassagens,
 };
-module.exports.LICOES_EXTRA = LICOES_EXTRA;
-module.exports.TEXTO = TEXTO;
-module.exports.registrarPassagem = registrarPassagem;
-module.exports.listarPassagens = listarPassagens;
