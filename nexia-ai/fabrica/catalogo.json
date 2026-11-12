@@ -1,56 +1,827 @@
 {
-  "versao": 1,
+  "versao": 3,
   "atualizado": "2026-11-12",
   "nota": "Biblioteca KERNEX: memória de tudo que já foi construído. Antes de criar, o Cortex consulta aqui; só o que não existe vira tarefa. Nunca guardar dado pessoal de cliente (só o que o módulo faz e onde está).",
   "modulos": [
-    { "id": "site", "nome": "Site com SEO", "faz": "página principal com textos, fotos, contato, SEO e privacidade", "apelidos": ["landing", "pagina", "site institucional", "seo"], "nichos": ["*"], "nivel": 1, "pronto": true, "origem": "demo-eventos, demo-viagens, adrianoblumer, studiolima", "onde": "kernex-clientes/clientes/*/site/index.html" },
-    { "id": "whatsapp", "nome": "Botão e contato por WhatsApp", "faz": "botão fixo e links de conversa com mensagem pronta", "apelidos": ["contato", "botao whatsapp", "zap"], "nichos": ["*"], "nivel": 1, "pronto": true, "origem": "demo-viagens, studiolima", "onde": "kernex-clientes/clientes/*/site" },
-    { "id": "privacidade", "nome": "Páginas de privacidade e LGPD", "faz": "política de privacidade, termos e cookies", "apelidos": ["lgpd", "termos", "politica de privacidade", "cookies"], "nichos": ["*"], "nivel": 1, "pronto": true, "origem": "studiolima, bezsan, adrianoblumer, demo-eventos", "onde": "kernex-clientes/clientes/*/site/privacidade.html" },
-    { "id": "galeria", "nome": "Galeria de fotos", "faz": "fotos em grade com ampliação", "apelidos": ["fotos", "portfolio", "portfólio"], "nichos": ["eventos", "estetica", "*"], "nivel": 1, "pronto": true, "origem": "demo-eventos", "onde": "kernex-clientes/clientes/demo-eventos/site" },
-    { "id": "agenda", "nome": "Agenda online com painel", "faz": "cliente escolhe dia e horário livre; a dona confirma no painel com senha", "apelidos": ["marcar horario", "agendamento", "horarios", "consultas", "agendar"], "nichos": ["saude", "estetica", "beleza", "servicos"], "nivel": 1, "pronto": true, "origem": "studiolima, bezsan", "onde": "kernex-clientes/clientes/studiolima/site/agenda + api.kernex.com.br/api/agenda" },
-    { "id": "conteudo-editavel", "nome": "Textos e fotos editáveis pelo dono", "faz": "o dono troca textos, preços e fotos do site pelo painel, sem programador", "apelidos": ["editar site", "cms", "painel de conteudo", "precos editaveis"], "nichos": ["*"], "nivel": 1, "pronto": true, "origem": "studiolima", "onde": "kernex-clientes/clientes/studiolima/site/index.html (CONTEÚDO EDITÁVEL)" },
-    { "id": "painel", "nome": "Painel do dono com senha", "faz": "área com senha para o dono ver pedidos, horários e contatos", "apelidos": ["painel administrativo", "admin", "area do dono"], "nichos": ["*"], "nivel": 1, "pronto": true, "origem": "studiolima, adrianoblumer, demo-viagens", "onde": "kernex-clientes/clientes/*/site/painel" },
-    { "id": "reservas", "nome": "Reservas e locação com calendário", "faz": "reserva de data (espaço, item, festa) com sinal e confirmação", "apelidos": ["locacao", "locação", "reserva de data", "aluguel"], "nichos": ["eventos", "festas", "locacao"], "nivel": 1, "pronto": true, "origem": "demo-eventos", "onde": "kernex-clientes/clientes/demo-eventos/site/agenda" },
-    { "id": "pacotes", "nome": "Catálogo de pacotes de viagem", "faz": "pacotes com fotos, datas, preço e pedido de orçamento", "apelidos": ["pacotes de viagem", "roteiros", "destinos", "catalogo"], "nichos": ["viagens"], "nivel": 1, "pronto": true, "origem": "demo-viagens", "onde": "kernex-clientes/clientes/demo-viagens/site" },
-    { "id": "area-cliente", "nome": "Área do cliente", "faz": "o cliente vê os dados da compra/viagem dele com código", "apelidos": ["area do viajante", "area do cliente", "minha conta"], "nichos": ["viagens", "*"], "nivel": 1, "pronto": true, "origem": "demo-viagens", "onde": "kernex-clientes/clientes/demo-viagens/site/app" },
-    { "id": "leiloes", "nome": "Análise de leilões (interno)", "faz": "lista e analisa leilões de imóveis para o dono (não indexado)", "apelidos": ["leilao", "leilão", "imoveis de leilao"], "nichos": ["imoveis", "advocacia"], "nivel": 2, "pronto": true, "origem": "bezsan", "onde": "kernex-clientes/clientes/bezsan/site/leiloes" },
-    { "id": "app-instalavel", "nome": "App instalável (celular) e Android na Play", "faz": "o site vira app no celular e pode ir para a Play Store", "apelidos": ["app", "aplicativo", "pwa", "play store", "android"], "nichos": ["*"], "nivel": 2, "pronto": true, "origem": "body-coach", "onde": "nexia/apps/body-coach (PWA + android/twa-manifest.json)" },
-    { "id": "login-clientes", "nome": "Login dos clientes (Google e e-mail)", "faz": "cada cliente tem conta própria", "apelidos": ["login", "cadastro de clientes", "conta do cliente"], "nichos": ["*"], "nivel": 2, "pronto": true, "origem": "body-coach, kernex-finance", "onde": "nexia/cloudflare/app.js (Firebase Auth)" },
-    { "id": "treino-dieta", "nome": "Treino, dieta e evolução com coach de IA", "faz": "plano de treino e refeições, medidas e evolução", "apelidos": ["academia", "personal", "nutricao", "treino", "dieta"], "nichos": ["fitness", "saude"], "nivel": 2, "pronto": true, "origem": "body-coach", "onde": "nexia/apps/body-coach" },
-    { "id": "lembretes-push", "nome": "Lembretes no celular", "faz": "aviso no celular (treino, água, véspera, saldo)", "apelidos": ["notificacoes", "lembretes", "push", "avisos"], "nichos": ["*"], "nivel": 2, "pronto": true, "origem": "body-coach, splash", "onde": "nexia/cloudflare/lembretes.js" },
-    { "id": "carteira", "nome": "Carteira de investimentos", "faz": "lê prints da corretora e mostra a carteira com cotação", "apelidos": ["investimentos", "financas pessoais", "carteira"], "nichos": ["financas"], "nivel": 2, "pronto": false, "origem": "kernex-finance (em andamento)", "onde": "nexia/prumo" },
-    { "id": "assinatura", "nome": "Plano grátis e premium (assinatura)", "faz": "plano básico grátis e premium mensal/anual com teste grátis", "apelidos": ["premium", "assinatura", "plano mensal"], "nichos": ["*"], "nivel": 3, "pronto": false, "origem": "body-coach (oferta, sem cobrança automática)", "onde": "nexia/apps/body-coach" },
-    { "id": "util-brl", "nome": "Valores em reais e parcelas", "faz": "formatar e ler R$ e calcular parcelas", "apelidos": ["reais", "parcelas", "dinheiro"], "nichos": ["*"], "nivel": 1, "pronto": true, "origem": "contrato #3481/#3490", "onde": "nexia/lib/brl.js" },
-    { "id": "util-documentos", "nome": "Validar CNPJ, e-mail e telefone", "faz": "confere CNPJ, e-mail e telefone digitados", "apelidos": ["cnpj", "validar email", "telefone"], "nichos": ["*"], "nivel": 1, "pronto": true, "origem": "contrato #3488/#3502/#3515", "onde": "nexia/lib/cnpj.js, lib/telefone.js" },
-    { "id": "util-dias-uteis", "nome": "Dias úteis, expediente e diárias", "faz": "pula fim de semana, horário de atendimento e diária com desconto", "apelidos": ["dias uteis", "horario de atendimento", "expediente", "diaria"], "nichos": ["*"], "nivel": 1, "pronto": true, "origem": "contrato #3489/#3501/#3503", "onde": "nexia/lib/dias-uteis.js, lib/expediente.js" },
-    { "id": "ler-anexos", "nome": "Ler arquivos enviados", "faz": "entende PDF, imagem e planilha que a pessoa envia", "apelidos": ["anexo", "pdf", "planilha", "upload", "documento"], "nichos": ["financas", "advocacia", "contabilidade"], "nivel": 2, "pronto": true, "origem": "nexia (lib)", "onde": "lib/anexos-entender.js + lib/planilha-processar.js" },
-    { "id": "busca-web", "nome": "Busca na internet", "faz": "pesquisa na web e resume para o assistente", "apelidos": ["pesquisa", "google", "buscar na web"], "nichos": ["*"], "nivel": 2, "pronto": true, "origem": "nexia (lib)", "onde": "lib/busca-web.js" },
-    { "id": "dados-bancarios", "nome": "Cadastro de dados bancários e Pix", "faz": "guarda e confere conta e chave Pix para receber", "apelidos": ["pix", "conta bancaria", "recebimento", "chave pix"], "nichos": ["*"], "nivel": 2, "pronto": true, "origem": "nexia (lib)", "onde": "lib/cadastro-banco.js" },
-    { "id": "checkin-evento", "nome": "Check-in de evento", "faz": "lista de convidados e entrada na porta pelo celular", "apelidos": ["check-in", "convidados", "credenciamento", "lista de presenca"], "nichos": ["eventos"], "nivel": 2, "pronto": true, "origem": "ces", "onde": "ces/checkin.html + ces/ces-app.js" },
-    { "id": "assistente-ia", "nome": "Assistente com IA", "faz": "chat que responde com os dados reais da pessoa", "apelidos": ["chat", "assistente", "ia", "robo"], "nichos": ["*"], "nivel": 2, "pronto": true, "origem": "kernex-finance, body-coach", "onde": "netlify/functions/prumo-lib/assistente.js" },
-    { "id": "controle-gastos", "nome": "Controle de gastos e cartões", "faz": "lançamentos, faturas de cartão e alertas de vencimento", "apelidos": ["gastos", "despesas", "cartao de credito", "fatura", "orcamento"], "nichos": ["financas"], "nivel": 2, "pronto": true, "origem": "kernex-finance", "onde": "netlify/functions/prumo-lib/cartoes.js + financas.js + alertas.js" },
-    { "id": "dividas-metas", "nome": "Dívidas e metas", "faz": "lista dívidas, sugere a ordem de pagar e acompanha metas", "apelidos": ["dividas", "quitar", "metas", "objetivos"], "nichos": ["financas"], "nivel": 2, "pronto": true, "origem": "kernex-finance", "onde": "netlify/functions/prumo-lib/dividas.js + metas.js" },
-    { "id": "conta-familia", "nome": "Conta da família", "faz": "várias pessoas na mesma conta, cada uma com permissão", "apelidos": ["familia", "compartilhar", "varios usuarios"], "nichos": ["financas"], "nivel": 2, "pronto": true, "origem": "kernex-finance", "onde": "netlify/functions/prumo-lib/familia.js" },
-    { "id": "open-finance", "nome": "Ligação com bancos (Open Finance)", "faz": "importa saldos dos bancos da pessoa", "apelidos": ["open finance", "banco", "extrato automatico"], "nichos": ["financas"], "nivel": 3, "pronto": false, "origem": "kernex-finance", "onde": "netlify/functions/prumo-lib/openfinance.js" }
+    {
+      "id": "site",
+      "nome": "Site com SEO",
+      "faz": "página principal com textos, fotos, contato, SEO e privacidade",
+      "apelidos": [
+        "landing",
+        "pagina",
+        "site institucional",
+        "seo"
+      ],
+      "nichos": [
+        "*"
+      ],
+      "nivel": 1,
+      "pronto": true,
+      "origem": "demo-eventos, demo-viagens, adrianoblumer, studiolima",
+      "onde": "kernex-clientes/clientes/*/site/index.html"
+    },
+    {
+      "id": "whatsapp",
+      "nome": "Botão e contato por WhatsApp",
+      "faz": "botão fixo e links de conversa com mensagem pronta",
+      "apelidos": [
+        "contato",
+        "botao whatsapp",
+        "zap"
+      ],
+      "nichos": [
+        "*"
+      ],
+      "nivel": 1,
+      "pronto": true,
+      "origem": "demo-viagens, studiolima",
+      "onde": "kernex-clientes/clientes/*/site"
+    },
+    {
+      "id": "privacidade",
+      "nome": "Páginas de privacidade e LGPD",
+      "faz": "política de privacidade, termos e cookies",
+      "apelidos": [
+        "lgpd",
+        "termos",
+        "politica de privacidade",
+        "cookies"
+      ],
+      "nichos": [
+        "*"
+      ],
+      "nivel": 1,
+      "pronto": true,
+      "origem": "studiolima, bezsan, adrianoblumer, demo-eventos",
+      "onde": "kernex-clientes/clientes/*/site/privacidade.html"
+    },
+    {
+      "id": "galeria",
+      "nome": "Galeria de fotos",
+      "faz": "fotos em grade com ampliação",
+      "apelidos": [
+        "fotos",
+        "portfolio",
+        "portfólio"
+      ],
+      "nichos": [
+        "eventos",
+        "estetica",
+        "*"
+      ],
+      "nivel": 1,
+      "pronto": true,
+      "origem": "demo-eventos",
+      "onde": "kernex-clientes/clientes/demo-eventos/site"
+    },
+    {
+      "id": "agenda",
+      "nome": "Agenda online com painel",
+      "faz": "cliente escolhe dia e horário livre; a dona confirma no painel com senha",
+      "apelidos": [
+        "marcar horario",
+        "agendamento",
+        "horarios",
+        "consultas",
+        "agendar"
+      ],
+      "nichos": [
+        "saude",
+        "estetica",
+        "beleza",
+        "servicos"
+      ],
+      "nivel": 1,
+      "pronto": true,
+      "origem": "studiolima, bezsan",
+      "onde": "kernex-clientes/clientes/studiolima/site/agenda + api.kernex.com.br/api/agenda"
+    },
+    {
+      "id": "conteudo-editavel",
+      "nome": "Textos e fotos editáveis pelo dono",
+      "faz": "o dono troca textos, preços e fotos do site pelo painel, sem programador",
+      "apelidos": [
+        "editar site",
+        "cms",
+        "painel de conteudo",
+        "precos editaveis"
+      ],
+      "nichos": [
+        "*"
+      ],
+      "nivel": 1,
+      "pronto": true,
+      "origem": "studiolima",
+      "onde": "kernex-clientes/clientes/studiolima/site/index.html (CONTEÚDO EDITÁVEL)"
+    },
+    {
+      "id": "painel",
+      "nome": "Painel do dono com senha",
+      "faz": "área com senha para o dono ver pedidos, horários e contatos",
+      "apelidos": [
+        "painel administrativo",
+        "admin",
+        "area do dono",
+        "admin-painel"
+      ],
+      "nichos": [
+        "*"
+      ],
+      "nivel": 1,
+      "pronto": true,
+      "origem": "studiolima, adrianoblumer, demo-viagens",
+      "onde": "kernex-clientes/clientes/*/site/painel"
+    },
+    {
+      "id": "reservas",
+      "nome": "Reservas e locação com calendário",
+      "faz": "reserva de data (espaço, item, festa) com sinal e confirmação",
+      "apelidos": [
+        "locacao",
+        "locação",
+        "reserva de data",
+        "aluguel"
+      ],
+      "nichos": [
+        "eventos",
+        "festas",
+        "locacao"
+      ],
+      "nivel": 1,
+      "pronto": true,
+      "origem": "demo-eventos",
+      "onde": "kernex-clientes/clientes/demo-eventos/site/agenda"
+    },
+    {
+      "id": "pacotes",
+      "nome": "Catálogo de pacotes de viagem",
+      "faz": "pacotes com fotos, datas, preço e pedido de orçamento",
+      "apelidos": [
+        "pacotes de viagem",
+        "roteiros",
+        "destinos",
+        "catalogo"
+      ],
+      "nichos": [
+        "viagens"
+      ],
+      "nivel": 1,
+      "pronto": true,
+      "origem": "demo-viagens",
+      "onde": "kernex-clientes/clientes/demo-viagens/site"
+    },
+    {
+      "id": "area-cliente",
+      "nome": "Área do cliente",
+      "faz": "o cliente vê os dados da compra/viagem dele com código",
+      "apelidos": [
+        "area do viajante",
+        "area do cliente",
+        "minha conta",
+        "area-viajante"
+      ],
+      "nichos": [
+        "viagens",
+        "*"
+      ],
+      "nivel": 1,
+      "pronto": true,
+      "origem": "demo-viagens",
+      "onde": "kernex-clientes/clientes/demo-viagens/site/app"
+    },
+    {
+      "id": "leiloes",
+      "nome": "Análise de leilões (interno)",
+      "faz": "lista e analisa leilões de imóveis para o dono (não indexado)",
+      "apelidos": [
+        "leilao",
+        "leilão",
+        "imoveis de leilao"
+      ],
+      "nichos": [
+        "imoveis",
+        "advocacia"
+      ],
+      "nivel": 2,
+      "pronto": true,
+      "origem": "bezsan",
+      "onde": "kernex-clientes/clientes/bezsan/site/leiloes"
+    },
+    {
+      "id": "app-instalavel",
+      "nome": "App instalável (celular) e Android na Play",
+      "faz": "o site vira app no celular e pode ir para a Play Store",
+      "apelidos": [
+        "app",
+        "aplicativo",
+        "pwa",
+        "play store",
+        "android",
+        "pwa-instalar",
+        "instalar app"
+      ],
+      "nichos": [
+        "*"
+      ],
+      "nivel": 2,
+      "pronto": true,
+      "origem": "body-coach",
+      "onde": "nexia/apps/body-coach (PWA + android/twa-manifest.json)"
+    },
+    {
+      "id": "login-clientes",
+      "nome": "Login dos clientes (Google e e-mail)",
+      "faz": "cada cliente tem conta própria",
+      "apelidos": [
+        "login",
+        "cadastro de clientes",
+        "conta do cliente",
+        "login google",
+        "login-google"
+      ],
+      "nichos": [
+        "*"
+      ],
+      "nivel": 2,
+      "pronto": true,
+      "origem": "body-coach, kernex-finance",
+      "onde": "nexia/cloudflare/app.js (Firebase Auth)"
+    },
+    {
+      "id": "treino-dieta",
+      "nome": "Treino, dieta e evolução com coach de IA",
+      "faz": "plano de treino e refeições, medidas e evolução",
+      "apelidos": [
+        "academia",
+        "personal",
+        "nutricao",
+        "treino",
+        "dieta",
+        "nutrição"
+      ],
+      "nichos": [
+        "fitness",
+        "saude"
+      ],
+      "nivel": 2,
+      "pronto": true,
+      "origem": "body-coach",
+      "onde": "nexia/apps/body-coach"
+    },
+    {
+      "id": "lembretes-push",
+      "nome": "Lembretes no celular",
+      "faz": "aviso no celular (treino, água, véspera, saldo)",
+      "apelidos": [
+        "notificacoes",
+        "lembretes",
+        "push",
+        "avisos"
+      ],
+      "nichos": [
+        "*"
+      ],
+      "nivel": 2,
+      "pronto": true,
+      "origem": "body-coach, splash",
+      "onde": "nexia/cloudflare/lembretes.js"
+    },
+    {
+      "id": "carteira",
+      "nome": "Carteira de investimentos",
+      "faz": "lê prints da corretora e mostra a carteira com cotação",
+      "apelidos": [
+        "investimentos",
+        "financas pessoais",
+        "carteira",
+        "carteira-investimentos"
+      ],
+      "nichos": [
+        "financas"
+      ],
+      "nivel": 2,
+      "pronto": false,
+      "origem": "kernex-finance (em andamento)",
+      "onde": "nexia/prumo"
+    },
+    {
+      "id": "assinatura",
+      "nome": "Plano grátis e premium (assinatura)",
+      "faz": "plano básico grátis e premium mensal/anual com teste grátis",
+      "apelidos": [
+        "premium",
+        "assinatura",
+        "plano mensal"
+      ],
+      "nichos": [
+        "*"
+      ],
+      "nivel": 3,
+      "pronto": false,
+      "origem": "body-coach (oferta, sem cobrança automática)",
+      "onde": "nexia/apps/body-coach"
+    },
+    {
+      "id": "util-brl",
+      "nome": "Valores em reais e parcelas",
+      "faz": "formatar e ler R$ e calcular parcelas",
+      "apelidos": [
+        "reais",
+        "parcelas",
+        "dinheiro"
+      ],
+      "nichos": [
+        "*"
+      ],
+      "nivel": 1,
+      "pronto": true,
+      "origem": "contrato #3481/#3490",
+      "onde": "nexia/lib/brl.js"
+    },
+    {
+      "id": "util-documentos",
+      "nome": "Validar CNPJ, e-mail e telefone",
+      "faz": "confere CNPJ, e-mail e telefone digitados",
+      "apelidos": [
+        "cnpj",
+        "validar email",
+        "telefone",
+        "validar-dados",
+        "validar dados"
+      ],
+      "nichos": [
+        "*"
+      ],
+      "nivel": 1,
+      "pronto": true,
+      "origem": "contrato #3488/#3502/#3515",
+      "onde": "nexia/lib/cnpj.js, lib/telefone.js"
+    },
+    {
+      "id": "util-dias-uteis",
+      "nome": "Dias úteis, expediente e diárias",
+      "faz": "pula fim de semana, horário de atendimento e diária com desconto",
+      "apelidos": [
+        "dias uteis",
+        "horario de atendimento",
+        "expediente",
+        "diaria",
+        "horario-atendimento"
+      ],
+      "nichos": [
+        "*"
+      ],
+      "nivel": 1,
+      "pronto": true,
+      "origem": "contrato #3489/#3501/#3503",
+      "onde": "nexia/lib/dias-uteis.js, lib/expediente.js"
+    },
+    {
+      "id": "ler-anexos",
+      "nome": "Ler arquivos enviados",
+      "faz": "entende PDF, imagem e planilha que a pessoa envia",
+      "apelidos": [
+        "anexo",
+        "pdf",
+        "planilha",
+        "upload",
+        "documento"
+      ],
+      "nichos": [
+        "financas",
+        "advocacia",
+        "contabilidade"
+      ],
+      "nivel": 2,
+      "pronto": true,
+      "origem": "nexia (lib)",
+      "onde": "lib/anexos-entender.js + lib/planilha-processar.js"
+    },
+    {
+      "id": "busca-web",
+      "nome": "Busca na internet",
+      "faz": "pesquisa na web e resume para o assistente",
+      "apelidos": [
+        "pesquisa",
+        "google",
+        "buscar na web"
+      ],
+      "nichos": [
+        "*"
+      ],
+      "nivel": 2,
+      "pronto": true,
+      "origem": "nexia (lib)",
+      "onde": "lib/busca-web.js"
+    },
+    {
+      "id": "dados-bancarios",
+      "nome": "Cadastro de dados bancários e Pix",
+      "faz": "guarda e confere conta e chave Pix para receber",
+      "apelidos": [
+        "pix",
+        "conta bancaria",
+        "recebimento",
+        "chave pix"
+      ],
+      "nichos": [
+        "*"
+      ],
+      "nivel": 2,
+      "pronto": true,
+      "origem": "nexia (lib)",
+      "onde": "lib/cadastro-banco.js"
+    },
+    {
+      "id": "checkin-evento",
+      "nome": "Check-in de evento",
+      "faz": "lista de convidados e entrada na porta pelo celular",
+      "apelidos": [
+        "check-in",
+        "convidados",
+        "credenciamento",
+        "lista de presenca"
+      ],
+      "nichos": [
+        "eventos"
+      ],
+      "nivel": 2,
+      "pronto": true,
+      "origem": "ces",
+      "onde": "ces/checkin.html + ces/ces-app.js"
+    },
+    {
+      "id": "assistente-ia",
+      "nome": "Assistente com IA",
+      "faz": "chat que responde com os dados reais da pessoa",
+      "apelidos": [
+        "chat",
+        "assistente",
+        "ia",
+        "robo"
+      ],
+      "nichos": [
+        "*"
+      ],
+      "nivel": 2,
+      "pronto": true,
+      "origem": "kernex-finance, body-coach",
+      "onde": "netlify/functions/prumo-lib/assistente.js"
+    },
+    {
+      "id": "controle-gastos",
+      "nome": "Controle de gastos e cartões",
+      "faz": "lançamentos, faturas de cartão e alertas de vencimento",
+      "apelidos": [
+        "gastos",
+        "despesas",
+        "cartao de credito",
+        "fatura",
+        "orcamento"
+      ],
+      "nichos": [
+        "financas"
+      ],
+      "nivel": 2,
+      "pronto": true,
+      "origem": "kernex-finance",
+      "onde": "netlify/functions/prumo-lib/cartoes.js + financas.js + alertas.js"
+    },
+    {
+      "id": "dividas-metas",
+      "nome": "Dívidas e metas",
+      "faz": "lista dívidas, sugere a ordem de pagar e acompanha metas",
+      "apelidos": [
+        "dividas",
+        "quitar",
+        "metas",
+        "objetivos"
+      ],
+      "nichos": [
+        "financas"
+      ],
+      "nivel": 2,
+      "pronto": true,
+      "origem": "kernex-finance",
+      "onde": "netlify/functions/prumo-lib/dividas.js + metas.js"
+    },
+    {
+      "id": "conta-familia",
+      "nome": "Conta da família",
+      "faz": "várias pessoas na mesma conta, cada uma com permissão",
+      "apelidos": [
+        "familia",
+        "compartilhar",
+        "varios usuarios"
+      ],
+      "nichos": [
+        "financas"
+      ],
+      "nivel": 2,
+      "pronto": true,
+      "origem": "kernex-finance",
+      "onde": "netlify/functions/prumo-lib/familia.js"
+    },
+    {
+      "id": "open-finance",
+      "nome": "Ligação com bancos (Open Finance)",
+      "faz": "importa saldos dos bancos da pessoa",
+      "apelidos": [
+        "open finance",
+        "banco",
+        "extrato automatico"
+      ],
+      "nichos": [
+        "financas"
+      ],
+      "nivel": 3,
+      "pronto": false,
+      "origem": "kernex-finance",
+      "onde": "netlify/functions/prumo-lib/openfinance.js"
+    },
+    {
+      "id": "cotacoes-viagem",
+      "nome": "Cotacoes e pacotes de viagem",
+      "faz": "monta e envia cotacao de pacote ao cliente",
+      "apelidos": [
+        "cotacao",
+        "orcamento de viagem"
+      ],
+      "nichos": [
+        "viagens",
+        "turismo"
+      ],
+      "nivel": 2,
+      "pronto": true,
+      "origem": "viajante-pro",
+      "onde": "viajante-pro/vp-cotacoes.html"
+    },
+    {
+      "id": "seguranca-arquivos",
+      "nome": "Servir arquivos com seguranca",
+      "faz": "bloqueia caminho fora da pasta, symlink e .env",
+      "apelidos": [
+        "seguranca"
+      ],
+      "nichos": [
+        "*"
+      ],
+      "nivel": 1,
+      "pronto": true,
+      "origem": "lib",
+      "onde": "lib/safe-path.js + lib/safe-static.js + lib/safe-error.js",
+      "testes": 2
+    }
   ],
   "modelos": [
-    { "id": "demo-viagens", "nome": "Agência de viagens", "nichos": ["viagens", "turismo"], "modulos": ["site", "whatsapp", "pacotes", "area-cliente", "painel", "privacidade"], "clonavel": true, "previa": "https://viagens.kernex.com.br" },
-    { "id": "demo-eventos", "nome": "Eventos, festas e locação", "nichos": ["eventos", "festas", "locacao"], "modulos": ["site", "whatsapp", "galeria", "reservas", "privacidade"], "clonavel": true, "previa": "https://eventos.kernex.com.br" },
-    { "id": "agenda-com-painel", "nome": "Serviço com agenda online (modelo do Studio Lima)", "nichos": ["saude", "estetica", "beleza", "servicos"], "modulos": ["site", "whatsapp", "agenda", "conteudo-editavel", "painel", "privacidade"], "clonavel": false, "falta_para_clonar": "M3: separar o modelo dos dados do Studio Lima", "origem": "studiolima" },
-    { "id": "profissional-com-painel", "nome": "Profissional liberal com painel (modelo do Adriano)", "nichos": ["advocacia", "consultoria", "profissional"], "modulos": ["site", "whatsapp", "painel", "privacidade"], "clonavel": false, "falta_para_clonar": "M3", "origem": "adrianoblumer" },
-    { "id": "app-fitness", "nome": "App de treino e dieta (modelo do Body Coach)", "nichos": ["fitness", "academia", "personal", "nutricao"], "modulos": ["app-instalavel", "login-clientes", "treino-dieta", "lembretes-push", "privacidade"], "clonavel": false, "falta_para_clonar": "nível 2: multi-cliente do Body Coach", "origem": "body-coach" },
-    { "id": "viajante-pro", "nome": "Agência de viagens com área do passageiro (Viajante Pro)", "nichos": ["viagens", "turismo"], "modulos": ["site", "whatsapp", "pacotes", "area-cliente", "painel", "app-instalavel"], "clonavel": true, "previa": "" },
-    { "id": "eventos-checkin", "nome": "Eventos com check-in (CES)", "nichos": ["eventos"], "modulos": ["site", "checkin-evento", "painel", "app-instalavel"], "clonavel": true, "previa": "" },
-    { "id": "financas-pessoais", "nome": "Finanças pessoais (Kernex Finance)", "nichos": ["financas"], "modulos": ["login-clientes", "app-instalavel", "carteira", "controle-gastos", "dividas-metas", "conta-familia", "assistente-ia"], "clonavel": false, "previa": "https://finance.kernex.com.br" }
+    {
+      "id": "demo-viagens",
+      "nome": "Agência de viagens",
+      "nichos": [
+        "viagens",
+        "turismo"
+      ],
+      "modulos": [
+        "site",
+        "whatsapp",
+        "pacotes",
+        "area-cliente",
+        "painel",
+        "privacidade"
+      ],
+      "clonavel": true,
+      "previa": "https://viagens.kernex.com.br"
+    },
+    {
+      "id": "demo-eventos",
+      "nome": "Eventos, festas e locação",
+      "nichos": [
+        "eventos",
+        "festas",
+        "locacao"
+      ],
+      "modulos": [
+        "site",
+        "whatsapp",
+        "galeria",
+        "reservas",
+        "privacidade"
+      ],
+      "clonavel": true,
+      "previa": "https://eventos.kernex.com.br"
+    },
+    {
+      "id": "demo-agenda",
+      "nome": "Serviço com agenda online (clínica, estética, salão)",
+      "nichos": [
+        "saude",
+        "estetica",
+        "beleza",
+        "servicos"
+      ],
+      "modulos": [
+        "site",
+        "whatsapp",
+        "agenda",
+        "conteudo-editavel",
+        "painel",
+        "privacidade"
+      ],
+      "clonavel": true,
+      "origem": "studiolima",
+      "previa": "(prévia a publicar)",
+      "nota": "feito do Studio Lima sem os dados da cliente (kernex-clientes PR 2)"
+    },
+    {
+      "id": "profissional-com-painel",
+      "nome": "Profissional liberal com painel (modelo do Adriano)",
+      "nichos": [
+        "advocacia",
+        "consultoria",
+        "profissional"
+      ],
+      "modulos": [
+        "site",
+        "whatsapp",
+        "painel",
+        "privacidade"
+      ],
+      "clonavel": false,
+      "falta_para_clonar": "M3",
+      "origem": "adrianoblumer"
+    },
+    {
+      "id": "app-fitness",
+      "nome": "App de treino e dieta (modelo do Body Coach)",
+      "nichos": [
+        "fitness",
+        "academia",
+        "personal",
+        "nutricao"
+      ],
+      "modulos": [
+        "app-instalavel",
+        "login-clientes",
+        "treino-dieta",
+        "lembretes-push",
+        "privacidade"
+      ],
+      "clonavel": false,
+      "falta_para_clonar": "nível 2: multi-cliente do Body Coach",
+      "origem": "body-coach"
+    },
+    {
+      "id": "viajante-pro",
+      "nome": "Agência de viagens com área do passageiro (Viajante Pro)",
+      "nichos": [
+        "viagens",
+        "turismo"
+      ],
+      "modulos": [
+        "site",
+        "whatsapp",
+        "pacotes",
+        "area-cliente",
+        "painel",
+        "app-instalavel"
+      ],
+      "clonavel": true,
+      "previa": ""
+    },
+    {
+      "id": "eventos-checkin",
+      "nome": "Eventos com check-in (CES)",
+      "nichos": [
+        "eventos"
+      ],
+      "modulos": [
+        "site",
+        "checkin-evento",
+        "painel",
+        "app-instalavel"
+      ],
+      "clonavel": true,
+      "previa": ""
+    },
+    {
+      "id": "financas-pessoais",
+      "nome": "Finanças pessoais (Kernex Finance)",
+      "nichos": [
+        "financas"
+      ],
+      "modulos": [
+        "login-clientes",
+        "app-instalavel",
+        "carteira",
+        "controle-gastos",
+        "dividas-metas",
+        "conta-familia",
+        "assistente-ia"
+      ],
+      "clonavel": false,
+      "previa": "https://finance.kernex.com.br"
+    },
+    {
+      "id": "splash",
+      "nome": "Eventos com app (Splash)",
+      "nichos": [
+        "eventos",
+        "lazer"
+      ],
+      "modulos": [
+        "site",
+        "app-instalavel",
+        "reservas",
+        "lembretes-push"
+      ],
+      "clonavel": false,
+      "falta_para_clonar": "M3: separar o modelo dos dados do cliente de origem",
+      "origem": "splash"
+    },
+    {
+      "id": "ces",
+      "nome": "Eventos e congressos com check-in (CES)",
+      "nichos": [
+        "eventos",
+        "congressos"
+      ],
+      "modulos": [
+        "site",
+        "checkin-evento",
+        "painel",
+        "app-instalavel"
+      ],
+      "clonavel": false,
+      "falta_para_clonar": "M3: separar o modelo dos dados do cliente de origem",
+      "origem": "ces"
+    }
   ],
   "ramos": {
-    "saude": ["dentista", "odontologia", "clinica", "clínica", "medico", "médico", "fisioterapia", "psicologo", "psicólogo", "consultorio", "consultório", "nutricionista"],
-    "estetica": ["estetica", "estética", "depilacao", "sobrancelha", "lash", "spa"],
-    "beleza": ["salao", "salão", "cabeleireiro", "barbearia", "manicure", "salao de beleza"],
-    "viagens": ["agencia de viagens", "agência de viagens", "turismo", "viagem", "excursao", "excursão"],
-    "eventos": ["buffet", "festa", "festas", "casamento", "decoracao", "decoração", "espaco de eventos"],
-    "fitness": ["academia", "personal", "crossfit", "pilates", "treino"],
-    "advocacia": ["advogado", "advocacia", "escritorio de advocacia"],
-    "servicos": ["servico", "serviço", "manutencao", "conserto"]
+    "saude": [
+      "dentista",
+      "odontologia",
+      "clinica",
+      "clínica",
+      "medico",
+      "médico",
+      "fisioterapia",
+      "psicologo",
+      "psicólogo",
+      "consultorio",
+      "consultório",
+      "nutricionista"
+    ],
+    "estetica": [
+      "estetica",
+      "estética",
+      "depilacao",
+      "sobrancelha",
+      "lash",
+      "spa"
+    ],
+    "beleza": [
+      "salao",
+      "salão",
+      "cabeleireiro",
+      "barbearia",
+      "manicure",
+      "salao de beleza"
+    ],
+    "viagens": [
+      "agencia de viagens",
+      "agência de viagens",
+      "turismo",
+      "viagem",
+      "excursao",
+      "excursão"
+    ],
+    "eventos": [
+      "buffet",
+      "festa",
+      "festas",
+      "casamento",
+      "decoracao",
+      "decoração",
+      "espaco de eventos"
+    ],
+    "fitness": [
+      "academia",
+      "personal",
+      "crossfit",
+      "pilates",
+      "treino"
+    ],
+    "advocacia": [
+      "advogado",
+      "advocacia",
+      "escritorio de advocacia"
+    ],
+    "servicos": [
+      "servico",
+      "serviço",
+      "manutencao",
+      "conserto"
+    ]
   }
 }

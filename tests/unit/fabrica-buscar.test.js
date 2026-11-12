@@ -30,7 +30,8 @@ test('FB2. ficha: normaliza ramo e "precisa" e valida o mínimo', () => {
 test('FB3. clínica de dentista: agenda e site já existem (modelo de agenda), pagamento vira "falta" nível 3', () => {
   const r = consultar({ nome: 'Clínica Sorriso', ramo: 'dentista', whatsapp: '81999999999', precisa: ['agenda', 'site', 'whatsapp', 'pagamento'] }, cat);
   assert.deepEqual(r.erros, []);
-  assert.equal(r.modelo.id, 'agenda-com-painel');
+  assert.equal(r.modelo.id, 'demo-agenda');
+  assert.equal(r.modelo.clonavel, true);
   for (const id of ['agenda', 'site', 'whatsapp']) assert.ok(r.prontos.some(m => m.id === id), `${id} pronto`);
   assert.deepEqual(r.faltam.map(m => m.pedido), ['pagamento']);
   assert.equal(r.nivel, 3);
