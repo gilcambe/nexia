@@ -8,6 +8,10 @@ import { haQuanto, textoDeploy } from "./regras";
 interface Pr { numero: number; titulo: string; link: string; ramo: string; doCortex: boolean; automerge: boolean; rascunho: boolean; quando: string }
 const CHIPS = [{ id: "esperando", nome: "Esperando você" }, { id: "sozinho", nome: "Entram sozinhos" }, { id: "todos", nome: "Todos" }] as const;
 
+// Cockpit (12/11): "Aprovar e juntar" também para os PRs do PC 1 e do PC 2 (ramo nexia/...), não só os do Cortex.
+// O servidor (acao "juntar") só aceita ramo nexia/ e só põe automerge: o PR entra quando o CI ficar verde.
+export const podeJuntar = (p: Pick<Pr, "ramo" | "rascunho" | "automerge">) => !p.rascunho && !p.automerge && String(p.ramo || "").startsWith("nexia/");
+
 export default function Publicacoes() {
   const { prs: pedirPrs, deploy, agir } = usePedidos();
   const [prs, setPrs] = useState<{ prs: Pr[]; conferidoEm: string; origem: string } | null>(null);
@@ -21,9 +25,9 @@ export default function Publicacoes() {
   }, [pedirPrs, deploy]);
   useEffect(() => { carregar(); const t = setInterval(carregar, 60000); return () => clearInterval(t); }, [carregar]);
   const fazer = async (corpo: Record<string, unknown>) => { setMsg("Fazendo…"); try { setMsg((await agir(corpo)).mensagem); carregar(); } catch (e) { setMsg((e as Error).message); } };
-  const lista = (prs?.prs || []).filter((p) => chip === "todos" || (chip === "sozinho" ? p.automerge : p.doCortex && !p.automerge && !p.rascunho));
+  const lista = (prs?.prs || []).filter((p) => chip === "todos" || (chip === "sozinho" ? p.automerge : podeJuntar(p)));
   const todos = prs?.prs || [];
-  const esperando = todos.filter((p) => p.doCortex && !p.automerge && !p.rascunho).length;
+  const esperando = todos.filter(podeJuntar).length;
   const sozinhos = todos.filter((p) => p.automerge).length;
   return (
     <div className="kx-tela">
@@ -43,7 +47,7 @@ export default function Publicacoes() {
               <a className="kx-titulo" href={p.link} target="_blank" rel="noreferrer" style={{ color: "inherit" }}>#{p.numero} {p.titulo}</a>
               <span className="kx-mut">{haQuanto(p.quando)}</span>
               {p.automerge ? <span className="kx-selo" style={{ background: "#22c55e" }}>Entra sozinho</span>
-                : p.doCortex && <button type="button" className="kx-btn forte" onClick={() => fazer({ acao: "juntar", pr: p.numero })}>Aprovar e juntar</button>}
+                : podeJuntar(p) && <button type="button" className="kx-btn forte" onClick={() => fazer({ acao: "juntar", pr: p.numero })}>Aprovar e juntar</button>}
             </li>
           ))}
           {prs && lista.length === 0 && <li>Nada aqui. 🎉</li>}

@@ -28,6 +28,41 @@ function SemSinal({ nome, nunca }: { nome: string; nunca: boolean }) {
 }
 
 // #3219 parte 7: Máquinas. Lê o batimento que os PCs já mandam (nexia-ai/maquinas, parte=maquinas).
+// Cockpit (12/11): o quadro de tarefas do PC 1 e do PC 2 (parte "quadro" da API), para o dono não abrir GitHub nem Claude.
+export type TarefaQuadro = { id: number; titulo: string; status: string; dono: string; quando?: string };
+export const ROTULO_QUADRO: Record<string, string> = { fila: "Na fila", fazendo: "Fazendo", feito: "Feito" };
+/** Ordem do quadro: fazendo primeiro, depois fila; feitas saem (o dono quer o que está vivo). */
+export const ordenarQuadro = (t: TarefaQuadro[]) => (t || []).filter((x) => x.status !== "feito")
+  .sort((a, b) => (a.status === b.status ? a.id - b.id : a.status === "fazendo" ? -1 : 1));
+
+function QuadroEquipe() {
+  const { ler } = useCentral();
+  const [q, setQ] = useState<{ tarefas: TarefaQuadro[]; em: string } | null>(null);
+  const [aviso, setAviso] = useState<string | null>(null);
+  useEffect(() => {
+    const carregar = () => ler<{ tarefas: TarefaQuadro[] }>("parte=quadro")
+      .then((x) => { setQ({ tarefas: x.tarefas || [], em: new Date().toISOString() }); setAviso(null); })
+      .catch((e) => setAviso(/parte|desconhecid|404|inv[aá]lid/i.test((e as Error).message) ? "O quadro dos PCs ainda não está ligado no servidor." : (e as Error).message));
+    carregar(); const t = setInterval(carregar, 60000); return () => clearInterval(t);
+  }, [ler]);
+  const vivas = ordenarQuadro(q?.tarefas || []);
+  return (
+    <Bloco icone="lista" corIcone="#a78bfa" titulo="Quadro do PC 1 e do PC 2" ajuda="O que cada PC está fazendo agora e o que está na fila. Some daqui quando fica pronto." fonte={q ? "quadro da equipe (tarefas.json)" : null} atualizadoEm={q?.em || null}>
+      {aviso && <p className="kx-mut" data-testid="kx-quadro-aviso">{aviso}</p>}
+      <ul className="kx-lista" data-testid="kx-quadro">
+        {vivas.slice(0, 15).map((t) => (
+          <li key={t.id}>
+            <span className="kx-selo" style={{ background: t.status === "fazendo" ? "#3b82f6" : "#64748b" }}>{ROTULO_QUADRO[t.status] || t.status}</span>
+            <b className="kx-titulo">{t.titulo}</b>
+            <span className="kx-mut">{t.dono ? t.dono.toUpperCase() : "sem dono"}{t.quando ? " · " + haQuanto(t.quando) : ""}</span>
+          </li>
+        ))}
+        {q && vivas.length === 0 && <li>Nada na fila. 🎉</li>}
+      </ul>
+    </Bloco>
+  );
+}
+
 export default function Maquinas() {
   const { buscar } = useCentral();
   const [d, setD] = useState<{ ligado: boolean; maquinas: Maquina[]; em: string } | null>(null);
@@ -63,6 +98,7 @@ export default function Maquinas() {
         </Bloco>
       ))}
       {erro && <p className="kx-mut">{erro}</p>}
+      <div style={{ gridColumn: "1/-1" }}><QuadroEquipe /></div>
       {d && !lista.length && <p className="kx-mut" style={{ gridColumn: "1/3" }}>Nenhum PC mandou sinal ainda. Eles aparecem aqui quando o Operário estiver instalado neles.</p>}
     </div>
     </div>
