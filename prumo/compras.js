@@ -1,1 +1,1 @@
-'Kernex Finance: ' + l.nome
+'Prumo: ' + l.nome
