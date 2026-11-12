@@ -69,10 +69,6 @@ module.exports = {
     await queryInterface.addIndex('livro_cotas', ['reset_at'], { name: 'livro_cotas_reset_at_idx' });
   },
 
-  down: async (queryInterface, Sequelize) => {
-    await queryInterface.dropTable('livro_cotas');
-  },
-
   down: async (queryInterface) => {
     // Índice cai junto com a tabela; o ENUM do MySQL também (era o bug do down antigo).
     await queryInterface.dropTable('livro_cotas');
