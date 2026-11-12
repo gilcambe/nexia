@@ -13,7 +13,7 @@ test('resumo semanal: cartão 1080×1350 com @nexiabodycoach e botão no relató
   const out = ts.transpileModule(fonte, { compilerOptions: { module: ts.ModuleKind.ES2022, target: 'ES2022' } }).outputText;
   const f = path.join(fs.mkdtempSync(path.join(require('os').tmpdir(), 'rs-')), 'c.mjs');
   fs.writeFileSync(f, out);
-  const m = await import(f);
+  const m = await import(require('node:url').pathToFileURL(f).href);
   const textos = [];
   const grad = { addColorStop() {} };
   const ctx = new Proxy({ fillText: (t) => textos.push(t), measureText: (t) => ({ width: t.length * 20 }), createLinearGradient: () => grad, createRadialGradient: () => grad }, { get: (o, k) => (k in o ? o[k] : () => {}), set: () => true });

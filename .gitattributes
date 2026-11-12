@@ -1,3 +1,6 @@
+# Linha LF em todo PC (Windows também), senão testes que comparam texto quebram (#3557).
+* text=auto eol=lf
 *.bat text eol=crlf
 afiliados/configurar-robo.bat -text
 apps/body-coach/android/android-play.bat -text
+clientes/adriano/referencia/adriano-landing.html -text

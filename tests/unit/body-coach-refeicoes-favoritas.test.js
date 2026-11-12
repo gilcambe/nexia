@@ -13,7 +13,7 @@ test('favoritas: alterna a estrela, limita a 12 e a página mostra o cartão', a
   fs.writeFileSync(f, out);
   const store = {};
   global.localStorage = { getItem: k => store[k] ?? null, setItem: (k, v) => { store[k] = v; } };
-  const m = await import(f);
+  const m = await import(require('node:url').pathToFileURL(f).href);
   const a = { name: 'Ovos', calories: 150, protein: 12, carbs: 1, fat: 10, fiber: 0 };
   let l = m.alternarFavorita(m.lerFavoritas(), a);
   assert.strictEqual(m.ehFavorita(l, 'ovos'), true);

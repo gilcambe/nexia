@@ -31,7 +31,9 @@ test('server.js não serve arquivos fora das raízes públicas (C1)', async (t) 
     '/core/zz-test-symlink.js', '/.git/config', '/NEXIA_OS_MASTER_DOC_v61.md',
     '/zz-private.html', '/core/../zz-private.html', '/%2e%2e/zz-private.html',
   ];
-  const hostname = fs.readFileSync('/etc/hostname', 'utf8');
+  // /etc/hostname só existe em Linux/Mac; no Windows esta checagem não tem o que comparar.
+  let hostname = '';
+  try { hostname = fs.readFileSync('/etc/hostname', 'utf8'); } catch {}
   for (const p of attacks) {
     const r = await rawRequest(srv.port, p);
     assert.ok(!r.body.includes('TEST_ONLY=1'), `${p} vazou .env`);

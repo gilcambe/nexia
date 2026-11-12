@@ -11,7 +11,7 @@ test('lembretes inteligentes: horários aprendidos pelo uso', async () => {
   const out = ts.transpileModule(fs.readFileSync(path.join(SRC, 'lib/horariosAprendidos.ts'), 'utf8'), { compilerOptions: { module: ts.ModuleKind.ES2022, target: 'ES2022' } }).outputText;
   const f = path.join(fs.mkdtempSync(path.join(require('os').tmpdir(), 'ha-')), 'h.mjs');
   fs.writeFileSync(f, out);
-  const m = await import(f);
+  const m = await import(require('node:url').pathToFileURL(f).href);
   const agora = new Date(2026, 9, 19, 22, 0);
   const dia = (d, h, min = 0) => new Date(2026, 9, d, h, min).toISOString();
   const refeicoes = [
