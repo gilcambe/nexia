@@ -234,12 +234,16 @@ const APELIDO_TIPO = [[/tesouro/i, 'tesouro'], [/fgts/i, 'fgts'], [/prev|pgbl|vg
 // #3532: ETFs e units da B3 que terminam em 11 mas NÃO são FII.
 const ETFS = new Set(['IVVB11', 'BOVA11', 'SMAL11', 'HASH11', 'NASD11', 'GOLD11', 'DIVO11', 'SPXI11', 'XINA11', 'BOVV11', 'BBSD11', 'ECOO11', 'FIND11', 'MATB11', 'PIBB11', 'BRAX11', 'ACWI11', 'EURP11', 'WRLD11', 'QBTC11', 'ETHE11', 'BITH11', 'B5P211', 'IMAB11', 'IRFM11', 'FIXA11', 'TECK11', 'GOVE11', 'BOVB11', 'DEFI11', 'META11', 'SPXR11', 'USTK11']);
 const UNITS = new Set(['TAEE11', 'SANB11', 'KLBN11', 'ALUP11', 'BPAC11', 'ENGI11', 'SAPR11', 'IGTI11', 'CPLE11', 'BRBI11', 'TIET11', 'RNEW11', 'AESB11', 'CMIG11', 'ITSA11', 'SULA11', 'PPLA11', 'BIDI11', 'INBR11', 'NEOE11']);
-/** Tipo pelo ticker (#3532): ETF conhecido = etf; unit = acoes; outro XXXX11 = fiis (nunca renda fixa). */
+/** Tipo pelo ticker (#3532): ETF conhecido = etf; unit = acoes; outro XXXX11 = fiis (nunca renda fixa).
+ *  #3532: FII e ETF NUNCA ficam como "renda_fixa" — a lista de ETFs conhecida tem prioridade sobre o tipo vindo da IA. */
 function tipoPeloTicker(tk, tipo) {
-  if (ETFS.has(tk)) return 'etf';
-  if (UNITS.has(tk)) return 'acoes';
-  if (/^[A-Z]{4}11$/.test(tk) && tipo !== 'fiis' && tipo !== 'etf') return 'fiis';
-  if (/^[A-Z]{4}\d{1,2}$/.test(tk) && (tipo === 'outro' || tipo === 'renda_fixa')) return 'acoes';
+  const t = String(tk || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+  if (ETFS.has(t)) return 'etf';
+  if (UNITS.has(t)) return 'acoes';
+  // Ticker terminado em 11 que não é ETF conhecido nem unit é FII (nunca renda fixa).
+  if (/^[A-Z]{4}11$/.test(t)) return tipo === 'etf' ? 'etf' : 'fiis';
+  // Ação (XXXX3, XXXX4, XXXX6...) não é renda fixa nem FII.
+  if (/^[A-Z]{4}\d{1,2}$/.test(t) && (tipo === 'outro' || tipo === 'renda_fixa')) return 'acoes';
   return tipo;
 }
 /** #3532: se tem quantidade e cotação, o valor da posição é quantidade × cotação (a IA erra a vírgula: 1.883,70 em vez de 188,37). */
