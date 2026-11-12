@@ -93,8 +93,8 @@ async function verificarServicos(deps = {}) {
 
 /** Salva o estado atual das checagens no banco D1 ou Firestore */
 async function salvarEstado(db, itens, { at = Date.now() } = {}) {
-  // Banco nulo ou sem o método usado na chamada: nada a gravar, mas a checagem segue válida.
-  if (!db || typeof db.execute !== 'function') {
+  // Suporta tanto D1 quanto Firestore (Firestore usa db.collection, D1 usa db.prepare/execute)
+  if (!db) {
     console.log('[saude-servicos] salvamento ignorado: banco indisponível (D1/Firestore)');
     return { skipped: 'sem banco' };
   }
@@ -103,9 +103,23 @@ async function salvarEstado(db, itens, { at = Date.now() } = {}) {
   for (const item of itens) {
     servicos[item.id] = { ...item };
   }
-  const ref = db.collection(COLECAO).doc(DOC);
-  await ref.set({ em: conferidoEm, servicos });
-  return { ok: true, conferidoEm, total: itens.length };
+  if (typeof db.collection === 'function') {
+    const ref = db.collection(COLECAO).doc(DOC);
+    await ref.set({ em: conferidoEm, servicos });
+    return { ok: true, conferidoEm, total: itens.length };
+  }
+  if (typeof db.prepare === 'function' || typeof db.execute === 'function') {
+    // Caso seja D1
+    const stmt = typeof db.prepare === 'function' ? db.prepare(`INSERT OR REPLACE INTO ${COLECAO} (id, dados, em) VALUES (?, ?, ?)`) : null;
+    if (stmt && typeof stmt.bind === 'function' && typeof stmt.run === 'function') {
+      await stmt.bind(DOC, JSON.stringify(servicos), conferidoEm).run();
+    } else if (typeof db.execute === 'function') {
+      await db.execute(`INSERT OR REPLACE INTO ${COLECAO} (id, dados, em) VALUES (?, ?, ?)`, [DOC, JSON.stringify(servicos), conferidoEm]);
+    }
+    return { ok: true, conferidoEm, total: itens.length };
+  }
+  console.log('[saude-servicos] salvamento ignorado: método de banco não reconhecido');
+  return { skipped: 'metodo nao suportado' };
 }
 
 /** Consulta o último estado gravado */
