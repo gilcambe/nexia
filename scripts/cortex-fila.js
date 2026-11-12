@@ -499,6 +499,27 @@ async function dividirComIA(tarefa, router, lista) {
   return null;
 }
 
+// Fila de replanejamento: partes com caminho inexistente (sem "criar arquivo" e sem substituto) ou com 3+ tentativas.
+const filaReplanejar = [];
+// Confere os caminhos de uma parte. Devolve a parte ajustada, ou null quando deve ser replanejada.
+function validatePart(part, attempt = 1) {
+  const fs = require('node:fs');
+  const path = require('node:path');
+  const permiteCriar = /criar arquivo/i.test(String((part && part.tarefa) || ''));
+  const arquivos = [];
+  for (const a of (part && part.arquivos) || []) {
+    if (fs.existsSync(a)) { arquivos.push(a); continue; }
+    if (attempt >= 3) return null;
+    if (permiteCriar) { arquivos.push(a); continue; }
+    const ext = path.extname(a);
+    let sub = null;
+    try { sub = fs.readdirSync(path.dirname(a)).find(n => path.extname(n) === ext && !arquivos.includes(path.join(path.dirname(a), n))); } catch { /* pasta inexistente */ }
+    if (!sub) return null;
+    arquivos.push(path.join(path.dirname(a), sub));
+  }
+  return { ...part, arquivos };
+}
+
 // Planejador: pede o PLANO (partes com arquivos, dependências e critério de pronto) aos modelos grátis, um de cada vez.
 // Nenhum válido: tenta o divisor antigo (só textos, em sequência); nada ainda: plano simples, uma parte por arquivo.
 // Só devolve null quando o pedido não cita nem 2 arquivos — aí ele segue inteiro, como antes.
@@ -510,6 +531,10 @@ async function planejarComIA(tarefa, router, lista, tamanhos = {}) {
       const out = await Promise.race([router.chat(d, { system: plano.SISTEMA_PLANO, messages: [{ role: 'user', content: tarefa.slice(0, 12000) + contexto }], maxTokens: 4000, cache: true }), new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 40000))]);
       const m = out && out.text && /\[[\s\S]*\]/.exec(out.text);
       const partes = m && plano.validarPlano(JSON.parse(m[0]));
+      if (partes) for (let k = 0; k < partes.length; k++) {
+        const v = validatePart({ ...partes[k], tarefa: partes[k].tarefa || partes[k].titulo }, 1);
+        if (v) partes[k].arquivos = v.arquivos; else filaReplanejar.push(partes[k]);
+      }
       if (partes) return { partes, origem: `plano da IA (${d.model || d.provider || 'grátis'})` };
     } catch { /* tenta o próximo modelo */ }
   }
@@ -975,5 +1000,5 @@ async function main() {
   }
 }
 
-module.exports = { juntarTravadas, tentaContrato, FORA_DO_CONTRATO, vaiParaContrato, ultimoRotuloEm, travadasPeloCofre, entregaComprovada, MAX_RECUPERAR_POR_CICLO, FORA_DA_RECUPERACAO, soPipelineModelo, assinaturaDoSmoke, errosDeAmbiente, mexeEmWorkflow, planejarComIA, revisarParte, dadosDoPlanejador, corrigirCiDosPrs, reservaVolta, reservasQueVoltam, travouAntesDoConserto, devePedirReserva, entregouAlgo, depoisSemEntrega, MAX_SEM_ENTREGA, rascunhosParados, candidatosRascunho, MSG_RASCUNHO_PARADO, tokenDaApp, TENTATIVAS_ATE_DIVIDIR, caminhosDoPedido, sondarCota, decidir, precisaTesteFinal, precisaDividir, paisConcluidos, dividirComIA, MAX_TENTATIVAS, validarCortexFeito, reabrirFeitosInvalidos };
+module.exports = { validatePart, filaReplanejar, juntarTravadas, tentaContrato, FORA_DO_CONTRATO, vaiParaContrato, ultimoRotuloEm, travadasPeloCofre, entregaComprovada, MAX_RECUPERAR_POR_CICLO, FORA_DA_RECUPERACAO, soPipelineModelo, assinaturaDoSmoke, errosDeAmbiente, mexeEmWorkflow, planejarComIA, revisarParte, dadosDoPlanejador, corrigirCiDosPrs, reservaVolta, reservasQueVoltam, travouAntesDoConserto, devePedirReserva, entregouAlgo, depoisSemEntrega, MAX_SEM_ENTREGA, rascunhosParados, candidatosRascunho, MSG_RASCUNHO_PARADO, tokenDaApp, TENTATIVAS_ATE_DIVIDIR, caminhosDoPedido, sondarCota, decidir, precisaTesteFinal, precisaDividir, paisConcluidos, dividirComIA, MAX_TENTATIVAS, validarCortexFeito, reabrirFeitosInvalidos };
 if (require.main === module) main().catch(e => { console.error(e.message); process.exit(1); });
