@@ -1,0 +1,7 @@
+{
+  "series": [
+    { "rotulo": "A", "valor": 10 },
+    { "rotulo": "B", "valor": 20 },
+    { "rotulo": "C", "valor": 30 }
+  ]
+}
