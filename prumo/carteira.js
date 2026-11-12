@@ -26,7 +26,9 @@ function conferirTotais(conferencia, itens, dup) {
 function chaveAtivo(x) {
   const n = (v) => String(v || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
     .replace(/\b(s\.?a\.?|ltda)\b/g, ' ').replace(/[^a-z0-9%]+/g, ' ').replace(/\b(do|da|de|dos|das|e)\b/g, ' ').replace(/\s+/g, ' ').trim();
-  return [n(x && x.banco), n(x && (x.ticker || x.nome))].join('|');
+  const tk = String((x && x.ticker) || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+  if (tk) return `tk|${tk}`; // #3532: com ticker, só o ticker (igual ao servidor)
+  return [n(x && x.banco), n(x && x.nome)].join('|');
 }
 if (typeof module !== 'undefined' && module.exports) module.exports = { conferirTotais, chaveAtivo };
 
@@ -44,7 +46,7 @@ if (typeof window !== 'undefined') (function () {
     const nomeObj = Object.fromEntries(objetivos.map((o) => [o.id, o.nome]));
     const optObj = (sel) => `<option value="">Sem objetivo</option>` + objetivos.map((o) => `<option value="${o.id}"${o.id === sel ? ' selected' : ''}>${esc(o.nome)}</option>`).join('');
     const bancos = {};
-    itens.forEach((i) => { const b = i.banco || 'Sem banco'; bancos[b] = (bancos[b] || 0) + i.valor; });
+    itens.forEach((i) => { const b = i.banco || 'Não informado'; bancos[b] = (bancos[b] || 0) + i.valor; });
     const tipos = Object.entries(por_tipo).sort((a, b) => b[1] - a[1]);
     el.innerHTML = `
       <div class="card"><div class="fraco">Patrimônio total</div><div class="grande">${brl(total)}</div>
@@ -53,7 +55,7 @@ if (typeof window !== 'undefined') (function () {
       <div class="linha" style="margin-bottom:12px"><button class="btn sec" id="add">✍️ Preencher</button><button class="btn" id="print">📷 Só mandar os prints</button></div>
       <input type="file" id="arq" accept="image/*" multiple hidden>
       ${Object.keys(bancos).length > 1 ? `<div class="card"><div class="fraco">Por banco</div>${Object.entries(bancos).map(([b, v]) => `<div class="item"><span>${esc(b)}</span><span class="v">${brl(v)}</span></div>`).join('')}</div>` : ''}
-      <div class="card">${itens.length ? itens.map((i) => `<div class="item" data-id="${i.id}"><div><div class="n">${esc(i.nome)}</div><div class="fraco">${esc(i.banco || '')} · ${esc(TIPOS[i.tipo] || i.tipo)}${i.ticker ? ' · ' + esc(i.ticker) : ''}${i.quantidade ? ' · ' + esc(i.quantidade) + ' cotas' : ''}${i.objetivo_id && nomeObj[i.objetivo_id] ? ' · 🎯 ' + esc(nomeObj[i.objetivo_id]) : ''} · ${esc(i.data_valor || '')}</div></div><div class="v">${brl(i.valor)}</div></div>`).join('') : '<p class="fraco">Nada ainda. Toque em "Só mandar os prints" e mande os prints do app do banco, da previdência e do FGTS, ou preencha à mão.</p>'}</div>
+      <div class="card">${itens.length ? itens.map((i) => `<div class="item" data-id="${i.id}"><div><div class="n">${esc(i.nome)}</div><div class="fraco">${esc(i.banco || 'Banco não informado')} · ${esc(TIPOS[i.tipo] || i.tipo)}${i.ticker ? ' · ' + esc(i.ticker) : ''}${i.quantidade ? ' · ' + esc(i.quantidade) + ' cotas' : ''}${i.objetivo_id && nomeObj[i.objetivo_id] ? ' · 🎯 ' + esc(nomeObj[i.objetivo_id]) : ''} · ${esc(i.data_valor || '')}</div></div><div class="v">${brl(i.valor)}</div></div>`).join('') : '<p class="fraco">Nada ainda. Toque em "Só mandar os prints" e mande os prints do app do banco, da previdência e do FGTS, ou preencha à mão.</p>'}</div>
       ${itens.length ? '<button class="btn sec" id="limpar" style="width:100%">🧹 Limpar e refazer a carteira</button>' : ''}`;
 
     const editar = (i) => formulario(i ? 'Editar investimento' : 'Novo investimento', [
@@ -138,7 +140,7 @@ if (typeof window !== 'undefined') (function () {
         <label>Nome</label><input data-k="nome" value="${esc(i.nome)}">
         <label>Banco</label><input data-k="banco" value="${esc(i.banco)}">
         <label>Tipo</label><select data-k="tipo">${opcoes(TIPOS, i.tipo)}</select>
-        ${i.ticker || i.quantidade ? `<div class="fraco">${esc(i.ticker || '')}${i.quantidade ? ' · ' + esc(i.quantidade) + ' cotas' : ''}${i.preco_medio ? ' · preço médio ' + brl(i.preco_medio) : ''}${i.cotacao ? ' · cotação ' + brl(i.cotacao) : ''}</div>` : ''}
+        ${i.ticker || i.quantidade ? `<div class="fraco">${esc(i.ticker || '')}${i.quantidade ? ' · ' + esc(i.quantidade) + ' cotas' : ''}${i.preco_medio ? ' · preço médio ' + brl(i.preco_medio) : ''}${i.cotacao ? ' · cotação ' + brl(i.cotacao) : ''}${i.corrigido_por_cotacao ? ` · ✔️ valor = quantidade × cotação (a leitura tinha dado ${brl(i.valor_lido)})` : ''}</div>` : ''}
         <label>Saldo atual (R$)</label><input data-k="valor" type="number" step="0.01" value="${i.valor}">
         <label>Objetivo</label><select data-k="objetivo_id">${optObj('')}</select></div>`).join('')}
       ${descartados && descartados.length ? `<p class="fraco">${descartados.length} item(ns) sem valor legível foram ignorados.</p>` : ''}
