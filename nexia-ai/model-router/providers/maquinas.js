@@ -33,7 +33,7 @@ function createMaquinasProvider({ env = process.env, maquinas, esperaMaxMs = ESP
         if (t && t.status === 'feito') {
           return { provider: 'maquinas', model, text: t.texto || '', tool_calls: [], usage: { input_tokens: 0, output_tokens: Number(t.tokens) || 0, total_tokens: Number(t.tokens) || 0 }, stop_reason: 'stop', maquina: t.maquina || null };
         }
-        if (t && t.status === 'erro') throw new ModelError(CODES.UPSTREAM, 'maquinas: o PC devolveu erro', { provider: 'maquinas', model });
+        if (t && t.status === 'erro') throw new ModelError(CODES.UPSTREAM, `maquinas: o PC devolveu erro (${String(t.erro || 'sem detalhe').replace(/\s+/g, ' ').slice(0, 200)})`, { provider: 'maquinas', model });
       }
       const e = new ModelError(CODES.UPSTREAM, `maquinas: o PC não respondeu em ${Math.round(espera / 1000)} s`, { provider: 'maquinas', model });
       e.isTimeout = true;
