@@ -7,7 +7,9 @@
 //   3. o teste só pode importar node:test, node:assert e os arquivos da solução (nada de fs, rede, processo, env);
 //   4. no mínimo 3 asserções;
 //   5. sintaxe válida;
-//   6. o teste FALHA no código atual (senão não prova nada).
+//   6. o teste FALHA no código atual (senão não prova nada);
+//   7. a solução mexe em pelo menos 1 arquivo que o produto já tem, ou o pedido nomeia o arquivo novo (entrega não fica solta);
+//   8. uma 2ª IA confere se o teste cobre o que o pedido exige (opcional; sem resposta, não trava o fluxo).
 // Pedido que não dá para testar assim (tela, texto, configuração) volta "nao_testavel" e segue o caminho antigo.
 const fs = require('node:fs');
 const path = require('node:path');
@@ -73,6 +75,12 @@ async function gerar(o) {
       if (p.testavel === false) return { ok: false, nao_testavel: true, motivo: String(p.motivo || 'sem motivo').slice(0, 300), tentativas, modelo: `${m.provider}/${m.model}` };
       const c = conferir(p);
       if (!c.ok) { ultimo = c.erros.join('; '); log(`${m.provider}/${m.model}: recusado (${ultimo})`); continue; }
+      const pedido = String(o.pedido);
+      if (!c.arquivos.some(a => fs.existsSync(path.join(o.raiz, a)) || pedido.includes(a))) {
+        ultimo = `a solução precisa mexer em pelo menos 1 arquivo que o produto já usa (nenhum de ${c.arquivos.join(', ')} existe nem é citado no pedido)`;
+        log(`${m.provider}/${m.model}: recusado (${ultimo})`);
+        continue;
+      }
       const abs = path.join(o.raiz, c.teste);
       if (fs.existsSync(abs)) { ultimo = `o teste ${c.teste} já existe; escolha outro nome`; continue; }
       fs.mkdirSync(path.dirname(abs), { recursive: true });
@@ -81,6 +89,16 @@ async function gerar(o) {
       const cmd = `node --test ${c.teste}`;
       const r = await o.rodarTeste(cmd);
       if (r.ok) { fs.unlinkSync(abs); ultimo = 'o teste já passa no código atual: ele precisa falhar até a solução existir'; continue; }
+      if (o.revisar) {
+        const rev = await o.revisar({ pedido, codigo: c.codigo, modelo: m }).catch(() => null);
+        if (rev && rev.cobre === false) {
+          fs.unlinkSync(abs);
+          ultimo = `o teste não cobre o pedido: ${String(rev.falta || 'sem detalhe').slice(0, 300)}`;
+          log(`${m.provider}/${m.model}: recusado pelo revisor (${ultimo})`);
+          continue;
+        }
+        if (!rev) log('revisor de cobertura sem resposta: segue sem ele');
+      }
       log(`${m.provider}/${m.model}: contrato aceito (${c.arquivos.join(', ')} | ${cmd})`);
       return {
         ok: true, tentativas, modelo: `${m.provider}/${m.model}`, testeArquivo: c.teste, testeCodigo: c.codigo,
@@ -92,4 +110,22 @@ async function gerar(o) {
   return { ok: false, motivo: `nenhuma IA gerou um teste válido (${ultimo})`, tentativas };
 }
 
-module.exports = { gerar, conferir, extrairJson, SISTEMA };
+const REVISOR = [
+  'Você confere TESTES DE ACEITAÇÃO. Recebe um PEDIDO e um TESTE. Não escreva código.',
+  'O teste cobre o pedido se verifica cada regra concreta que o pedido exige (valores, casos citados, exceções, limites).',
+  'Responda SÓ com JSON: {"cobre": true} ou {"cobre": false, "falta": "regra do pedido que o teste não verifica"}.',
+].join('\n');
+
+/** Portão 8: uma IA (de preferência outra, não a que escreveu o teste) diz se o teste cobre o pedido. null = sem resposta. */
+async function revisarCobertura(router, modelos, pedido, codigo) {
+  for (const m of modelos || []) {
+    let out;
+    try { out = await router.chat(m, { system: REVISOR, messages: [{ role: 'user', content: `PEDIDO:\n${String(pedido).slice(0, 6000)}\n\nTESTE:\n${String(codigo).slice(0, 12000)}` }], maxTokens: 600 }); }
+    catch { continue; }
+    const j = extrairJson(out && out.text);
+    if (j && typeof j.cobre === 'boolean') return j.cobre ? { cobre: true } : { cobre: false, falta: String(j.falta || '') };
+  }
+  return null;
+}
+
+module.exports = { gerar, conferir, extrairJson, revisarCobertura, SISTEMA, REVISOR };

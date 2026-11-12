@@ -60,7 +60,8 @@ test('GC4. teste que já passa é recusado e apagado', async () => {
 
 test('GC5. ponta a ponta: pedido → contrato gerado → executor resolve → teste passa', async () => {
   const raiz = repo();
-  const g = await gerar({ pedido: 'dobro', raiz, router: roteiro([proposta()]), modelos: M, rodarTeste: rodar(raiz) });
+  // Portão 7: arquivo novo precisa ser nomeado no pedido (senão é entrega solta fora do produto).
+  const g = await gerar({ pedido: 'Criar lib/dobro.js com dobro(n)', raiz, router: roteiro([proposta()]), modelos: M, rodarTeste: rodar(raiz) });
   const solucao = "ARQUIVO: lib/dobro.js\n```js\nmodule.exports = { dobro: n => { if (typeof n !== 'number') throw new TypeError('número'); return n * 2; } };\n```\n";
   const e = await executar({ contrato: g.contrato, raiz, router: roteiro([solucao]), modelos: M, rodarTeste: rodar(raiz) });
   assert.equal(e.ok, true);
