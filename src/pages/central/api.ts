@@ -154,7 +154,9 @@ export function useCentral() {
     return body as { ok: boolean; mensagem: string };
   }, [getToken]);
 
-  return { buscar, agir, entrarSuporte, distribuirTarefas, enviarTarefasParaContas, marcarTodasTarefasComoGratuitas };
+  // Fábrica (M5): leitura genérica `?parte=...&...` para partes novas sem mexer no tipo Parte.
+  const ler = useCallback(<T,>(query: string) => pedir<T>({ query: query.startsWith("?") ? query : `?${query}` }), [pedir]);
+  return { buscar, ler, agir, entrarSuporte, distribuirTarefas, enviarTarefasParaContas, marcarTodasTarefasComoGratuitas };
 }
 
 export const reais = (v: number) => (v || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
