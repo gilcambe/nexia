@@ -1,5 +1,7 @@
 'use strict';
 
+const { Sequelize } = require('sequelize');
+
 module.exports = {
   up: async (queryInterface, Sequelize) => {
     await queryInterface.createTable('livro_cotas', {
@@ -53,7 +55,7 @@ module.exports = {
         type: Sequelize.FLOAT,
         defaultValue: 0.0
       },
-          createdAt: {
+      createdAt: {
         allowNull: false,
         type: Sequelize.DATE,
         defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
