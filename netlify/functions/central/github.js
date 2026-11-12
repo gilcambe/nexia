@@ -7,7 +7,6 @@ const { estadoTarefas } = require('./estado-tarefas');
 // responde exatamente o objeto de estadoTarefas(). A contagem (fila, andamento,
 // travada, concluida, falhou, total, precisaVoce) vem só de lá; a lista de tarefas
 // passou para a parte "tarefas".
-// A contagem vem só de lá; a lista de tarefas passou para a parte "tarefas".
 
 const REPO = 'gilcambe/nexia';
 const API = 'https://api.github.com/repos/' + REPO;
