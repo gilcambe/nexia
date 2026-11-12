@@ -6,6 +6,14 @@ import { Icone } from "./icones";
 // Janela de um alerta: o que aconteceu, o que afeta e o passo a passo. Sem um alerta escolhido, mostra a lista.
 const COR = { vermelho: "bg-red-50 text-red-600", amarelo: "bg-amber-50 text-amber-600", verde: "bg-emerald-50 text-emerald-600", cinza: "bg-slate-100 text-slate-500" };
 const BOTAO = "inline-flex items-center justify-center gap-1 rounded-xl px-3 py-2 text-sm font-medium min-h-[40px] cursor-pointer disabled:opacity-50";
+const PRAZO_RESOLUCAO_H = 4; // horas até considerar que o aviso "resolve sozinho" não se resolveu
+
+export function resolverSozinho(a: Aviso, agora = Date.now()): boolean {
+  if (!a.sozinho || !a.checadoEm) return false;
+  const t = Date.parse(a.checadoEm);
+  if (Number.isNaN(t)) return false;
+  return agora - t < PRAZO_RESOLUCAO_H * 60 * 60 * 1000;
+}
 
 export default function AvisoDetalhe({ avisos, inicial, fechar, ir }: { avisos: Aviso[]; inicial: number | null; fechar: () => void; ir: (a: Aba) => void }) {
   const { agir } = useCentral();
@@ -55,12 +63,17 @@ export default function AvisoDetalhe({ avisos, inicial, fechar, ir }: { avisos: 
               <p><b className="text-slate-900">O que aconteceu:</b> <span className="text-slate-700">{a.oque}</span></p>
               <p><b className="text-slate-900">O que isso afeta:</b> <span className="text-slate-700">{a.impacto}</span></p>
             </div>
-            <div className={`rounded-xl p-3 ${a.sozinho ? "bg-emerald-50" : "bg-indigo-50"}`}>
-              <div className="text-sm font-semibold text-slate-900 mb-1">{a.sozinho ? "✅ Resolve sozinho. Se quiser acompanhar:" : "O que fazer, passo a passo:"}</div>
-              <ol className="list-decimal pl-5 space-y-1 text-sm text-slate-700" data-testid="aviso-passos">
-                {a.passos.map((p) => <li key={p}>{p}</li>)}
-              </ol>
-            </div>
+            {(() => {
+              const sozinho = resolverSozinho(a);
+              return (
+                <div className={`rounded-xl p-3 ${sozinho ? "bg-emerald-50" : "bg-indigo-50"}`}>
+                  <div className="text-sm font-semibold text-slate-900 mb-1">{sozinho ? "✅ Resolve sozinho. Se quiser acompanhar:" : "Não resolveu sozinho, precisa de você"}</div>
+                  <ol className="list-decimal pl-5 space-y-1 text-sm text-slate-700" data-testid="aviso-passos">
+                    {a.passos.map((p) => <li key={p}>{p}</li>)}
+                  </ol>
+                </div>
+              );
+            })()}
             <div className="flex flex-wrap gap-2">
               {a.link && <a className={`${BOTAO} border border-slate-200 bg-white text-slate-700`} href={a.link.url} target="_blank" rel="noopener noreferrer">{a.link.rotulo} ↗</a>}
               {a.conserto && <button className={`${BOTAO} bg-indigo-600 text-[#fff]`} onClick={() => pedir(a.conserto!)} disabled={pedindo} data-testid="aviso-consertar">{pedindo ? "Pedindo…" : "🛠️ Pedir conserto ao Cortex"}</button>}
