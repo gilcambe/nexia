@@ -129,7 +129,10 @@ const manterVivo = setInterval(() => {}, 60 * 60 * 1000);
   if (!N || !TOKEN) { console.error('NUMERO e GH_TOKEN são obrigatórios'); process.exit(2); }
   const issue = (await gh('GET', `/issues/${N}`)).json;
   if (!issue || issue.pull_request) { console.error('issue não encontrada'); process.exit(2); }
-  if (!CONFIAVEIS.has(issue.author_association)) { console.log(`#${N}: autor sem permissão (${issue.author_association}); ignorado`); return; }
+  // Partes criadas pelo próprio planejador do Cortex (github-actions[bot] deste repo) vêm como CONTRIBUTOR;
+  // sem isto toda parte de pedido grande era ignorada e o pedido nunca andava (12/11/2026, #3532).
+  const doBot = issue.user && issue.user.login === 'github-actions[bot]';
+  if (!CONFIAVEIS.has(issue.author_association) && !doBot) { console.log(`#${N}: autor sem permissão (${issue.author_association}); ignorado`); return; }
   const texto = `${issue.title}\n\n${issue.body || ''}`;
   let c = lerContrato(texto);
   const { router, lista } = modelos();
