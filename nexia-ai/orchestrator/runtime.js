@@ -283,7 +283,10 @@ async function runAgent(o) {
   const catalog = o.gateway.describe().filter(t => allowed(o.agentId, t.name));
   const tools = catalog.map(t => ({ name: toModelName(t.name), description: `[${t.risk}] ${t.description}`, input_schema: t.input_schema }));
   if (REPORTING_AGENTS.has(o.agentId)) tools.push(REPORT_TOOL);
-  const system = systemPrompt(o.agentId, o.context);
+  // M6: o Architect consulta a Biblioteca antes de planejar sistema novo (clonar o que existe, criar só o que falta).
+  let biblioteca = '';
+  if (o.agentId === 'architect') { try { biblioteca = require('../fabrica/contexto').contextoBiblioteca(o.goal); } catch { biblioteca = ''; } }
+  const system = systemPrompt(o.agentId, [o.context, biblioteca].filter(Boolean).join('\n\n'));
   const messages = [{ role: 'user', content: o.goal }];
   const failures = new Map();
   const canWrite = catalog.some(t => WRITE_TOOLS.has(t.name));
