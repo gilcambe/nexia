@@ -22,8 +22,9 @@ module.exports = (models) => {
         const dataObj = new Date(dataVal);
         const numero = item.id || item.getDataValue?.('id') || 0;
         const hora = !isNaN(dataObj.getTime()) ? dataObj.toISOString() : String(dataVal);
+        const bruto = typeof item.toJSON === 'function' ? item.toJSON() : item;
         return {
-          ...item.toJSON ? item.toJSON() : item,
+          ...bruto,
           numero,
           hora
         };
