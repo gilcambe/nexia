@@ -21,7 +21,9 @@ export function resolverSozinho(a: Aviso, agora = Date.now()): boolean {
   if (!a.sozinho || !a.checadoEm) return false;
   const t = Date.parse(a.checadoEm);
   if (Number.isNaN(t)) return false;
-  return agora - t < PRAZO_RESOLUCAO_H * 60 * 60 * 1000;
+  const diff = agora - t;
+  // Deve ter checagem recente (diff >= 0 e < PRAZO_RESOLUCAO_H)
+  return diff >= 0 && diff < PRAZO_RESOLUCAO_H * 60 * 60 * 1000;
 }
 export type Aba = "inicio" | "falta" | "clientes" | "dinheiro" | "divulgar" | "cortex" | "prs" | "sistema" | "mais";
 
