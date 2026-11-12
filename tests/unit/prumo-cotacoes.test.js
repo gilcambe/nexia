@@ -77,3 +77,21 @@ test('COT6 carteira inteira: total ao vivo soma cotações + CDB pelo CDI; bolsa
   assert.equal(r.total_print, 138741.92);
   assert.equal(r.indices.cdi_dia_pct, 0.055131);
 });
+
+test('COT7 GET público cotacao_saude: só dado de mercado, sem login; 503 se nenhuma fonte responde', async () => {
+  const p = require('../../netlify/functions/prumo.js');
+  cot._cache.clear();
+  const antes = global.fetch;
+  global.fetch = async (url) => (/yahoo/.test(url) ? resp(yahoo(8.9, 8.95)) : /bcb/.test(url) ? resp(bcb('0,055131', '11/11/2026')) : resp({}, false));
+  try {
+    const r = await p.handler({ httpMethod: 'GET', headers: {}, queryStringParameters: { acao: 'cotacao_saude' } });
+    const b = JSON.parse(r.body);
+    assert.equal(r.statusCode, 200); assert.equal(b.preco, 8.9); assert.equal(b.fonte, 'yahoo'); assert.equal(b.cdi_dia_pct, 0.055131);
+    cot._cache.clear();
+    global.fetch = async () => resp({}, false);
+    const r2 = await p.handler({ httpMethod: 'GET', headers: {}, queryStringParameters: { acao: 'cotacao_saude' } });
+    assert.equal(r2.statusCode, 503);
+    const r3 = await p.handler({ httpMethod: 'GET', headers: {}, queryStringParameters: {} });
+    assert.equal(r3.statusCode, 405);
+  } finally { global.fetch = antes; }
+});

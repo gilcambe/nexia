@@ -533,6 +533,14 @@ async function agir(uid, body) {
 exports.handler = async (event) => {
   const method = String(event.httpMethod || '').toUpperCase();
   if (method === 'OPTIONS') return { statusCode: 204, headers: makeHeaders(event), body: '' };
+  // #3304: prova pública de que a cotação ao vivo funciona no ar (só dado público de mercado, nada da pessoa).
+  if (method === 'GET' && event.queryStringParameters && event.queryStringParameters.acao === 'cotacao_saude') {
+    const cot = require('./prumo-lib/cotacoes');
+    const agora = deps.agora();
+    const [c, ind] = await Promise.all([cot.cotar('MXRF11', { fetch: (...a) => fetch(...a), agora, env: process.env }), cot.indices((...a) => fetch(...a)).catch(() => ({}))]);
+    const ok = !!(c.preco > 0 && !c.desatualizada);
+    return responder(event, ok ? 200 : 503, { ok, ticker: 'MXRF11', preco: c.preco, fonte: c.fonte, data_hora: c.data_hora, erro: c.erro || null, cdi_dia_pct: ind.cdi_dia_pct || null, selic_ano_pct: ind.selic_ano_pct || null });
+  }
   if (method !== 'POST') return responder(event, 405, { error: 'Use POST.' });
   const auth = await verifyBearerToken(event);
   if (!auth || !auth.ok) return responder(event, 401, { error: 'Entre com sua conta.' });
