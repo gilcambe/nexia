@@ -22,15 +22,13 @@ const LICOES = Object.freeze([
   'Entregue só o que a tarefa pede, nos arquivos que ela cita. Exemplo real: para #2717 (motivos da fila na Central) o PR #2835 criou um workflow nexia-pipeline.yml que ninguém pediu; isso conta como falha.',
   'Homologação (#3264): nenhuma versão é publicada sem o check "Homologação" verde; todo bug do dono vira caso em homologacao/catalogo com teste que falha no código antigo e passa no novo, no mesmo PR (ex.: #3267 ativos duplicados, tests/unit/prumo-homologacao.test.js).',
   'Nunca planejar arquivo em pasta que o produto não usa; ler a árvore antes.',
-  "Nunca planejar arquivo em pasta que o produto não usa; ler a árvore antes",
 ];
 
 const TEXTO = 'LIÇÕES APRENDIDAS (erros reais de tarefas anteriores; não repita):\n' +
   LICOES.map((l) => `- ${l}`).join('\n');
 
-const LICOES_EXTRA = [
-  'Nunca planejar arquivo em pasta que o produto não usa; ler a árvore antes (use github.list_dir antes de criar arquivo).',
-];
+// Só lições já presentes na lista principal: TEXTO_EXTRA é a parte nova das lições, para o prompt não repetir.
+const LICOES_EXTRA = [];
 
 const REGISTRO_PASSAGENS = [];
 
@@ -47,6 +45,7 @@ function listarPassagens() {
 module.exports = LICOES;
 
 module.exports.LICOES = LICOES;
+module.exports.LICOES_EXTRA = LICOES_EXTRA;
 module.exports.TEXTO = TEXTO;
 module.exports.registrarPassagem = registrarPassagem;
 module.exports.listarPassagens = listarPassagens;
