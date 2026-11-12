@@ -5,7 +5,11 @@
 const alertRules = require('../src/lib/alertRules');
 
 function processarAlertasAtivo(ativo, historicoProventos, dadosPrint) {
-  return alertRules.avaliarAlertas(ativo, historicoProventos, dadosPrint);
+  const alertas = alertRules.avaliarAlertas(ativo, historicoProventos, dadosPrint);
+  return {
+    alertas,
+    dispararEmail: alertas.length > 0
+  };
 }
 
 module.exports = {
