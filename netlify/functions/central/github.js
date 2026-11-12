@@ -71,8 +71,8 @@ function criarGithub(env = process.env, fetchFn = fetch) {
   // #2717: cada tarefa leva o motivo (por que está parada ou esperando).
   const tarefa = (i) => ({ numero: i.number, titulo: String(i.title || '').slice(0, 120), link: i.html_url, quando: i.updated_at, motivo: motivos.motivoDe(i).texto });
 
-  // #3125 parte 2/6: sem lógica própria de fila/rodando/travadas. Só busca as issues e
-  // devolve exatamente o objeto que estadoTarefas() produz (contagens por estado).
+  // #3125 parte 2/6: sem lógica própria de fila/rodando/travadas. A resposta é exatamente o
+  // objeto que estadoTarefas() produz (contagens por estado).
   async function cortex() {
     const issues = await gh('/issues?state=all&per_page=100');
     return estadoTarefas(issues);
