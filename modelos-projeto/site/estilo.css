@@ -1,0 +1,12 @@
+:root { --cor: {{cor}}; }
+* { box-sizing: border-box; }
+html, body { margin: 0; overflow-x: hidden; }
+body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; font-size: 16px; line-height: 1.5; color: #1f2937; background: #ffffff; }
+img { max-width: 100%; height: auto; }
+.topo { padding: 16px; border-bottom: 3px solid var(--cor); }
+.marca { color: var(--cor); font-size: 20px; }
+.principal { max-width: 720px; margin: 0 auto; padding: 48px 16px; text-align: center; }
+h1 { font-size: 32px; margin: 0 0 16px; }
+.descricao { font-size: 18px; margin: 0 0 32px; }
+.botao { display: inline-block; padding: 14px 28px; border-radius: 8px; background: var(--cor); color: #ffffff; font-size: 18px; text-decoration: none; }
+.rodape { padding: 24px 16px; text-align: center; font-size: 16px; color: #6b7280; }
