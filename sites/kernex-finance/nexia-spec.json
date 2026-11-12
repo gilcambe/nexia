@@ -2,9 +2,9 @@
   "spec": {
     "kind": "system",
     "name": "Kernex Finance",
-    "tagline": "Gestão financeira corporativa e central de alertas",
-    "photo_theme": "corporate finance dashboard",
-    "description": "Gestão financeira corporativa e central de alertas",
+    "tagline": "Gestão financeira corporativa e controle de contas",
+    "photo_theme": "",
+    "description": "Gestão financeira corporativa e controle de contas",
     "folder": "sites/kernex-finance",
     "fonts": {
       "heading": "Plus Jakarta Sans",
@@ -22,7 +22,7 @@
     "style": "modern",
     "contact": {
       "whatsapp": "",
-      "phone": "(11) 4004-9988",
+      "phone": "(11) 4000-9900",
       "email": "suporte@kernex.com.br",
       "address": "",
       "city": "",
@@ -44,44 +44,98 @@
     "leads_origem": "",
     "entities": [
       {
-        "key": "dominios",
-        "label": "Domínios e Rotas",
-        "singular": "Domínio",
+        "key": "contas",
+        "label": "Contas Bancárias",
+        "singular": "Conta Bancária",
         "fields": [
           {
-            "key": "host",
-            "label": "Endereço (Host)",
+            "key": "banco",
+            "label": "Banco",
             "type": "text",
             "options": [],
             "required": true
           },
           {
-            "key": "servico",
-            "label": "Serviço Associado",
+            "key": "agencia",
+            "label": "Agência",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "conta",
+            "label": "Conta",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "tipo",
+            "label": "Tipo",
             "type": "select",
             "options": [
-              "Kernex Finance",
-              "Cortex",
-              "CES",
-              "Central"
+              "Corrente",
+              "Poupança",
+              "Investimento",
+              "Caixa"
             ],
             "required": true
           },
           {
-            "key": "status",
-            "label": "Status DNS",
-            "type": "select",
-            "options": [
-              "Ativo",
-              "Propagando",
-              "Pendente"
-            ],
+            "key": "saldo",
+            "label": "Saldo Inicial",
+            "type": "money",
+            "options": [],
+            "required": true
+          }
+        ],
+        "sample": [
+          {
+            "banco": "Itaú Empresas",
+            "agencia": "0452",
+            "conta": "12345-6",
+            "tipo": "Corrente",
+            "saldo": "45200.00"
+          },
+          {
+            "banco": "Nubank PJ",
+            "agencia": "0001",
+            "conta": "98765-4",
+            "tipo": "Corrente",
+            "saldo": "12500.50"
+          },
+          {
+            "banco": "BTG Pactual",
+            "agencia": "0102",
+            "conta": "44332-1",
+            "tipo": "Investimento",
+            "saldo": "150000.00"
+          },
+          {
+            "banco": "Caixa Geral",
+            "agencia": "0123",
+            "conta": "00011-9",
+            "tipo": "Caixa",
+            "saldo": "1850.00"
+          }
+        ]
+      },
+      {
+        "key": "centros_custo",
+        "label": "Centros de Custo",
+        "singular": "Centro de Custo",
+        "fields": [
+          {
+            "key": "codigo",
+            "label": "Código",
+            "type": "text",
+            "options": [],
             "required": true
           },
           {
-            "key": "atualizacao",
-            "label": "Última Verificação",
-            "type": "date",
+            "key": "nome",
+            "label": "Nome do Centro",
+            "type": "text",
             "options": [],
             "required": true
           },
@@ -91,202 +145,48 @@
             "type": "text",
             "options": [],
             "required": true
-          }
-        ],
-        "sample": [
-          {
-            "host": "finance.kernex.com.br",
-            "servico": "Kernex Finance",
-            "status": "Ativo",
-            "atualizacao": "2026-11-12",
-            "responsavel": "Equipe DevOps"
           },
           {
-            "host": "cortex.kernex.com.br",
-            "servico": "Cortex",
-            "status": "Ativo",
-            "atualizacao": "2026-11-10",
-            "responsavel": "Equipe Core"
-          },
-          {
-            "host": "ces.kernex.com.br",
-            "servico": "CES",
-            "status": "Ativo",
-            "atualizacao": "2026-11-05",
-            "responsavel": "Equipe Suporte"
-          },
-          {
-            "host": "nexia.gcbezerra.workers.dev",
-            "servico": "Kernex Finance",
-            "status": "Ativo",
-            "atualizacao": "2026-11-12",
-            "responsavel": "Legado / Redirecionamento"
-          }
-        ]
-      },
-      {
-        "key": "alertas",
-        "label": "Alertas Diários",
-        "singular": "Alerta",
-        "fields": [
-          {
-            "key": "titulo",
-            "label": "Título do Relatório",
-            "type": "text",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "canal",
-            "label": "Canal de Envio",
-            "type": "select",
-            "options": [
-              "E-mail Diário",
-              "Webhook",
-              "Slack",
-              "Painel"
-            ],
-            "required": true
-          },
-          {
-            "key": "hora_envio",
-            "label": "Horário",
-            "type": "text",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "status_envio",
-            "label": "Status",
-            "type": "select",
-            "options": [
-              "Enviado",
-              "Agendado",
-              "Erro"
-            ],
-            "required": true
-          },
-          {
-            "key": "destinatario",
-            "label": "Destinatário Principal",
-            "type": "email",
-            "options": [],
-            "required": true
-          }
-        ],
-        "sample": [
-          {
-            "titulo": "Resumo Financeiro Diário - KF",
-            "canal": "E-mail Diário",
-            "hora_envio": "07:30",
-            "status_envio": "Enviado",
-            "destinatario": "diretoria@kernex.com.br"
-          },
-          {
-            "titulo": "Auditoria de Rotas Cloudflare",
-            "canal": "Webhook",
-            "hora_envio": "08:00",
-            "status_envio": "Enviado",
-            "destinatario": "devops@kernex.com.br"
-          },
-          {
-            "titulo": "Fechamento de Caixa Parcial",
-            "canal": "Slack",
-            "hora_envio": "12:00",
-            "status_envio": "Agendado",
-            "destinatario": "financeiro@kernex.com.br"
-          },
-          {
-            "titulo": "Relatório de Inadimplência",
-            "canal": "E-mail Diário",
-            "hora_envio": "18:00",
-            "status_envio": "Agendado",
-            "destinatario": "cobranca@kernex.com.br"
-          }
-        ]
-      },
-      {
-        "key": "transacoes",
-        "label": "Transações",
-        "singular": "Transação",
-        "fields": [
-          {
-            "key": "descricao",
-            "label": "Descrição",
-            "type": "text",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "valor",
-            "label": "Valor",
+            "key": "orcamento",
+            "label": "Orçamento Mensal",
             "type": "money",
             "options": [],
             "required": true
-          },
-          {
-            "key": "tipo",
-            "label": "Tipo",
-            "type": "select",
-            "options": [
-              "Receita",
-              "Despesa",
-              "Investimento"
-            ],
-            "required": true
-          },
-          {
-            "key": "data",
-            "label": "Data",
-            "type": "date",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "categoria",
-            "label": "Categoria",
-            "type": "text",
-            "options": [],
-            "required": true
           }
         ],
         "sample": [
           {
-            "descricao": "Assinatura Servidores Cloudflare",
-            "valor": "1250.00",
-            "tipo": "Despesa",
-            "data": "2026-11-12",
-            "categoria": "Infraestrutura"
+            "codigo": "CC-101",
+            "nome": "Engenharia e Produto",
+            "responsavel": "Carlos Silva",
+            "orcamento": "85000.00"
           },
           {
-            "descricao": "Mensalidade Cliente Enterprise A",
-            "valor": "8500.00",
-            "tipo": "Receita",
-            "data": "2026-11-12",
-            "categoria": "Software as a Service"
+            "codigo": "CC-102",
+            "nome": "Marketing e Vendas",
+            "responsavel": "Mariana Costa",
+            "orcamento": "45000.00"
           },
           {
-            "descricao": "Licenciamento Domínio .com.br",
-            "valor": "40.00",
-            "tipo": "Despesa",
-            "data": "2026-11-11",
-            "categoria": "Registro"
+            "codigo": "CC-103",
+            "nome": "Operações e Suporte",
+            "responsavel": "Roberto Dias",
+            "orcamento": "20000.00"
           },
           {
-            "descricao": "Consultoria Arquitetura Cloud",
-            "valor": "3200.00",
-            "tipo": "Investimento",
-            "data": "2026-11-10",
-            "categoria": "Serviços"
+            "codigo": "CC-104",
+            "nome": "Administrativo e RH",
+            "responsavel": "Ana Paula",
+            "orcamento": "30000.00"
           }
         ]
       }
     ],
     "modules": [
-      "Domínios e Rotas",
-      "Alertas Diários",
-      "Transações",
-      "Central de Produtos"
+      "Dashboard",
+      "Contas Bancárias",
+      "Centros de Custo",
+      "Relatórios"
     ]
   },
   "media": {}
