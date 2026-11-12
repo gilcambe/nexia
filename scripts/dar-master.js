@@ -1,17 +1,19 @@
 #!/usr/bin/env node
 'use strict';
 // NEXIA — dá o papel master a UMA conta, a que o dono nomeou por escrito (2026-10-08: "Pode dar master para
-// gcbezerra@gmail.com"). Só aceita esse e-mail; a conta precisa já existir no login do Firebase.
+// o e-mail do dono"). Só aceita esse e-mail; a conta precisa já existir no login do Firebase.
 // Grava users/{uid}.role = 'master' (mesmo lugar que as regras e a API já leem). Não mexe em mais nada.
-// Uso: FIREBASE_SERVICE_ACCOUNT_BASE64=... node scripts/dar-master.js gcbezerra@gmail.com [--dry-run]
+// Uso: FIREBASE_SERVICE_ACCOUNT_BASE64=... node scripts/dar-master.js o e-mail do dono [--dry-run]
 const { createTokenSource } = require('../lib/firebase-lite/google-auth');
 
-const PERMITIDO = 'gcbezerra@gmail.com';
+// O e-mail autorizado vem do segredo MASTER_EMAIL (ou DONO_EMAIL), fora do código público desde 12/11/2026.
+const PERMITIDO = String(process.env.DONO_EMAIL || process.env.MASTER_EMAIL || '').trim().toLowerCase();
 
 async function main() {
   const email = (process.argv[2] || '').trim().toLowerCase();
   const dry = process.argv.includes('--dry-run');
-  if (email !== PERMITIDO) throw new Error(`Só autorizado para ${PERMITIDO}.`);
+  if (!PERMITIDO) throw new Error('Falta o segredo MASTER_EMAIL.');
+  if (email !== PERMITIDO) throw new Error(`Só autorizado para o e-mail do dono (segredo MASTER_EMAIL).`);
   const sa = JSON.parse(Buffer.from(process.env.FIREBASE_SERVICE_ACCOUNT_BASE64 || '', 'base64').toString('utf8') || '{}');
   if (!sa.project_id) throw new Error('Falta FIREBASE_SERVICE_ACCOUNT_BASE64.');
   const p = sa.project_id;

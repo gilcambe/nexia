@@ -1,4 +1,4 @@
-# NEXIA — dá master para a conta que o dono nomeou por escrito (gcbezerra@gmail.com, 2026-10-08).
+# NEXIA — dá master para a conta que o dono nomeou por escrito (o e-mail do dono, segredo MASTER_EMAIL, 2026-10-08).
 # Manual. "conferir" só olha; "DAR" grava o papel. O script só aceita esse e-mail.
 name: Dar master ao dono
 
@@ -23,6 +23,7 @@ jobs:
         with:
           node-version: '20'
       - name: Conferir ou dar master
-        run: node scripts/dar-master.js gcbezerra@gmail.com ${{ inputs.confirm == 'DAR' && ' ' || '--dry-run' }}
+        run: node scripts/dar-master.js "$MASTER_EMAIL" ${{ inputs.confirm == 'DAR' && ' ' || '--dry-run' }}
         env:
           FIREBASE_SERVICE_ACCOUNT_BASE64: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_BASE64 }}
+          MASTER_EMAIL: ${{ secrets.MASTER_EMAIL }}
