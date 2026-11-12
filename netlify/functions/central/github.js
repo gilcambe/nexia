@@ -70,12 +70,11 @@ function criarGithub(env = process.env, fetchFn = fetch) {
   // #2717: cada tarefa leva o motivo (por que está parada ou esperando).
   const tarefa = (i) => ({ numero: i.number, titulo: String(i.title || '').slice(0, 120), link: i.html_url, quando: i.updated_at, motivo: motivos.motivoDe(i).texto });
 
-  // #3125 parte 2/6: esta rota responde exatamente o objeto de estadoTarefas(),
-  // calculado a partir das issues reais do GitHub (sem lógica própria de fila/rodando/travadas).
+  // #3125 parte 2/6: esta rota responde EXATAMENTE o objeto de estadoTarefas(),
+  // sem lógica própria de fila/rodando/travadas. estadoTarefas() já filtra pull_request e soma total.
   async function cortex() {
     const issues = await gh('/issues?state=all&per_page=100');
-    const lista = (Array.isArray(issues) ? issues : []).filter((i) => !i.pull_request);
-    return estadoTarefas(lista);
+    return estadoTarefas(issues);
   }
 
   // Lista de tarefas (issue #3128): usada pela parte "tarefas" da Central.
