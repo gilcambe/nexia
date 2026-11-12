@@ -125,3 +125,12 @@ test('VAULT-SCHEMAS.md está em dia com schemas.js', () => {
   const { render, DOC_FILE } = require('../../nexia-ai/vault/schema-doc');
   assert.strictEqual(require('fs').readFileSync(DOC_FILE, 'utf8').replace(/\r\n/g, '\n'), render(),'rode: node nexia-ai/vault/schema-doc.js --write');
 });
+
+test('detectSecret: id do Vault nunca é acusado (antes falhava ao acaso pela entropia)', () => {
+  const { detectSecret } = require('../../nexia-ai/vault/secrets');
+  const crypto = require('crypto');
+  for (const p of Object.values(SCHEMAS).map(s => s.idPrefix)) for (let i = 0; i < 300; i++) {
+    assert.deepStrictEqual(detectSecret(`${p}_${crypto.randomBytes(16).toString('hex')}`), [], p);
+  }
+  assert.ok(detectSecret('xK9fQ2mZ7pL4vB8nR1tY6wE3sA5dG0hJ').includes('high_entropy'), 'chave de verdade continua acusada');
+});
