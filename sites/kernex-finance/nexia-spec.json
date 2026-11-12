@@ -2,17 +2,17 @@
   "spec": {
     "kind": "system",
     "name": "Kernex Finance",
-    "tagline": "Gestão financeira corporativa consolidada",
+    "tagline": "Gestão financeira inteligente para o seu negócio",
     "photo_theme": "",
-    "description": "Gestão financeira corporativa consolidada",
+    "description": "Gestão financeira inteligente para o seu negócio",
     "folder": "sites/kernex-finance",
     "fonts": {
-      "heading": "Sora",
+      "heading": "Space Grotesk",
       "body": "Inter"
     },
     "palette": {
-      "primary": "#1e3a8a",
-      "accent": "#0ea5e9",
+      "primary": "#4f46e5",
+      "accent": "#22d3ee",
       "bg": "#fbfaf7",
       "surface": "#ffffff",
       "text": "#1d2426",
@@ -23,7 +23,7 @@
     "contact": {
       "whatsapp": "",
       "phone": "",
-      "email": "suporte@kernex.com.br",
+      "email": "support@kernex.com.br",
       "address": "",
       "city": "",
       "hours": "",
@@ -44,26 +44,22 @@
     "leads_origem": "",
     "entities": [
       {
-        "key": "transacoes",
-        "label": "Transações",
-        "singular": "Transação",
+        "key": "recebimentos",
+        "label": "Recebimentos",
+        "singular": "Recebimento",
         "fields": [
           {
-            "key": "descricao",
-            "label": "Descrição",
+            "key": "cliente",
+            "label": "Cliente",
             "type": "text",
             "options": [],
             "required": true
           },
           {
-            "key": "categoria",
-            "label": "Categoria",
-            "type": "select",
-            "options": [
-              "Receita",
-              "Despesa",
-              "Transferência"
-            ],
+            "key": "descricao",
+            "label": "Descrição",
+            "type": "text",
+            "options": [],
             "required": true
           },
           {
@@ -74,8 +70,8 @@
             "required": true
           },
           {
-            "key": "data",
-            "label": "Data",
+            "key": "data_vencimento",
+            "label": "Vencimento",
             "type": "date",
             "options": [],
             "required": true
@@ -87,134 +83,155 @@
             "options": [
               "Pago",
               "Pendente",
-              "Atrasado"
+              "Atrasado",
+              "Cancelado"
             ],
             "required": true
           },
           {
-            "key": "responsavel",
-            "label": "Responsável",
-            "type": "text",
-            "options": [],
+            "key": "forma_pagamento",
+            "label": "Forma de Pagamento",
+            "type": "select",
+            "options": [
+              "Pix",
+              "Cartão de Crédito",
+              "TED",
+              "Boleto"
+            ],
             "required": true
           }
         ],
         "sample": [
           {
-            "descricao": "Contrato Mensal - TechCorp",
-            "categoria": "Receita",
-            "valor": "4500",
-            "data": "2026-05-15",
+            "cliente": "Barbearia do Zé",
+            "descricao": "Mensalidade SaaS",
+            "valor": "149.90",
+            "data_vencimento": "2026-01-10",
             "status": "Pago",
-            "responsavel": "Equipe Financeira"
+            "forma_pagamento": "Pix"
           },
           {
-            "descricao": "Licenças de Software",
-            "categoria": "Despesa",
-            "valor": "1200",
-            "data": "2026-05-18",
+            "cliente": "Padaria Pão Dourado",
+            "descricao": "Mensalidade SaaS",
+            "valor": "299.00",
+            "data_vencimento": "2026-01-15",
             "status": "Pendente",
-            "responsavel": "Maria Silva"
+            "forma_pagamento": "Cartão de Crédito"
           },
           {
-            "descricao": "Serviço de Consultoria",
-            "categoria": "Receita",
-            "valor": "8500",
-            "data": "2026-05-20",
+            "cliente": "Clínica Dermatológica",
+            "descricao": "Contrato Anual",
+            "valor": "3600.00",
+            "data_vencimento": "2025-12-20",
             "status": "Pago",
-            "responsavel": "João Santos"
+            "forma_pagamento": "TED"
           },
           {
-            "descricao": "Aluguel Escritório",
-            "categoria": "Despesa",
-            "valor": "3500",
-            "data": "2026-05-01",
+            "cliente": "Estúdio Beauty",
+            "descricao": "Mensalidade SaaS",
+            "valor": "199.90",
+            "data_vencimento": "2025-11-05",
             "status": "Atrasado",
-            "responsavel": "Administrativo"
+            "forma_pagamento": "Boleto"
           }
         ]
       },
       {
-        "key": "clientes",
-        "label": "Clientes",
-        "singular": "Cliente",
+        "key": "recorrentes",
+        "label": "Assinaturas Recorrentes",
+        "singular": "Assinatura",
         "fields": [
           {
-            "key": "nome",
-            "label": "Nome",
+            "key": "nome_assinatura",
+            "label": "Nome da Assinatura",
             "type": "text",
             "options": [],
             "required": true
           },
           {
-            "key": "cnpj",
-            "label": "CNPJ",
-            "type": "text",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "email",
-            "label": "E-mail",
-            "type": "email",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "telefone",
-            "label": "Telefone",
-            "type": "phone",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "status",
-            "label": "Status",
+            "key": "ciclo",
+            "label": "Ciclo",
             "type": "select",
             "options": [
-              "Ativo",
-              "Inativo",
-              "Conta a Receber"
+              "Mensal",
+              "Trimestral",
+              "Anual"
+            ],
+            "required": true
+          },
+          {
+            "key": "valor_mensal",
+            "label": "Valor Mensal Equivalente",
+            "type": "money",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "prox_vencimento",
+            "label": "Próximo Vencimento",
+            "type": "date",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "churn_risco",
+            "label": "Risco de Churn",
+            "type": "number",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "status_atual",
+            "label": "Status Atual",
+            "type": "select",
+            "options": [
+              "Ativa",
+              "Pausada",
+              "Cancelada"
             ],
             "required": true
           }
         ],
         "sample": [
           {
-            "nome": "TechCorp Solutions",
-            "cnpj": "12.345.678/0001-99",
-            "email": "contato@techcorp.com.br",
-            "telefone": "(11) 98888-1234",
-            "status": "Ativo"
+            "nome_assinatura": "Plano Essencial",
+            "ciclo": "Mensal",
+            "valor_mensal": "99.00",
+            "prox_vencimento": "2026-02-01",
+            "churn_risco": "12",
+            "status_atual": "Ativa"
           },
           {
-            "nome": "BuildMore Construções",
-            "cnpj": "98.765.432/0001-10",
-            "email": "financeiro@buildmore.com.br",
-            "telefone": "(21) 97777-5678",
-            "status": "Conta a Receber"
+            "nome_assinatura": "Plano Profissional",
+            "ciclo": "Mensal",
+            "valor_mensal": "249.00",
+            "prox_vencimento": "2026-02-15",
+            "churn_risco": "8",
+            "status_atual": "Ativa"
           },
           {
-            "nome": "MedLife Hospitais",
-            "cnpj": "45.678.910/0001-22",
-            "email": "pagamentos@medlife.com.br",
-            "telefone": "(31) 96666-9012",
-            "status": "Ativo"
+            "nome_assinatura": "Plano Enterprise",
+            "ciclo": "Anual",
+            "valor_mensal": "1200.00",
+            "prox_vencimento": "2025-12-31",
+            "churn_risco": "5",
+            "status_atual": "Ativa"
           },
           {
-            "nome": "EducaTech Academy",
-            "cnpj": "11.222.333/0001-44",
-            "email": "contabil@educatech.com.br",
-            "telefone": "(44) 95555-3456",
-            "status": "Inativo"
+            "nome_assinatura": "Trial Gratuito",
+            "ciclo": "Trimestral",
+            "valor_mensal": "0.00",
+            "prox_vencimento": "2026-01-20",
+            "churn_risco": "45",
+            "status_atual": "Pausada"
           }
         ]
       }
     ],
     "modules": [
       "Dashboard",
-      "Transações",
-      "Clientes",
+      "Billing",
+      "Assinaturas",
       "Relatórios"
     ]
   },
