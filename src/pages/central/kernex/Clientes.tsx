@@ -39,7 +39,7 @@ export default function Clientes() {
           <div className="kx-passos neutro" data-testid="kx-clonar">
             <ol>
               <li>Toque em "Abrir clientes".</li>
-              <li>Abra "Duplicar tenant". Em "Origem", escreva o cliente que quer copiar (ex.: nexia). Em "Id do tenant novo", o nome do novo (ex.: ces-2027).</li>
+              <li>Abra "Duplicar tenant". Em "Origem", escreva o cliente que quer copiar (ex.: studiolima). Em "Id do tenant novo", o nome do novo (ex.: ces-2027).</li>
               <li>Toque em "Prévia" para ver o que vai ser copiado. Se estiver certo, toque em "Duplicar".</li>
             </ol>
             <a className="kx-btn forte" href="/projetos"><Icone nome="troca" tam={16} />Abrir clientes</a>

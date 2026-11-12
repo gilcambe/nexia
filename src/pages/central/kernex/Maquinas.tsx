@@ -12,14 +12,14 @@ function SemSinal({ nome, nunca }: { nome: string; nunca: boolean }) {
       <b>O que fazer no {nome}:</b>
       {nunca ? (
         <ol style={{ margin: "6px 0 0", paddingLeft: 20 }}>
-          <li>O programa que manda o sinal (NEXIA Agente) ainda não está neste PC.</li>
+          <li>O programa que manda o sinal (agente KERNEX) ainda não está neste PC.</li>
           <li>Peça na Central: "instalar o NEXIA Agente no {nome}". Isso mexe no PC, então só com o seu OK.</li>
         </ol>
       ) : (
         <ol style={{ margin: "6px 0 0", paddingLeft: 20 }}>
           <li>Se o {nome} está ligado, o programa que manda o sinal (NEXIA Agente) parou nele.</li>
           <li>Reinicie o {nome}. O programa liga sozinho junto com o Windows. Espere 2 minutos e olhe aqui de novo.</li>
-          <li>Se não voltar: no {nome}, abra o menu Iniciar, digite <b>Agendador de Tarefas</b> e abra. Clique em "Biblioteca do Agendador", ache <b>NEXIA Agente</b>, clique com o botão direito e escolha <b>Executar</b>.</li>
+          <li>Se não voltar: no {nome}, abra o menu Iniciar, digite <b>Agendador de Tarefas</b> e abra. Clique em "Biblioteca do Agendador", ache <b>NEXIA Agente</b> {/* nome-antigo:permitido (nome real da tarefa no Windows) */}, clique com o botão direito e escolha <b>Executar</b>.</li>
           <li>Se nem aparecer "NEXIA Agente" na lista, o programa foi apagado: peça na Central "reinstalar o NEXIA Agente no {nome}".</li>
         </ol>
       )}

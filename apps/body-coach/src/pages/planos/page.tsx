@@ -33,7 +33,7 @@ export default function Planos() {
   const { search } = useLocation();
   const ref = new URLSearchParams(search).get('ref');
   const comRef = (base: string) => (ref ? `${base}${base.includes('?') ? '&' : '?'}ref=${encodeURIComponent(ref)}` : base);
-  useEffect(() => { document.title = 'Planos e preços · NEXIA Body Coach'; }, []);
+  useEffect(() => { document.title = 'Planos e preços · Body Coach'; }, []);
 
   // Logado: vai direto para "Minha assinatura" (onde está o Pix). Sem conta: cria a conta e volta para lá.
   const pix = user
