@@ -12,6 +12,17 @@ export interface Aviso {
   sozinho?: boolean; // resolve sozinho, sem o dono fazer nada
   checadoEm?: string; // ISO date da última checagem do aviso; usado para saber se já passou do prazo
 }
+
+// Prazo prometido: depois de 4 h sem resolver, o aviso deixa de dizer "Resolve sozinho" e passa a pedir o dono.
+// Só vale para aviso marcado como "sozinho" e com checagem recente (checadoEm < agora).
+export const PRAZO_RESOLUCAO_H = 4;
+
+export function resolverSozinho(a: Aviso, agora = Date.now()): boolean {
+  if (!a.sozinho || !a.checadoEm) return false;
+  const t = Date.parse(a.checadoEm);
+  if (Number.isNaN(t)) return false;
+  return agora - t < PRAZO_RESOLUCAO_H * 60 * 60 * 1000;
+}
 export type Aba = "inicio" | "falta" | "clientes" | "dinheiro" | "divulgar" | "cortex" | "prs" | "sistema" | "mais";
 
 const ACOES = "https://github.com/gilcambe/nexia/actions";
@@ -89,6 +100,7 @@ export function calcularAvisos(d: Dados): Aviso[] {
     cor: "amarelo", texto: `${d.dinheiro.vencendo7} assinatura${d.dinheiro.vencendo7 > 1 ? "s vencem" : " vence"} em até 7 dias`, aba: "dinheiro",
     oque: "Assinaturas perto de vencer.", impacto: "Se não renovarem, perdem o acesso.",
     passos: ["Abra a aba Dinheiro para ver quem é.", "Se quiser, mande uma mensagem lembrando da renovação."],
+    sozinho: true, checadoEm: d.saude?.quando || undefined,
   });
   for (const f of d.empresa?.fornecedores || []) if (f.situacao === "erro") a.push({
     cor: "amarelo", texto: `${f.nome} deu erro na última vez`, aba: "sistema",
