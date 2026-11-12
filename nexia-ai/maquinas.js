@@ -82,15 +82,30 @@ function createMaquinas({ env = process.env, driver, agora = () => new Date() } 
     return t ? t.fields : null;
   }
 
+  /** Quadro de tarefas dos PCs (T:\equipe\tarefas.json), mandado pelo PC; a Central só lê. */
+  async function salvarQuadro(nome, b) {
+    const tarefas = (Array.isArray(b.tarefas) ? b.tarefas : []).slice(0, 300).map(t => ({
+      id: num(t.id), titulo: String(t.titulo || '').slice(0, 200), status: String(t.status || '').slice(0, 20),
+      dono: String(t.dono || '').slice(0, 20), quando: String(t.quando || '').slice(0, 30),
+    })).filter(t => t.id !== null);
+    await d().apply([up('equipe/quadro', { tarefas, enviado_por: nome, em: iso() })]);
+    return { ok: true, tarefas: tarefas.length };
+  }
+
+  async function lerQuadro() {
+    const q = (await d().get(['equipe/quadro'])).get('equipe/quadro');
+    return q ? { tarefas: q.fields.tarefas || [], em: q.fields.em || null, enviado_por: q.fields.enviado_por || '' } : { tarefas: [], em: null };
+  }
+
   async function listar() {
     const t = agora().getTime();
     return (await d().list('', 'maquinas', false)).map(m => ({ ...m.fields, online: t - Date.parse(m.fields.visto_em || 0) < ONLINE_MS }));
   }
 
-  /** Rotas do PC: /api/nexia/maquinas/{pulso|tarefa|resultado}. Devolve null se não for rota daqui. */
+  /** Rotas do PC: /api/nexia/maquinas/{pulso|tarefa|resultado|quadro}. Devolve null se não for rota daqui. */
   async function rotaDoPc(event, json) {
     const parts = (event.path || '').replace(/^\/api\/nexia\/?/, '').split('/').filter(Boolean);
-    if (parts[0] !== 'maquinas' || parts.length !== 2 || !['pulso', 'tarefa', 'resultado'].includes(parts[1])) return null;
+    if (parts[0] !== 'maquinas' || parts.length !== 2 || !['pulso', 'tarefa', 'resultado', 'quadro'].includes(parts[1])) return null;
     const ok = tokenOk(event, env);
     if (ok === null || !d()) return json(event, 404, { error: 'Rota não encontrada.' });
     if (!ok) return json(event, 401, { error: 'Não autenticado.' });
@@ -101,6 +116,7 @@ function createMaquinas({ env = process.env, driver, agora = () => new Date() } 
     if (!NOME_RE.test(nome)) return json(event, 400, { error: 'nome inválido (letras, números, - e _).' });
     const m = event.httpMethod;
     if (parts[1] === 'pulso' && m === 'POST') return json(event, 200, await pulso(nome, b));
+    if (parts[1] === 'quadro' && m === 'POST') return json(event, 200, await salvarQuadro(nome, b));
     if (parts[1] === 'tarefa' && m === 'GET') {
       const t = await pegarTarefa(nome);
       return t ? json(event, 200, t) : { statusCode: 204, headers: {}, body: '' };
@@ -112,7 +128,7 @@ function createMaquinas({ env = process.env, driver, agora = () => new Date() } 
     return json(event, 405, { error: 'Método não permitido.' });
   }
 
-  return { pulso, pegarTarefa, resultado, criarTarefa, lerTarefa, listar, rotaDoPc, ligado: () => !!d() };
+  return { pulso, pegarTarefa, resultado, criarTarefa, lerTarefa, listar, salvarQuadro, lerQuadro, rotaDoPc, ligado: () => !!d() };
 }
 
 module.exports = { createMaquinas, tokenOk, ONLINE_MS };

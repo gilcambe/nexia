@@ -39,7 +39,21 @@ function Trabalhar {
 }
 
 Log 'agente iniciado'
+# Cockpit (12/11): manda o quadro de tarefas dos PCs para a Central (só quando o arquivo muda). Opcional: "quadro" no config.
+$quadro = if ($cfg.quadro) { $cfg.quadro } elseif (Test-Path 'T:\equipe\tarefas.json') { 'T:\equipe\tarefas.json' } else { 'C:\NEXIA-TROCA\equipe\tarefas.json' }
+$quadroVisto = $null
+function Quadro {
+  if (-not (Test-Path $quadro)) { return }
+  $quando = (Get-Item $quadro).LastWriteTimeUtc
+  if ($quadroVisto -eq $quando) { return }
+  $t = Get-Content $quadro -Raw -Encoding UTF8 | ConvertFrom-Json
+  $b = @{ nome = $cfg.nome; tarefas = @($t) } | ConvertTo-Json -Depth 5 -Compress
+  Invoke-RestMethod "$base/quadro" -Method Post -Headers $H -ContentType 'application/json; charset=utf-8' -Body ([Text.Encoding]::UTF8.GetBytes($b)) -TimeoutSec 20 -DisableKeepAlive | Out-Null
+  $script:quadroVisto = $quando
+}
+
 while ($true) {
   try { Pulso; Trabalhar } catch { Log "erro: $_" }
+  try { Quadro } catch { Log "quadro: $_" }
   Start-Sleep -Seconds 15
 }
