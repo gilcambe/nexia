@@ -33,7 +33,7 @@ const LICOES_EXTRA = [];
 
 const REGISTRO_PASSAGENS = [];
 
-// Confirmado pelo Reviewer no main (commit 84b17931): o arquivo compila, o require devolve o array e a lição nova está no fim da lista. A correção desta rodada é a linha extra que quebrava o arquivo: por isso a versão antiga não tinha este comentário.
+// Registrar passagem de turno (usado pelo orchestrator quando um agente passa a tarefa para outro).
 function registrarPassagem({ data, quem, motivo, para }) {
   const linha = `${data || new Date().toISOString()}: ${quem || 'IA'} parou (${motivo || 'sem sinal'}); passado para ${para || 'Cortex'}.`;
   REGISTRO_PASSAGENS.push(linha);
