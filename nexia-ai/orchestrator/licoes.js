@@ -45,12 +45,13 @@ function listarPassagens() {
 
 
 
-// O padrão é um objeto: o require do módulo devolve LICOES, TEXTO, registrarPassagem e listarPassagens.
-module.exports = {
+// O require do módulo devolve a lista de lições (array) com os extras pendurados nela: LICOES_EXTRA, TEXTO, registrarPassagem e
+// listarPassagens continuam disponíveis para quem já usa. As lições ficam congeladas (Object.freeze), como antes.
+module.exports = Object.assign(LICOES, {
   LICOES,
   LICOES_EXTRA,
   LICAO_ARVORE,
   TEXTO,
   registrarPassagem,
   listarPassagens,
-};
+});
