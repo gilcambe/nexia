@@ -5,7 +5,7 @@ const assert = require('node:assert');
 const fs = require('fs');
 const path = require('path');
 
-const yml = fs.readFileSync(path.join(__dirname, '../../.github/workflows/lote-sites.yml'), 'utf8');
+const yml = fs.readFileSync(path.join(__dirname, '../../.github/workflows/lote-sites.yml'), 'utf8').replace(/\r\n/g, '\n'); // CRLF do Windows
 
 test('LOTE1. dispara à mão com slugs e publicar (padrão previa)', () => {
   assert.ok(/workflow_dispatch:/.test(yml));
