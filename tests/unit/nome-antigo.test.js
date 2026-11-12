@@ -71,3 +71,10 @@ test('NA8. listarVisiveis varre só as pastas do cliente', () => {
   const lista = listarVisiveis(r).map((x) => `${x.arquivo}:${x.linha}`).sort();
   assert.deepEqual(lista, ['apps/body-coach/src/c.tsx:1', 'public/e.html:1', 'src/pages/a.tsx:1']);
 });
+
+test('NA-CI. guarda: nada com o nome antigo visível ao cliente no repositório (C/#3571 fechado em 12/11)', () => {
+  const path = require('node:path');
+  const { listarVisiveis } = require('../../scripts/nome-antigo');
+  const achados = listarVisiveis(path.join(__dirname, '..', '..'));
+  assert.deepEqual(achados.map(a => `${a.arquivo || a.caminho}:${a.linha} ${a.trecho}`), []);
+});
