@@ -1,7 +1,7 @@
 {
-  "versao": 2,
+  "versao": 3,
   "atualizado": "2026-11-12",
-  "nota": "Biblioteca KERNEX: memória de tudo que já foi construído. Antes de criar, o Cortex consulta aqui; só o que não existe vira tarefa. Nunca guardar dado pessoal de cliente (só o que o módulo faz e onde está). v2: inventário do PC 2 (M2) incluído.",
+  "nota": "Biblioteca KERNEX: memória de tudo que já foi construído. Antes de criar, o Cortex consulta aqui; só o que não existe vira tarefa. Nunca guardar dado pessoal de cliente (só o que o módulo faz e onde está).",
   "modulos": [
     {
       "id": "site",
@@ -378,68 +378,107 @@
       "onde": "nexia/lib/dias-uteis.js, lib/expediente.js"
     },
     {
-      "id": "cadastro-banco",
-      "nome": "Cadastro de dados bancarios/Pix",
-      "faz": "guarda e valida dados de recebimento",
-      "apelidos": [
-        "pix",
-        "dados bancarios",
-        "recebimento"
-      ],
-      "nichos": [
-        "*"
-      ],
-      "nivel": 2,
-      "pronto": true,
-      "origem": "lib",
-      "onde": "lib/cadastro-banco.js",
-      "testes": 5
-    },
-    {
       "id": "ler-anexos",
-      "nome": "Entender anexos (PDF, imagem, planilha)",
-      "faz": "le arquivos enviados e extrai o conteudo",
+      "nome": "Ler arquivos enviados",
+      "faz": "entende PDF, imagem e planilha que a pessoa envia",
       "apelidos": [
-        "ler pdf",
+        "anexo",
+        "pdf",
         "planilha",
-        "anexos"
+        "upload",
+        "documento"
       ],
       "nichos": [
         "financas",
-        "escritorio"
+        "advocacia",
+        "contabilidade"
       ],
       "nivel": 2,
       "pronto": true,
-      "origem": "lib",
-      "onde": "lib/anexos-entender.js + lib/planilha-processar.js",
-      "testes": 8
+      "origem": "nexia (lib)",
+      "onde": "lib/anexos-entender.js + lib/planilha-processar.js"
     },
     {
       "id": "busca-web",
-      "nome": "Busca na web",
-      "faz": "pesquisa e resume resultados para o assistente",
+      "nome": "Busca na internet",
+      "faz": "pesquisa na web e resume para o assistente",
       "apelidos": [
         "pesquisa",
-        "buscar na internet"
+        "google",
+        "buscar na web"
       ],
       "nichos": [
         "*"
       ],
       "nivel": 2,
       "pronto": true,
-      "origem": "lib",
-      "onde": "lib/busca-web.js",
-      "testes": 8
+      "origem": "nexia (lib)",
+      "onde": "lib/busca-web.js"
+    },
+    {
+      "id": "dados-bancarios",
+      "nome": "Cadastro de dados bancários e Pix",
+      "faz": "guarda e confere conta e chave Pix para receber",
+      "apelidos": [
+        "pix",
+        "conta bancaria",
+        "recebimento",
+        "chave pix"
+      ],
+      "nichos": [
+        "*"
+      ],
+      "nivel": 2,
+      "pronto": true,
+      "origem": "nexia (lib)",
+      "onde": "lib/cadastro-banco.js"
+    },
+    {
+      "id": "checkin-evento",
+      "nome": "Check-in de evento",
+      "faz": "lista de convidados e entrada na porta pelo celular",
+      "apelidos": [
+        "check-in",
+        "convidados",
+        "credenciamento",
+        "lista de presenca"
+      ],
+      "nichos": [
+        "eventos"
+      ],
+      "nivel": 2,
+      "pronto": true,
+      "origem": "ces",
+      "onde": "ces/checkin.html + ces/ces-app.js"
+    },
+    {
+      "id": "assistente-ia",
+      "nome": "Assistente com IA",
+      "faz": "chat que responde com os dados reais da pessoa",
+      "apelidos": [
+        "chat",
+        "assistente",
+        "ia",
+        "robo"
+      ],
+      "nichos": [
+        "*"
+      ],
+      "nivel": 2,
+      "pronto": true,
+      "origem": "kernex-finance, body-coach",
+      "onde": "netlify/functions/prumo-lib/assistente.js"
     },
     {
       "id": "controle-gastos",
-      "nome": "Controle de gastos e cartoes",
-      "faz": "lancamentos, faturas de cartao, alertas",
+      "nome": "Controle de gastos e cartões",
+      "faz": "lançamentos, faturas de cartão e alertas de vencimento",
       "apelidos": [
         "gastos",
         "despesas",
         "cartao de credito",
-        "faturas"
+        "fatura",
+        "orcamento"
       ],
       "nichos": [
         "financas"
@@ -447,17 +486,17 @@
       "nivel": 2,
       "pronto": true,
       "origem": "kernex-finance",
-      "onde": "netlify/functions/prumo-lib/cartoes.js + financas.js + alertas.js",
-      "testes": 8
+      "onde": "netlify/functions/prumo-lib/cartoes.js + financas.js + alertas.js"
     },
     {
       "id": "dividas-metas",
-      "nome": "Dividas, plano de quitacao e metas",
-      "faz": "lista dividas, sugere ordem de pagar e acompanha metas",
+      "nome": "Dívidas e metas",
+      "faz": "lista dívidas, sugere a ordem de pagar e acompanha metas",
       "apelidos": [
         "dividas",
+        "quitar",
         "metas",
-        "quitar dividas"
+        "objetivos"
       ],
       "nichos": [
         "financas"
@@ -465,16 +504,33 @@
       "nivel": 2,
       "pronto": true,
       "origem": "kernex-finance",
-      "onde": "netlify/functions/prumo-lib/dividas.js + metas.js",
-      "testes": 14
+      "onde": "netlify/functions/prumo-lib/dividas.js + metas.js"
+    },
+    {
+      "id": "conta-familia",
+      "nome": "Conta da família",
+      "faz": "várias pessoas na mesma conta, cada uma com permissão",
+      "apelidos": [
+        "familia",
+        "compartilhar",
+        "varios usuarios"
+      ],
+      "nichos": [
+        "financas"
+      ],
+      "nivel": 2,
+      "pronto": true,
+      "origem": "kernex-finance",
+      "onde": "netlify/functions/prumo-lib/familia.js"
     },
     {
       "id": "open-finance",
-      "nome": "Open Finance (leitura de bancos)",
-      "faz": "conecta bancos para importar saldos",
+      "nome": "Ligação com bancos (Open Finance)",
+      "faz": "importa saldos dos bancos da pessoa",
       "apelidos": [
         "open finance",
-        "conectar banco"
+        "banco",
+        "extrato automatico"
       ],
       "nichos": [
         "financas"
@@ -482,44 +538,7 @@
       "nivel": 3,
       "pronto": false,
       "origem": "kernex-finance",
-      "onde": "netlify/functions/prumo-lib/openfinance.js",
-      "testes": 4
-    },
-    {
-      "id": "assistente-ia",
-      "nome": "Assistente com IA sobre os dados do usuario",
-      "faz": "chat que responde com os numeros reais da conta",
-      "apelidos": [
-        "assistente",
-        "chat com ia",
-        "chatbot"
-      ],
-      "nichos": [
-        "financas",
-        "saude",
-        "*"
-      ],
-      "nivel": 2,
-      "pronto": true,
-      "origem": "kernex-finance",
-      "onde": "netlify/functions/prumo-lib/assistente.js"
-    },
-    {
-      "id": "familia",
-      "nome": "Conta compartilhada da familia",
-      "faz": "varias pessoas na mesma conta com permissao",
-      "apelidos": [
-        "conta compartilhada",
-        "familia"
-      ],
-      "nichos": [
-        "financas"
-      ],
-      "nivel": 2,
-      "pronto": true,
-      "origem": "kernex-finance",
-      "onde": "netlify/functions/prumo-lib/familia.js",
-      "testes": 4
+      "onde": "netlify/functions/prumo-lib/openfinance.js"
     },
     {
       "id": "cotacoes-viagem",
@@ -537,24 +556,6 @@
       "pronto": true,
       "origem": "viajante-pro",
       "onde": "viajante-pro/vp-cotacoes.html"
-    },
-    {
-      "id": "checkin-evento",
-      "nome": "Check-in de evento",
-      "faz": "lista de convidados e check-in na porta",
-      "apelidos": [
-        "check-in",
-        "lista de convidados",
-        "credenciamento"
-      ],
-      "nichos": [
-        "eventos"
-      ],
-      "nivel": 2,
-      "pronto": true,
-      "origem": "ces",
-      "onde": "ces/checkin.html + ces-app.js",
-      "testes": 9
     },
     {
       "id": "seguranca-arquivos",
@@ -671,8 +672,8 @@
       "origem": "body-coach"
     },
     {
-      "id": "viajantepro",
-      "nome": "Agência de viagens com cotações (Viajante Pro)",
+      "id": "viajante-pro",
+      "nome": "Agência de viagens com área do passageiro (Viajante Pro)",
       "nichos": [
         "viagens",
         "turismo"
@@ -680,14 +681,46 @@
       "modulos": [
         "site",
         "whatsapp",
+        "pacotes",
         "area-cliente",
-        "cotacoes-viagem",
         "painel",
         "app-instalavel"
       ],
+      "clonavel": true,
+      "previa": ""
+    },
+    {
+      "id": "eventos-checkin",
+      "nome": "Eventos com check-in (CES)",
+      "nichos": [
+        "eventos"
+      ],
+      "modulos": [
+        "site",
+        "checkin-evento",
+        "painel",
+        "app-instalavel"
+      ],
+      "clonavel": true,
+      "previa": ""
+    },
+    {
+      "id": "financas-pessoais",
+      "nome": "Finanças pessoais (Kernex Finance)",
+      "nichos": [
+        "financas"
+      ],
+      "modulos": [
+        "login-clientes",
+        "app-instalavel",
+        "carteira",
+        "controle-gastos",
+        "dividas-metas",
+        "conta-familia",
+        "assistente-ia"
+      ],
       "clonavel": false,
-      "falta_para_clonar": "M3: separar o modelo dos dados do cliente de origem",
-      "origem": "viajante-pro"
+      "previa": "https://finance.kernex.com.br"
     },
     {
       "id": "splash",
