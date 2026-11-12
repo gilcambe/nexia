@@ -120,7 +120,11 @@ function CriarEPublicar({ ficha, modelo, agir, ler, pronto }: Api & { ficha: Fic
   const publicar = async () => {
     if (!id || !window.confirm(`Publicar "${ficha.nome}" para todo mundo ver?`)) return;
     setOcupado(true);
-    try { await agir({ acao: "fabrica-publicar", id }); setSt((s) => ({ ...(s || { status: "previa" }), status: "no-ar" })); }
+    try {
+      const r = await agir<{ endereco?: string; reserva?: string }>({ acao: "fabrica-publicar", id });
+      setSt((s) => ({ ...(s || { status: "previa" }), status: "no-ar" }));
+      if (r && r.endereco) setMsg(`Publicando (1 a 2 minutos): ${r.endereco}. Se o endereço ainda não abrir, use ${r.reserva}.`);
+    }
     catch (e) { setMsg("Não deu certo: " + (e as Error).message); }
     setOcupado(false);
   };

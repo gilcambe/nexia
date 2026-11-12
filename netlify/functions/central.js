@@ -63,7 +63,7 @@ function createHandler(deps = {}) {
         let body = {};
         try { body = JSON.parse(event.body || '{}') || {}; } catch { return res(400, { error: 'Pedido inválido.' }); }
         if (String(body.acao || '').startsWith('fabrica-')) {   // M4: Fábrica (tela do PC 2)
-          const r = await require('./central/fabrica').rota({ acao: body.acao, body }, { gh: deps.ghRaiz || require('./central/fabrica').criarGhRaiz(env, fetchFn) });
+          const r = await require('./central/fabrica').rota({ acao: body.acao, body }, { gh: deps.ghRaiz || require('./central/fabrica').criarGhRaiz(env, fetchFn), loja: deps.lojaFabrica !== undefined ? deps.lojaFabrica : require('./central/fabrica').criarLoja(env) });
           if (r) return res(r.status, r.corpo);
         }
         if (body.acao === 'testar-ias') return res(200, { ias: await empresa.testarIAs(getRouter(), getIAs()), em: new Date().toISOString() });
@@ -124,7 +124,7 @@ function createHandler(deps = {}) {
 
       const parte = String((event.queryStringParameters || {}).parte || 'lista');
       if (String(parte || '').startsWith('fabrica-')) {
-        const r = await require('./central/fabrica').rota({ parte, query: event.queryStringParameters || {} }, { gh: deps.ghRaiz || require('./central/fabrica').criarGhRaiz(env, fetchFn) });
+        const r = await require('./central/fabrica').rota({ parte, query: event.queryStringParameters || {} }, { gh: deps.ghRaiz || require('./central/fabrica').criarGhRaiz(env, fetchFn), loja: deps.lojaFabrica !== undefined ? deps.lojaFabrica : require('./central/fabrica').criarLoja(env) });
         if (r) return res(r.status, r.corpo);
       }
       if (parte === 'lista') return res(200, { produtos: PRODUTOS, links: LINKS });

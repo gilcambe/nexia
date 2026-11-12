@@ -69,10 +69,21 @@ test('CFS5. status: gerando, prévia (com portões e URL) e reprovado, pelo tít
   assert.equal((await fab.status('../x', ghFalso())).status, 400);
 });
 
-test('CFS6. publicar em produção nunca é automático (409 com explicação)', () => {
-  const r = fab.publicar();
-  assert.equal(r.status, 409);
-  assert.match(r.corpo.error, /aprovação/);
+test('CFS6. publicar usa a MESMA ficha da prévia (guardada no D1) e dispara o workflow de produção', async () => {
+  const loja = fab.criarLoja({}, createMemoryDriver());
+  const { gh, chamadas } = ghFalso();
+  await fab.criar({ ficha: { ...FICHA, responsavel: 'Dra. Ana' } }, { gh, loja });
+  const r = await fab.publicar({ id: 'clinica-sorriso' }, { gh, loja });
+  assert.equal(r.status, 200);
+  assert.equal(r.corpo.endereco, 'https://clinica-sorriso.kernex.com.br');
+  const disparo = chamadas.find(c => c.caminho.includes('fabrica-producao.yml'));
+  const corpo = JSON.parse(disparo.init.body);
+  assert.deepEqual(corpo.inputs, { modelo: 'demo-agenda', slug: 'clinica-sorriso', nome: 'Clínica Sorriso', whatsapp: '5581999999999', cidade: 'Recife', responsavel: 'Dra. Ana', dominio: 'sim', guardar: 'sim' });
+  // sem prévia guardada: não publica nada
+  const r2 = await fab.publicar({ id: 'outra-clinica' }, { gh, loja });
+  assert.equal(r2.status, 409);
+  assert.equal((await fab.publicar({ id: '../x' }, { gh, loja })).status, 400);
+  assert.equal((await fab.publicar({ id: 'clinica-sorriso' }, { gh, loja: null })).status, 409);
 });
 
 test('CFS7. rota da Central: parte e ação da fábrica respondem; o resto passa adiante', async () => {
