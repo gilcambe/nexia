@@ -59,3 +59,46 @@ test('GP5. revisarCobertura: lê o JSON da IA; sem IA respondendo devolve null',
   const lixo = await revisarCobertura({ chat: async () => ({ text: 'não sei' }) }, M, 'pedido', 'codigo');
   assert.equal(lixo, null);
 });
+
+// B6 (12/11, achado do PC 2): 6 rodadas sem PR porque o gerador recusava tudo que mexe em arquivo existente.
+const { conferir, SISTEMA } = require('../../nexia-ai/contrato/gerador');
+const LER = "'use strict';\nconst test = require('node:test');\nconst assert = require('node:assert/strict');\nconst fs = require('node:fs');\nconst path = require('node:path');\nconst src = fs.readFileSync(path.join(__dirname, '../../src/pages/legais/termos/page.tsx'), 'utf8');\ntest('termos', () => {\n  assert.match(src, /contato@kernex\.com\.br/);\n  assert.doesNotMatch(src, /nexiaos/);\n  assert.ok(src.length > 100);\n});\n";
+const prop = (o = {}) => ({ testavel: true, arquivos: ['src/pages/legais/termos/page.tsx'], teste: 'tests/unit/contrato-termos.test.js', codigo: LER, ...o });
+
+test('GP6. arquivo existente .tsx/.html/.json pode ser a solução e o teste pode LER o arquivo da solução', () => {
+  const c = conferir(prop());
+  assert.equal(c.ok, true, c.erros.join('; '));
+  for (const a of ['public/conheca/index.html', 'apps/body-coach/android/twa-manifest.json', 'src/x.ts', 'docs/x.md']) assert.equal(conferir(prop({ arquivos: [a], codigo: LER.replace('src/pages/legais/termos/page.tsx', a) })).ok, true, a);
+  for (const a of ['package.json', 'wrangler.toml', '.github/workflows/ci.yml', '.env', 'tests/unit/a.js']) assert.equal(conferir(prop({ arquivos: [a] })).ok, false, a);
+});
+
+test('GP7. teste que não importa nem lê nenhum arquivo da solução é recusado', () => {
+  assert.match(conferir(prop({ codigo: LER.replace('src/pages/legais/termos/page.tsx', 'src/outro.tsx') })).erros.join(), /nenhum arquivo da solução/);
+});
+
+test('GP8. gravar em disco só em pasta temporária; caminho absoluto e processo continuam proibidos', () => {
+  const grava = LER.replace("test('termos'", "fs.writeFileSync('x.txt', 'a');\ntest('termos'");
+  assert.match(conferir(prop({ codigo: grava })).erros.join(), /pasta temporária/);
+  const tmp = grava.replace("fs.writeFileSync('x.txt'", "const os = require('node:os');\nconst d = fs.mkdtempSync(path.join(os.tmpdir(), 'k-'));\nfs.writeFileSync(path.join(d, 'x.txt')");
+  assert.equal(conferir(prop({ codigo: tmp })).ok, true, conferir(prop({ codigo: tmp })).erros.join('; '));
+  assert.match(conferir(prop({ codigo: LER.replace("path.join(__dirname, '../../src/pages/legais/termos/page.tsx')", "'C:\\NEXIA\\src\\pages\\legais\\termos\\page.tsx'") })).erros.join(), /caminho absoluto/);
+  assert.match(conferir(prop({ codigo: LER + "\nrequire('node:child_process');" })).erros.join(), /importa o que não pode: node:child_process/);
+});
+
+test('GP9. instrução da IA: mudar arquivo existente É testável (função exportada ou handler com pedido falso)', () => {
+  assert.match(SISTEMA, /arquivo existente/);
+  assert.match(SISTEMA, /handler/);
+  assert.match(SISTEMA, /readFileSync/);
+});
+
+test('GP10. executor: arquivo existente grande não pode ser trocado por um arquivo inteiro com menos da metade (IA truncou)', () => {
+  const { aplicar } = require('../../nexia-ai/contrato/executor');
+  const raiz = repo({ 'src/pagina.tsx': 'linha de código\n'.repeat(300) });
+  const c = { arquivos: ['src/pagina.tsx'] };
+  const curto = aplicar('ARQUIVO: src/pagina.tsx\n```tsx\nexport default 1;\n```\n', c, raiz);
+  assert.deepEqual(curto.aplicados, []);
+  assert.match(curto.recusas.join(), /menos da metade/);
+  assert.equal(fs.readFileSync(path.join(raiz, 'src/pagina.tsx'), 'utf8').length, 'linha de código\n'.length * 300);
+  const novo = aplicar('ARQUIVO: src/novo.tsx\n```tsx\nexport default 1;\n```\n', { arquivos: ['src/novo.tsx'] }, raiz);
+  assert.deepEqual(novo.aplicados, ['src/novo.tsx']);
+});

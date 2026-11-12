@@ -16,15 +16,23 @@ const path = require('node:path');
 const { safePath } = require('../orchestrator/edit-blocks');
 
 const PROIBIDO = /^(tests\/|\.github\/|node_modules\/|dist\/|build\/)|(^|\/)\.env|wrangler\.toml$|package(-lock)?\.json$|(^|\/)(deploy|publicar)[^/]*$/i;
-const MODULOS_OK = new Set(['node:test', 'node:assert', 'node:assert/strict', 'assert', 'assert/strict']);
+// B6 (12/11): fs/path/os liberados para LER o arquivo da solução e gravar só em pasta temporária (mkdtemp).
+const MODULOS_OK = new Set(['node:test', 'node:assert', 'node:assert/strict', 'assert', 'assert/strict', 'node:fs', 'fs', 'node:path', 'path', 'node:os', 'os']);
+const EXT_OK = /\.((c|m)?js|jsx|ts|tsx|html|css|json|md)$/i;
+const GRAVA = /\b(writeFileSync|writeFile|appendFileSync|appendFile|mkdirSync|rmSync|rmdirSync|unlinkSync|renameSync|copyFileSync|cpSync)\b/;
+const ABSOLUTO = /['"`]([A-Za-z]:\\|\/(home|etc|usr|var|tmp|Users|root)\/)/;
 
 const SISTEMA = [
   'Você escreve TESTES DE ACEITAÇÃO para outra IA implementar depois. Você NÃO escreve a solução.',
   'Responda SÓ com um JSON: {"testavel": true|false, "motivo": "...", "arquivos": ["lib/x.js"], "teste": "tests/unit/contrato-x.test.js", "codigo": "conteúdo do teste"}.',
-  'Regras do teste: CommonJS; use só require("node:test"), require("node:assert/strict") e require("../../<arquivo da solução>");',
-  'nada de fs, rede, child_process, process.env, timers ou dados aleatórios; no mínimo 3 asserções com valores concretos e corretos;',
-  'cubra o caso comum, um caso de borda e uma entrada inválida. Os arquivos da solução são módulos novos ou existentes fora de tests/.',
-  'Se o pedido for de tela, texto, configuração, deploy ou algo que não dá para provar com função pura, responda {"testavel": false, "motivo": "..."}.',
+  'Regras do teste: CommonJS; pode usar require("node:test"), require("node:assert/strict"), require("node:fs"), require("node:path"), require("node:os") e require("../../<arquivo da solução>");',
+  'nada de rede, child_process, process.env, timers, tempo atual ou dados aleatórios; gravar em disco só dentro de fs.mkdtempSync(path.join(os.tmpdir(), ...)); caminhos sempre relativos a __dirname;',
+  'no mínimo 3 asserções com valores concretos e corretos; cubra o caso comum, um caso de borda e uma entrada inválida.',
+  'Mudar um arquivo existente É testável (o teste falha hoje e passa depois da mudança):',
+  '- lógica em arquivo existente: importe a função exportada e verifique o comportamento novo;',
+  '- endpoint/rota: importe o handler e chame com um pedido falso (objeto com method, body, headers) e dependências falsas; verifique status e corpo;',
+  '- texto, título, link ou configuração em .tsx/.html/.json/.md: leia o arquivo com fs.readFileSync(path.join(__dirname, "../../<arquivo>"), "utf8") e verifique o conteúdo novo e a ausência do antigo.',
+  'Só responda {"testavel": false, "motivo": "..."} se a mudança depender de serviço externo (painel da Cloudflare, Firebase, Play Store, DNS), de deploy ou de olhar humano (cor, layout).',
 ].join('\n');
 
 function extrairJson(texto) {
@@ -41,14 +49,17 @@ function conferir(p) {
   if (!teste || !/^tests\/unit\/contrato-[a-z0-9-]+\.test\.js$/.test(teste)) erros.push('teste deve ficar em tests/unit/contrato-<nome>.test.js');
   const arquivos = Array.isArray(p && p.arquivos) ? p.arquivos.map(safePath) : [];
   if (!arquivos.length || arquivos.length > 4) erros.push('de 1 a 4 arquivos da solução');
-  if (arquivos.some(a => !a || PROIBIDO.test(a) || !/\.(c|m)?js$/.test(a))) erros.push('arquivo da solução inválido ou proibido (só .js fora de tests/, .github/, deploy e configuração)');
+  if (arquivos.some(a => !a || PROIBIDO.test(a) || !EXT_OK.test(a))) erros.push('arquivo da solução inválido ou proibido (código/texto fora de tests/, .github/, deploy, package e segredos)');
   const codigo = String((p && p.codigo) || '');
   if (codigo.length < 80 || codigo.length > 20000) erros.push('teste vazio ou grande demais');
   const reqs = [...codigo.matchAll(/require\(\s*['"`]([^'"`]+)['"`]\s*\)/g)].map(m => m[1]);
   const daSolucao = r => r.startsWith('../../') && arquivos.some(a => a && (r.slice(6) === a || r.slice(6) + '.js' === a));
   const ruins = reqs.filter(r => !MODULOS_OK.has(r) && !daSolucao(r));
   if (ruins.length) erros.push(`o teste importa o que não pode: ${ruins.join(', ')}`);
-  if (!reqs.some(daSolucao)) erros.push('o teste não importa nenhum arquivo da solução');
+  const leSolucao = arquivos.some(a => a && codigo.includes(a));
+  if (!reqs.some(daSolucao) && !leSolucao) erros.push('o teste não importa nem lê nenhum arquivo da solução');
+  if (GRAVA.test(codigo) && !/mkdtempSync\s*\(/.test(codigo)) erros.push('o teste só pode gravar em pasta temporária (fs.mkdtempSync em os.tmpdir())');
+  if (ABSOLUTO.test(codigo)) erros.push('o teste usa caminho absoluto (use path.join(__dirname, ...))');
   if (/\bimport\s|process\.|child_process|globalThis|eval\(|Function\(|fetch\(|setTimeout|setInterval|Math\.random|Date\.now\(\)|new Date\(\)/.test(codigo)) erros.push('o teste usa recurso proibido (processo, rede, tempo atual, aleatório ou eval)');
   const assercoes = (codigo.match(/\bassert\s*\.\s*\w+\s*\(|\bassert\s*\(/g) || []).length;
   if (assercoes < 3) erros.push(`poucas asserções (${assercoes}; mínimo 3)`);
