@@ -67,6 +67,10 @@ module.exports = {
   },
 
   down: async (queryInterface, Sequelize) => {
+    await queryInterface.dropTable('livro_cotas');
+  },
+
+  _downAntigo: async (queryInterface, Sequelize) => {
     // Rdv2: remove o ENUM que o MySQL cria junto com a coluna treina_com_dados.
     // A migration é idempotente: se a tabela não existir, o up() não faz nada.
     try {

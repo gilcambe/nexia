@@ -6,7 +6,8 @@ const router = express.Router();
 module.exports = (models) => {
   const LivroCota = models && models.LivroCota;
 
-  router.get('/livro_cotas', async (req, res) => {
+  // GET /livro_cotas: todas as linhas (ou "sem dados") + /livro_cotas/numero/:id/hora
+  router.get(['/livro_cotas', '/livro_cotas/numero/:id/hora'], async (req, res) => {
     try {
       let registros = [];
       if (LivroCota && typeof LivroCota.findAll === 'function') {
