@@ -95,6 +95,12 @@ jobs:
       - name: Log do servidor em caso de falha
         if: failure()
         run: tail -n 100 server.log || true
+      - name: Central - todas as telas abrem sem erro (build de teste com usuário falso, servidor falso)
+        run: |
+          VITE_E2E_USUARIO_TESTE=1 npx vite build --outDir dist-e2e --emptyOutDir > /dev/null
+          npx vite preview --outDir dist-e2e --port 4173 --strictPort > preview.log 2>&1 &
+          for i in $(seq 1 60); do curl -sf -o /dev/null http://127.0.0.1:4173/ && break; sleep 1; done
+          BASE_URL=http://127.0.0.1:4173 npx playwright test -c tests/e2e/playwright.central.config.js
 
   # ADR-F12-02: o Bridge roda no Windows do dono; a suíte dele roda também num runner Windows.
   bridge-windows:
