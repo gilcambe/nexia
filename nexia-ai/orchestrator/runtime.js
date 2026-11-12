@@ -291,6 +291,7 @@ async function runAgent(o) {
   let nudges = 0;
   let verdictNudges = 0;
   let fakeNudges = 0;
+  let planoParcial = '';       // #3354: último texto de análise do Architect, usado se ele bater no limite
   const applied = new Set();   // blocos de texto já enviados ao gateway
   const branch = o.branch || ((/Branch de trabalho: (nexia\/\S+)/.exec(o.goal || '') || [])[1]) || null;
   const localErrors = [];   // gravações recusadas (diagnóstico no resumo do passo quando nada foi gravado)
@@ -474,6 +475,7 @@ async function runAgent(o) {
       return { status: 'done', text: `${clip(out.text, 2000 - why.length)}${why}`, tool_call_ids: toolCallIds, model };
     }
 
+    if (o.agentId === 'architect' && String(out.text || '').trim()) planoParcial = String(out.text).trim();
     const r = await runCalls(calls, out, model);
     if (r.stop) return r.stop;
     if (viaText) for (const e of (calls.find(c => c.id === 'text_edit') || { input: { edits: [] } }).input.edits) applied.add(JSON.stringify([e.path, e.find, e.replace]));
@@ -485,6 +487,8 @@ async function runAgent(o) {
   }
   // Já gravou na branch e só faltou fechar: segue para CI, revisão e segurança (os gates decidem), em vez de jogar o trabalho fora.
   if (canWrite && branch && wrote) return { status: 'done', text: `O agente ${agent.title} gravou as mudanças na branch ${branch} e atingiu o limite de passos; segue para os testes e a revisão.`, tool_call_ids: toolCallIds, limite_passos: true };
+  // #3354: o Architect não reprova a tarefa por limite de passos; o plano parcial segue para o próximo agente.
+  if (o.agentId === 'architect' && planoParcial) return { status: 'done', parcial: true, text: `Plano parcial (o Architect atingiu o limite de passos):\n${clip(planoParcial, 1900)}`, tool_call_ids: toolCallIds, limite_passos: true };
   return { status: 'failed', error_code: 'MAX_STEPS', text: `O agente ${agent.title} não terminou dentro do limite de passos.`, tool_call_ids: toolCallIds };
 }
 
