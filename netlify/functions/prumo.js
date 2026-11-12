@@ -42,6 +42,8 @@ function validarItemCarteira(o) {
     if (Number.isFinite(n)) item[k] = k === 'quantidade' ? Math.round(n * 1e6) / 1e6 : dinheiro(n);
   }
   if (o.corrigido_por_cotacao === true) { item.corrigido_por_cotacao = true; const vl = numero(o.valor_lido); if (Number.isFinite(vl)) item.valor_lido = dinheiro(vl); }
+  // Sem nome de banco escrito no print (ou sem banco_escrito) o campo sai vazio, nunca adivinhado.
+  item.banco = texto(o.banco, 80);
   return { ok: true, item };
 }
 
@@ -278,7 +280,7 @@ function normalizarLido(b, dataPrint) {
   const dataDoPrint = dataLida((String(dataPrint || '').match(/(\d{1,2}\/\d{1,2}\/\d{2,4})/) || [])[0] || dataPrint);
   const { banco_escrito, instituicao, ...resto } = b; // eslint-disable-line no-unused-vars
   return conferirValor({ ...resto, nome, tipo, valor: Number.isFinite(val) ? Math.abs(val) : b.valor,
-    data_valor: dataLida(b.data_valor) || dataDoPrint || deps.agora().toISOString().slice(0, 10), vencimento: dataLida(b.vencimento) || null, banco });
+    data_valor: dataLida(b.data_valor) || dataDoPrint || deps.agora().toISOString().slice(0, 10), vencimento: dataLida(b.vencimento) || null, banco: banco || undefined });
 }
 // Modelos grátis com visão, do mais rápido ao mais forte. Vários provedores: se a cota de um acabar
 // (o Gemini grátis vive no limite por causa do Cortex), o próximo lê.
