@@ -74,7 +74,9 @@ function criarGithub(env = process.env, fetchFn = fetch) {
   // Toda a contagem (fila, andamento, travadas, concluídas, total) vem de lá.
   async function cortex() {
     const issues = await gh('/issues?state=all&per_page=100');
-    return estadoTarefas(issues);
+    // A resposta é EXATAMENTE o objeto de estadoTarefas() (fila, andamento, aguardando-ia,
+    // travada, concluida, falhou, total, precisaVoce). Nada de campos extras.
+    return estadoTarefas(Array.isArray(issues) ? issues : []);
   }
 
   // Lista de tarefas (issue #3128): usada pela parte "tarefas" da Central.
