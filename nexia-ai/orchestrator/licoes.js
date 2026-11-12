@@ -24,4 +24,23 @@ const LICOES = Object.freeze([
   'Nunca planejar arquivo em pasta que o produto não usa; ler a árvore antes.',
 ];
 
+const TEXTO = `LIÇÕES APRENDIDAS (erros reais de tarefas anteriores; não repita):\n${LICOES.map(l => `- ${l}`).join('\n')}`;
+
+const REGISTRO_PASSAGENS = [];
+
+function registrarPassagem({ data, quem, motivo, para }) {
+  const linha = `${data || new Date().toISOString()}: ${quem || 'IA'} parou (${motivo || 'sem sinal'}); passado para ${para || 'Cortex'}.`;
+  REGISTRO_PASSAGENS.push(linha);
+  return linha;
+}
+
+function listarPassagens() {
+  return [...REGISTRO_PASSAGENS];
+}
+
 module.exports = LICOES;
+
+module.exports.LICOES = LICOES;
+module.exports.TEXTO = TEXTO;
+module.exports.registrarPassagem = registrarPassagem;
+module.exports.listarPassagens = listarPassagens;
