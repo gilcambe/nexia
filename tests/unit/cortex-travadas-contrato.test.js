@@ -38,3 +38,12 @@ test('TC3. no máximo MAX_RECUPERAR_POR_CICLO por ciclo', async () => {
   const r = await travadasPeloCofre('t', issues, { ghFn: githubFalso() });
   assert.equal(r.length, MAX_RECUPERAR_POR_CICLO);
 });
+
+test('TC4. a recuperação vê também as travadas que perderam cortex-fila (as do Jules), sem duplicar', () => {
+  const { juntarTravadas } = require('../../scripts/cortex-fila');
+  const daFila = [issue(10), { ...issue(20), labels: [{ name: 'cortex-fila' }] }];
+  const soTravadas = [issue(10), { number: 1629, body: 'x', author_association: 'OWNER', labels: [{ name: 'cortex-travado' }, { name: 'jules-enviado' }] }, { number: 99, pull_request: {}, labels: [] }];
+  const r = juntarTravadas(daFila, soTravadas);
+  assert.deepEqual(r.map(i => i.number).sort((a, b) => a - b), [10, 20, 1629]);
+  assert.deepEqual(juntarTravadas(daFila, null).map(i => i.number), [10, 20]);
+});

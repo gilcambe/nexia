@@ -276,6 +276,12 @@ function tentaContrato(i) {
   return !i.pull_request && !nomes(i).some(l => FORA_DO_CONTRATO.includes(l));
 }
 const JULES_PARADO_MS = 3 * 24 * 3600 * 1000;   // Jules sem entregar em 3 dias = parado; antes disso, não abre 2ª frente
+// 12/11: as travadas mandadas ao Jules perdem cortex-fila e a fila só carregava cortex-fila: a recuperação nunca as via
+// (19 paradas). Junta as abertas com cortex-travado (sem PR, sem repetir).
+function juntarTravadas(issues, travadas) {
+  const vistos = new Set((issues || []).map(i => i.number));
+  return [...(issues || []), ...(Array.isArray(travadas) ? travadas : []).filter(i => !i.pull_request && !vistos.has(i.number) && vistos.add(i.number))];
+}
 async function travadasPeloCofre(token, issues, { ghFn = gh, agora = Date.now() } = {}) {
   const voltar = [];
   const fora = x => nomes(x).some(l => FORA_DA_RECUPERACAO.includes(l));
@@ -920,7 +926,10 @@ async function main() {
   }
   acoes.push(...(extra.julesFeitos || []));
   try { acoes.push(...(await reservasQueVoltam(token, issues) || [])); } catch (e) { console.log(`reserva sem cota: ${e.message}`); }
-  try { acoes.push(...((await travadasPeloCofre(token, issues) || [])).filter(a => !acoes.some(x => x.numero === a.numero))); } catch (e) { console.log(`travadas pelo cofre: ${e.message}`); }
+  try {
+    const soTravadas = (await gh(token, 'GET', `/issues?state=open&labels=${L.travado}&per_page=100`)).json;
+    acoes.push(...((await travadasPeloCofre(token, juntarTravadas(issues, soTravadas)) || [])).filter(a => !acoes.some(x => x.numero === a.numero)));
+  } catch (e) { console.log(`travadas pelo cofre: ${e.message}`); }
   // Sem escrita disponível no banco, despachar só queima mais cota: segura as tarefas novas (o resto segue).
   if (acoes.some(a => a.tipo === 'despachar')) {
     const sonda = await sondarCota();
@@ -966,5 +975,5 @@ async function main() {
   }
 }
 
-module.exports = { tentaContrato, FORA_DO_CONTRATO, vaiParaContrato, ultimoRotuloEm, travadasPeloCofre, entregaComprovada, MAX_RECUPERAR_POR_CICLO, FORA_DA_RECUPERACAO, soPipelineModelo, assinaturaDoSmoke, errosDeAmbiente, mexeEmWorkflow, planejarComIA, revisarParte, dadosDoPlanejador, corrigirCiDosPrs, reservaVolta, reservasQueVoltam, travouAntesDoConserto, devePedirReserva, entregouAlgo, depoisSemEntrega, MAX_SEM_ENTREGA, rascunhosParados, candidatosRascunho, MSG_RASCUNHO_PARADO, tokenDaApp, TENTATIVAS_ATE_DIVIDIR, caminhosDoPedido, sondarCota, decidir, precisaTesteFinal, precisaDividir, paisConcluidos, dividirComIA, MAX_TENTATIVAS, validarCortexFeito, reabrirFeitosInvalidos };
+module.exports = { juntarTravadas, tentaContrato, FORA_DO_CONTRATO, vaiParaContrato, ultimoRotuloEm, travadasPeloCofre, entregaComprovada, MAX_RECUPERAR_POR_CICLO, FORA_DA_RECUPERACAO, soPipelineModelo, assinaturaDoSmoke, errosDeAmbiente, mexeEmWorkflow, planejarComIA, revisarParte, dadosDoPlanejador, corrigirCiDosPrs, reservaVolta, reservasQueVoltam, travouAntesDoConserto, devePedirReserva, entregouAlgo, depoisSemEntrega, MAX_SEM_ENTREGA, rascunhosParados, candidatosRascunho, MSG_RASCUNHO_PARADO, tokenDaApp, TENTATIVAS_ATE_DIVIDIR, caminhosDoPedido, sondarCota, decidir, precisaTesteFinal, precisaDividir, paisConcluidos, dividirComIA, MAX_TENTATIVAS, validarCortexFeito, reabrirFeitosInvalidos };
 if (require.main === module) main().catch(e => { console.error(e.message); process.exit(1); });
