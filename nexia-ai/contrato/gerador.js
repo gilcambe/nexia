@@ -42,6 +42,31 @@ function extrairJson(texto) {
   try { return JSON.parse(m[1]); } catch { return null; }
 }
 
+/**
+ * 13/11: a IA escrevia um teste bom mas no lugar errado (ex.: tests/painel.test.js) e o portão recusava tudo
+ * (6 de 6 recusas da Cloudflare). Agora o nome e os require da solução são ajustados para o padrão
+ * tests/unit/contrato-<nome>.test.js; o resto dos portões continua igual.
+ */
+function ajustarTeste(p) {
+  if (!p || typeof p !== 'object') return p;
+  const PADRAO = /^tests\/unit\/contrato-[a-z0-9-]+\.test\.js$/;
+  const orig = safePath(p.teste) || '';
+  if (PADRAO.test(orig)) return p;
+  const arquivos = Array.isArray(p.arquivos) ? p.arquivos.map(safePath).filter(Boolean) : [];
+  const nomeDe = x => String(x || '').split('/').pop().replace(/\.(test|spec)\.[cm]?[jt]s$/, '').replace(/\.[^.]+$/, '');
+  const slug = (nomeDe(orig) || nomeDe(arquivos[0])).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .replace(/^contrato-/, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 50);
+  if (!slug) return p;
+  const pastaOrig = orig.includes('/') ? orig.slice(0, orig.lastIndexOf('/')) : 'tests/unit';
+  const posix = require('path').posix;
+  const codigo = String(p.codigo || '').replace(/require\(\s*(['"`])(\.{1,2}\/[^'"`]+)\1\s*\)/g, (todo, q, r) => {
+    const alvo = posix.normalize(posix.join(pastaOrig, r));
+    const achou = arquivos.find(a => a === alvo || a === alvo + '.js');
+    return achou ? `require(${q}../../${achou}${q})` : todo;
+  });
+  return { ...p, teste: `tests/unit/contrato-${slug}.test.js`, codigo, ajustado: orig || '(sem nome)' };
+}
+
 /** Portões puros (sem rodar nada). Devolve lista de problemas. */
 function conferir(p) {
   const erros = [];
@@ -88,7 +113,8 @@ async function gerar(o) {
         out = await o.router.chat(m, { system: SISTEMA, messages: [{ role: 'user', content: `PEDIDO:\n${String(o.pedido).slice(0, 6000)}${ultimo ? `\n\nA TENTATIVA ANTERIOR FOI RECUSADA: ${ultimo}` : ''}` }], maxTokens: 4000 });
       } catch (e) { log(`${m.provider}/${m.model}: sem resposta (${motivoCurto(e)})`); break; }
       responderam++;
-      const p = extrairJson(out && out.text);
+      const p = ajustarTeste(extrairJson(out && out.text));
+      if (p && p.ajustado) log(`${m.provider}/${m.model}: teste movido de ${p.ajustado} para ${p.teste}`);
       if (!p) { ultimo = 'responda só com o JSON pedido'; continue; }
       if (p.testavel === false) return { ok: false, nao_testavel: true, motivo: String(p.motivo || 'sem motivo').slice(0, 300), tentativas, modelo: `${m.provider}/${m.model}` };
       const c = conferir(p);
@@ -146,4 +172,4 @@ async function revisarCobertura(router, modelos, pedido, codigo) {
   return null;
 }
 
-module.exports = { motivoCurto, gerar, conferir, extrairJson, revisarCobertura, SISTEMA, REVISOR };
+module.exports = { motivoCurto, ajustarTeste, gerar, conferir, extrairJson, revisarCobertura, SISTEMA, REVISOR };
