@@ -177,4 +177,15 @@ async function rodar(at, { env = process.env, fetchFn = fetch } = {}) {
   return out;
 }
 
-module.exports = { rodar, decidir, proximaExtra, reposExtras, ESPERA_JULES_H, MAX_ENVIOS };
+const MAX_GEMINI_DIA = 5;
+
+// Cota do Jules acabou: dispara o workflow gemini-ajudante (rótulo gemini-cli), no máximo 5 por dia.
+function processJulesQuota(issue, ctx) {
+  if (!Number.isInteger(issue) || issue <= 0) throw new TypeError('issue inválida');
+  if (ctx.getDailyDispatchCount() >= MAX_GEMINI_DIA) return false;
+  ctx.dispatchWorkflow('gemini-ajudante.yml', { issue });
+  ctx.createPR(`nexia/gemini-${issue}`, `Gemini CLI: #${issue}`, `Refs #${issue}`);
+  return true;
+}
+
+module.exports = { rodar, decidir, proximaExtra, reposExtras, ESPERA_JULES_H, MAX_ENVIOS, processJulesQuota, MAX_GEMINI_DIA };
