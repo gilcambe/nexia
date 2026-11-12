@@ -37,7 +37,7 @@ const TAIL = [
   { provider: 'google', model: 'gemini-flash-latest' }, { provider: 'google', model: 'gemini-2.5-flash' },
   { provider: 'google', model: 'gemini-flash-lite-latest' }, { provider: 'google', model: 'gemini-2.5-flash-lite' },
   { provider: 'codestral', model: 'codestral-latest' },
-  { provider: 'nvidia', model: 'qwen/qwen3-coder-480b-a35b-instruct' }, { provider: 'nvidia', model: 'openai/gpt-oss-120b' },
+  { provider: 'nvidia', model: 'openai/gpt-oss-120b' }, // qwen3-coder-480b saiu da NVIDIA (410 em 12/11)
   { provider: 'cloudflare', model: '@cf/openai/gpt-oss-120b' },
   { provider: 'mistral', model: 'mistral-small-latest' }, { provider: 'mistral', model: 'devstral-small-latest' },
   { provider: 'zai', model: 'glm-4.7-flash' }, { provider: 'zai', model: 'glm-4.5-flash' },
