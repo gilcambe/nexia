@@ -1,6 +1,6 @@
 {
-  "versao": 3,
-  "atualizado": "2026-11-12",
+  "versao": 4,
+  "atualizado": "2026-11-13",
   "nota": "Biblioteca KERNEX: memória de tudo que já foi construído. Antes de criar, o Cortex consulta aqui; só o que não existe vira tarefa. Nunca guardar dado pessoal de cliente (só o que o módulo faz e onde está).",
   "modulos": [
     {
@@ -755,6 +755,87 @@
       "clonavel": false,
       "falta_para_clonar": "M3: separar o modelo dos dados do cliente de origem",
       "origem": "ces"
+    },
+    {
+      "id": "demo-barbearia",
+      "nome": "Barbearia (corte, barba, horário pelo WhatsApp)",
+      "nichos": [
+        "barbearia",
+        "beleza"
+      ],
+      "modulos": [
+        "site",
+        "whatsapp",
+        "privacidade",
+        "galeria"
+      ],
+      "clonavel": true,
+      "previa": "https://barbearia.kernex.com.br"
+    },
+    {
+      "id": "demo-restaurante",
+      "nome": "Restaurante / delivery (cardápio e pedido pelo WhatsApp)",
+      "nichos": [
+        "restaurante",
+        "alimentacao"
+      ],
+      "modulos": [
+        "site",
+        "whatsapp",
+        "privacidade",
+        "galeria"
+      ],
+      "clonavel": true,
+      "previa": "https://restaurante.kernex.com.br"
+    },
+    {
+      "id": "demo-loja",
+      "nome": "Loja com pedido pelo WhatsApp (bolos, roupas, presentes)",
+      "nichos": [
+        "loja",
+        "varejo",
+        "alimentacao"
+      ],
+      "modulos": [
+        "site",
+        "whatsapp",
+        "privacidade",
+        "galeria"
+      ],
+      "clonavel": true,
+      "previa": "https://loja.kernex.com.br"
+    },
+    {
+      "id": "demo-academia",
+      "nome": "Academia / personal (planos e aula experimental)",
+      "nichos": [
+        "fitness"
+      ],
+      "modulos": [
+        "site",
+        "whatsapp",
+        "privacidade",
+        "galeria"
+      ],
+      "clonavel": true,
+      "previa": "https://academia.kernex.com.br"
+    },
+    {
+      "id": "demo-profissional",
+      "nome": "Profissional liberal (nutricionista, consultor, terapeuta)",
+      "nichos": [
+        "saude",
+        "servicos",
+        "profissional"
+      ],
+      "modulos": [
+        "site",
+        "whatsapp",
+        "privacidade",
+        "galeria"
+      ],
+      "clonavel": true,
+      "previa": "https://profissional.kernex.com.br"
     }
   ],
   "ramos": {
@@ -822,6 +903,57 @@
       "serviço",
       "manutencao",
       "conserto"
+    ],
+    "barbearia": [
+      "barbearia",
+      "barbeiro",
+      "barber",
+      "corte de cabelo",
+      "barba"
+    ],
+    "restaurante": [
+      "restaurante",
+      "lanchonete",
+      "pizzaria",
+      "hamburgueria",
+      "delivery",
+      "marmita",
+      "bar",
+      "cafe",
+      "cafeteria"
+    ],
+    "alimentacao": [
+      "bolo",
+      "bolos",
+      "confeitaria",
+      "doceria",
+      "padaria",
+      "salgados"
+    ],
+    "loja": [
+      "loja",
+      "boutique",
+      "roupas",
+      "presentes",
+      "acessorios",
+      "moda"
+    ],
+    "varejo": [
+      "varejo",
+      "comercio",
+      "mercadinho"
+    ],
+    "profissional": [
+      "nutricionista",
+      "nutri",
+      "consultor",
+      "consultoria",
+      "terapeuta",
+      "psicologo",
+      "psicologa",
+      "coach",
+      "fisioterapeuta",
+      "fonoaudiologo"
     ]
   }
 }

@@ -59,3 +59,13 @@ test('FB6. ficha inválida devolve erros e não sugere nada', () => {
   assert.ok(r.erros.length);
   assert.equal(r.modelo, null);
 });
+
+test('FB7. cada ramo comum cai no modelo clonável certo (13/11: barbearia, restaurante, loja, academia, profissional)', () => {
+  const casos = { barbearia: 'demo-barbearia', pizzaria: 'demo-restaurante', 'loja de bolos': 'demo-loja', academia: 'demo-academia',
+    dentista: 'demo-agenda', 'agência de viagens': 'demo-viagens', nutricionista: 'demo-profissional' };
+  for (const [ramo, modelo] of Object.entries(casos)) {
+    const r = consultar({ nome: 'Casa Teste', ramo, whatsapp: '81999999999' }, cat);
+    assert.equal(r.modelo && r.modelo.id, modelo, ramo);
+    assert.equal(r.modelo.clonavel, true, ramo);
+  }
+});
