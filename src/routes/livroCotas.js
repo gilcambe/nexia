@@ -7,9 +7,11 @@ module.exports = (models) => {
   const LivroCota = models && models.LivroCota;
 
   // GET /livro_cotas -> { mensagem, dados }
-  // Sem linhas: { mensagem: 'sem dados', dados: [] }
-  // Com linhas: cada item traz numero (id) e hora (data do registro),
-  // ordenado por id; erros respondem 500 sem expor detalhes internos.
+// Sem linhas: 200 { mensagem: 'sem dados', dados: [] } (nunca 500).
+// Com linhas: 200 { mensagem: 'ok', dados: [...] } com numero (id) e hora
+// (data do registro) em cada item, ordenado por id.
+// Só falha real na consulta responde 500 { mensagem: 'erro ao consultar livro_cotas' },
+// sem expor detalhes internos.
 
   // GET /livro_cotas: todas as linhas (ou "sem dados") + /livro_cotas/numero/:id/hora
   router.get(['/livro_cotas', '/livro_cotas/numero/:id/hora'], async (req, res) => {
@@ -47,6 +49,7 @@ module.exports = (models) => {
       return res.status(200).json({ mensagem: 'ok', dados: formatados });
     } catch (err) {
       console.error('livroCotas: falha na consulta', err);
+      // Sem detalhes internos (mensagem do banco, stack): só a mensagem genérica.
       return res.status(500).json({ mensagem: 'erro ao consultar livro_cotas' });
     }
   });
