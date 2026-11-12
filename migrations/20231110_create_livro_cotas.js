@@ -65,35 +65,16 @@ module.exports = {
       }
     });
 
-    // Índices de apoio: o GET /livro_cotas ordena por id e filtra por reset_at.
-    await queryInterface.addIndex('livro_cotas', ['id'], { name: 'livro_cotas_id_idx' });
+    // Índice de apoio: consultas de cota vencida ordenam por reset_at.
     await queryInterface.addIndex('livro_cotas', ['reset_at'], { name: 'livro_cotas_reset_at_idx' });
-
-    // Índice único por provider+model: cota é por par (impede duplicar no seed).
-    await queryInterface.addIndex('livro_cotas', ['provider', 'model'], {
-      name: 'livro_cotas_provider_model_unique',
-      unique: true
-    });
   },
 
   down: async (queryInterface, Sequelize) => {
     await queryInterface.dropTable('livro_cotas');
   },
 
-  _downAntigo: async (queryInterface, Sequelize) => {
-    // Rdv2: remove o ENUM que o MySQL cria junto com a coluna treina_com_dados.
-    // A migration é idempotente: se a tabela não existir, o up() não faz nada.
-    try {
-      // Índices caem junto com a tabela; remove antes só se ainda existirem.
-      await queryInterface.removeIndex('livro_cotas', ['id'], { name: 'livro_cotas_id_idx' }).catch(() => {});
-      await queryInterface.removeIndex('livro_cotas', ['reset_at'], { name: 'livro_cotas_reset_at_idx' }).catch(() => {});
-      await queryInterface.sequelize.query('ALTER TABLE livro_cotas MODIFY COLUMN treina_com_dados VARCHAR(16)');
-      await queryInterface.sequelize.query(
-        "DROP TYPE IF EXISTS 'enum_livro_cotas_treina_com_dados';"
-      );
-    } catch (e) {
-      // banco sem ENUM (SQLite/Postgres): segue a remoção da tabela
-    }
+  down: async (queryInterface) => {
+    // Índice cai junto com a tabela; o ENUM do MySQL também (era o bug do down antigo).
     await queryInterface.dropTable('livro_cotas');
   }
 };
