@@ -124,3 +124,11 @@ test('CFS9. fotos (Q1): vão ao workflow como texto com vírgula e seguem para o
     assert.equal((await fab.criar({ ficha: { ...FICHA, fotos: ruim } }, ghFalso())).status, 400, ruim);
   }
 });
+
+test('CFS10. modelos por ramo (kernex-clientes#10): barbearia, restaurante, loja e academia são clonáveis e escolhidos pelo ramo', () => {
+  for (const [ramo, id] of [['barbearia', 'demo-barbearia'], ['restaurante', 'demo-restaurante'], ['loja de roupas', 'demo-loja'], ['academia', 'demo-academia']]) {
+    assert.ok(fab.GERAVEIS.includes(id), id);
+    assert.equal(fab.consultar({ ...FICHA, ramo, precisa: ['site', 'whatsapp'] }).modelo.id, id, ramo);
+  }
+  assert.equal(fab.consultar({ ...FICHA, ramo: 'dentista', precisa: ['agenda'] }).modelo.id, 'demo-agenda', 'dentista continua no modelo de agenda');
+});

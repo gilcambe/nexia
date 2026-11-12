@@ -755,6 +755,67 @@
       "clonavel": false,
       "falta_para_clonar": "M3: separar o modelo dos dados do cliente de origem",
       "origem": "ces"
+    },
+    {
+      "id": "demo-barbearia",
+      "nome": "Barbearia com hora marcada",
+      "nichos": [
+        "beleza",
+        "barbearia"
+      ],
+      "modulos": [
+        "site",
+        "whatsapp",
+        "privacidade"
+      ],
+      "clonavel": true,
+      "previa": "https://barbearia.kernex.com.br"
+    },
+    {
+      "id": "demo-restaurante",
+      "nome": "Restaurante e delivery",
+      "nichos": [
+        "alimentacao",
+        "restaurante",
+        "delivery"
+      ],
+      "modulos": [
+        "site",
+        "whatsapp",
+        "privacidade"
+      ],
+      "clonavel": true,
+      "previa": "https://restaurante.kernex.com.br"
+    },
+    {
+      "id": "demo-loja",
+      "nome": "Loja com pedido pelo WhatsApp",
+      "nichos": [
+        "comercio",
+        "loja"
+      ],
+      "modulos": [
+        "site",
+        "whatsapp",
+        "privacidade"
+      ],
+      "clonavel": true,
+      "previa": "https://loja.kernex.com.br"
+    },
+    {
+      "id": "demo-academia",
+      "nome": "Academia e treino",
+      "nichos": [
+        "fitness",
+        "academia"
+      ],
+      "modulos": [
+        "site",
+        "whatsapp",
+        "privacidade"
+      ],
+      "clonavel": true,
+      "previa": "https://academia.kernex.com.br"
     }
   ],
   "ramos": {
@@ -822,6 +883,30 @@
       "serviço",
       "manutencao",
       "conserto"
+    ],
+    "alimentacao": [
+      "restaurante",
+      "lanchonete",
+      "delivery",
+      "marmita",
+      "marmitaria",
+      "pizzaria",
+      "padaria",
+      "confeitaria",
+      "bolos",
+      "hamburgueria"
+    ],
+    "comercio": [
+      "loja",
+      "boutique",
+      "moda",
+      "roupas",
+      "presentes",
+      "papelaria",
+      "calcados",
+      "calçados",
+      "acessorios",
+      "acessórios"
     ]
   }
 }
