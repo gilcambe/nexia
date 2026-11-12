@@ -271,6 +271,8 @@ function normalizarLido(b, dataPrint) {
   const bruto = String(b.tipo || '').trim();
   const tk = String(b.ticker || '').toUpperCase();
   let tipo = TIPOS.includes(bruto) ? bruto : ((APELIDO_TIPO.find(([re]) => re.test(`${bruto} ${b.nome || ''}`)) || [])[1] || 'outro');
+  // Sem ticker e sem tipo escrito (nem apelido no nome), não inventa classificação.
+  if (!tk && !tipo) tipo = 'outro';
   if (/etf/i.test(bruto)) tipo = 'etf';
   // Ticker manda: ETF conhecido ou terminação 11 do grupo FIIs viram "etf"/"fiis" (nunca "renda_fixa"),
   // mesmo quando a IA devolve outro tipo ou o ticker vem dentro do nome (ex.: "MXRF11".trim()).
