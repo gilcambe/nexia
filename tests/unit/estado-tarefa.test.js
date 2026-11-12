@@ -180,3 +180,8 @@ test('EST6. travada que precisa de você não conta duas vezes; resumo cita as d
   assert.strictEqual(res.precisaVoce, 1);
   assert.strictEqual(resumoDia(res, []), 'Hoje: 0 em andamento, 2 travadas, 0 concluídas, 1 precisa de você. IAs ativas: 0 de 0.');
 });
+
+test('EST-N1. issue fechada pelo PR (state_reason completed) conta como concluída; not_planned continua falhou', () => {
+  assert.strictEqual(estadoTarefa({ state: 'closed', state_reason: 'completed', labels: [] }).estado, 'concluida');
+  assert.strictEqual(estadoTarefa({ state: 'closed', state_reason: 'not_planned', labels: [] }).estado, 'falhou');
+});

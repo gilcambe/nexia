@@ -68,3 +68,21 @@ test('OQF5. buscar pagina o GraphQL e converte os nós', async () => {
   assert.ok(chamadas.some(([, d]) => d === 'c1'));
   assert.equal(doNo({ number: 1, headRefName: 'x', mergedAt: 'm', labels: { nodes: [] } }).pull_request.merged_at, 'm');
 });
+
+test('OQF-N1. "sendo feitas" e "travadas" seguem a mesma regra da tela inicial (rótulo esquecido não conta como rodando)', () => {
+  const agora = Date.parse('2026-11-13T02:00:00Z');
+  const velho = '2026-11-10T17:00:00Z', novo = '2026-11-13T01:50:00Z';
+  const abertas = [
+    { number: 1, title: 'a', labels: [{ name: 'cortex-fila' }, { name: 'cortex-rodando' }], updated_at: novo },
+    { number: 2, title: 'b', labels: [{ name: 'cortex-fila' }, { name: 'cortex-rodando' }], updated_at: velho },
+    { number: 3, title: 'c', labels: [{ name: 'cortex-fila' }, { name: 'cortex-travado' }], updated_at: novo },
+    { number: 4, title: 'd', labels: [{ name: 'cortex-fila' }], updated_at: velho },
+  ];
+  const r = montar({ abertas, fechadas: [], prs: [], agora }).resumo;
+  assert.equal(r.rodando, 1);
+  assert.equal(r.travadas, 2);
+  const { estadoTarefas } = require('../../netlify/functions/central/estado-tarefas');
+  const c = estadoTarefas(abertas, agora);
+  assert.equal(c.andamento, r.rodando);
+  assert.equal(c.travada, r.travadas);
+});

@@ -50,6 +50,12 @@ function montarReservas(repo, prod, semCota = []) {
   return { semAcesso: false, semCota, contas: RESERVAS.map(({ id, nome, gratis, passos, segredos }) => ({ id, nome, gratis, passos, ligada: segredos.some((x) => tem.has(x)), segredo: segredos.find((x) => tem.has(x)) || segredos[0] })) };
 }
 
+/** 00:00 de hoje em Brasília (UTC-3), em ISO. */
+function inicioDoDia(agora = Date.now()) {
+  const br = new Date(agora - 3 * 3600e3);
+  return new Date(Date.UTC(br.getUTCFullYear(), br.getUTCMonth(), br.getUTCDate(), 3)).toISOString().replace('.000Z', 'Z');
+}
+
 function criarGithub(env = process.env, fetchFn = fetch) {
   const token = env.NEXIA_JOBS_TOKEN || env.NEXIA_GITHUB_TOKEN || env.GITHUB_TOKEN || '';
   async function gh(caminho, init = {}) {
@@ -73,7 +79,17 @@ function criarGithub(env = process.env, fetchFn = fetch) {
   // #3125 parte 2/6: esta rota responde EXATAMENTE o objeto de estadoTarefas().
   // Toda a contagem (fila, andamento, travadas, concluídas, total) vem de lá.
   async function cortex() {
-    const issues = await gh('/issues?state=all&per_page=100');
+    // 13/11: antes eram as 100 mais novas (issues + PRs misturados); tarefa antiga travada sumia da conta e
+    // "concluída" contava qualquer dia. Agora: todas as abertas do Cortex (cortex-fila ou cortex-travado) + as fechadas desde 00:00 de hoje (Brasília).
+    const hoje = inicioDoDia();
+    const abertas = [];
+    // Só tarefa do Cortex (rótulo cortex-fila) ou travada: o mesmo universo da aba "O que falta".
+    for (const rotulo of ['cortex-fila', 'cortex-travado']) {
+      for (let p = 1; p <= 3; p++) { const l = await gh('/issues?state=open&per_page=100&labels=' + rotulo + '&page=' + p); if (!Array.isArray(l)) break; for (const i of l) if (!abertas.some((a) => a.number === i.number)) abertas.push(i); if (l.length < 100) break; }
+    }
+    const recentes = await gh('/issues?state=closed&per_page=100&since=' + hoje);
+    const fechadasHoje = (Array.isArray(recentes) ? recentes : []).filter((i) => i.closed_at && i.closed_at >= hoje);
+    const issues = [...abertas, ...fechadasHoje];
     // A resposta é EXATAMENTE o objeto de estadoTarefas() (fila, andamento, aguardando-ia,
     // travada, concluida, falhou, total, precisaVoce). Nada de campos extras.
     return estadoTarefas(Array.isArray(issues) ? issues : []);
