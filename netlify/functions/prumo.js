@@ -349,7 +349,9 @@ async function lerPrint(imagens, deps) {
     if (!lido) continue;
     algum = true;
     const doPrint = [];
-    for (const bruto of separarLinhasIguais(lido.itens)) { const v = validarItemCarteira(normalizarLido(bruto, lido.data_print)); if (v.ok) doPrint.push(v.item); else descartados.push({ ...bruto, motivo: v.erro }); }
+    // #3532: a data do print é uma só e vale para todos os itens (data_valor correta em AAAA-MM-DD).
+    const dataDoPrint = dataDoPrint(lido.data_print);
+    for (const bruto of separarLinhasIguais(lido.itens)) { const v = validarItemCarteira(normalizarLido(bruto, dataDoPrint)); if (v.ok) doPrint.push(v.item); else descartados.push({ ...bruto, motivo: v.erro }); }
     const limpos = tirarSubtotais(doPrint);
     itens.push(...limpos);
     // "itens" diz quantos itens são deste print: o app junta vários prints da mesma tela sob um total só.
