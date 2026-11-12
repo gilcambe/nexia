@@ -86,7 +86,7 @@ export default function CortexPage() {
       document.head.append(cor, ico);
     mostrarAbertura("CORTEX");
     if ("serviceWorker" in navigator) navigator.serviceWorker.register("/cortex-sw.js", { scope: "/cortex" }).catch(() => undefined);
-    const titulo = document.title; document.title = "Cortex · NEXIA";
+    const titulo = document.title; document.title = "Cortex · KERNEX";
     const pedido = (e: Event) => {
       e.preventDefault();
       const ev = e as Event & { prompt: () => void };

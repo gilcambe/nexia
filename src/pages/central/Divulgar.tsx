@@ -139,7 +139,7 @@ export default function Divulgar({ d, erro }: { d: Dados; erro?: string }) {
         <p className="text-sm text-nexia-muted">Busca ofertas fitness na Shopee e na Amazon e monta a vitrine.</p>
         <div className="grid grid-cols-2 gap-2">
           <Botao onClick={() => rodar({ acao: "rodar", arquivo: "afiliados.yml" })} disabled={ocupado}>🛍️ Buscar ofertas</Botao>
-          <Botao href="https://achados-nexia.pages.dev/">Ver vitrine</Botao>
+          <Botao href="https://achados-nexia.pages.dev/">Ver vitrine</Botao>{/* nome-antigo:permitido (endereço da vitrine; só no link, sem domínio Kernex ainda) */}
         </div>
       </Cartao>
 

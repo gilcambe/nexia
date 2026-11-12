@@ -6,7 +6,7 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 md:grid-cols-4">
           <div className="space-y-2">
-            <h3 className="text-sm font-semibold text-gray-400 tracking-wider uppercase">Nexia</h3>
+            <h3 className="text-sm font-semibold text-gray-400 tracking-wider uppercase">Kernex</h3>
             <p className="text-sm text-gray-400">Plataforma de automação e IA para negócios.</p>
           </div>
           <nav className="flex flex-col sm:flex-row gap-2 sm:gap-6 justify-center sm:justify-start text-sm space-y-1 sm:space-y-0">

@@ -77,7 +77,7 @@ export default function EntretenimentoTreino({ variante = 'cartao', minutosSuger
               <h3 className="font-heading text-lg font-bold text-foreground-950">Assistir no cardio</h3>
               <button type="button" onClick={() => setAberto(false)} className="rounded-full p-2 text-foreground-500" aria-label="Fechar"><i className="ri-close-line text-xl"></i></button>
             </div>
-            <p className="text-xs text-foreground-500">O app abre por cima. Assista na esteira ou na bike e volte para o NEXIA para registrar o cardio.</p>
+            <p className="text-xs text-foreground-500">O app abre por cima. Assista na esteira ou na bike e volte para o Body Coach para registrar o cardio.</p>
 
             <p className="mt-3 text-sm font-semibold text-foreground-800">Quanto tempo de cardio?</p>
             <div className="mt-1.5 flex gap-1.5">
