@@ -50,8 +50,7 @@ function listarPassagens() {
 module.exports = Object.assign(LICOES, {
   LICOES,
   LICOES_EXTRA,
-  LICAO_ARVORE,
-  TEXTO,
+      TEXTO,
   registrarPassagem,
   listarPassagens,
 });
