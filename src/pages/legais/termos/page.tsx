@@ -35,7 +35,7 @@ export default function TermosPage() {
         </section>
         <section>
           <h2 className="text-lg font-semibold text-white mb-3">7. Contato e Suporte</h2>
-          <p>Para dúvidas, reembolsos, suporte ou solicitações sobre estes termos, entre em contato via e-mail: <strong className="text-white">contato.nexia.os@gmail.com</strong>.</p>
+          <p>Para dúvidas, reembolsos, suporte ou solicitações sobre estes termos, entre em contato via e-mail: <strong className="text-white">contato@kernex.com.br</strong>.</p>
         </section>
       </div>
     </LegalLayout>

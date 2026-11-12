@@ -469,11 +469,11 @@ guide → App guia VP
 
 ### Credenciais de Teste:
 ```
-Master Admin: master@nexia.com.br / GIL0102@
-CES Admin: admin@cesbrasil.tech / GIL0102@
-VP Admin: admin@viajantepro.com.br / GIL0102@
-Bezsan Admin: admin@bezsan.com.br / GIL0102@
-Splash Admin: admin@splashevents.com.br / GIL0102@
+Master Admin: master@nexia.com.br / (senha removida do repositório)
+CES Admin: admin@cesbrasil.tech / (senha removida do repositório)
+VP Admin: admin@viajantepro.com.br / (senha removida do repositório)
+Bezsan Admin: admin@bezsan.com.br / (senha removida do repositório)
+Splash Admin: admin@splashevents.com.br / (senha removida do repositório)
 ```
 
 ## 5.3 Firestore — Estrutura de Coleções
@@ -1556,7 +1556,7 @@ CSS de branding de cada tenant (accent, logo)
    node set-master-role.js master@nexia.com.br
 
 8. TESTAR:
-   - Login: master@nexia.com.br / GIL0102@
+   - Login: master@nexia.com.br / (senha removida do repositório)
    - CORTEX: enviar mensagem, verificar streaming
    - Todas as landings e admins
 ```

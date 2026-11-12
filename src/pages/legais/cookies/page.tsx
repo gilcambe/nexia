@@ -12,7 +12,7 @@ export default function CookiesPage() {
           </div>
         </section>
         <section><h2 className="text-lg font-semibold text-white mb-3">3. Gerenciamento</h2><p>Você pode gerenciar suas preferências nas configurações do seu navegador. Desativar cookies essenciais pode comprometer o funcionamento da plataforma.</p></section>
-        <section><h2 className="text-lg font-semibold text-white mb-3">4. Contato</h2><p>E-mail: contato@nexiaos.com.br · WhatsApp: +55 11 94403-7259</p></section>
+        <section><h2 className="text-lg font-semibold text-white mb-3">4. Contato</h2><p>E-mail: contato@kernex.com.br · WhatsApp: +55 11 94403-7259</p></section>
       </div>
     </LegalLayout>
   );

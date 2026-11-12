@@ -14,7 +14,7 @@ describe("Cortex Termos e Privacidade (Issue #1588)", () => {
     assert.ok(termosContent.includes("IAs de Terceiros") || termosContent.includes("OpenAI") || termosContent.includes("parceiros"), "Provedores de IA não mencionados");
     assert.ok(termosContent.includes("spam") && termosContent.includes("golpe"), "Regras de uso aceitável (spam, golpe) não encontradas");
     assert.ok(termosContent.includes("7 (sete) dias") || termosContent.includes("reembolso"), "Cláusula de reembolso em 7 dias (CDC) não encontrada");
-    assert.ok(termosContent.includes("contato.nexia.os@gmail.com"), "E-mail de contato contato.nexia.os@gmail.com não encontrado em Termos");
+    assert.ok(termosContent.includes("contato@kernex.com.br"), "E-mail de contato contato@kernex.com.br não encontrado em Termos");
   });
 
   it("deve conter as cláusulas exigidas em Política de Privacidade (coleta, LGPD, exclusão de conta, contato)", () => {
@@ -22,7 +22,7 @@ describe("Cortex Termos e Privacidade (Issue #1588)", () => {
     assert.ok(privContent.includes("O que é Coletado") || privContent.includes("Dados de Cadastro"), "Seção de dados coletados não encontrada");
     assert.ok(privContent.includes("LGPD"), "Menção à LGPD não encontrada");
     assert.ok(privContent.includes("exclusão") || privContent.includes("apagar"), "Informação sobre exclusão de conta não encontrada");
-    assert.ok(privContent.includes("contato.nexia.os@gmail.com"), "E-mail de contato contato.nexia.os@gmail.com não encontrado em Privacidade");
+    assert.ok(privContent.includes("contato@kernex.com.br"), "E-mail de contato contato@kernex.com.br não encontrado em Privacidade");
   });
 
   it("deve incluir validação e checkbox de aceite dos termos na tela de cadastro e salvamento no AuthContext", () => {
