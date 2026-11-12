@@ -43,14 +43,12 @@ function listarPassagens() {
   return [...REGISTRO_PASSAGENS];
 }
 
-
-
 // O require do módulo devolve a lista de lições (array) com os extras pendurados nela: LICOES_EXTRA, TEXTO, registrarPassagem e
 // listarPassagens continuam disponíveis para quem já usa. As lições ficam congeladas (Object.freeze), como antes.
 module.exports = Object.assign(LICOES, {
   LICOES,
   LICOES_EXTRA,
-      TEXTO,
+  TEXTO,
   registrarPassagem,
   listarPassagens,
 });
