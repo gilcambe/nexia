@@ -17,7 +17,7 @@ const ACOES = "https://github.com/gilcambe/nexia/actions";
 
 export function calcularAvisos(d: Dados): Aviso[] {
   const a: Aviso[] = [];
-  const produto = (id: string) => d.lista?.produtos.find((p) => p.id === id);
+  const produto = (id: string) => (d.lista?.produtos || []).find((p) => p.id === id);
   const nome = (id: string) => produto(id)?.nome || id;
   for (const m of d.saude?.produtos || []) {
     const p = produto(m.id);
@@ -67,7 +67,7 @@ export function calcularAvisos(d: Dados): Aviso[] {
     link: { rotulo: "Ver a rodada com erro", url: r.link || ACOES },
     conserto: `O robô ${r.arquivo} ("${r.nome}") deu erro na última rodada${r.link ? ` (${r.link})` : ""}. Leia o log, ache a causa e corrija.`,
   });
-  const travadas = d.cortex?.travadas.length || 0;
+  const travadas = d.cortex?.travadas?.length || 0;
   if (travadas) a.push({
     cor: "amarelo", texto: `${travadas} tarefa${travadas > 1 ? "s" : ""} do Cortex travada${travadas > 1 ? "s" : ""}`, aba: "cortex",
     oque: `${travadas} tarefa${travadas > 1 ? "s" : ""} não ${travadas > 1 ? "foram entregues" : "foi entregue"} depois de várias tentativas do Cortex.`,
@@ -101,8 +101,8 @@ export function calcularAvisos(d: Dados): Aviso[] {
     oque: "Pessoas deixaram contato nos sites.", impacto: "Quanto antes responder, maior a chance de virar cliente.",
     passos: ["Abra a aba Tenants, parte Contatos.", "Toque no WhatsApp de cada um e responda."],
   });
-  const ultimo = d.divulga?.historico[0];
-  if (ultimo && ultimo.resultados.length && ultimo.resultados.every((r) => !r.ok)) a.push({
+  const ultimo = (d.divulga?.historico || [])[0];
+  if (ultimo && ultimo.resultados?.length && ultimo.resultados.every((r) => !r.ok)) a.push({
     cor: "amarelo", texto: "O último post não saiu em nenhuma rede", aba: "divulgar",
     oque: "O robô Divulga tentou postar e nenhuma rede aceitou.", impacto: "O post de hoje não apareceu.",
     passos: ["Abra a aba Divulgar e veja o motivo ao lado de cada rede.", "Se for a chave da Meta, rode o configurar-meta.bat no PC."],
