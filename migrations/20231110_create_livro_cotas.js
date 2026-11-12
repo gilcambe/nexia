@@ -53,7 +53,7 @@ module.exports = {
         type: Sequelize.FLOAT,
         defaultValue: 0.0
       },
-      createdAt: {
+          createdAt: {
         allowNull: false,
         type: Sequelize.DATE,
         defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
