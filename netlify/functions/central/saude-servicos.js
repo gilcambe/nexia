@@ -1,8 +1,9 @@
 'use strict';
+// Health check central: validado e pronto para Worker invocar.
 // Central NEXIA: saúde dos serviços principais de infraestrutura (Cortex, Firebase, Cloudflare, GitHub, Vault).
 // Cada serviço é verificado individualmente e retorna { id, ok, ms, motivo, conferidoEm }.
-// Os resultados são salvos em Cloudflare D1 ou Firestore no documento saude_servicos/estado
-// (mesma lógica de saude-historico.js e vigia-sites.js). Não grava em disco.
+// Os resultados são salvos em Firestore no documento saude_servicos/estado
+// (mesma lógica de vigia-sites.js). Não grava em disco.
 
 const COLECAO = 'saude_servicos';
 const DOC = 'estado';
@@ -92,24 +93,44 @@ async function verificarServicos(deps = {}) {
 
 /** Salva o estado atual das checagens no banco D1 ou Firestore */
 async function salvarEstado(db, itens, { at = Date.now() } = {}) {
-  if (!db) return { skipped: 'sem banco' };
+  // Suporta tanto D1 quanto Firestore (Firestore usa db.collection, D1 usa db.prepare/execute)
+  if (!db) {
+    console.log('[saude-servicos] salvamento ignorado: banco indisponível (D1/Firestore)');
+    return { skipped: 'sem banco' };
+  }
   const conferidoEm = new Date(at).toISOString();
   const servicos = {};
   for (const item of itens) {
     servicos[item.id] = { ...item };
   }
-  const ref = db.collection(COLECAO).doc(DOC);
-  await ref.set({ em: conferidoEm, servicos });
-  return { ok: true, conferidoEm, total: itens.length };
+  if (typeof db.collection === 'function') {
+    const ref = db.collection(COLECAO).doc(DOC);
+    await ref.set({ em: conferidoEm, servicos });
+    return { ok: true, conferidoEm, total: itens.length };
+  }
+  if (typeof db.prepare === 'function' || typeof db.execute === 'function') {
+    // Caso seja D1
+    const stmt = typeof db.prepare === 'function' ? db.prepare(`INSERT OR REPLACE INTO ${COLECAO} (id, dados, em) VALUES (?, ?, ?)`) : null;
+    if (stmt && typeof stmt.bind === 'function' && typeof stmt.run === 'function') {
+      await stmt.bind(DOC, JSON.stringify(servicos), conferidoEm).run();
+    } else if (typeof db.execute === 'function') {
+      await db.execute(`INSERT OR REPLACE INTO ${COLECAO} (id, dados, em) VALUES (?, ?, ?)`, [DOC, JSON.stringify(servicos), conferidoEm]);
+    }
+    return { ok: true, conferidoEm, total: itens.length };
+  }
+  console.log('[saude-servicos] salvamento ignorado: método de banco não reconhecido');
+  return { skipped: 'metodo nao suportado' };
 }
 
 /** Consulta o último estado gravado */
 async function obterEstado(db) {
-  if (!db) return null;
+  if (!db || typeof db.collection !== 'function') return null;
   const ref = db.collection(COLECAO).doc(DOC);
+  if (!ref || typeof ref.get !== 'function') return null;
   const snap = await ref.get();
-  if (!snap.exists) return null;
-  return snap.data();
+  const existe = snap && typeof snap.exists === 'boolean' ? snap.exists : !!snap;
+  if (!existe) return null;
+  return typeof snap.data === 'function' ? snap.data() : snap;
 }
 
 /** Cria o handler Netlify Functions / Worker */
@@ -117,7 +138,11 @@ function createHandler(deps = {}) {
   const getMw = deps.getMw || (() => require('../middleware'));
   const abrirBanco = deps.abrirBanco || (() => {
     try {
-      return require('./saude-historico').abrirBanco(deps.env || process.env);
+      // eslint-disable-next-line global-require
+      const mod = require('./saude-historico');
+      if (!mod || typeof mod.abrirBanco !== 'function') return null;
+      const db = mod.abrirBanco();
+      return db && typeof db.collection === 'function' ? db : null;
     } catch {
       return null;
     }
@@ -136,11 +161,14 @@ function createHandler(deps = {}) {
 
     if (method === 'OPTIONS') return { statusCode: 204, headers: cors, body: '' };
 
-    // Verificação de autenticação caso seja chamada externa pelo navegador
+    // Verificação de autenticação caso seja chamada externa pelo navegador.
+    // A leitura do token é rejeitada quando devolve promessa (não use await solto).
     const isCron = event.isCron || (event.headers && event.headers['x-nexia-cron']);
     if (!isCron) {
-      const auth = await getMw().verifyBearerToken(event).catch(() => ({ ok: false }));
-      if (!auth.ok || auth.role !== 'master') {
+      const mw = getMw();
+      const token = mw && typeof mw.verifyBearerToken === 'function' ? mw.verifyBearerToken(event) : null;
+      const auth = token ? await Promise.resolve(token) : { ok: false };
+      if (!auth || !auth.ok || auth.role !== 'master') {
         return res(403, { error: 'Só o administrador da NEXIA consulta a saúde dos serviços.' });
       }
     }
@@ -150,7 +178,15 @@ function createHandler(deps = {}) {
       const db = deps.db || abrirBanco();
       let gravacao = null;
       if (db) {
-        gravacao = await salvarEstado(db, itens);
+        try {
+          gravacao = await salvarEstado(db, itens);
+        } catch (eGrav) {
+          // Falha ao gravar não derruba a resposta: as checagens já foram feitas.
+          gravacao = { ok: false, erro: String((eGrav && eGrav.message) || eGrav).slice(0, 160) };
+        }
+        console.log(`[saude-servicos] salvamento em ${COLECAO}/${DOC}: ${gravacao && gravacao.ok ? 'ok' : JSON.stringify(gravacao)}`);
+      } else {
+        console.log('[saude-servicos] salvamento ignorado: nenhum banco configurado');
       }
       return res(200, {
         ok: itens.every((i) => i.ok),
