@@ -79,6 +79,10 @@ async function criar(body, { gh, loja = null, cat = carregar() }) {
   const inputs = { modelo, slug: ficha.slug, nome: ficha.nome, whatsapp: ficha.whatsapp, cidade: ficha.cidade || '' };
   const responsavel = String(((body || {}).ficha || {}).responsavel || '').trim().slice(0, 60);
   if (responsavel) inputs.responsavel = responsavel;
+  // Fotos do cliente (Q1): só links https limpos, no máximo 6; o workflow troca as imagens neutras do modelo.
+  const fotos = String(((body || {}).ficha || {}).fotos || '').split(/[\s,]+/).filter(Boolean);
+  if (fotos.length > 6 || fotos.some(u => !/^https:\/\/[^\s"'<>()\\]+$/.test(u))) return { status: 400, corpo: { error: 'Fotos: no máximo 6 links que começam com https://.' } };
+  if (fotos.length) inputs.fotos = fotos.join(',');
   try {
     await gh(`/repos/${REPO_CLIENTES}/actions/workflows/${WORKFLOW}/dispatches`, { method: 'POST', body: JSON.stringify({ ref: 'main', inputs }) });
   } catch (e) {

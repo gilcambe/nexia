@@ -107,3 +107,20 @@ test('CFS8. quadro dos PCs: o PC manda (token da máquina), a Central lê só o 
   const semToken = { ...ev, headers: {} };
   assert.equal((await m.rotaDoPc(semToken, json)).statusCode, 401);
 });
+
+test('CFS9. fotos (Q1): vão ao workflow como texto com vírgula e seguem para o Publicar; link ruim é recusado', async () => {
+  const loja = fab.criarLoja({}, createMemoryDriver());
+  const { gh, chamadas } = ghFalso();
+  const r = await fab.criar({ ficha: { ...FICHA, fotos: 'https://x.com/a.jpg, https://x.com/b.jpg' } }, { gh, loja });
+  assert.equal(r.status, 200);
+  assert.equal(JSON.parse(chamadas[0].init.body).inputs.fotos, 'https://x.com/a.jpg,https://x.com/b.jpg');
+  await fab.publicar({ id: 'clinica-sorriso' }, { gh, loja });
+  const prod = JSON.parse(chamadas.find(c => c.caminho.includes('fabrica-producao.yml')).init.body);
+  assert.equal(prod.inputs.fotos, 'https://x.com/a.jpg,https://x.com/b.jpg');
+  const semFoto = ghFalso();
+  await fab.criar({ ficha: FICHA }, { gh: semFoto.gh });
+  assert.equal('fotos' in JSON.parse(semFoto.chamadas[0].init.body).inputs, false, 'sem fotos o campo nem vai (workflow antigo continua aceitando)');
+  for (const ruim of ['http://x.com/a.jpg', 'https://x.com/a.jpg"onerror=1', Array(7).fill('https://x.com/a.jpg').join(',')]) {
+    assert.equal((await fab.criar({ ficha: { ...FICHA, fotos: ruim } }, ghFalso())).status, 400, ruim);
+  }
+});

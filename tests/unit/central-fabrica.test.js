@@ -99,3 +99,13 @@ test('FAB10. menu tem a Fábrica e a tela não fala NEXIA nem prumo', async () =
   assert.ok(tela.includes('parte=fabrica-catalogo') && tela.includes('parte=fabrica-status'));
   assert.ok(tela.includes('window.confirm'), 'publicar pede confirmação');
 });
+
+test('FAB-F1. fotos (Q1): opcionais, só https, no máximo 6; limparFicha junta com vírgula', async () => {
+  const { errosDaFicha, limparFicha } = await fabrica();
+  assert.deepEqual(errosDaFicha({ ...FICHA, fotos: '' }), []);
+  assert.deepEqual(errosDaFicha({ ...FICHA, fotos: 'https://a.com/1.jpg https://a.com/2.jpg' }), []);
+  assert.equal(errosDaFicha({ ...FICHA, fotos: 'http://a.com/1.jpg' }).length, 1);
+  assert.equal(errosDaFicha({ ...FICHA, fotos: Array(7).fill('https://a.com/1.jpg').join(',') }).length, 1);
+  assert.equal(limparFicha({ ...FICHA, fotos: ' https://a.com/1.jpg ,\nhttps://a.com/2.jpg ' }).fotos, 'https://a.com/1.jpg,https://a.com/2.jpg');
+  assert.equal('fotos' in limparFicha(FICHA), false);
+});
