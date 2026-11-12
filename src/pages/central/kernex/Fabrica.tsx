@@ -72,6 +72,7 @@ function CamposFicha({ ficha, setFicha, comPrecisa = true }: { ficha: Ficha; set
       {campo("ramo", "Ramo", "Ex.: dentista, viagens, estética")}
       {campo("cidade", "Cidade", "Ex.: Recife")}
       {campo("whatsapp", "WhatsApp (com DDI e DDD)", "Ex.: 5581999999999")}
+      {campo("fotos", "Fotos do negócio (opcional, links https separados por vírgula)", "Ex.: https://site.com/foto1.jpg, https://site.com/foto2.jpg")}
       {comPrecisa && (
         <fieldset style={{ border: 0, padding: 0, display: "flex", flexWrap: "wrap", gap: 8 }}>
           <legend style={{ marginBottom: 6 }}>O que o sistema precisa</legend>

@@ -4,7 +4,11 @@
 export type Modulo = { id: string; nome: string; faz: string; nichos: string[]; nivel: 1 | 2 | 3; pronto: boolean; origem: string; testes: number };
 export type Modelo = { id: string; nome: string; nichos: string[]; modulos: string[]; clonavel: boolean; previa: string };
 export type Catalogo = { modulos: Modulo[]; modelos: Modelo[] };
-export type Ficha = { nome: string; ramo: string; cidade?: string; whatsapp: string; precisa: string[] };
+export type Ficha = { nome: string; ramo: string; cidade?: string; whatsapp: string; precisa: string[]; fotos?: string };
+
+/** Fotos do cliente (Q1): links https separados por vírgula, espaço ou linha; no máximo 6. */
+export const FOTO_OK = /^https:\/\/[^\s"'<>()\\]+$/;
+export const listaFotos = (s?: string): string[] => String(s || "").split(/[\s,]+/).map((x) => x.trim()).filter(Boolean);
 export type Consulta = {
   modelo: { id: string; nome: string; porque: string } | null;
   prontos: { id: string; nome: string }[];
@@ -42,12 +46,15 @@ export function errosDaFicha(f: Partial<Ficha>): string[] {
   const zap = String(f.whatsapp || "").replace(/\D/g, "");
   if (zap.length < 12 || zap.length > 13) erros.push("WhatsApp com DDI e DDD, só números (ex.: 5581999999999).");
   if (!f.precisa || f.precisa.length === 0) erros.push("Marque pelo menos uma coisa que o sistema precisa.");
+  const fotos = listaFotos(f.fotos);
+  if (fotos.length > 6) erros.push("No máximo 6 fotos.");
+  if (fotos.some((u) => !FOTO_OK.test(u))) erros.push("Cada foto precisa ser um link que começa com https://.");
   return erros;
 }
 
 /** Limpa a ficha para enviar: tira espaços, deixa o WhatsApp só com números e tira itens repetidos. */
 export function limparFicha(f: Ficha): Ficha {
-  return { nome: f.nome.trim(), ramo: f.ramo.trim(), cidade: (f.cidade || "").trim(), whatsapp: String(f.whatsapp).replace(/\D/g, ""), precisa: [...new Set(f.precisa)] };
+  return { nome: f.nome.trim(), ramo: f.ramo.trim(), cidade: (f.cidade || "").trim(), whatsapp: String(f.whatsapp).replace(/\D/g, ""), precisa: [...new Set(f.precisa)], ...(listaFotos(f.fotos).length ? { fotos: listaFotos(f.fotos).join(",") } : {}) };
 }
 
 /** Os três grupos que o dono vê na consulta: pronto (verde), adaptar (amarelo), criar (vermelho). */
