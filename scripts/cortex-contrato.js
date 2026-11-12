@@ -121,6 +121,10 @@ function modelos() {
   return { router, lista };
 }
 
+// Mantém o processo vivo até o fim (11/11/2026): a espera pelo PC2 (fila "maquinas") usa timers "unref", que não
+// seguram o Node; sem isto o script saía em 2 s com código 0 logo depois de mandar a tarefa ao PC (que fazia o
+// trabalho em ~200 s sem ninguém esperando o resultado).
+const manterVivo = setInterval(() => {}, 60 * 60 * 1000);
 (async () => {
   if (!N || !TOKEN) { console.error('NUMERO e GH_TOKEN são obrigatórios'); process.exit(2); }
   const issue = (await gh('GET', `/issues/${N}`)).json;
@@ -205,4 +209,4 @@ function modelos() {
   if (semCi) await rotular('contrato-sem-ci');
   await rotular('contrato-pr');
   console.log(`PR #${pr.json.number}`);
-})().catch(e => { console.error(e); process.exit(1); });
+})().catch(e => { console.error(e); process.exitCode = 1; }).finally(() => clearInterval(manterVivo));
