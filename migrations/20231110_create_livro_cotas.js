@@ -67,6 +67,15 @@ module.exports = {
   },
 
   down: async (queryInterface, Sequelize) => {
+    // Rdv2: remove o ENUM que o MySQL cria junto com a coluna treina_com_dados.
+    try {
+      await queryInterface.sequelize.query('ALTER TABLE livro_cotas MODIFY COLUMN treina_com_dados VARCHAR(16)');
+      await queryInterface.sequelize.query(
+        "DROP TYPE IF EXISTS 'enum_livro_cotas_treina_com_dados';"
+      );
+    } catch (e) {
+      // banco sem ENUM (SQLite/Postgres): segue a remoção da tabela
+    }
     await queryInterface.dropTable('livro_cotas');
   }
 };
