@@ -55,6 +55,10 @@ function aplicar(texto, c, raiz) {
   const permitido = p => c.arquivos.includes(p);
   for (const f of b.files) {
     if (!permitido(f.path)) { recusas.push(`${f.path}: fora dos arquivos permitidos`); continue; }
+    // IA grátis costuma truncar arquivo grande: trocar um existente (>2 KB) por menos da metade é recusado.
+    const atualP = path.join(raiz, f.path);
+    const antes = fs.existsSync(atualP) ? fs.statSync(atualP).size : 0;
+    if (antes > 2000 && Buffer.byteLength(f.content) < antes / 2) { recusas.push(`${f.path}: arquivo inteiro com menos da metade do atual (provável corte); use blocos SEARCH/REPLACE`); continue; }
     fs.mkdirSync(path.dirname(path.join(raiz, f.path)), { recursive: true });
     fs.writeFileSync(path.join(raiz, f.path), f.content);
     aplicados.push(f.path);

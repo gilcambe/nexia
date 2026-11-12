@@ -25,10 +25,10 @@ test('GC1. portões recusam: teste fora do lugar, arquivo proibido, import perig
   assert.equal(conferir(JSON.parse(proposta({ teste: 'tests/contrato/x.test.js' }))).ok, false);
   assert.equal(conferir(JSON.parse(proposta({ arquivos: ['.github/workflows/ci.yml'] }))).ok, false);
   assert.equal(conferir(JSON.parse(proposta({ arquivos: ['tests/unit/a.js'] }))).ok, false);
-  assert.match(conferir(JSON.parse(proposta({ codigo: TESTE_BOM.replace("require('node:test')", "require('node:test'); require('fs')") }))).erros.join(), /importa o que não pode: fs/);
+  assert.match(conferir(JSON.parse(proposta({ codigo: TESTE_BOM.replace("require('node:test')", "require('node:test'); require('node:child_process')") }))).erros.join(), /importa o que não pode: node:child_process/);
   assert.match(conferir(JSON.parse(proposta({ codigo: TESTE_BOM + '\nprocess.env.X;' }))).erros.join(), /recurso proibido/);
   assert.match(conferir(JSON.parse(proposta({ codigo: TESTE_BOM.replace(/assert\.(throws|equal)\(dobro\((0|'x')\)[^\n]*\n/g, '') }))).erros.join(), /poucas asserções/);
-  assert.match(conferir(JSON.parse(proposta({ codigo: TESTE_BOM.replace("require('../../lib/dobro')", "require('node:assert')") }))).erros.join(), /não importa nenhum arquivo da solução/);
+  assert.match(conferir(JSON.parse(proposta({ codigo: TESTE_BOM.replace("require('../../lib/dobro')", "require('node:assert')") }))).erros.join(), /não importa nem lê nenhum arquivo da solução/);
 });
 
 test('GC2. pedido de tela/texto volta "não testável" (segue o caminho antigo)', async () => {
@@ -38,11 +38,11 @@ test('GC2. pedido de tela/texto volta "não testável" (segue o caminho antigo)'
 
 test('GC3. teste recusado volta com o motivo; o aceito precisa FALHAR no código atual e fica gravado', async () => {
   const raiz = repo();
-  const rt = roteiro([proposta({ codigo: TESTE_BOM + "\nrequire('fs');" }), proposta()]);
+  const rt = roteiro([proposta({ codigo: TESTE_BOM + "\nrequire('node:child_process');" }), proposta()]);
   const r = await gerar({ pedido: 'Função dobro(n) em lib/dobro.js; texto lança erro', raiz, router: rt, modelos: M, rodarTeste: rodar(raiz) });
   assert.equal(r.ok, true);
   assert.equal(r.tentativas, 2);
-  assert.match(rt.vistos[1], /RECUSADA: .*fs/);
+  assert.match(rt.vistos[1], /RECUSADA: .*child_process/);
   assert.deepEqual(r.contrato.arquivos, ['lib/dobro.js']);
   assert.equal(r.contrato.teste, 'node --test tests/unit/contrato-dobro.test.js');
   assert.ok(fs.existsSync(path.join(raiz, 'tests/unit/contrato-dobro.test.js')));
