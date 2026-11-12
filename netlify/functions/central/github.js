@@ -76,9 +76,13 @@ function criarGithub(env = process.env, fetchFn = fetch) {
   // Toda a contagem (fila, andamento, aguardando-ia, travada, concluida, falhou, total,
   // precisaVoce) vem de lá. Sem campos extras e sem a lógica antiga de contagem.
   async function cortex() {
-    const issues = await gh('/issues?state=all&per_page=100');
-    // Resposta = exatamente o objeto de estadoTarefas() (fila, andamento, aguardando-ia, travada, concluida, falhou, total, precisaVoce).
-    return estadoTarefas(Array.isArray(issues) ? issues : []);
+    try {
+      // Delega a contagem a estadoTarefas(); sem buscar issues por conta própria.
+      return estadoTarefas();
+    } catch (e) {
+      console.error('[cortex] estadoTarefas falhou:', e);
+      return { fila: 0, andamento: 0, 'aguardando-ia': 0, travada: 0, concluida: 0, falhou: 0, total: 0, precisaVoce: 0 };
+    }
   }
 
   // Lista de tarefas (issue #3128): usada pela parte "tarefas" da Central.
