@@ -9,7 +9,7 @@ const LICOES = Object.freeze([
   'Nada de exemplo fixo apresentado como resultado: se o pedido é um cardápio, treino ou cálculo, o código deve calcular a partir dos dados da pessoa. Exemplo real: um cardápio entregue com 3 refeições escritas à mão.',
   'Todo handler novo do servidor precisa ser registrado em cloudflare/functions.js e em lib/routes.js; sem isso a rota não existe no Worker.',
   'Em React/JSX não coloque um bloco novo dentro de um ternário (a ? x : y); coloque antes ou depois dele.',
-  'Dados do Body Coach ficam em bodycoach_users/{uid}/{profile|meals|workouts|daily_readiness|progress_entries|medical_exams}; use getUserDoc/setUserDoc de lib/userData.ts e nunca importe de "@/mocks".',',
+  'Dados do Body Coach ficam em bodycoach_users/{uid}/{profile|meals|workouts|daily_readiness|progress_entries|medical_exams}; use getUserDoc/setUserDoc de lib/userData.ts e nunca importe de "@/mocks"',',
   'No YAML de workflow, um "#" fora de aspas vira comentário e corta a expressão ${{ }}; coloque o valor inteiro entre aspas.',
   'Mudança pequena e exata funciona melhor que reescrever: faça só o que o pedido manda, nos arquivos que ele cita, e copie os trechos "find" exatamente como estão no arquivo.',
   'Todo workflow novo em .github/workflows entra no teste de detecção; todo arquivo novo de teste fica em tests/unit com final .test.js.',
