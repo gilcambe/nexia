@@ -19,9 +19,9 @@ export const PRAZO_RESOLUCAO_H = 4;
 
 export function resolverSozinho(a: Aviso, agora = Date.now()): boolean {
   if (!a.sozinho) return false;
-  if (!a.checadoEm) return true;
+  if (!a.checadoEm) return false;
   const t = Date.parse(a.checadoEm);
-  if (Number.isNaN(t)) return true;
+  if (Number.isNaN(t)) return false;
   const diff = agora - t;
   return diff >= 0 && diff < PRAZO_RESOLUCAO_H * 60 * 60 * 1000;
 }
