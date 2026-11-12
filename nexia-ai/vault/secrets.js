@@ -33,8 +33,13 @@ function shannonEntropy(s) {
 }
 
 // Sequência longa, aleatória, com letras e dígitos: típica de token/chave.
+// Id do próprio Vault (prefixo da entidade + 32 hex aleatórios, ex.: prj_9f…): não é segredo. Antes o teste falhava
+// de vez em quando, porque o prefixo somado ao hex às vezes passava de 4,2 de entropia.
+const VAULT_ID = /^(?:art|chg|cli|cnv|dec|dpl|env|err|exe|int|mem|pol|prj|rbt|repo|req|snp|tcl|trn|tsk)_[0-9a-f]{32}$/;
+
 function looksHighEntropy(token) {
   if (token.length < 32) return false;
+  if (VAULT_ID.test(token)) return false;
   // Nome legível com separadores (branch "nexia/corrija-o-botao-a1b2c3", caminho de arquivo): palavras curtas, não chave.
   const parts = token.split(/[-/_.]+/).filter(Boolean);
   if (parts.length >= 3 && parts.every(p => p.length <= 16)) return false;
