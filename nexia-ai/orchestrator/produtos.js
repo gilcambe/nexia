@@ -4,3 +4,4 @@ module.exports = {
   "Body Coach": ["apps/body-coach/"],
   "Viajante": ["viajante-pro/"]
 };
+
