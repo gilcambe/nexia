@@ -2,29 +2,29 @@
   "spec": {
     "kind": "system",
     "name": "Kernex Finance",
-    "tagline": "Gestão financeira empresarial integrada e segura",
-    "photo_theme": "corporate finance dashboard",
-    "description": "Gestão financeira empresarial integrada e segura",
+    "tagline": "Gestão financeira corporativa inteligente e unificada",
+    "photo_theme": "",
+    "description": "Gestão financeira corporativa inteligente e unificada",
     "folder": "sites/kernex-finance",
     "fonts": {
       "heading": "Plus Jakarta Sans",
       "body": "Inter"
     },
     "palette": {
-      "primary": "#2563eb",
-      "accent": "#0ea5e9",
+      "primary": "#0f172a",
+      "accent": "#2563eb",
       "bg": "#fbfaf7",
       "surface": "#ffffff",
       "text": "#1d2426",
       "muted": "#5d6b6e",
-      "dark": "#0f172a"
+      "dark": "#090d16"
     },
     "style": "modern",
     "contact": {
       "whatsapp": "",
-      "phone": "(11) 4004-8900",
+      "phone": "(11) 4000-8899",
       "email": "suporte@kernex.com.br",
-      "address": "Av. Paulista, 1000 - São Paulo, SP",
+      "address": "",
       "city": "",
       "hours": "",
       "instagram": "",
@@ -74,10 +74,10 @@
             "label": "Tipo",
             "type": "select",
             "options": [
-              "Corrente",
-              "Poupança",
+              "Corrente PJ",
               "Investimento",
-              "Caixa"
+              "Cartão de Crédito",
+              "Aplicação"
             ],
             "required": true
           },
@@ -87,55 +87,84 @@
             "type": "money",
             "options": [],
             "required": true
+          },
+          {
+            "key": "status",
+            "label": "Status",
+            "type": "select",
+            "options": [
+              "Ativa",
+              "Inativa",
+              "Conciliação Pendente"
+            ],
+            "required": true
           }
         ],
         "sample": [
           {
-            "banco": "Banco Itaú",
-            "agencia": "0312",
-            "conta": "45890-1",
-            "tipo": "Corrente",
-            "saldo": "15420.50"
+            "banco": "Itaú Empresas",
+            "agencia": "0342",
+            "conta": "12849-0",
+            "tipo": "Corrente PJ",
+            "saldo": "45200.00",
+            "status": "Ativa"
           },
           {
             "banco": "Nubank PJ",
             "agencia": "0001",
-            "conta": "892341-9",
-            "tipo": "Corrente",
-            "saldo": "48300.00"
+            "conta": "987654-3",
+            "tipo": "Corrente PJ",
+            "saldo": "18500.50",
+            "status": "Ativa"
           },
           {
             "banco": "BTG Pactual",
-            "agencia": "0100",
-            "conta": "12345-8",
+            "agencia": "0102",
+            "conta": "44321-8",
             "tipo": "Investimento",
-            "saldo": "150000.00"
+            "saldo": "150000.00",
+            "status": "Ativa"
           },
           {
-            "banco": "Caixa Interno",
-            "agencia": "0000",
-            "conta": "0001-0",
-            "tipo": "Caixa",
-            "saldo": "1250.00"
+            "banco": "Santander Corporate",
+            "agencia": "0550",
+            "conta": "88123-9",
+            "tipo": "Aplicação",
+            "saldo": "75000.00",
+            "status": "Conciliação Pendente"
           }
         ]
       },
       {
-        "key": "centros_custo",
-        "label": "Centros de Custo",
-        "singular": "Centro de Custo",
+        "key": "orcamentos",
+        "label": "Orçamentos",
+        "singular": "Orçamento",
         "fields": [
           {
-            "key": "codigo",
-            "label": "Código",
+            "key": "departamento",
+            "label": "Departamento",
             "type": "text",
             "options": [],
             "required": true
           },
           {
-            "key": "nome",
-            "label": "Nome do Centro",
+            "key": "categoria",
+            "label": "Categoria de Despesa",
             "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "valor_previsto",
+            "label": "Valor Previsto",
+            "type": "money",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "mes",
+            "label": "Mês de Referência",
+            "type": "date",
             "options": [],
             "required": true
           },
@@ -151,36 +180,133 @@
             "label": "Status",
             "type": "select",
             "options": [
-              "Ativo",
-              "Inativo"
+              "Aprovado",
+              "Em Revisão",
+              "Estourado",
+              "Bloqueado"
             ],
             "required": true
           }
         ],
         "sample": [
           {
-            "codigo": "CC-101",
-            "nome": "Engenharia e Tecnologia",
+            "departamento": "Tecnologia",
+            "categoria": "Serviços em Nuvem",
+            "valor_previsto": "12000.00",
+            "mes": "2026-11-01",
             "responsavel": "Carlos Silva",
-            "status": "Ativo"
+            "status": "Aprovado"
           },
           {
-            "codigo": "CC-102",
-            "nome": "Marketing e Vendas",
+            "departamento": "Marketing",
+            "categoria": "Anúncios e Mídia",
+            "valor_previsto": "25000.00",
+            "mes": "2026-11-01",
             "responsavel": "Mariana Costa",
-            "status": "Ativo"
+            "status": "Em Revisão"
           },
           {
-            "codigo": "CC-103",
-            "nome": "Recursos Humanos",
-            "responsavel": "Juliana Santos",
-            "status": "Ativo"
+            "departamento": "Recursos Humanos",
+            "categoria": "Benefícios e Folha",
+            "valor_previsto": "85000.00",
+            "mes": "2026-11-01",
+            "responsavel": "Juliana Mendes",
+            "status": "Aprovado"
           },
           {
-            "codigo": "CC-104",
-            "nome": "Operações e Logística",
-            "responsavel": "Roberto Alves",
-            "status": "Ativo"
+            "departamento": "Operações",
+            "categoria": "Infraestrutura",
+            "valor_previsto": "9500.00",
+            "mes": "2026-11-01",
+            "responsavel": "Roberto Dias",
+            "status": "Estourado"
+          }
+        ]
+      },
+      {
+        "key": "transacoes",
+        "label": "Transações",
+        "singular": "Transação",
+        "fields": [
+          {
+            "key": "descricao",
+            "label": "Descrição",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "tipo",
+            "label": "Tipo",
+            "type": "select",
+            "options": [
+              "Receita",
+              "Despesa",
+              "Transferência"
+            ],
+            "required": true
+          },
+          {
+            "key": "valor",
+            "label": "Valor",
+            "type": "money",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "data",
+            "label": "Data",
+            "type": "date",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "categoria",
+            "label": "Categoria",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "observacoes",
+            "label": "Observações",
+            "type": "textarea",
+            "options": [],
+            "required": false
+          }
+        ],
+        "sample": [
+          {
+            "descricao": "Cliente Enterprise A - Licenciamento",
+            "tipo": "Receita",
+            "valor": "35000.00",
+            "data": "2026-11-12",
+            "categoria": "Vendas de Software",
+            "observacoes": "Fatura 2026-112 emitida via API"
+          },
+          {
+            "descricao": "AWS Cloud Services",
+            "tipo": "Despesa",
+            "valor": "11250.40",
+            "data": "2026-11-10",
+            "categoria": "Infraestrutura",
+            "observacoes": "Débito automático cartão corporativo"
+          },
+          {
+            "descricao": "Escritório SP - Aluguel",
+            "tipo": "Despesa",
+            "valor": "8500.00",
+            "data": "2026-11-05",
+            "categoria": "Imóvel e Instalações",
+            "observacoes": "Boleto bancário liquidado"
+          },
+          {
+            "descricao": "Consultoria Externa DevOps",
+            "tipo": "Despesa",
+            "valor": "6000.00",
+            "data": "2026-11-03",
+            "categoria": "Serviços de Terceiros",
+            "observacoes": "NF 4492"
           }
         ]
       }
@@ -188,8 +314,10 @@
     "modules": [
       "Dashboard",
       "Contas Bancárias",
-      "Centros de Custo",
-      "Relatórios"
+      "Transações",
+      "Orçamentos",
+      "Alertas e Diário",
+      "Domínio Kernex"
     ]
   },
   "media": {}
