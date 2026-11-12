@@ -1,10 +1,11 @@
 'use strict';
 const motivos = require('./motivos');
 const { estadoTarefas } = require('./estado-tarefas');
-// Central NEXIA: o que a página precisa do GitHub (fila do Cortex, robôs, posts do Divulga).
+// Central NEXIA: o que a página precisa do GitHub (estado da fila do Cortex, robôs, posts do Divulga).
 // Usa o token da fila (NEXIA_JOBS_TOKEN) só no servidor; nada dele vai para a página.
-// #3125 parte 2/6: a parte "cortex" responde só o resumo de estadoTarefas(); a lista de tarefas
-// passou para a parte "tarefas" (issue #3128).
+// #3125 parte 2/6 (#3128): /api/central?parte=cortex responde exatamente o objeto de estadoTarefas()
+// (contagens por estado), sem lógica própria de fila/rodando/travadas. A lista de tarefas
+// passou para a parte "tarefas".
 
 const REPO = 'gilcambe/nexia';
 const API = 'https://api.github.com/repos/' + REPO;
