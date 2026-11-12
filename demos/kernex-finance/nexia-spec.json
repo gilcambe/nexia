@@ -1,0 +1,259 @@
+{
+  "spec": {
+    "kind": "system",
+    "name": "Kernex Finance",
+    "tagline": "Controle financeiro e alçadas de aprovação num só lugar",
+    "photo_theme": "finance dashboard dashboard analytics",
+    "description": "Controle financeiro e alçadas de aprovação num só lugar",
+    "folder": "demos/kernex-finance",
+    "fonts": {
+      "heading": "Manrope",
+      "body": "Inter"
+    },
+    "palette": {
+      "primary": "#2563eb",
+      "accent": "#10b981",
+      "bg": "#fbfaf7",
+      "surface": "#ffffff",
+      "text": "#1d2426",
+      "muted": "#5d6b6e",
+      "dark": "#0f172a"
+    },
+    "style": "modern",
+    "contact": {
+      "whatsapp": "",
+      "phone": "",
+      "email": "suporte@kernex.com.br",
+      "address": "",
+      "city": "",
+      "hours": "",
+      "instagram": "",
+      "facebook": "",
+      "youtube": "",
+      "tiktok": "",
+      "linkedin": ""
+    },
+    "logo": "",
+    "logo_scrolled": "",
+    "favicon": "",
+    "brand_text": false,
+    "selo": {
+      "label": "Feito com Kernex",
+      "url": "https://kernex.com.br/?utm_source=kernex-finance&utm_medium=selo&utm_campaign=clientes"
+    },
+    "leads_origem": "",
+    "entities": [
+      {
+        "key": "conta_lancamentos",
+        "label": "Lançamentos",
+        "singular": "Lançamento",
+        "fields": [
+          {
+            "key": "historico",
+            "label": "Histórico",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "data",
+            "label": "Data Lançamento",
+            "type": "date",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "categoria",
+            "label": "Categoria",
+            "type": "select",
+            "options": [
+              "Administrativo",
+              "Comercial",
+              "Tecnologia",
+              "Sustentação",
+              "Custo de Vendas"
+            ],
+            "required": true
+          },
+          {
+            "key": "valor",
+            "label": "Valor (R$)",
+            "type": "money",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "tipo",
+            "label": "Tipo",
+            "type": "select",
+            "options": [
+              "Receita",
+              "Despesa"
+            ],
+            "required": true
+          },
+          {
+            "key": "centro_custo",
+            "label": "Centro de Custo",
+            "type": "text",
+            "options": [],
+            "required": false
+          },
+          {
+            "key": "obs",
+            "label": "Observações",
+            "type": "textarea",
+            "options": [],
+            "required": false
+          }
+        ],
+        "sample": [
+          {
+            "historico": "Assinatura Enterprise",
+            "data": "2026-11-10",
+            "categoria": "Comercial",
+            "valor": "4500.00",
+            "tipo": "Receita",
+            "centro_custo": "CC-01",
+            "obs": ""
+          },
+          {
+            "historico": "AWS - Infraestrutura",
+            "data": "2026-11-15",
+            "categoria": "Tecnologia",
+            "valor": "3200.00",
+            "tipo": "Despesa",
+            "centro_custo": "CC-02",
+            "obs": ""
+          },
+          {
+            "historico": "Equipe Comercial - Provisão",
+            "data": "2026-11-28",
+            "categoria": "Comercial",
+            "valor": "8000.00",
+            "tipo": "Despesa",
+            "centro_custo": "",
+            "obs": ""
+          },
+          {
+            "historico": "Licença Segurança B2B",
+            "data": "2026-11-30",
+            "categoria": "Sustentação",
+            "valor": "1200.00",
+            "tipo": "Despesa",
+            "centro_custo": "",
+            "obs": ""
+          },
+          {
+            "historico": "Consultoria Legal",
+            "data": "2026-12-01",
+            "categoria": "Administrativo",
+            "valor": "2500.00",
+            "tipo": "Despesa",
+            "centro_custo": "",
+            "obs": ""
+          }
+        ]
+      },
+      {
+        "key": "regras_alcadas",
+        "label": "Alçadas",
+        "singular": "Alçada",
+        "fields": [
+          {
+            "key": "nome_regra",
+            "label": "Regra de Aprovação",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "nivel_max",
+            "label": "Valor Máximo (R$)",
+            "type": "money",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "aprovador_primeiro",
+            "label": "Primeiro Nível",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "aprovador_segundo",
+            "label": "Segundo Nível",
+            "type": "text",
+            "options": [],
+            "required": false
+          },
+          {
+            "key": "categoria_vinculada",
+            "label": "Categoria",
+            "type": "select",
+            "options": [
+              "Todas",
+              "Administrativo",
+              "Comercial",
+              "Tecnologia",
+              "Sustentação"
+            ],
+            "required": true
+          },
+          {
+            "key": "status",
+            "label": "Status",
+            "type": "select",
+            "options": [
+              "Ativa",
+              "Inativa"
+            ],
+            "required": true
+          }
+        ],
+        "sample": [
+          {
+            "nome_regra": "Gastos até 5 mil",
+            "nivel_max": "5000.00",
+            "aprovador_primeiro": "Gerente de Área",
+            "aprovador_segundo": "Gerente Financeiro",
+            "categoria_vinculada": "Todas",
+            "status": "Ativa"
+          },
+          {
+            "nome_regra": "Contratos Comerciais",
+            "nivel_max": "50000.00",
+            "aprovador_primeiro": "Diretor Comercial",
+            "aprovador_segundo": "CFO",
+            "categoria_vinculada": "Comercial",
+            "status": "Ativa"
+          },
+          {
+            "nome_regra": "Contratação Tech",
+            "nivel_max": "20000.00",
+            "aprovador_primeiro": "Head de Tecnologia",
+            "aprovador_segundo": "CEO",
+            "categoria_vinculada": "Tecnologia",
+            "status": "Ativa"
+          },
+          {
+            "nome_regra": "Móveis Corporativos",
+            "nivel_max": "10000.00",
+            "aprovador_primeiro": "Administrativo",
+            "aprovador_segundo": "CFO",
+            "categoria_vinculada": "Administrativo",
+            "status": "Ativa"
+          }
+        ]
+      }
+    ],
+    "modules": [
+      "Dashboards",
+      "Lançamentos",
+      "Alçadas",
+      "Exportações"
+    ]
+  },
+  "media": {}
+}
