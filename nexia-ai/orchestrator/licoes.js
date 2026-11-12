@@ -22,20 +22,6 @@ const LICOES = Object.freeze([
   'Entregue só o que a tarefa pede, nos arquivos que ela cita. Exemplo real: para #2717 (motivos da fila na Central) o PR #2835 criou um workflow nexia-pipeline.yml que ninguém pediu; isso conta como falha.',
   'Homologação (#3264): nenhuma versão é publicada sem o check "Homologação" verde; todo bug do dono vira caso em homologacao/catalogo com teste que falha no código antigo e passa no novo, no mesmo PR (ex.: #3267 ativos duplicados, tests/unit/prumo-homologacao.test.js).',
   'Nunca planejar arquivo em pasta que o produto não usa; ler a árvore antes.',
-]);
+];
 
-const TEXTO = `LIÇÕES APRENDIDAS (erros reais de tarefas anteriores; não repita):\n${LICOES.map(l => `- ${l}`).join('\n')}`;
-
-const REGISTRO_PASSAGENS = [];
-
-function registrarPassagem({ data, quem, motivo, para }) {
-  const linha = `${data || new Date().toISOString()}: ${quem || 'IA'} parou (${motivo || 'sem sinal'}); passado para ${para || 'Cortex'}.`;
-  REGISTRO_PASSAGENS.push(linha);
-  return linha;
-}
-
-function listarPassagens() {
-  return [...REGISTRO_PASSAGENS];
-}
-
-module.exports = { LICOES, TEXTO, registrarPassagem, listarPassagens };
+module.exports = LICOES;
