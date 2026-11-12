@@ -56,15 +56,20 @@ test('fonte local: não lê .env, não sai da raiz, não segue symlink', async (
   fs.writeFileSync(path.join(dir, '.env'), 'GROQ_API_KEY=valor');
   fs.writeFileSync(path.join(dir, '.env.example'), 'GROQ_API_KEY=');
   fs.writeFileSync(path.join(outside, 'secret.txt'), 'fora');
-  fs.symlinkSync(path.join(outside, 'secret.txt'), path.join(dir, 'link.txt'));
+  // Windows sem modo desenvolvedor não cria symlink de arquivo (EPERM): aí a checagem de symlink roda só no CI (Linux).
+  let temLink = true;
+  try { fs.symlinkSync(path.join(outside, 'secret.txt'), path.join(dir, 'link.txt')); }
+  catch (e) { if (process.platform === 'win32' && e.code === 'EPERM') temLink = false; else throw e; }
   fs.writeFileSync(path.join(dir, 'package.json'), '{"name":"x"}');
   const src = createLocalSource(dir);
   assert.strictEqual(await src.read('.env'), null);
   assert.strictEqual(await src.read('.env.local'), null);
   assert.strictEqual(await src.read('.env.example'), 'GROQ_API_KEY=');
   assert.strictEqual(await src.read('../' + path.basename(outside) + '/secret.txt'), null);
-  assert.strictEqual(await src.read('link.txt'), null);
-  assert.ok(!(await src.files()).includes('link.txt'));
+  if (temLink) {
+    assert.strictEqual(await src.read('link.txt'), null);
+    assert.ok(!(await src.files()).includes('link.txt'));
+  }
   for (const p of ['.env', 'config/.env.production', 'keys/server.pem', 'serviceAccount.json', 'service-account-prod.json']) assert.ok(NEVER_READ.test(p), p);
   for (const p of ['.env.example', 'src/env.ts', 'package.json']) assert.ok(!NEVER_READ.test(p), p);
 });

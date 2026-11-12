@@ -26,12 +26,15 @@ test('resolveStatic só devolve arquivos dentro da raiz, com extensão permitida
   fs.writeFileSync(path.join(root, 'ok.js'), 'ok');
   fs.writeFileSync(path.join(root, 'secret.env'), 'X=1');
   fs.writeFileSync(path.join(outside, 'leak.js'), 'leak');
-  fs.symlinkSync(path.join(outside, 'leak.js'), path.join(root, 'link.js'));
+  // Windows sem modo desenvolvedor não cria symlink de arquivo (EPERM): aí a checagem de symlink roda só no CI (Linux).
+  let temLink = true;
+  try { fs.symlinkSync(path.join(outside, 'leak.js'), path.join(root, 'link.js')); }
+  catch (e) { if (process.platform === 'win32' && e.code === 'EPERM') temLink = false; else throw e; }
   fs.mkdirSync(path.join(root, 'dir.js'));
   try {
     assert.ok(resolveStatic(root, 'ok.js'));
     assert.strictEqual(resolveStatic(root, 'secret.env'), null, 'extensão fora da allowlist');
-    assert.strictEqual(resolveStatic(root, 'link.js'), null, 'symlink para fora da raiz');
+    if (temLink) assert.strictEqual(resolveStatic(root, 'link.js'), null, 'symlink para fora da raiz');
     assert.strictEqual(resolveStatic(root, '../' + path.basename(outside) + '/leak.js'), null, 'traversal');
     assert.strictEqual(resolveStatic(root, path.join(outside, 'leak.js')), null, 'caminho absoluto');
     assert.strictEqual(resolveStatic(root, 'dir.js'), null, 'diretório');

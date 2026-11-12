@@ -32,8 +32,10 @@ test.before(() => {
   fs.writeFileSync(path.join(ROOT, '.env.example'), 'GROQ_API_KEY=\n');
   fs.writeFileSync(path.join(ROOT, 'config.js'), `module.exports = { apiKey: "${fakeKey()}" };\n`);
   fs.writeFileSync(path.join(OUTSIDE, 'segredo.txt'), 'fora do workspace');
-  fs.symlinkSync(OUTSIDE, path.join(ROOT, 'atalho-fora'));
-  fs.symlinkSync(path.join(ROOT, 'src'), path.join(ROOT, 'atalho-dentro'));
+  // Windows sem modo desenvolvedor não cria symlink comum (EPERM); junction é o atalho de pasta que não pede admin.
+const TIPO_LINK = process.platform === 'win32' ? 'junction' : 'dir';
+fs.symlinkSync(OUTSIDE, path.join(ROOT, 'atalho-fora'), TIPO_LINK);
+  fs.symlinkSync(path.join(ROOT, 'src'), path.join(ROOT, 'atalho-dentro'), TIPO_LINK);
   git('init', '-q', '-b', 'develop');
   git('config', 'user.email', 'bridge@test'); git('config', 'user.name', 'Bridge Test');
   fs.writeFileSync(path.join(ROOT, '.gitignore'), '.env\n');
@@ -166,8 +168,11 @@ test('W7. modo autonomous: escrita direta; apagar e comandos de escrita ainda pe
 
 test('W8. terminal.run: sem shell (metacaracteres são texto), sem secrets no ambiente, cwd preso ao workspace', async () => {
   const b = bridge('read-only');
-  const echo = await b.run('terminal_run', { command: 'echo', args: ['$(whoami); rm -rf / && echo', '`id`'] });
-  assert.deepStrictEqual([echo.result.exit_code, echo.result.stdout], [0, '$(whoami); rm -rf / && echo `id`\n']);
+  // No Windows 'echo' é comando interno do cmd (não existe echo.exe sem shell); a prova de "sem shell" roda no Linux (CI).
+  if (process.platform !== 'win32') {
+    const echo = await b.run('terminal_run', { command: 'echo', args: ['$(whoami); rm -rf / && echo', '`id`'] });
+    assert.deepStrictEqual([echo.result.exit_code, echo.result.stdout], [0, '$(whoami); rm -rf / && echo `id`\n']);
+  }
   assert.strictEqual((await b.run('terminal_run', { command: 'echo hi; ls' })).error.code, 'INVALID_ARGS');
   assert.strictEqual((await b.run('terminal_run', { command: 'ls', cwd: '../fora' })).error.code, 'OUTSIDE_WORKSPACE');
   assert.strictEqual((await b.run('terminal_run', { command: path.join(OUTSIDE, 'x.sh') })).error.code, 'OUTSIDE_WORKSPACE');

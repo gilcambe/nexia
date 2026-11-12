@@ -36,7 +36,8 @@ test('CF1. config do Worker: plano grátis, sem Container/Durable Object, cron a
   for (const dep of ['firebase-admin', '@cloudflare/containers']) {
     assert.ok(!(pkg.dependencies || {})[dep] && !(pkg.devDependencies || {})[dep], dep);
   }
-  const deploy = fs.readFileSync(path.join(ROOT, '.github/workflows/deploy-cloudflare.yml'), 'utf8');
+  // No Windows o git pode trocar fim de linha por CRLF; o teste compara com \n.
+  const deploy = fs.readFileSync(path.join(ROOT, '.github/workflows/deploy-cloudflare.yml'), 'utf8').replace(/\r\n/g, '\n');
   // ADR-AUTO-02: automático só depois do CI verde num push da develop; nunca direto em push/PR.
   assert.match(deploy, /^on:\n  workflow_dispatch:/m);
   assert.match(deploy, /workflow_run:\n    workflows: \[CI\]\n    types: \[completed\]\n    branches: \[develop\]/);

@@ -123,5 +123,5 @@ test('firestore.indexes.json contém exatamente os índices vault_* gerados dos 
 
 test('VAULT-SCHEMAS.md está em dia com schemas.js', () => {
   const { render, DOC_FILE } = require('../../nexia-ai/vault/schema-doc');
-  assert.strictEqual(require('fs').readFileSync(DOC_FILE, 'utf8'), render(), 'rode: node nexia-ai/vault/schema-doc.js --write');
+  assert.strictEqual(require('fs').readFileSync(DOC_FILE, 'utf8').replace(/\r\n/g, '\n'), render(),'rode: node nexia-ai/vault/schema-doc.js --write');
 });
