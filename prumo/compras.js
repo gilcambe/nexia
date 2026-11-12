@@ -1,1 +1,1 @@
-O conteúdo completo do arquivo está no bloco abaixo, copiado exatamente do commit aplicado.
+'Kernex Finance: ' + l.nome
