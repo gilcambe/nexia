@@ -1,0 +1,7 @@
+{
+  "nome": "{{nome}}",
+  "titulo": "{{titulo}}",
+  "descricao": "{{descricao}}",
+  "whatsapp": "{{whatsapp}}",
+  "cor": "{{cor}}"
+}

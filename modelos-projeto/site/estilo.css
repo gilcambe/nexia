@@ -1,0 +1,77 @@
+:root {
+  --cor-principal: #3b82f6;
+  --bg-color: #0b0b10;
+  --text-color: #f3f4f6;
+  --muted-color: #9ca3af;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: system-ui, -apple-system, sans-serif;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  line-height: 1.5;
+}
+
+.container {
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 24px 16px;
+}
+
+.header {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 32px 0;
+  text-align: center;
+}
+
+.nome {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.titulo {
+  font-size: 1.125rem;
+  color: var(--muted-color);
+}
+
+.main {
+  padding: 40px 0;
+  text-align: center;
+}
+
+.descricao {
+  font-size: 1rem;
+  margin-bottom: 32px;
+  color: var(--text-color);
+}
+
+.botao-whatsapp {
+  display: inline-block;
+  background-color: var(--cor-principal);
+  color: #ffffff;
+  padding: 14px 28px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 600;
+  transition: opacity 0.2s;
+}
+
+.botao-whatsapp:hover {
+  opacity: 0.9;
+}
+
+.footer {
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 24px 0;
+  text-align: center;
+  font-size: 0.875rem;
+  color: var(--muted-color);
+}
