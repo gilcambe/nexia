@@ -2,8 +2,8 @@
 // Health check central: validado e pronto para Worker invocar.
 // Central NEXIA: saúde dos serviços principais de infraestrutura (Cortex, Firebase, Cloudflare, GitHub, Vault).
 // Cada serviço é verificado individualmente e retorna { id, ok, ms, motivo, conferidoEm }.
-// Os resultados são salvos em Cloudflare D1 ou Firestore no documento saude_servicos/estado
-// (mesma lógica de saude-historico.js e vigia-sites.js). Não grava em disco.
+// Os resultados são salvos em Firestore no documento saude_servicos/estado
+// (mesma lógica de vigia-sites.js). Não grava em disco.
 
 const COLECAO = 'saude_servicos';
 const DOC = 'estado';
