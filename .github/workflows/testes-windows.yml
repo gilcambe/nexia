@@ -21,4 +21,6 @@ jobs:
           cache: npm
       - run: npm ci --ignore-scripts
       - name: Testes (os mesmos do Linux)
+        # bash expande tests/unit/*.test.js (o cmd do Windows não expande e o Node 20 não faz glob).
+        shell: bash
         run: npm test
