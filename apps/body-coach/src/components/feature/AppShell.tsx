@@ -9,7 +9,21 @@ import InstallButton from './InstallButton';
 import { setUserDoc } from '@/lib/userData';
 import { codigoIndicacao } from '@/lib/ferramentas/cartao';
 import { usePapel } from '@/lib/usePapel';
-import { EMAIL_ADMIN, mudarVerComo, verComo } from '@/lib/verComo';
+import { ehDonoGuardado, guardarEhDono, mudarVerComo, verComo } from '@/lib/verComo';
+import { verAcesso } from '@/lib/acesso';
+
+// G2 (12/11): o servidor diz se a conta é do dono (acesso_ver.master). Sem login: nunca é dono.
+function useEhDono(logado: boolean): boolean {
+  const [dono, setDono] = useState<boolean>(() => logado && ehDonoGuardado());
+  useEffect(() => {
+    if (!logado) { setDono(false); return; }
+    const ler = () => setDono(ehDonoGuardado());
+    window.addEventListener('bc-eh-dono', ler);
+    verAcesso().then((a) => guardarEhDono(!!a.master)).catch(() => { /* sem internet: fica o que estava guardado */ });
+    return () => window.removeEventListener('bc-eh-dono', ler);
+  }, [logado]);
+  return dono;
+}
 import { enviarPendentes } from '@/lib/pendentes';
 import { marcaGuardada, type Marca } from '@/lib/coach/profissionais';
 import PortaoAcesso from './PortaoAcesso';
@@ -190,7 +204,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
     : papel === 'aluno' ? [...navItems.slice(0, 5), { to: '/equipe', label: 'Minha equipe', icon: 'ri-user-heart-line' }, ...navItems.slice(5)]
     // Sem coach (treina sozinho): sem Conversa e Feed da equipe; quem tiver um personal entra pelo link de convite dele.
     : [...navItems.filter((i) => i.to !== '/chat' && i.to !== '/feed'), { to: '/acesso', label: 'Minha assinatura', icon: 'ri-vip-crown-line' }]
-  const ehAdmin = user?.email?.toLowerCase() === EMAIL_ADMIN;
+  const ehAdmin = useEhDono(!!user);
   const comAdmin = ehAdmin ? [...itens, { to: '/admin/painel', label: 'Painel do dono', icon: 'ri-dashboard-line' }, { to: '/admin/acessos', label: 'Acessos (admin)', icon: 'ri-shield-user-line' }] : itens;
 
 
@@ -283,7 +297,7 @@ function Shell() {
   // Entrou por um link de indicação: grava no perfil quem indicou (uma vez só, nunca a si mesmo).
   const { user, profile } = useAuth();
   // O dono usa o app no dia a dia como quem treina sozinho (e troca a visão no Painel do dono).
-  const ehDono = user?.email?.toLowerCase() === EMAIL_ADMIN;
+  const ehDono = useEhDono(!!user);
   useEffect(() => { if (ehDono && !verComo()) mudarVerComo('nenhum'); }, [ehDono]);
   useEffect(() => {
     if (!user || !profile || profile.indicado_por) return;
