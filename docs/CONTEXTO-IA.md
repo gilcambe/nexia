@@ -3,7 +3,7 @@
 Cole o texto abaixo no início da conversa, ou mande a IA ler este arquivo no GitHub (`gilcambe/nexia`, ramo `develop`, `docs/CONTEXTO-IA.md`). Com isso ela entende o projeto sem o dono precisar explicar tudo de novo. **Este arquivo nunca contém chave ou senha.**
 
 ## Quem e o quê
-- Dono: Gildivan Bezerra (gcbezerra@gmail.com). Escreve em português, não é programador: respostas curtas, simples, passo a passo.
+- Dono: Gildivan Bezerra (contato@kernex.com.br). Escreve em português, não é programador: respostas curtas, simples, passo a passo.
 - NEXIA: plataforma com vários produtos. Repositório `gilcambe/nexia`, ramo principal `develop`.
 - Marca pública: **Kernex** (kernex.com.br, frase 'Inteligência que resolve.'). Arte em `brand/kernex/`. Nomes internos continuam `nexia` para não quebrar nada.
 - Produtos: **Body Coach** (app de treino, `/body-coach`, em produção, não pode quebrar), **Cortex** (IA que programa, `/cortex`), **Central** (`/central`, painel do dono), sites de clientes (Bezsan, Studio Lima), Divulga (robô de posts), Achados (afiliados). Clientes antigos: CES Brasil 2027 (`/ces`), Viajante Pro (`/vp`), Splash Eventos (`/splash`).

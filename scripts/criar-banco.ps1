@@ -23,7 +23,7 @@ Passo 'Login no GitHub (abre o navegador)'
 & gh auth status 2>$null
 if ($LASTEXITCODE -ne 0) { Roda 'gh auth login --web --git-protocol https --scopes repo' }
 
-Passo 'Login no Google (abre o navegador; use gcbezerra@gmail.com)'
+Passo 'Login no Google (abre o navegador; use a conta Google do dono)'
 Roda 'gcloud auth login'
 
 Passo "Criando o projeto $projeto"

@@ -5,7 +5,7 @@ $repo = 'gilcambe/nexia'
 function Roda($c) { & cmd /c $c; if ($LASTEXITCODE -ne 0) { throw "Falhou: $c" } }
 
 $projetos = (& gcloud projects list --filter="projectId:nexia-cortex-*" --format="value(projectId)") | Where-Object { $_ }
-if (-not $projetos) { throw 'Nenhum banco nexia-cortex-* encontrado. Rode gcloud auth login com gcbezerra@gmail.com.' }
+if (-not $projetos) { throw 'Nenhum banco nexia-cortex-* encontrado. Rode gcloud auth login com a conta Google do dono.' }
 foreach ($p in $projetos) {
   $sa = "firebase-adminsdk-nexia@$p.iam.gserviceaccount.com"
   Write-Host "== Liberando indices em $p" -ForegroundColor Cyan

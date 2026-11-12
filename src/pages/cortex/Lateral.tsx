@@ -16,14 +16,13 @@ const MENU: { id: Vista; nome: string; d: string }[] = [
 const Icone = ({ d }: { d: string }) => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={d} /></svg>;
 
 interface Props {
-  itens: Resumo[]; aberto: number; vista: Vista; busca: string; nome: string; email: string;
+  itens: Resumo[]; aberto: number; vista: Vista; busca: string; nome: string; email: string; isAdmin: boolean;
   buscar: (q: string) => void; novo: () => void; abrir: (n: number) => void; ir: (v: Vista) => void;
 }
 
 // Menu lateral: logo, Novo pedido, Procurar, atalhos, histórico por data e perfil do dono.
-export default function Lateral({ itens, aberto, vista, busca, nome, email, buscar, novo, abrir, ir }: Props) {
+export default function Lateral({ itens, aberto, vista, busca, nome, email, isAdmin, buscar, novo, abrir, ir }: Props) {
   const item = "w-full flex items-center gap-3 px-3 h-11 rounded-xl text-left text-[15px] hover:bg-[var(--cx-hover)]";
-  const isAdmin = email === "gcbezerra@gmail.com";
   const menuItens = MENU.filter((m) => m.id !== "central" || isAdmin);
 
   return (

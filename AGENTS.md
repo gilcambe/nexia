@@ -3,7 +3,7 @@
 Este arquivo vale para Jules, Codex, Copilot, Antigravity/Gemini, Claude ou qualquer outra IA. Leia também `docs/CONTEXTO-IA.md`.
 
 ## Quem é o dono
-Gildivan (gcbezerra@gmail.com). Não é programador e escreve em português. Responda curto, simples e em passos numerados.
+Gildivan (contato@kernex.com.br). Não é programador e escreve em português. Responda curto, simples e em passos numerados.
 
 ## Regras que nunca mudam
 0. **Escada de trabalho (regra do dono):** primeiro o Cortex, depois as IAs grátis ajudantes (Jules, Gemini CLI), e só por último o Claude Code, que termina a tarefa e se retira. Detalhes e rótulos em `docs/ESCADA-IA.md`.

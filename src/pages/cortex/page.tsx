@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { apiPath } from "@/config/env";
 import { usePedidos, lerCache, guardarCache } from "../meu-cortex/api";
 import type { Resumo } from "../meu-cortex/api";
 import Composer from "./Composer";
@@ -30,7 +31,22 @@ const lerTema = (): Tema => { try { const t = localStorage.getItem("cx_tema"); r
 // Cortex: o app de IA do dono da NEXIA. Menu lateral com histórico, conversa por pedido, conexões e publicação.
 export default function CortexPage() {
   const navigate = useNavigate();
-  const { user, loading: authLoading, logout } = useAuth();
+  const { user, loading: authLoading, logout, getToken } = useAuth();
+  // Admin = papel "master" vindo do servidor (/me), não um e-mail escrito no código público (12/11/2026).
+  const [ehMaster, setEhMaster] = useState(false);
+  useEffect(() => {
+    let vivo = true;
+    (async () => {
+      try {
+        const t = await getToken();
+        if (!t) { if (vivo) setEhMaster(false); return; }
+        const r = await fetch(apiPath("/me"), { headers: { Authorization: `Bearer ${t}` } });
+        const j = r.ok ? await r.json() : null;
+        if (vivo) setEhMaster(!!j && j.role === "master");
+      } catch { if (vivo) setEhMaster(false); }
+    })();
+    return () => { vivo = false; };
+  }, [user, getToken]);
   const { listar, agir } = usePedidos();
   const [tema, setTema] = useState<Tema>(lerTema);
   const [claroSistema, setClaroSistema] = useState(() => typeof matchMedia === "function" && matchMedia("(prefers-color-scheme: light)").matches);
@@ -101,9 +117,9 @@ export default function CortexPage() {
 
   const nome = user?.displayName || "";
   const email = user?.email || "";
-  const isAdmin = user?.email === "gcbezerra@gmail.com";
+  const isAdmin = ehMaster;
 
-  const lateral = <Lateral itens={itens} aberto={aberto} vista={vista} busca={busca} nome={nome} email={email} buscar={setBusca} novo={novo} abrir={abrir} ir={ir} />;
+  const lateral = <Lateral itens={itens} aberto={aberto} vista={vista} busca={busca} nome={nome} email={email} isAdmin={isAdmin} buscar={setBusca} novo={novo} abrir={abrir} ir={ir} />;
 
   return (
     <div className="cx h-[100dvh] flex overflow-hidden" data-tema={temaFinal} data-testid="cortex-app">
