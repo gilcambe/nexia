@@ -15,7 +15,7 @@ test('BC-SEO: index.html tem JSON-LD SoftwareApplication com publisher Kernex e 
   assert.equal(ld.operatingSystem, 'Android, Web');
   assert.equal(ld.offers.priceCurrency, 'BRL');
   assert.deepStrictEqual(ld.publisher, { '@type': 'Organization', name: 'Kernex', url: 'https://kernex.com.br' });
-  assert.match(html, /<meta property="og:image" content="https:\/\/nexiabodycoach\.pages\.dev\/body-coach\/og-image\.png"/);
+  assert.match(html, /<meta property="og:image" content="https:\/\/bodycoach\.kernex\.com\.br\/body-coach\/og-image\.png"/);   // K5 (#3593): domínio Kernex
   assert.match(html, /<meta property="og:title"/);
   assert.match(html, /<meta name="description" content="[^"]+"/);
   // o plano mais barato existe no app (Básico grátis) e o Premium bate com o preço do app
