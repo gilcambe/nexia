@@ -1,7 +1,7 @@
 {
   "packageId": "app.nexia.bodycoach",
   "host": "bodycoach.kernex.com.br",
-  "name": "NEXIA Body Coach",
+  "name": "Body Coach",
   "launcherName": "Body Coach",
   "display": "standalone",
   "orientation": "portrait",
