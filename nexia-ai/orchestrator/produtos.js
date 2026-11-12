@@ -1,5 +1,6 @@
 // Mapa de produto: cada produto com os diretorios que lhe pertencem.
 // Usado pelo orchestrator para descobrir os arquivos de cada produto.
+// Formato: { "<Produto>": ["diretorio/qualquer", ...] } — caminho relativo a raiz do repositorio.
 module.exports = {
   "Kernex Finance": ["prumo/", "netlify/functions/prumo", "netlify/functions/prumo-lib", "tests/unit/prumo-"],
   "Central/Cortex": ["src/"],
