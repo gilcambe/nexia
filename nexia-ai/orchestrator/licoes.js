@@ -45,10 +45,15 @@ function listarPassagens() {
 
 const LICAO_ARVORE = 'Nunca planejar arquivo em pasta que o produto não usa; ler a árvore antes.';
 
-module.exports = LICOES;
-
-module.exports.LICAO_ARVORE = LICAO_ARVORE;
-module.exports.LICOES = LICOES;
+// O padrão é um objeto: o require do módulo devolve LICOES, TEXTO, registrarPassagem e listarPassagens.
+module.exports = {
+  LICOES,
+  LICOES_EXTRA,
+  LICAO_ARVORE,
+  TEXTO,
+  registrarPassagem,
+  listarPassagens,
+};
 module.exports.LICOES_EXTRA = LICOES_EXTRA;
 module.exports.TEXTO = TEXTO;
 module.exports.registrarPassagem = registrarPassagem;
