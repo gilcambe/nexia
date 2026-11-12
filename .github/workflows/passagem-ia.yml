@@ -1,9 +1,9 @@
-# #3284 (parte 2 de #3272): Kernex nunca para. A cada 10 min, se uma IA (Claude, Jules...) parou de dar sinal
+# #3284 (parte 2 de #3272): Kernex nunca para. A cada 20 min, se uma IA (Claude, Jules...) parou de dar sinal
 # no seu registro trabalho-ativo há mais de 15 min, os itens pendentes viram issues da fila no repo certo.
 name: Passagem IA
 on:
   schedule:
-    - cron: '*/10 * * * *'
+    - cron: '*/20 * * * *'  # 13/11: era */10; fila do Actions cheia (relatorios/fila-actions.md)
   workflow_dispatch:
 permissions:
   contents: read

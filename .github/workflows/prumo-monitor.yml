@@ -1,11 +1,11 @@
 # NEXIA — monitoramento do Kernex Finance (Prumo)
-# A cada 30 minutos e por acionamento manual (workflow_dispatch).
+# A cada hora e por acionamento manual (workflow_dispatch).
 # Se 2 checagens seguidas falharem, abre issue de alerta; ao restabelecer, fecha a issue.
 name: Monitoramento Prumo
 
 on:
   schedule:
-    - cron: '*/30 * * * *'
+    - cron: '7 * * * *'  # 13/11: era */30 (so o dono usa o Finance); fila do Actions cheia
   workflow_dispatch:
 
 permissions:
