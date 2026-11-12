@@ -1,3 +1,4 @@
+# Objetivo: Publica o Body Coach no Cloudflare Pages (endereço sem o nome antigo). Manual.
 name: Body Coach no Pages (link sem gcbezerra)
 on:
   workflow_dispatch:

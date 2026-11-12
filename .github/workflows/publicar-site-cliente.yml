@@ -1,3 +1,4 @@
+# Objetivo: Publica o site de um cliente no Cloudflare Pages. Manual.
 name: Publicar site de cliente (Cloudflare Pages)
 # Cada cliente fica em https://<slug>.pages.dev (grátis, sem "gcbezerra" no endereço).
 # Uso: Actions > Publicar site de cliente > Run workflow, com o slug e a pasta dos arquivos estáticos (ex.: sites/<slug>).

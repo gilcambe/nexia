@@ -1,3 +1,4 @@
+# Objetivo: Faz merge automático de PRs do Cortex com CI verde (a cada 30 min e ao fim do CI). Essencial.
 name: Merge automático
 
 # ADR-OPS-02 (autorizado pelo dono em 2026-10-06): PRs com o rótulo "automerge" (branch nexia/...

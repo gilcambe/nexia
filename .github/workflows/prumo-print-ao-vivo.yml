@@ -1,3 +1,4 @@
+# Objetivo: Prumo: teste ao vivo da leitura de print por IA (desligado por decisão).
 name: Prumo - teste ao vivo da leitura de print
 on:
   workflow_dispatch:

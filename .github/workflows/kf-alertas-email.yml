@@ -1,3 +1,4 @@
+# Objetivo: Kernex Finance: e-mail diário de alertas às 8h (Brasília).
 name: Kernex Finance - e-mail diário de alertas
 on:
   schedule:

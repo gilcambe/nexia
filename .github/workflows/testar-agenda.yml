@@ -1,3 +1,4 @@
+# Objetivo: Teste de ponta a ponta da agenda de um site no ar (com fotos de tela). Manual.
 name: Testar agenda no ar
 # NEXIA Agenda: testa a agenda publicada (API + site + painel) como uma pessoa, no celular.
 # Usa só a agenda de teste para criar/cancelar horários (o site e o painel publicados são apontados para ela);
