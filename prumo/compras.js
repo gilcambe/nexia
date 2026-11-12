@@ -1,1 +1,2 @@
-'Kernex Finance: ' + l.nome
+"use strict";
+"Kernex Finance: " + l.nome;
