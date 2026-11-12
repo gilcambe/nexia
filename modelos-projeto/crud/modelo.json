@@ -1,30 +1,5 @@
 {
   "nome": "crud",
   "versao": "1.0.0",
-  "variaveis": [
-    {
-      "nome": "nome",
-      "titulo": "Nome",
-      "campos": [],
-      "cor": null
-    },
-    {
-      "nome": "titulo",
-      "titulo": "Titulo",
-      "campos": [],
-      "cor": null
-    },
-    {
-      "nome": "campos",
-      "titulo": "Campos",
-      "campos": [],
-      "cor": null
-    },
-    {
-      "nome": "cor",
-      "titulo": "Cor",
-      "campos": [],
-      "cor": null
-    }
-  ]
+  "variaveis": ["nome", "titulo", "campos", "cor"]
 }
