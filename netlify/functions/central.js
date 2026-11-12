@@ -62,6 +62,10 @@ function createHandler(deps = {}) {
       if (method === 'POST') {
         let body = {};
         try { body = JSON.parse(event.body || '{}') || {}; } catch { return res(400, { error: 'Pedido inválido.' }); }
+        if (String(body.acao || '').startsWith('fabrica-')) {   // M4: Fábrica (tela do PC 2)
+          const r = await require('./central/fabrica').rota({ acao: body.acao, body }, { gh: deps.ghRaiz || require('./central/fabrica').criarGhRaiz(env, fetchFn) });
+          if (r) return res(r.status, r.corpo);
+        }
         if (body.acao === 'testar-ias') return res(200, { ias: await empresa.testarIAs(getRouter(), getIAs()), em: new Date().toISOString() });
         // Cadastro de cliente sem PR (regra dos 20 projetos/hora). Só master chega aqui.
         if (body.acao === 'cliente-criar') { const r = await require('./central/clientes-cadastro').criar(body, { getDb }); return res(r.status, r.corpo); }
@@ -119,6 +123,10 @@ function createHandler(deps = {}) {
       }
 
       const parte = String((event.queryStringParameters || {}).parte || 'lista');
+      if (String(parte || '').startsWith('fabrica-')) {
+        const r = await require('./central/fabrica').rota({ parte, query: event.queryStringParameters || {} }, { gh: deps.ghRaiz || require('./central/fabrica').criarGhRaiz(env, fetchFn) });
+        if (r) return res(r.status, r.corpo);
+      }
       if (parte === 'lista') return res(200, { produtos: PRODUTOS, links: LINKS });
       if (parte === 'saude') {
         // O Worker não consegue abrir o próprio endereço dentro de um pedido (o Cloudflare barra o laço) e dava
@@ -188,6 +196,10 @@ function createHandler(deps = {}) {
         // #1846: PCs do dono (agente local manda o pulso a cada minuto). Só leitura.
         const m = deps.getMaquinas ? deps.getMaquinas() : require('../../nexia-ai/maquinas').createMaquinas({ env });
         return res(200, { ligado: m.ligado(), maquinas: m.ligado() ? await m.listar() : [] });
+      }
+      if (parte === 'quadro') {   // Cockpit: quadro de tarefas do PC 1 e do PC 2 (mandado pelos PCs)
+        const m = deps.getMaquinas ? deps.getMaquinas() : require('../../nexia-ai/maquinas').createMaquinas({ env });
+        return res(200, m.ligado() ? await m.lerQuadro() : { tarefas: [], em: null });
       }
       if (parte === 'vagas') return res(200, await vagas.estado(gh.api, env));
       if (parte === 'reservas') return res(200, await gh.reservas());   // #802: contas de reserva (só nomes de segredos)
