@@ -1,0 +1,17 @@
+# TEMPORÁRIO (G2): confere, sem mostrar, se o segredo MASTER_EMAIL é o e-mail do dono. Sai antes de fundir.
+name: tmp confere email
+on:
+  push:
+    branches: [nexia/pc1-g2-email-dono]
+permissions:
+  contents: read
+jobs:
+  conferir:
+    runs-on: ubuntu-latest
+    steps:
+      - env:
+          M: ${{ secrets.MASTER_EMAIL }}
+        run: |
+          h=$(printf '%s' "$M" | tr '[:upper:]' '[:lower:]' | tr -d ' \n\r' | sha256sum | cut -c1-64)
+          [ -n "$M" ] && echo "MASTER_EMAIL existe" || echo "MASTER_EMAIL VAZIO"
+          [ "$h" = "e9c5fd59b35d6ef379d450afeed2099dc5c6e481df63f9f3f7a33e4c92a4e327" ] && echo "RESULTADO: IGUAL" || echo "RESULTADO: DIFERENTE"
