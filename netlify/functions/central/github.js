@@ -69,12 +69,8 @@ function criarGithub(env = process.env, fetchFn = fetch) {
   const tarefa = (i) => ({ numero: i.number, titulo: String(i.title || '').slice(0, 120), link: i.html_url, quando: i.updated_at, motivo: motivos.motivoDe(i).texto });
 
   async function cortex() {
-    const [abertas, feitas] = await Promise.all([
-      gh('/issues?state=open&per_page=100'),
-      gh('/issues?state=closed&per_page=100'),
-    ]);
-    const todas = [...abertas, ...feitas];
-    return estadoTarefas(todas);
+    const issues = await gh('/issues?state=all&per_page=100');
+    return estadoTarefas(issues);
   }
 
   async function robos(lista) {
