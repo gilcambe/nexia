@@ -2,6 +2,7 @@
 // #2873 (partes #2906-#2908): aba "O que falta" da Central Kernex. Mostra, numa página só,
 // o que está pronto (72 h), o que está com o Cortex (com barra de partes e motivo) e o que espera o dono.
 const motivos = require('./motivos');
+const { estadoTarefa } = require('./estado-tarefas');
 
 const nomes = (i) => (i.labels || []).map((l) => l.name || l);
 const PARTE = /^\[Parte (\d+)\/(\d+) de #(\d+)\]/;
@@ -54,8 +55,10 @@ function montar({ abertas = [], fechadas = [], prs = [], agora = Date.now() }) {
   return {
     resumo: {
       pedidos: comCortex.length, urgentes: comCortex.filter((x) => x.urgente).length,
-      rodando: issues.filter((i) => nomes(i).includes('cortex-rodando')).length,
-      travadas: issues.filter((i) => nomes(i).includes('cortex-travado')).length,
+      // 13/11: mesma regra da tela inicial (estadoTarefa). Antes "rodando" contava rótulo cortex-rodando esquecido
+      // há dias (10 "sendo feitas") e "travadas" só olhava o rótulo (1), enquanto o Início mostrava 18.
+      rodando: issues.filter((i) => estadoTarefa(i, agora).estado === 'andamento').length,
+      travadas: issues.filter((i) => { const e = estadoTarefa(i, agora); return e.estado === 'travada' && !e.precisaVoce; }).length,
       partesNaFila: Object.values(partesAbertas).reduce((s, n) => s + n, 0),
       esperandoVoce: esperandoVoce.length, prontos72h: prontos.length,
       pausada: issues.some((i) => nomes(i).includes('fila-pausada')),
@@ -96,13 +99,16 @@ async function todas(gql, q, max = 10) {
 /** Busca no GitHub e monta. `gql` = criarGql(env) (ou um falso nos testes). */
 async function buscar(gql, agora = Date.now(), repo = 'gilcambe/nexia') {
   const desde = new Date(agora - SETENTA_E_DUAS_H).toISOString().slice(0, 16);
-  const [abertas, donos, fechadas, prs] = await Promise.all([
+  const [abertas, donos, fechadas, prs, travadas] = await Promise.all([
     todas(gql, `repo:${repo} is:issue is:open label:cortex-fila`),
     todas(gql, `repo:${repo} is:issue is:open label:vez-do-dono`, 1),
     todas(gql, `repo:${repo} is:closed closed:>=${desde}`, 1),
     todas(gql, `repo:${repo} is:pr is:open`, 1),
+    todas(gql, `repo:${repo} is:issue is:open label:cortex-travado`, 1),
   ]);
   for (const d of donos) if (!abertas.some((a) => a.number === d.number)) abertas.push(d);
+  // Travada sem cortex-fila (ex.: tirada da fila) também é travada: entra na conta, igual à tela inicial.
+  for (const d of travadas) if (!abertas.some((a) => a.number === d.number)) abertas.push(d);
   return montar({ abertas, fechadas, prs, agora });
 }
 

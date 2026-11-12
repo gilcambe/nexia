@@ -74,7 +74,9 @@ function estadoTarefa(issue, agora = Date.now(), cfg = {}) {
   let travouPorTempo = false;
 
   if (fechada) {
-    if (has('cortex-feito') || has('jules-feito')) {
+    // 13/11: a Central dizia "0 concluídas" com PRs entregues no dia: a issue fechada pelo PR (state_reason
+    // "completed") não ganha rótulo cortex-feito. Fechada como "not_planned" continua "Falhou".
+    if (has('cortex-feito') || has('jules-feito') || issue.state_reason === 'completed') {
       estado = 'concluida';
     } else {
       estado = 'falhou';
