@@ -54,9 +54,10 @@ test('RF4. REGRESSÃO #2141/#2145/#2159: tarefa com mais de 100 eventos, travada
   assert.deepEqual(v.map(x => [x.tipo, x.numero, x.motivo]), [['reserva-volta', 2141, 'cofre'], ['reserva-volta', 2159, 'cofre']]);
 });
 
-test('RF5. travou DEPOIS do conserto: não volta (a causa é da tarefa; evita laço de tentativas)', async () => {
-  const gh = githubFalso({ eventos: { 2383: historico({ rotulo: 'cortex-travado', em: DEPOIS }) } });
-  assert.deepEqual(await travadasPeloCofre('t', [issue(2383, ['cortex-travado'])], { ghFn: gh }), []);
+test('RF5. travou DEPOIS do conserto: vai para o executor de contrato (#3419); se o contrato já falhou, não volta (sem laço)', async () => {
+  const gh = githubFalso({ eventos: { 2383: historico({ rotulo: 'cortex-travado', em: DEPOIS }), 2384: historico({ rotulo: 'cortex-travado', em: DEPOIS }) } });
+  const v = await travadasPeloCofre('t', [issue(2383, ['cortex-travado']), issue(2384, ['cortex-travado', 'contrato-falhou'])], { ghFn: gh });
+  assert.deepEqual(v.map(x => [x.numero, x.motivo]), [[2383, 'contrato']]);
 });
 
 test('RF6. REGRESSÃO da janela de 15: travadas antigas elegíveis são alcançadas mesmo com 15 mais novas na frente', async () => {
@@ -64,7 +65,8 @@ test('RF6. REGRESSÃO da janela de 15: travadas antigas elegíveis são alcança
   const eventos = {}; const issues = [];
   for (let n = 119; n >= 100; n--) { issues.push(issue(n, ['cortex-travado'])); eventos[n] = historico({ rotulo: 'cortex-travado', em: n >= 105 ? DEPOIS : ANTES, total: 30 }); }
   const v = await travadasPeloCofre('t', issues, { ghFn: githubFalso({ eventos }) });
-  assert.deepEqual(v.map(x => x.numero).sort(), [100, 101, 102, 103, 104]);
+  // As 5 antigas voltam do zero (cofre); a vaga que sobra vai para a mais antiga das recentes, pelo contrato (#3419).
+  assert.deepEqual(v.map(x => [x.numero, x.motivo]), [[100, 'cofre'], [101, 'cofre'], [102, 'cofre'], [103, 'cofre'], [104, 'cofre'], [105, 'contrato']].slice(0, MAX_RECUPERAR_POR_CICLO));
 });
 
 test('RF7. no máximo MAX_RECUPERAR_POR_CICLO por ciclo, das mais antigas para as mais novas (não despeja tudo de uma vez)', async () => {
@@ -78,9 +80,13 @@ test('RF7. no máximo MAX_RECUPERAR_POR_CICLO por ciclo, das mais antigas para a
 test('RF8. tarefa em outro degrau da escada (Jules, Claude, humano) não volta para o Cortex: evita 2ª frente na mesma tarefa', async () => {
   const eventos = {}; const issues = [];
   FORA_DA_RECUPERACAO.forEach((rotulo, k) => { const n = 300 + k; issues.push(issue(n, ['cortex-travado', rotulo])); eventos[n] = historico({ rotulo: 'cortex-travado', em: ANTES, total: 10 }); });
+  // Travou há 1 dia: o Jules ainda pode entregar; nenhuma volta.
+  const umDiaDepois = Date.parse(ANTES) + 24 * 3600 * 1000;
+  assert.deepEqual(await travadasPeloCofre('t', issues, { ghFn: githubFalso({ eventos }), agora: umDiaDepois }), []);
+  // #3419: Jules parado há 3+ dias não segura a tarefa (vai para o contrato); Claude, humano, alerta e dividida nunca voltam.
   const gh = githubFalso({ eventos });
-  assert.deepEqual(await travadasPeloCofre('t', issues, { ghFn: gh }), []);
-  assert.equal(gh.chamadas.length, 0, 'nem consulta a API para elas');
+  const v = await travadasPeloCofre('t', issues, { ghFn: gh, agora: Date.parse(ANTES) + 4 * 24 * 3600 * 1000 });
+  assert.deepEqual(v.map(x => [FORA_DA_RECUPERACAO[x.numero - 300], x.motivo]), [['jules-enviado', 'contrato']]);
 });
 
 test('RF9. PR integrado que DIZ fechar a tarefa: não repete o trabalho e não fecha sozinha; só citar o número não basta', async () => {
