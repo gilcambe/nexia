@@ -1,0 +1,19 @@
+.grafico {
+  max-width: 100%;
+  height: auto;
+  margin: 0 auto;
+}
+
+.barra {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 600px) {
+  .barra {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
