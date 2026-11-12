@@ -13,7 +13,7 @@ function formatHealthReport(results) {
     return 'Relatório de saúde vazio.';
   }
 
-  let report = '=== RELATÓRIO DE SAÚDE DOS PROVIDERS ===\n';
+  let report = '=== RELATÓRIO DE SAÚDE DOS PROVIDERS ===';
   for (const [provider, data] of entries) {
     const status = data.success ? '🟢 OK' : '🔴 FALHA';
     const time = data.timestamp ? new Date(data.timestamp).toISOString() : 'N/A';

@@ -1,6 +1,7 @@
 'use strict';
 
 const { runHealthCheck } = require('./healthCheck');
+const { formatHealthReport } = require('../src/utils/healthReporter');
 
 /**
  * Agendador de Cron para os workers.
@@ -10,21 +11,22 @@ function startCronScheduler(db = null) {
   console.log('[CronScheduler] Agendador iniciado. Health check configurado para rodar a cada 5 minutos.');
 
   // Executa imediatamente na inicialização
-  runHealthCheck(db).catch(err => {
-    console.error('[CronScheduler] Erro na execução inicial do health check:', err);
-  });
+  tick('inicial');
 
   // Intervalo de 5 minutos (5 * 60 * 1000 ms)
   const INTERVALO_MS = 5 * 60 * 1000;
   
-  const timer = setInterval(async () => {
-    console.log(`[CronScheduler] [${new Date().toISOString()}] Executando health check agendado (a cada 5 min)...`);
+  const tick = async (motivo) => {
+    console.log(`[CronScheduler] [${new Date().toISOString()}] Executando health check (${motivo}, a cada 5 min)...`);
     try {
-      await runHealthCheck(db);
+      const results = await runHealthCheck(db);
+      console.log('[CronScheduler] Resultado:\n' + formatHealthReport(results));
     } catch (err) {
-      console.error('[CronScheduler] Erro durante a execução agendada do health check:', err);
+      console.error('[CronScheduler] Erro durante a execução do health check:', err.message);
     }
-  }, INTERVALO_MS);
+  };
+
+  const timer = setInterval(() => { tick('agendado'); }, INTERVALO_MS);
 
   // Permite fechar o timer se necessário
   return {
