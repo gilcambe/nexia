@@ -47,7 +47,7 @@ export default function Footer({ client }: FooterProps) {
               <span className="font-bold text-white">KERNEX</span>
             </div>
             <p className="text-xs text-nexia-muted leading-relaxed mb-4">Sistema Operacional de Inteligência Artificial. Orquestre 50+ providers em uma única plataforma SaaS.</p>
-            <a href="mailto:contato@nexiaos.com.br" className="text-xs text-nexia-muted hover:text-nexia-cyan transition-colors">contato@nexiaos.com.br</a>
+            <a href="mailto:contato@kernex.com.br" className="text-xs text-nexia-muted hover:text-nexia-cyan transition-colors">contato@kernex.com.br</a>
           </div>
 
           <div>

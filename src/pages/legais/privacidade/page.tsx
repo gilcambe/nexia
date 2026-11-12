@@ -43,7 +43,7 @@ export default function PrivacidadePage() {
         </section>
         <section>
           <h2 className="text-lg font-semibold text-white mb-3">7. Contato do Encarregado de Dados</h2>
-          <p>Para exercer seus direitos de privacidade, dúvidas ou pedidos de exclusão, entre em contato através do e-mail: <strong className="text-white">contato.nexia.os@gmail.com</strong>.</p>
+          <p>Para exercer seus direitos de privacidade, dúvidas ou pedidos de exclusão, entre em contato através do e-mail: <strong className="text-white">contato@kernex.com.br</strong>.</p>
         </section>
       </div>
     </LegalLayout>
