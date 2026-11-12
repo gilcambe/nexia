@@ -109,16 +109,17 @@ export default function CentralPage() {
     } catch { /* sem rede: confere na próxima */ }
   }, [buscar]);
 
-  useEffect(() => { if (!authLoading && user) conferir(); }, [authLoading, user, conferir]);
+  // 12/11: a Central nova (Casca) busca os próprios dados; os da antiga só carregam na antiga (antes quebravam a nova).
+  useEffect(() => { if (!authLoading && user && antiga) conferir(); }, [authLoading, user, conferir, antiga]);
   const ir = (a: Aba) => { setAba(a); history.replaceState(null, "", `#${a}`); window.scrollTo(0, 0); };
   const avisos = useMemo(() => calcularAvisos(d), [d]);
 
   // Com a Central aberta, confere de novo a cada 5 minutos e avisa no aparelho quando algo novo fica vermelho.
   useEffect(() => {
-    if (!user) return;
+    if (!user || !antiga) return;
     const t = setInterval(conferir, 5 * 60000);
     return () => clearInterval(t);
-  }, [user, conferir]);
+  }, [user, conferir, antiga]);
   const vermelhosVistos = useRef<Set<string> | null>(null);
   useEffect(() => {
     if (!d.saude) return;
