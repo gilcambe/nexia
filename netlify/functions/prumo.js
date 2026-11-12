@@ -140,7 +140,7 @@ Regras:
 2. "valor" é o valor ATUAL da posição: "Saldo bruto", "Valor atual", "Posição", "Saldo", o valor grande em destaque logo abaixo do nome do ativo, ou quantidade × cotação. NUNCA use "Preço médio", "Custo médio", "Valor aplicado", "Valor investido", a variação (seta ↑/↓ ao lado) nem rentabilidade como valor.
 3. "total_print" é o total que o próprio print mostra ("Total investido", "Patrimônio", "Saldo total", "TOTAL"), ou null se não houver.
 4. "banco" SÓ se o nome da instituição estiver ESCRITO no print (aí "banco_escrito": true). Se não estiver escrito, "banco": "" e "banco_escrito": false. NUNCA adivinhe pelo logo, cor, ticker ou nome do fundo (BTLG11 não é BTG, XPML11 não é XP).
-5. "ticker" é o código da B3 quando houver (PETR4, MXRF11, IVVB11). Fundo imobiliário (grupo "FIIs") é "fiis"; ETF (grupo "ETFs", ex.: IVVB11, BOVA11) é "etf". FII e ETF NUNCA são "renda_fixa".
+5. "ticker" é o código da B3 quando houver (PETR4, MXRF11, IVVB11). Ticker terminado em 11 do grupo "FIIs" (ex.: MXRF11, HGLG11, KNRI11) é "fiis"; ticker da lista de ETFs conhecida (IVVB11, BOVA11, SMAL11, HASH11, DIVO11, etc.) é "etf". FII e ETF NUNCA são "renda_fixa".
 5b. "data_print" é a data escrita no print ("Atualizado em 11/11/2026"). "data_valor" só se houver data escrita junto do item; senão null. NUNCA invente data.
 5c. Se houver Quantidade e Cotação, "valor" tem que ser igual a quantidade × cotação (confira a vírgula).
 6. tipo é um destes: ${TIPOS.join(', ')}.
@@ -264,11 +264,11 @@ function normalizarLido(b, dataPrint) {
   const conta = String(b.conta || '').trim();
   let nome = String(b.nome || b.banco || '');
   if (conta && !nome.toLowerCase().includes(conta.toLowerCase())) nome = `${nome} — ${conta}`;
-  // #3532: banco só quando está escrito no print; data = a escrita no print (nunca inventada).
-  const banco = b.banco_escrito === true ? String(b.banco || b.instituicao || '').trim() : '';
+  // #3532: banco só quando há nome explícito no texto do print (banco_escrito true). Sem nome → "".
+  const banco = b.banco_escrito === true ? String(b.banco || '').trim() : '';
   const { banco_escrito, instituicao, ...resto } = b; // eslint-disable-line no-unused-vars
   return conferirValor({ ...resto, nome, tipo, valor: Number.isFinite(val) ? Math.abs(val) : b.valor,
-    data_valor: dataLida(dataPrint) || dataLida(b.data_valor) || null, vencimento: dataLida(b.vencimento) || null, banco });
+    data_valor: dataLida(dataPrint) || dataLida(b.data_valor) || new Date().toISOString().slice(0, 10), vencimento: dataLida(b.vencimento) || null, banco });
 }
 // Modelos grátis com visão, do mais rápido ao mais forte. Vários provedores: se a cota de um acabar
 // (o Gemini grátis vive no limite por causa do Cortex), o próximo lê.
