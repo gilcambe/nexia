@@ -75,7 +75,6 @@ function criarGithub(env = process.env, fetchFn = fetch) {
   // devolve exatamente o objeto que estadoTarefas() produz (contagens por estado).
   async function cortex() {
     const issues = await gh('/issues?state=all&per_page=100');
-    // Chama estadoTarefas para obter as contagens de estado das issues.
     return estadoTarefas(issues);
   }
 
