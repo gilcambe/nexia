@@ -236,6 +236,8 @@ const APELIDO_TIPO = [[/tesouro/i, 'tesouro'], [/fgts/i, 'fgts'], [/prev|pgbl|vg
 // #3532: ETFs e units da B3 que terminam em 11 mas NÃO são FII.
 const ETFS = new Set(['IVVB11', 'BOVA11', 'SMAL11', 'HASH11', 'NASD11', 'GOLD11', 'DIVO11', 'SPXI11', 'XINA11', 'BOVV11', 'BBSD11', 'ECOO11', 'FIND11', 'MATB11', 'PIBB11', 'BRAX11', 'ACWI11', 'EURP11', 'WRLD11', 'QBTC11', 'ETHE11', 'BITH11', 'B5P211', 'IMAB11', 'IRFM11', 'FIXA11', 'TECK11', 'GOVE11', 'BOVB11', 'DEFI11', 'META11', 'SPXR11', 'USTK11']);
 const UNITS = new Set(['TAEE11', 'SANB11', 'KLBN11', 'ALUP11', 'BPAC11', 'ENGI11', 'SAPR11', 'IGTI11', 'CPLE11', 'BRBI11', 'TIET11', 'RNEW11', 'AESB11', 'CMIG11', 'ITSA11', 'SULA11', 'PPLA11', 'BIDI11', 'INBR11', 'NEOE11']);
+// #3532: "renda fixa" escrito perto do ticker não faz um FII ou ETF virar renda fixa (a IA erra o tipo).
+const TIPO_FIXA = /cdb|lci|lca|cri|cra|deb[eê]nt|renda fixa|lc\b|rdb/i;
 /** Tipo pelo ticker (#3532): ETF conhecido = etf; unit = acoes; outro XXXX11 = fiis (nunca renda fixa).
  *  #3532: FII e ETF NUNCA ficam como "renda_fixa" — a lista de ETFs conhecida tem prioridade sobre o tipo vindo da IA. */
 function tipoPeloTicker(tk, tipo) {
@@ -275,7 +277,7 @@ function normalizarLido(b, dataPrint) {
   if (!tk && !tipo) tipo = 'outro';
   if (/etf/i.test(bruto)) tipo = 'etf';
   // #3532: ETF conhecido ou FII do grupo 11 não podem ficar como "renda_fixa".
-  if (bruto === 'renda_fixa' && (ETFS.has(tk) || /^[A-Z]{4}11$/.test(tk))) tipo = ETFS.has(tk) ? 'etf' : 'fiis';
+  if (tipo === 'renda_fixa' && (ETFS.has(tk) || /^[A-Z]{4}11$/.test(tk))) tipo = ETFS.has(tk) ? 'etf' : 'fiis';
   // Ticker manda: ETF conhecido ou terminação 11 do grupo FIIs viram "etf"/"fiis" (nunca "renda_fixa"),
   // mesmo quando a IA devolve outro tipo ou o ticker vem dentro do nome (ex.: "MXRF11".trim()).
   const tickerTexto = tk || (/\b([A-Z]{4}11)\b/i.exec(String(b.nome || '').toUpperCase()) || [])[1] || '';
@@ -289,7 +291,7 @@ function normalizarLido(b, dataPrint) {
   // Nunca adivinhe pelo logo, cor, ticker ou nome do fundo (BTLG11 não é BTG, XPML11 não é XP).
   const banco = b.banco_escrito === true ? String(b.banco || '').trim() : '';
   // A data do print vem escrita como "Atualizado em 11/11/2026" (texto livre) e pode chegar no JSON bruto.
-  const dataDoPrint = dataDoPrint(dataPrint) || dataDoPrint(b && b.data_print);
+  const dataDoPrint = dataDoPrint(dataPrint) || dataDoPrint(b && b.data_print) || deps.agora().toISOString().slice(0, 10);
   const { banco_escrito, ...resto } = b; // eslint-disable-line no-unused-vars
   return conferirValor({ ...resto, nome, tipo, valor: Number.isFinite(val) ? Math.abs(val) : b.valor,
     // #3532: data_valor = data escrita no item, ou "Atualizado em DD/MM/AAAA" do print, ou hoje.
