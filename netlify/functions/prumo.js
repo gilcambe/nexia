@@ -42,8 +42,8 @@ function validarItemCarteira(o) {
     if (Number.isFinite(n)) item[k] = k === 'quantidade' ? Math.round(n * 1e6) / 1e6 : dinheiro(n);
   }
   if (o.corrigido_por_cotacao === true) { item.corrigido_por_cotacao = true; const vl = numero(o.valor_lido); if (Number.isFinite(vl)) item.valor_lido = dinheiro(vl); }
-  // Sem nome de banco escrito no print (ou sem banco_escrito) o campo sai vazio, nunca adivinhado.
-  item.banco = texto(o.banco, 80);
+  // Sem nome de banco escrito no texto o campo sai vazio, nunca adivinhado.
+  if (!item.banco) item.banco = '';
   return { ok: true, item };
 }
 
@@ -275,12 +275,12 @@ function normalizarLido(b, dataPrint) {
   if (conta && !nome.toLowerCase().includes(conta.toLowerCase())) nome = `${nome} — ${conta}`;
   // #3532: sem adivinhação de banco. Só vale o nome escrito no print (banco_escrito true). Sem nome → "".
   // Nunca adivinhe pelo logo, cor, ticker ou nome do fundo (BTLG11 não é BTG, XPML11 não é XP).
-  const banco = b.banco_escrito === true ? String(b.banco || '').trim() : '';
+  const banco = String(b.banco || '').trim();
   // A data do print vem escrita como "Atualizado em 11/11/2026" (texto livre): extrai a data antes de dataLida.
   const dataDoPrint = dataLida((String(dataPrint || '').match(/(\d{1,2}\/\d{1,2}\/\d{2,4})/) || [])[0] || dataPrint);
   const { banco_escrito, ...resto } = b; // eslint-disable-line no-unused-vars
   return conferirValor({ ...resto, nome, tipo, valor: Number.isFinite(val) ? Math.abs(val) : b.valor,
-    data_valor: dataLida(b.data_valor) || dataDoPrint || deps.agora().toISOString().slice(0, 10), vencimento: dataLida(b.vencimento) || null, banco: banco || undefined });
+    data_valor: dataLida(b.data_valor) || dataDoPrint || deps.agora().toISOString().slice(0, 10), vencimento: dataLida(b.vencimento) || null, banco });
 }
 // Modelos grátis com visão, do mais rápido ao mais forte. Vários provedores: se a cota de um acabar
 // (o Gemini grátis vive no limite por causa do Cortex), o próximo lê.
