@@ -72,7 +72,8 @@ function criarGithub(env = process.env, fetchFn = fetch) {
   // #2717: cada tarefa leva o motivo (por que está parada ou esperando).
   const tarefa = (i) => ({ numero: i.number, titulo: String(i.title || '').slice(0, 120), link: i.html_url, quando: i.updated_at, motivo: motivos.motivoDe(i).texto });
 
-  // #3125 parte 2/6 (#3128): esta rota responde EXATAMENTE o objeto de estadoTarefas().
+  // #3125 parte 2/6 (#3128): esta rota responde EXATAMENTE o objeto de estadoTarefas()
+  // (a lógica antiga de contar fila/andamento/travadas foi removida; a contagem vem só de lá).
   // Toda a contagem (fila, andamento, aguardando-ia, travada, concluida, falhou, total,
   // precisaVoce) vem de lá. Sem campos extras e sem a lógica antiga de contagem.
   async function cortex() {
