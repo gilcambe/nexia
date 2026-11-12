@@ -506,6 +506,7 @@ export default function Painel({ d, erros, avisos, ir, conferir, carregando, abr
               valor={usoServidor ? `${Math.round(usoServidor.pct || 0)}%` : null} sub={usoServidor ? `${usoServidor.nome} · ${usoServidor.usado} de ${usoServidor.limite}` : ""}
               pct={usoServidor ? usoServidor.pct : null} barra={usoServidor && (usoServidor.pct || 0) >= 80 ? "bg-amber-500" : "bg-sky-500"}
               conta={usoServidor ? `${usoServidor.usado} de ${usoServidor.limite}` : ""} />
+            {/* O cartão "Cota de IA" foi unificado neste ("Uso do servidor hoje") para não haver dois cards com o mesmo número. */}
             <Numero titulo="Alertas" icone="alerta" cor="from-orange-400 to-amber-500" onClick={() => abrirAlerta(null)}
               valor={d.saude ? avisos.length : null} sub={avisos.length ? "precisam de você" : "nada pendente"} />
           </div>
