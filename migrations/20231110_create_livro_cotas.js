@@ -70,7 +70,8 @@ module.exports = {
   },
 
   down: async (queryInterface) => {
-    // Índice cai junto com a tabela; o ENUM do MySQL também (era o bug do down antigo).
+    // O índice cai junto com a tabela; o ENUM do Postgres é recriado no up.
     await queryInterface.dropTable('livro_cotas');
+    await queryInterface.sequelize.query('DROP TYPE IF EXISTS "enum_livro_cotas_treina_com_dados";');
   }
 };

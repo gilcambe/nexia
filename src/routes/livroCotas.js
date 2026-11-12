@@ -18,8 +18,8 @@ module.exports = (models) => {
       }
 
       if (!registros || registros.length === 0) {
-        // Sem linhas: devolve um JSON simples com a mensagem pedida.
-        return res.status(200).json({ mensagem: 'sem dados' });
+        // Sem linhas: devolve a mensagem pedida.
+        return res.status(200).json({ mensagem: 'sem dados', dados: [] });
       }
 
       const formatados = registros.map(item => {
@@ -39,8 +39,9 @@ module.exports = (models) => {
         };
       });
 
-      return res.status(200).json(formatados);
+      return res.status(200).json({ mensagem: 'ok', dados: formatados });
     } catch (err) {
+      console.error('livroCotas: falha na consulta', err);
       return res.status(500).json({ mensagem: 'erro ao consultar livro_cotas' });
     }
   });
