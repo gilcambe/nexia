@@ -9,6 +9,7 @@ import lembretes from './lembretes.js';
 import saude from './saude.js';
 import julesAuto from './jules-auto.js';
 import cacheBorda from './cacheBorda.js';
+import hostAntigo from './host-antigo.js';
 import { VazaoController } from '../src/durable/VazaoController.js';
 import { CofreSql, pontaCofre } from '../src/durable/CofreSql.js';
 
@@ -17,6 +18,9 @@ export { VazaoController, CofreSql };
 
 export default {
   async fetch(request, env, ctx) {
+    // #1967: páginas no endereço antigo vão para cortex.kernex.com.br (API e arquivos seguem iguais).
+    const paraKernex = hostAntigo.redirecionarHostAntigo(request);
+    if (paraKernex) return paraKernex;
     if (new URL(request.url).pathname === '/api/corpo-ia') return corpoIa(request, env);
     // #2188: jobs do GitHub Actions usam o banco do Worker do cofre por esta rota (com segredo).
     if (new URL(request.url).pathname === '/api/cofre-sql') return pontaCofre(request, env);
