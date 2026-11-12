@@ -13,8 +13,9 @@ const path = require('node:path');
 const { execFileSync } = require('node:child_process');
 
 const raiz = path.resolve(__dirname, '../..');
-const plano = require('../../scripts/cortex-plano.js');
+const planner = require('../../scripts/cortex-plano.js');
 
 const ISSUE = 3304;
 const PEDIDO = [
-  `Criar/atualizar o teste unitário em \`tests/unit/planejador-caminhos.test.js\` que:`,</
+  `Criar/atualizar o teste unitário em \`tests/unit/planejador-caminhos.test.js\` que:`,`
+]
