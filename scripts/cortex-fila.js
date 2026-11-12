@@ -268,22 +268,34 @@ function entregaComprovada(numero, prsMesclados) {
   const re = new RegExp(`\\b${PALAVRA_FECHA}\\b[^\\n]*?#${numero}(?!\\d)`, 'i');
   return (prsMesclados || []).find(pr => pr && pr.merged_at && re.test(`${pr.title || ''}\n${pr.body || ''}`)) || null;
 }
-async function travadasPeloCofre(token, issues, { ghFn = gh } = {}) {
+// #3419/#3418: "cortex-travado" não é estado final. Travada que nunca passou pelo executor de contrato (escada de IAs
+// grátis + PC 2 + Claude Pro, com espera de cota) vai para ele. Fica parada só quem o contrato já tentou ou está com
+// uma pessoa. Jules parado não segura a tarefa (jules-enviado de dias atrás = abandonada).
+const FORA_DO_CONTRATO = ['contrato-falhou', 'contrato-nao-testavel', 'cortex-contrato', 'so-humano', 'vez-do-claude', 'cortex-dividido', 'cortex-alerta'];
+function tentaContrato(i) {
+  return !i.pull_request && !nomes(i).some(l => FORA_DO_CONTRATO.includes(l));
+}
+const JULES_PARADO_MS = 3 * 24 * 3600 * 1000;   // Jules sem entregar em 3 dias = parado; antes disso, não abre 2ª frente
+async function travadasPeloCofre(token, issues, { ghFn = gh, agora = Date.now() } = {}) {
   const voltar = [];
+  const fora = x => nomes(x).some(l => FORA_DA_RECUPERACAO.includes(l));
   // Todas as travadas elegíveis, das mais antigas para as mais novas (antes só as 15 primeiras da lista, que vem da mais
   // nova para a mais antiga: as antigas nunca entravam na janela).
-  const candidatas = issues.filter(x => !x.pull_request && nomes(x).includes(L.travado) && !nomes(x).some(l => FORA_DA_RECUPERACAO.includes(l)))
+  const candidatas = issues.filter(x => !x.pull_request && nomes(x).includes(L.travado) && (!fora(x) || tentaContrato(x)))
     .sort((a, b) => a.number - b.number).slice(0, MAX_VERIFICAR);
   let mesclados = null;
   for (const i of candidatas) {
     if (voltar.length >= MAX_RECUPERAR_POR_CICLO) break;
     try {
       const quando = await ultimoRotuloEm(token, i.number, L.travado, ghFn);
-      if (!travouAntesDoConserto(quando)) continue;   // travou depois do conserto: a causa é da tarefa, não do ambiente
+      // Travou antes do conserto do ambiente: volta do zero (cofre). Depois: a causa é da tarefa, então vai para o contrato.
+      const julesRecente = fora(i) && !(quando && agora - Date.parse(quando) >= JULES_PARADO_MS);
+      const motivo = !fora(i) && travouAntesDoConserto(quando) ? 'cofre' : tentaContrato(i) && !julesRecente ? 'contrato' : null;
+      if (!motivo) continue;
       if (mesclados === null) { const r = (await ghFn(token, 'GET', '/pulls?state=closed&sort=updated&direction=desc&per_page=100')).json; mesclados = Array.isArray(r) ? r : []; }
       const pr = entregaComprovada(i.number, mesclados);
       if (pr) { console.log(`travada #${i.number}: o PR #${pr.number} já integrado diz fechar a tarefa; não volta para a fila (precisa de conferência da entrega)`); continue; }
-      voltar.push({ tipo: 'reserva-volta', numero: i.number, rotulos: nomes(i), motivo: 'cofre' });
+      voltar.push({ tipo: 'reserva-volta', numero: i.number, rotulos: nomes(i), motivo });
     } catch (e) { console.log(`travada #${i.number}: ${e.message}`); }
   }
   return voltar;
@@ -627,6 +639,13 @@ async function executar(token, acao, dividir) {
     await limparPistas(); await addLabel(L.feito);
     await comentar(`O PR do Jules (#${acao.pr}) entrou na develop. Parte concluída.`);
     await gh(token, 'PATCH', `/issues/${n}`, { state: 'closed', state_reason: 'completed' });
+  } else if (acao.tipo === 'reserva-volta' && acao.motivo === 'contrato') {
+    // #3419: travada vai direto para o executor de contrato (não repete os 7 agentes que já falharam).
+    const d = await gh(token, 'POST', '/actions/workflows/cortex-contrato.yml/dispatches', { ref: 'develop', inputs: { numero: String(n) } });
+    if (d.status !== 204) { console.log(`travada #${n}: não consegui disparar o contrato (${d.status}); tento no próximo ciclo`); return; }
+    for (const l of acao.rotulos.filter(x => [L.travado, L.rodando, L.fila, L.jules, 'jules-enviado'].includes(x) || /^(tentativa|sem-entrega|pista)-\d+$/.test(x))) await delLabel(l).catch(() => null);
+    await addLabel('cortex-contrato');
+    await comentar('Esta tarefa estava travada sem próxima ação. Mandei para o executor de contrato (escada de IAs grátis, PC 2 e Claude Pro, com espera de cota): ele escreve o teste, a IA implementa e o teste decide. Se não der para testar, ela volta marcada para uma pessoa olhar.');
   } else if (acao.tipo === 'reserva-volta') {
     // #803: novo dia, nova cota: volta para a fila do zero (tentativa-N, sem-entrega-N e travado saem).
     for (const l of acao.rotulos.filter(x => x === L.semCota || x === L.travado || x === L.rodando || /^(tentativa|sem-entrega|pista)-\d+$/.test(x) || (acao.motivo === 'cofre' && x === 'reserva-tentou'))) await delLabel(l).catch(() => null);
@@ -947,5 +966,5 @@ async function main() {
   }
 }
 
-module.exports = { vaiParaContrato, ultimoRotuloEm, travadasPeloCofre, entregaComprovada, MAX_RECUPERAR_POR_CICLO, FORA_DA_RECUPERACAO, soPipelineModelo, assinaturaDoSmoke, errosDeAmbiente, mexeEmWorkflow, planejarComIA, revisarParte, dadosDoPlanejador, corrigirCiDosPrs, reservaVolta, reservasQueVoltam, travouAntesDoConserto, devePedirReserva, entregouAlgo, depoisSemEntrega, MAX_SEM_ENTREGA, rascunhosParados, candidatosRascunho, MSG_RASCUNHO_PARADO, tokenDaApp, TENTATIVAS_ATE_DIVIDIR, caminhosDoPedido, sondarCota, decidir, precisaTesteFinal, precisaDividir, paisConcluidos, dividirComIA, MAX_TENTATIVAS, validarCortexFeito, reabrirFeitosInvalidos };
+module.exports = { tentaContrato, FORA_DO_CONTRATO, vaiParaContrato, ultimoRotuloEm, travadasPeloCofre, entregaComprovada, MAX_RECUPERAR_POR_CICLO, FORA_DA_RECUPERACAO, soPipelineModelo, assinaturaDoSmoke, errosDeAmbiente, mexeEmWorkflow, planejarComIA, revisarParte, dadosDoPlanejador, corrigirCiDosPrs, reservaVolta, reservasQueVoltam, travouAntesDoConserto, devePedirReserva, entregouAlgo, depoisSemEntrega, MAX_SEM_ENTREGA, rascunhosParados, candidatosRascunho, MSG_RASCUNHO_PARADO, tokenDaApp, TENTATIVAS_ATE_DIVIDIR, caminhosDoPedido, sondarCota, decidir, precisaTesteFinal, precisaDividir, paisConcluidos, dividirComIA, MAX_TENTATIVAS, validarCortexFeito, reabrirFeitosInvalidos };
 if (require.main === module) main().catch(e => { console.error(e.message); process.exit(1); });
