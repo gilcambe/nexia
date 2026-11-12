@@ -11,7 +11,10 @@ module.exports = (models) => {
     try {
       let registros = [];
       if (LivroCota && typeof LivroCota.findAll === 'function') {
-        registros = await LivroCota.findAll({ order: [['id', 'ASC']] });
+        registros = await LivroCota.findAll({
+          attributes: { exclude: ['createdAt', 'updatedAt'] },
+          order: [['id', 'ASC']]
+        });
       }
 
       if (!registros || registros.length === 0) {
@@ -27,7 +30,11 @@ module.exports = (models) => {
         return {
           ...bruto,
           numero,
-          hora
+          hora,
+          // data de criação legível: "AAAA-MM-DD HH:MM:SS" (UTC), sem depender de fuso
+          data_criacao: !isNaN(dataObj.getTime())
+            ? dataObj.toISOString().slice(0, 19).replace('T', ' ')
+            : String(dataVal)
         };
       });
 
