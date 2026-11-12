@@ -37,5 +37,9 @@ module.exports = (models) => {
     }
   });
 
+  // Rota montada por src/index.js; exports nomeado para uso direto nos testes.
+  module.exports = router;
+  module.exports.livroCotas = router;
+
   return router;
 };

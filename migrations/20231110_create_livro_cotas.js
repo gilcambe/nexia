@@ -64,6 +64,12 @@ module.exports = {
         defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
       }
     });
+
+    // Índice único por provider+model: cota é por par (impede duplicar no seed).
+    await queryInterface.addIndex('livro_cotas', ['provider', 'model'], {
+      name: 'livro_cotas_provider_model_unique',
+      unique: true
+    });
   },
 
   down: async (queryInterface, Sequelize) => {
