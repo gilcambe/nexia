@@ -243,6 +243,8 @@ const TIPO_FIXA = /cdb|lci|lca|cri|cra|deb[eê]nt|renda fixa|lc\b|rdb/i;
 function tipoPeloTicker(tk, tipo) {
   const t = String(tk || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
   if (ETFS.has(t)) return 'etf';
+  // #3532: o tipo da IA vem só como dica; FII e ETF decidem pelo ticker (nunca "renda fixa").
+  if (/^[A-Z]{4}11$/.test(t)) return tipo === 'fiis' || tipo === 'etf' ? tipo : 'fiis';
   if (UNITS.has(t)) return 'acoes';
   // Ticker terminado em 11 que não é ETF conhecido nem unit é FII (nunca renda fixa).
   if (/^[A-Z]{4}11$/.test(t)) return 'fiis';
