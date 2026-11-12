@@ -1,19 +1,12 @@
 import { useEffect, useState } from "react";
 import type { Aviso, Aba } from "./avisos";
+import { resolverSozinho } from "./avisos";
 import { useCentral } from "./api";
 import { Icone } from "./icones";
 
 // Janela de um alerta: o que aconteceu, o que afeta e o passo a passo. Sem um alerta escolhido, mostra a lista.
 const COR = { vermelho: "bg-red-50 text-red-600", amarelo: "bg-amber-50 text-amber-600", verde: "bg-emerald-50 text-emerald-600", cinza: "bg-slate-100 text-slate-500" };
 const BOTAO = "inline-flex items-center justify-center gap-1 rounded-xl px-3 py-2 text-sm font-medium min-h-[40px] cursor-pointer disabled:opacity-50";
-const PRAZO_RESOLUCAO_H = 4; // horas até considerar que o aviso "resolve sozinho" não se resolveu
-
-export function resolverSozinho(a: Aviso, agora = Date.now()): boolean {
-  if (!a.sozinho || !a.checadoEm) return false;
-  const t = Date.parse(a.checadoEm);
-  if (Number.isNaN(t)) return false;
-  return agora - t < PRAZO_RESOLUCAO_H * 60 * 60 * 1000;
-}
 
 export default function AvisoDetalhe({ avisos, inicial, fechar, ir }: { avisos: Aviso[]; inicial: number | null; fechar: () => void; ir: (a: Aba) => void }) {
   const { agir } = useCentral();
@@ -46,7 +39,9 @@ export default function AvisoDetalhe({ avisos, inicial, fechar, ir }: { avisos: 
                 <li key={k}>
                   <button onClick={() => setI(k)} className="w-full flex items-start gap-3 rounded-xl border border-slate-200 p-3 text-left cursor-pointer hover:bg-slate-50" data-testid="aviso-item">
                     <span className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${COR[x.cor]}`}><Icone nome="alerta" className="w-4 h-4" /></span>
-                    <span className="flex-1 text-sm text-slate-700">{x.texto}{x.sozinho && <span className="block text-xs text-emerald-700 mt-0.5">Resolve sozinho</span>}</span>
+                    <span className="flex-1 text-sm text-slate-700">{x.texto}{x.sozinho && (resolverSozinho(x)
+                      ? <span className="block text-xs text-emerald-700 mt-0.5" data-testid="resolve-sozinho">Resolve sozinho</span>
+                      : <span className="block text-xs text-amber-700 mt-0.5" data-testid="nao-resolveu">Não resolveu sozinho, precisa de você</span>)}</span>
                     <span className="text-slate-300">›</span>
                   </button>
                 </li>
@@ -64,10 +59,12 @@ export default function AvisoDetalhe({ avisos, inicial, fechar, ir }: { avisos: 
               <p><b className="text-slate-900">O que isso afeta:</b> <span className="text-slate-700">{a.impacto}</span></p>
             </div>
             {(() => {
+              // Mensagem conforme o tempo desde a última checagem (checadoEm): dentro do prazo prometido,
+              // o aviso diz "Resolve sozinho"; depois de 4 h sem resolver, passa a pedir o dono.
               const sozinho = resolverSozinho(a);
               return (
-                <div className={`rounded-xl p-3 ${sozinho ? "bg-emerald-50" : "bg-indigo-50"}`}>
-                  <div className="text-sm font-semibold text-slate-900 mb-1">{sozinho ? "✅ Resolve sozinho. Se quiser acompanhar:" : "Não resolveu sozinho, precisa de você"}</div>
+                <div className={`rounded-xl p-3 ${sozinho ? "bg-emerald-50" : "bg-amber-50"}`} data-testid={sozinho ? "aviso-resolve-sozinho" : "aviso-nao-resolveu"}>
+                  <div className={`text-sm font-semibold mb-1 ${sozinho ? "text-slate-900" : "text-amber-800"}`}>{sozinho ? "✅ Resolve sozinho. Se quiser acompanhar:" : "Não resolveu sozinho, precisa de você"}</div>
                   <ol className="list-decimal pl-5 space-y-1 text-sm text-slate-700" data-testid="aviso-passos">
                     {a.passos.map((p) => <li key={p}>{p}</li>)}
                   </ol>
