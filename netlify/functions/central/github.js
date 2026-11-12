@@ -74,11 +74,7 @@ function criarGithub(env = process.env, fetchFn = fetch) {
   // #3125 parte 2/6: sem lógica própria de fila/rodando/travadas. A resposta é exatamente o
   // objeto que estadoTarefas() produz (contagens por estado).
   async function cortex() {
-    let issues = [];
-    try {
-      issues = await gh('/issues?state=all&per_page=100');
-    } catch { issues = []; }
-    return await estadoTarefas(issues);
+    return estadoTarefas();
   }
 
   // Lista de tarefas (issue #3128): usada pela parte "tarefas" da Central.
