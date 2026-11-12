@@ -10,7 +10,7 @@ module.exports = (models) => {
     try {
       let registros = [];
       if (LivroCota && typeof LivroCota.findAll === 'function') {
-        registros = await LivroCota.findAll();
+        registros = await LivroCota.findAll({ order: [['id', 'ASC']] });
       }
 
       if (!registros || registros.length === 0) {
