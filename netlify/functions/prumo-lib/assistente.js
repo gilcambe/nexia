@@ -83,7 +83,26 @@ function responder(texto, d) {
   return null;
 }
 
-const AJUDA = 'Posso responder: "Quanto gastei este mês?", "Quanto tenho disponível?", "Quanto gastei com alimentação?", "Qual foi minha maior despesa?", "Quanto devo nos cartões?", "Qual o meu patrimônio?" e "Quanto tenho em milhas?". Também registro uma despesa ou crio um limite, sempre pedindo sua confirmação.';
+/** #3533: perguntas da carteira com cotação ao vivo ("quanto rendeu meu MXRF11?", "quanto recebo de dividendos?"). */
+const PERG_INVEST = /\b[a-z]{4}\d{1,2}\b|rend(eu|imento)|dividend|provento|carteira|investiment|cota[cç]|alerta|caiu|subiu/;
+function responderInvest(texto, itens, r) {
+  const t = sem(texto);
+  const resp = (resposta) => ({ resposta, fonte: `cotações ao vivo (${[...new Set(r.itens.map((x) => x.vivo && x.vivo.fonte).filter(Boolean))].join(', ') || 'valores do print'})`, atualizado_em: r.atualizado_em, falta: [] });
+  const porId = Object.fromEntries(itens.map((i) => [i.id, i]));
+  const tk = (/\b([a-z]{4}\d{1,2})\b/.exec(t) || [])[1];
+  if (tk) {
+    const x = r.itens.find((y) => y.ticker === tk.toUpperCase());
+    if (!x) return resp(`Não achei ${tk.toUpperCase()} na sua carteira.`);
+    const i = porId[x.id] || {}; const v = x.vivo;
+    if (!v) return resp(`${x.ticker}: ${fmt(x.valor_print)} pelo último print (sem cotação ao vivo agora).`);
+    return resp(`${x.ticker}: ${i.quantidade} cotas × ${fmt(v.preco)} = ${fmt(v.valor)}${v.variacao_dia_pct != null ? ` (${String(v.variacao_dia_pct).replace('.', ',')}% hoje)` : ''}.${v.ganho != null ? ` ${v.ganho >= 0 ? 'Ganho' : 'Perda'} de ${fmt(Math.abs(v.ganho))} sobre o que você pagou (preço médio ${fmt(i.preco_medio)}).` : ''}${x.renda_mensal ? ` Proventos: cerca de ${fmt(x.renda_mensal)} por mês.` : ''}`);
+  }
+  if (/dividend|provento|renda passiva|recebo/.test(t)) return resp(r.assessor.renda_mensal_estimada ? `Pelos proventos dos últimos 12 meses, sua carteira paga cerca de ${fmt(r.assessor.renda_mensal_estimada)} por mês (${fmt(r.assessor.renda_anual_estimada)} por ano).` : 'Ainda não achei proventos para os seus ativos.');
+  if (/alerta|caiu|subiu/.test(t)) return resp(r.assessor.alertas.length ? r.assessor.alertas.map((a) => a.texto).join(' ') : 'Nenhum alerta agora.');
+  return resp(`Seus investimentos valem ${fmt(r.total)} agora (${r.variacao >= 0 ? '+' : '−'}${fmt(Math.abs(r.variacao))} desde o último print).`);
+}
+
+const AJUDA = 'Posso responder: "Quanto rendeu meu MXRF11?", "Quanto recebo de dividendos?", "Algum alerta na carteira?", "Quanto gastei este mês?", "Quanto tenho disponível?", "Quanto gastei com alimentação?", "Qual foi minha maior despesa?", "Quanto devo nos cartões?", "Qual o meu patrimônio?" e "Quanto tenho em milhas?". Também registro uma despesa ou crio um limite, sempre pedindo sua confirmação.';
 
 async function agirAssistente(acao, body, c) {
   if (!['assistente_perguntar', 'assistente_confirmar'].includes(acao)) return null;
@@ -105,6 +124,11 @@ async function agirAssistente(acao, body, c) {
     const comprometido = cts.reduce((s, k) => s + Math.round(cartoes.limiteDoCartao(k, gastos, mes).comprometido * 100), 0) / 100;
     const inv = carteira.reduce((s, x) => s + Math.round((x.valor || 0) * 100), 0) / 100;
     const brl = contas.filter((k) => (k.moeda || 'BRL') === 'BRL').reduce((s, k) => s + Math.round((k.saldo || 0) * 100), 0) / 100;
+    if (PERG_INVEST.test(sem(texto)) && !/patrimonio|gastei|saldo/.test(sem(texto)) && carteira.length) {
+      const cot = require('./cotacoes');
+      const rr = await cot.carteiraAoVivo(carteira, { fetch: (c.deps && c.deps.fetch) || ((...a) => fetch(...a)), agora: new Date(agoraIso), env: typeof process !== 'undefined' ? process.env : {} });
+      return [200, { tipo: 'resposta', ...responderInvest(texto, carteira, rr) }];
+    }
     const out = responder(texto, { mes, agoraIso, saldo: sd.saldo, por_categoria: tot.por_categoria, qtd: doMes.length, maior: desp[0], comprometido, temCartao: cts.length > 0, patrimonio: Math.round((brl + inv - dividaTotal * 1) * 100) / 100, dividaTotal, dividasConhecidas: dividas.length > 0 || !!(cfgDiv && cfgDiv.exists && cfgDiv.data().sem_dividas),
       milhas: Math.round(pontos.reduce((s, p) => s + ((p.saldo || 0) / 1000) * (p.valor_milheiro || 0), 0) * 100) / 100, receitas: tot.receitas, despesas: tot.despesas });
     return [200, out ? { tipo: 'resposta', ...out } : { tipo: 'nao_entendi', resposta: 'Não entendi esse pedido e prefiro não chutar um número. ' + AJUDA }];
@@ -127,4 +151,4 @@ async function agirAssistente(acao, body, c) {
   return [400, { error: 'Esse tipo de ação eu não executo.' }];
 }
 
-module.exports = { agirAssistente, parseComando, responder, categoriaDe, valorDe };
+module.exports = { responderInvest, agirAssistente, parseComando, responder, categoriaDe, valorDe };
