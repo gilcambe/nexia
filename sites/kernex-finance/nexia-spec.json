@@ -1,0 +1,235 @@
+{
+  "spec": {
+    "kind": "system",
+    "name": "Kernex Finance",
+    "tagline": "Gestão financeira inteligente, sem prumo.",
+    "photo_theme": "",
+    "description": "Gestão financeira inteligente, sem prumo.",
+    "folder": "sites/kernex-finance",
+    "fonts": {
+      "heading": "Space Grotesk",
+      "body": "Inter"
+    },
+    "palette": {
+      "primary": "#0f172a",
+      "accent": "#3b82f6",
+      "bg": "#fbfaf7",
+      "surface": "#ffffff",
+      "text": "#1d2426",
+      "muted": "#5d6b6e",
+      "dark": "#020617"
+    },
+    "style": "modern",
+    "contact": {
+      "whatsapp": "",
+      "phone": "(11) 90000-0000",
+      "email": "finance@kernex.com.br",
+      "address": "",
+      "city": "",
+      "hours": "",
+      "instagram": "",
+      "facebook": "",
+      "youtube": "",
+      "tiktok": "",
+      "linkedin": ""
+    },
+    "logo": "",
+    "logo_scrolled": "",
+    "favicon": "",
+    "brand_text": false,
+    "selo": {
+      "label": "Feito com Kernex",
+      "url": "https://kernex.com.br/?utm_source=kernex-finance&utm_medium=selo&utm_campaign=clientes"
+    },
+    "leads_origem": "",
+    "entities": [
+      {
+        "key": "contas",
+        "label": "Contas a Pagar",
+        "singular": "Conta",
+        "fields": [
+          {
+            "key": "fornecedor",
+            "label": "Fornecedor",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "valor",
+            "label": "Valor (R$)",
+            "type": "money",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "vencimento",
+            "label": "Vencimento",
+            "type": "date",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "status",
+            "label": "Status",
+            "type": "select",
+            "options": [
+              "Pendente",
+              "Pago",
+              "Atrasado",
+              "Agendado"
+            ],
+            "required": true
+          },
+          {
+            "key": "categoria",
+            "label": "Categoria",
+            "type": "select",
+            "options": [
+              "Folha",
+              "Impostos",
+              "Fornecedores",
+              "Infraestrutura"
+            ],
+            "required": true
+          }
+        ],
+        "sample": [
+          {
+            "fornecedor": "AWS Cloud",
+            "valor": "1250.00",
+            "vencimento": "2026-11-15",
+            "status": "Pendente",
+            "categoria": "Infraestrutura"
+          },
+          {
+            "fornecedor": "Liquidação Folha",
+            "valor": "45000.00",
+            "vencimento": "2026-11-30",
+            "status": "Agendado",
+            "categoria": "Folha"
+          },
+          {
+            "fornecedor": "ICMS SP",
+            "valor": "8800.00",
+            "vencimento": "2026-11-20",
+            "status": "Pendente",
+            "categoria": "Impostos"
+          },
+          {
+            "fornecedor": "Linksys",
+            "valor": "320.00",
+            "vencimento": "2026-10-31",
+            "status": "Pago",
+            "categoria": "Infraestrutura"
+          },
+          {
+            "fornecedor": "Adobe CC",
+            "valor": "1800.00",
+            "vencimento": "2026-11-01",
+            "status": "Pago",
+            "categoria": "Fornecedores"
+          }
+        ]
+      },
+      {
+        "key": "recebimentos",
+        "label": "Receitas",
+        "singular": "Receita",
+        "fields": [
+          {
+            "key": "cliente",
+            "label": "Cliente",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "valor",
+            "label": "Valor (R$)",
+            "type": "money",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "data",
+            "label": "Data Limite",
+            "type": "date",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "status",
+            "label": "Status",
+            "type": "select",
+            "options": [
+              "Aprovado",
+              "Reprovado",
+              "Em Análise"
+            ],
+            "required": true
+          },
+          {
+            "key": "origem",
+            "label": "Origem do Fluxo",
+            "type": "select",
+            "options": [
+              "Assinatura",
+              "Projeto",
+              "Licença",
+              "Recurring"
+            ],
+            "required": true
+          },
+          {
+            "key": "notas",
+            "label": "Documentos",
+            "type": "text",
+            "options": [],
+            "required": false
+          }
+        ],
+        "sample": [
+          {
+            "cliente": "Grupo Acme",
+            "valor": "15000.00",
+            "data": "2026-11-30",
+            "status": "Aprovado",
+            "origem": "Assinatura",
+            "notas": ""
+          },
+          {
+            "cliente": "Nexus Tech",
+            "valor": "8500.00",
+            "data": "2026-12-15",
+            "status": "Em Análise",
+            "origem": "Projeto",
+            "notas": ""
+          },
+          {
+            "cliente": "Startup Flow",
+            "valor": "4200.00",
+            "data": "2026-11-10",
+            "status": "Aprovado",
+            "origem": "Recurring",
+            "notas": ""
+          },
+          {
+            "cliente": "Vertex Holdings",
+            "valor": "22000.00",
+            "data": "2026-12-01",
+            "status": "Aprovado",
+            "origem": "Licença",
+            "notas": ""
+          }
+        ]
+      }
+    ],
+    "modules": [
+      "Painel Principal",
+      "Contas",
+      "Receitas"
+    ]
+  },
+  "media": {}
+}
