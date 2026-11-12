@@ -18,7 +18,8 @@ module.exports = (models) => {
       }
 
       if (!registros || registros.length === 0) {
-        return res.status(200).json({ mensagem: 'sem dados', dados: [] });
+        // Sem linhas: devolve um JSON simples com a mensagem pedida.
+        return res.status(200).json({ mensagem: 'sem dados' });
       }
 
       const formatados = registros.map(item => {
