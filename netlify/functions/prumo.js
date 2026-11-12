@@ -289,6 +289,8 @@ function normalizarLido(b, dataPrint) {
   const conta = String(b.conta || '').trim();
   let nome = String(b.nome || b.banco || '');
   if (conta && !nome.toLowerCase().includes(conta.toLowerCase())) nome = `${nome} — ${conta}`;
+  // Banco: só o nome escrito no texto do print vale. Sem banco_escrito true (ou sem nome) o campo sai "",
+  // sem lista de exemplos e sem adivinhação por logo, cor, ticker ou nome do fundo.
   // #3532: sem adivinhação de banco. Só vale o nome escrito no print (banco_escrito true). Sem nome → "".
   // Nunca adivinhe pelo logo, cor, ticker ou nome do fundo (BTLG11 não é BTG, XPML11 não é XP).
   const banco = b.banco_escrito === true ? String(b.banco || '').trim() : '';
@@ -353,7 +355,7 @@ async function lerPrint(imagens, deps) {
     if (!lido) continue;
     algum = true;
     const doPrint = [];
-    // #3532: a data do print é uma só e vale para todos os itens (data_valor correta em AAAA-MM-DD).
+    // #3532: data_valor é a data "Atualizado em DD/MM/AAAA" escrita no print; ausente, a data atual.
     const dataDoPrint = dataDoPrint(lido.data_print);
     for (const bruto of separarLinhasIguais(lido.itens)) { const v = validarItemCarteira(normalizarLido(bruto, dataDoPrint)); if (v.ok) doPrint.push(v.item); else descartados.push({ ...bruto, motivo: v.erro }); }
     const limpos = tirarSubtotais(doPrint);
@@ -447,7 +449,9 @@ function chaveAtivo(x) {
   // #3532: com ticker, a chave é SÓ o ticker (o banco às vezes vinha inventado e duplicava o ativo).
   const tk = String((x && x.ticker) || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
   if (tk) return `tk|${tk}`;
-  return [n(x && x.banco), n(x && x.nome)].join('|');
+  // Sem banco escrito no texto (banco vazio) a chave não pode começar com "|": o nome define o ativo.
+  const b = n(x && x.banco);
+  return [b, n(x && x.nome)].filter(Boolean).join('|');
 }
 /** Junta linhas repetidas (mesma chave): fica a mais nova. Não apaga nada do banco. */
 function semDuplicados(itens) {
