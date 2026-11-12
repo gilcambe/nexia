@@ -285,7 +285,7 @@ function normalizarLido(b, dataPrint) {
   // Nunca adivinhe pelo logo, cor, ticker ou nome do fundo (BTLG11 não é BTG, XPML11 não é XP).
   const banco = b.banco_escrito === true ? String(b.banco || '').trim() : '';
   // A data do print vem escrita como "Atualizado em 11/11/2026" (texto livre) e pode chegar no JSON bruto.
-  const dataDoPrint = dataDoPrint_(dataPrint) || dataDoPrint_(b && b.data_print);
+  const dataDoPrint = dataDoPrint(dataPrint) || dataDoPrint(b && b.data_print);
   const { banco_escrito, ...resto } = b; // eslint-disable-line no-unused-vars
   return conferirValor({ ...resto, nome, tipo, valor: Number.isFinite(val) ? Math.abs(val) : b.valor,
     data_valor: dataLida(b.data_valor) || dataDoPrint || deps.agora().toISOString().slice(0, 10), vencimento: dataLida(b.vencimento) || null, banco });
