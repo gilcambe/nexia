@@ -13,7 +13,7 @@ const LICOES = Object.freeze([
   'No YAML de workflow, um "#" fora de aspas vira comentário e corta a expressão ${{ }}; coloque o valor inteiro entre aspas.',
   'Mudança pequena e exata funciona melhor que reescrever: faça só o que o pedido manda, nos arquivos que ele cita, e copie os trechos "find" exatamente como estão no arquivo.',
   'Todo workflow novo em .github/workflows entra no teste de detecção; todo arquivo novo de teste fica em tests/unit com final .test.js.',
-      'Use só o que o projeto já usa: antes de criar arquivo, confira com github.list_dir que a pasta e o framework existem. Exemplo real: um Answer.vue criado numa pasta que não existe (o projeto não usa Vue) e arquivos src/models com Mongoose/Express, que o projeto também não usa.',
+  'Use só o que o projeto já usa: antes de criar arquivo, confira com github.list_dir que a pasta e o framework existem. Exemplo real: um Answer.vue criado numa pasta que não existe (o projeto não usa Vue) e arquivos src/models com Mongoose/Express, que o projeto também não usa.',
   'Mudança no roteador de modelos (nexia-ai/model-router) ou no chat do Cortex mexe no que está no ar: mude o mínimo, mantenha o formato de chamada e de resposta, rode os testes do model-router e diga no PR que precisa do teste do chat ao vivo. Exemplo real: o PR #1898 forçou tools: true no openai-compatible.js e derrubou o chat.',
   'Ação pública (que o cliente usa sem senha) fica ANTES da checagem de token do painel no handler; depois dela, só ações da agência. Exemplo real: app-viagem e o chat do viajante (#2619) ficaram depois da checagem e o app nunca abria a viagem.',
   'Página nova precisa funcionar de ponta a ponta antes de marcar a tarefa como feita: chamar a API real (/api/...), ter rota em lib/routes.js e não chamar funções que não existem. Exemplo real: vp-editar.html (#2630) foi marcada feita chamando obterUsuario/obterConteudo, que não existem, sem rota e sem falar com a API.',
@@ -45,7 +45,7 @@ function listarPassagens() {
 
 // O require do módulo devolve a lista de lições (array) com os extras pendurados nela: LICOES_EXTRA, TEXTO, registrarPassagem e
 // listarPassagens continuam disponíveis para quem já usa. As lições ficam congeladas (Object.freeze), como antes.
-module.exports = Object.assign(LICOES, {
+module.exports = Object.assign([...LICOES], {
   LICOES,
   LICOES_EXTRA,
   TEXTO,

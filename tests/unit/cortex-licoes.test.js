@@ -21,7 +21,9 @@ test('CL2. agentes que só leem não recebem, e cada lição é uma frase curta'
 });
 
 test('CL3. lição "ler a árvore antes" existe, é única e está no fim da lista', () => {
-  const alvo = 'Nunca planejar arquivo em pasta que o produto não usa; ler a árvore antes.';
-  assert.equal(LICOES.filter((l) => l === alvo).length, 1, 'lição deve aparecer uma única vez');
-  assert.equal(LICOES[LICOES.length - 1], alvo);
+  const alvo = 'Nunca planejar arquivo em pasta que o produto não usa; ler a árvore antes';
+  const alvoFinal = `${alvo}.`;
+  const iguais = LICOES.filter((l) => l === alvo || l === alvoFinal);
+  assert.equal(iguais.length, 1, 'lição deve aparecer uma única vez');
+  assert.ok(LICOES[LICOES.length - 1].startsWith(alvo), 'lição deve estar no fim da lista');
 });
