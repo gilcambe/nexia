@@ -128,4 +128,23 @@ async function testarIAs(router, candidatos) {
   }));
 }
 
-module.exports = { fornecedores, clientes, leads, testarIAs };
+/** Situação real da vaga: "ok" se houve teste nas últimas 24 h, senão "não testado" (cinza). */
+async function handler(event) {
+  const resp = (statusCode, corpo) => ({ statusCode, headers: { 'content-type': 'application/json' }, body: JSON.stringify(corpo) });
+  const vagaId = event && event.queryStringParameters && event.queryStringParameters.vagaId;
+  if (!vagaId) return resp(400, { erro: 'vagaId ausente' });
+  let situacao = 'não testado';
+  let quando = null;
+  try {
+    const iaVagas = require('./ia-vagas');
+    const ultimo = typeof iaVagas.obterUltimoTesteVaga === 'function' ? await iaVagas.obterUltimoTesteVaga(vagaId) : null;
+    const t = ultimo && ultimo.data ? new Date(ultimo.data).getTime() : NaN;
+    if (Number.isFinite(t)) {
+      quando = t;
+      if (Date.now() - t <= DIA) situacao = 'ok';
+    }
+  } catch { /* sem teste conhecido: fica "não testado" */ }
+  return resp(200, { vagaId, situacao, quando });
+}
+
+module.exports = Object.assign(handler, { handler, fornecedores, clientes, leads, testarIAs });
