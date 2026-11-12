@@ -77,6 +77,7 @@ function criarGithub(env = process.env, fetchFn = fetch) {
   // precisaVoce) vem de lá. Sem campos extras e sem a lógica antiga de contagem.
   async function cortex() {
     const issues = await gh('/issues?state=all&per_page=100');
+    // Resposta = exatamente o objeto de estadoTarefas() (fila, andamento, aguardando-ia, travada, concluida, falhou, total, precisaVoce).
     return estadoTarefas(Array.isArray(issues) ? issues : []);
   }
 
