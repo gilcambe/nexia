@@ -29,13 +29,7 @@ export type Aba = "inicio" | "falta" | "clientes" | "dinheiro" | "divulgar" | "c
 
 export const PRAZO_EXPIRADO = "Não resolveu sozinho, precisa de você";
 
-export function resolverSozinho(aviso: Aviso, agora: number = Date.now()): boolean {
-  if (!aviso.sozinho) return false;
-  const checado = (aviso as any).checadoEm;
-  if (!checado || typeof checado !== "number") return true; // sem registro recente, assume que ainda está no prazo padrão ou resolve sozinho
-  const  quatroHoras = 4 * 60 * 60 * 1000;
-  return agora - checado <=  quatroHoras;
-}
+
 
 const ACOES = "https://github.com/gilcambe/nexia/actions";
 
