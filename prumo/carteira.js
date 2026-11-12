@@ -49,13 +49,13 @@ if (typeof window !== 'undefined') (function () {
     itens.forEach((i) => { const b = i.banco || 'Não informado'; bancos[b] = (bancos[b] || 0) + i.valor; });
     const tipos = Object.entries(por_tipo).sort((a, b) => b[1] - a[1]);
     el.innerHTML = `
-      <div class="card"><div class="fraco">Patrimônio total</div><div class="grande">${brl(total)}</div>
+      <div class="card"><div class="fraco">Patrimônio total</div><div class="grande" id="total-vivo">${brl(total)}</div><div class="fraco" id="selo-vivo">Buscando cotações ao vivo…</div><button class="btn sec" id="atualizar-vivo" style="margin-top:6px">🔄 Atualizar agora</button>
         ${tipos.map(([t, v]) => `<div style="margin-top:8px"><div class="item" style="padding:0;border:0"><span>${esc(TIPOS[t] || t)}</span><span>${brl(v)}</span></div>${barra(total ? (v / total) * 100 : 0)}</div>`).join('')}
       </div>
       <div class="linha" style="margin-bottom:12px"><button class="btn sec" id="add">✍️ Preencher</button><button class="btn" id="print">📷 Só mandar os prints</button></div>
       <input type="file" id="arq" accept="image/*" multiple hidden>
       ${Object.keys(bancos).length > 1 ? `<div class="card"><div class="fraco">Por banco</div>${Object.entries(bancos).map(([b, v]) => `<div class="item"><span>${esc(b)}</span><span class="v">${brl(v)}</span></div>`).join('')}</div>` : ''}
-      <div class="card">${itens.length ? itens.map((i) => `<div class="item" data-id="${i.id}"><div><div class="n">${esc(i.nome)}</div><div class="fraco">${esc(i.banco || 'Banco não informado')} · ${esc(TIPOS[i.tipo] || i.tipo)}${i.ticker ? ' · ' + esc(i.ticker) : ''}${i.quantidade ? ' · ' + esc(i.quantidade) + ' cotas' : ''}${i.objetivo_id && nomeObj[i.objetivo_id] ? ' · 🎯 ' + esc(nomeObj[i.objetivo_id]) : ''} · ${esc(i.data_valor || '')}</div></div><div class="v">${brl(i.valor)}</div></div>`).join('') : '<p class="fraco">Nada ainda. Toque em "Só mandar os prints" e mande os prints do app do banco, da previdência e do FGTS, ou preencha à mão.</p>'}</div>
+      <div class="card">${itens.length ? itens.map((i) => `<div class="item" data-id="${i.id}"><div><div class="n">${esc(i.nome)}</div><div class="fraco">${esc(i.banco || 'Banco não informado')} · ${esc(TIPOS[i.tipo] || i.tipo)}${i.ticker ? ' · ' + esc(i.ticker) : ''}${i.quantidade ? ' · ' + esc(i.quantidade) + ' cotas' : ''}${i.objetivo_id && nomeObj[i.objetivo_id] ? ' · 🎯 ' + esc(nomeObj[i.objetivo_id]) : ''} · ${esc(i.data_valor || '')}</div></div><div class="v">${brl(i.valor)}</div><div class="fraco" data-vivo="${i.id}"></div></div>`).join('') : '<p class="fraco">Nada ainda. Toque em "Só mandar os prints" e mande os prints do app do banco, da previdência e do FGTS, ou preencha à mão.</p>'}</div>
       ${itens.length ? '<button class="btn sec" id="limpar" style="width:100%">🧹 Limpar e refazer a carteira</button>' : ''}`;
 
     const editar = (i) => formulario(i ? 'Editar investimento' : 'Novo investimento', [
@@ -100,10 +100,40 @@ if (typeof window !== 'undefined') (function () {
       guardarRascunho(lidos);
       conferir(el, lidos, optObj, itens);
     };
+    if (itens.length) aoVivo(el);
     // Itens lidos e ainda não salvos ficam guardados só neste celular até salvar ou cancelar.
     const rascunho = lerRascunho();
     if (rascunho) conferir(el, rascunho, optObj, itens);
   };
+
+  // #3304: cotação ao vivo. Valor de cada ativo = quantidade × cotação; CDB rende pelo CDI desde o print.
+  // Atualiza ao abrir, no botão e a cada 60 s durante o pregão enquanto a tela está aberta.
+  function aoVivo(el) {
+    const pct = (v) => (v > 0 ? '+' : '') + String(v).replace('.', ',') + '%';
+    const minutos = (iso) => { const m = Math.max(0, Math.round((Date.now() - Date.parse(iso)) / 60000)); return m < 1 ? 'agora' : `há ${m} min`; };
+    let timer = null;
+    const rodar = async () => {
+      if (!document.contains(el.querySelector('#selo-vivo'))) { clearInterval(timer); return; }
+      el.querySelector('#selo-vivo').textContent = 'Atualizando cotações…';
+      let r;
+      try { r = await MB.api('cotacoes_vivas'); } catch { el.querySelector('#selo-vivo').textContent = 'Sem cotação ao vivo agora; mostrando os valores do print.'; return; }
+      el.querySelector('#total-vivo').textContent = brl(r.total);
+      const dif = r.variacao ? ` (${r.variacao > 0 ? '+' : ''}${brl(r.variacao)} desde o print)` : '';
+      const velhas = r.itens.filter((i) => i.vivo && i.vivo.desatualizada).length;
+      el.querySelector('#selo-vivo').innerHTML = `🟢 Ao vivo · atualizado ${esc(minutos(r.atualizado_em))}${esc(dif)}${r.em_pregao ? '' : ' · bolsa fechada (último preço)'}${velhas ? ` · <b style="color:#f5b041">${velhas} cotação(ões) desatualizada(s)</b>` : ''}${r.indices && r.indices.cdi_dia_pct ? ` · CDI ${esc(String(r.indices.cdi_dia_pct).replace('.', ','))}% ao dia` : ''}`;
+      for (const i of r.itens) {
+        const linha = el.querySelector(`.item[data-id="${i.id}"]`); const info = el.querySelector(`[data-vivo="${i.id}"]`);
+        if (!linha || !i.vivo) continue;
+        linha.querySelector('.v').textContent = brl(i.vivo.valor);
+        if (info) info.innerHTML = i.vivo.estimado
+          ? `≈ pelo CDI, ${i.vivo.dias_uteis} dia(s) útil(eis) desde o print`
+          : `${brl(i.vivo.preco)}${i.vivo.variacao_dia_pct != null ? ` (${esc(pct(i.vivo.variacao_dia_pct))} hoje)` : ''}${i.vivo.ganho != null ? ` · <span style="color:${i.vivo.ganho >= 0 ? '#58d68d' : '#ec7063'}">${i.vivo.ganho >= 0 ? '↑' : '↓'} ${brl(Math.abs(i.vivo.ganho))}</span>` : ''} · ${esc(i.vivo.fonte || '')} ${esc(minutos(i.vivo.data_hora))}${i.vivo.desatualizada ? ' <b style="color:#f5b041">desatualizada</b>' : ''}`;
+      }
+      if (r.em_pregao && !timer) timer = setInterval(rodar, 60000);
+    };
+    const b = el.querySelector('#atualizar-vivo'); if (b) b.onclick = rodar;
+    rodar();
+  }
 
   const MAX_PRINTS = 15;
   const CHAVE = 'fortune-lidos';
