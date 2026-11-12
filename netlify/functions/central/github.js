@@ -78,7 +78,7 @@ function criarGithub(env = process.env, fetchFn = fetch) {
     try {
       issues = await gh('/issues?state=all&per_page=100');
     } catch { issues = []; }
-    return estadoTarefas(issues);
+    return await estadoTarefas(issues);
   }
 
   // Lista de tarefas (issue #3128): usada pela parte "tarefas" da Central.
