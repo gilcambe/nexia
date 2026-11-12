@@ -258,6 +258,14 @@ function conferirValor(it) {
   return { ...it, valor: qc, valor_lido: it.valor, corrigido_por_cotacao: true };
 }
 /** Arruma o que a IA devolveu (tipo, valor, datas) para não descartar item bom por formato. */
+function dataDoPrint(texto) {
+  const s = String(texto == null ? '' : texto);
+  if (!s) return '';
+  const t = dataLida(s.trim());
+  if (t) return t;
+  const m = /(\d{1,2}\/\d{1,2}\/\d{2,4})/.exec(s);
+  return m ? dataLida(m[0]) : '';
+}
 function normalizarLido(b, dataPrint) {
   if (!b || typeof b !== 'object') return b;
   const bruto = String(b.tipo || '').trim();
@@ -275,9 +283,9 @@ function normalizarLido(b, dataPrint) {
   if (conta && !nome.toLowerCase().includes(conta.toLowerCase())) nome = `${nome} — ${conta}`;
   // #3532: sem adivinhação de banco. Só vale o nome escrito no print (banco_escrito true). Sem nome → "".
   // Nunca adivinhe pelo logo, cor, ticker ou nome do fundo (BTLG11 não é BTG, XPML11 não é XP).
-  const banco = String(b.banco || '').trim();
-  // A data do print vem escrita como "Atualizado em 11/11/2026" (texto livre): extrai a data antes de dataLida.
-  const dataDoPrint = dataLida((String(dataPrint || '').match(/(\d{1,2}\/\d{1,2}\/\d{2,4})/) || [])[0] || dataPrint);
+  const banco = b.banco_escrito === true ? String(b.banco || '').trim() : '';
+  // A data do print vem escrita como "Atualizado em 11/11/2026" (texto livre) e pode chegar no JSON bruto.
+  const dataDoPrint = dataDoPrint_(dataPrint) || dataDoPrint_(b && b.data_print);
   const { banco_escrito, ...resto } = b; // eslint-disable-line no-unused-vars
   return conferirValor({ ...resto, nome, tipo, valor: Number.isFinite(val) ? Math.abs(val) : b.valor,
     data_valor: dataLida(b.data_valor) || dataDoPrint || deps.agora().toISOString().slice(0, 10), vencimento: dataLida(b.vencimento) || null, banco });
