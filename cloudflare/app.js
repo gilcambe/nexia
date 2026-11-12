@@ -147,7 +147,7 @@ async function webConfigFromServiceAccount(env, fetchImpl) {
 // usa o próprio host como authDomain (o /__/auth desse host já é repassado ao Firebase em proxyAuth).
 // Sem a variável, nada muda. Ligar só depois de cadastrar os endereços no Firebase e no Google
 // (passo a passo no PR do #1013). Para desfazer, apague a variável.
-const KERNEX_HOSTS = ['kernex.com.br', 'bodycoach.kernex.com.br', 'cortex.kernex.com.br'];
+const KERNEX_HOSTS = ['kernex.com.br', 'bodycoach.kernex.com.br', 'cortex.kernex.com.br', 'finance.kernex.com.br'];
 function authDomainProprio(env, request) {
   if (!request) return '';
   if (String(env.KERNEX_AUTH_PROPRIO || '').trim() === '1') {
@@ -204,6 +204,7 @@ const HOME_POR_HOST = {
   'bodycoach.kernex.com.br': BODY_COACH_PREFIX + '/',
   'cortex.kernex.com.br': '/cortex',
   'ces.kernex.com.br': '/ces/landing', // CES no padrão de domínio KERNEX (11/11/2026)
+  'finance.kernex.com.br': '/prumo/', // Kernex Finance no domínio KERNEX (#3556, 12/11/2026)
 };
 
 const extOf = p => { const m = /\.[^./]+$/.exec(p); return m ? m[0].toLowerCase() : ''; };

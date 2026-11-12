@@ -35,3 +35,11 @@ test('KX4. raiz de ces.kernex.com.br vai para /ces/landing; caminhos do CES não
   const p = await call('https://ces.kernex.com.br/ces/admin');
   assert.notStrictEqual(p.status, 302);
 });
+
+test('KX5. raiz de finance.kernex.com.br abre o Kernex Finance (#3556)', async () => {
+  const r = await call('https://finance.kernex.com.br/');
+  assert.strictEqual(r.status, 302);
+  assert.strictEqual(r.headers.get('Location'), 'https://finance.kernex.com.br/prumo/');
+  const app = await call('https://finance.kernex.com.br/prumo/');
+  assert.strictEqual(app.status, 200);
+});
