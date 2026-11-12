@@ -133,3 +133,20 @@ test('COT10 chat assessor responde com os dados reais da carteira (ticker, prove
   assert.match(responderInvest('quanto recebo de dividendos?', itens, r).resposta, /36,10 por mês/);
   assert.match(responderInvest('quanto rendeu o PETR4?', itens, r).resposta, /Não achei PETR4/);
 });
+
+test('COT11 rebalanceamento: aporte vai para o que está abaixo da meta, sem vender; meta precisa somar 100', () => {
+  const r = cot.rebalancear({ renda_fixa: 138263.12, fiis: 10289.82, etf: 478.8 }, { renda_fixa: 70, fiis: 20, etf: 10 }, 10000);
+  assert.equal(r.comprar.reduce((a, x) => a + x.valor, 0), 10000);
+  assert.ok(!r.comprar.some((x) => x.tipo === 'renda_fixa'), 'renda fixa já está acima da meta');
+  assert.ok(r.comprar.find((x) => x.tipo === 'fiis').valor > r.comprar.find((x) => x.tipo === 'etf').valor);
+  assert.equal(cot.rebalancear({ fiis: 1 }, { fiis: 60, etf: 30 }, 100), null);
+  assert.match(r.aviso, /não é recomendação/);
+});
+
+test('COT12 comparativos de 12 meses: CDI do Banco Central e índices pelo Yahoo', async () => {
+  cot._limparIndices();
+  const serie = (a, b) => ({ chart: { result: [{ indicators: { adjclose: [{ adjclose: [a, null, b] }] } }] } });
+  const f = redeFalsa([[/sgs\.4391/, resp(Array.from({ length: 12 }, () => ({ valor: '1,0' })))], [/%5EBVSP/, resp(serie(100, 110))], [/XFIX11/, resp(serie(10, 9.5))], [/IVVB11/, resp(serie(300, 360))]]);
+  const b = await cot.benchmarks(f, 0);
+  assert.equal(b.cdi_12m_pct, 12.68); assert.equal(b.ibov_12m_pct, 10); assert.equal(b.ifix_12m_pct, -5); assert.equal(b.ivvb11_12m_pct, 20);
+});
