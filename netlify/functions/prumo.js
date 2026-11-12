@@ -140,7 +140,7 @@ Regras:
 2. "valor" é o valor ATUAL da posição: "Saldo bruto", "Valor atual", "Posição", "Saldo", o valor grande em destaque logo abaixo do nome do ativo, ou quantidade × cotação. NUNCA use "Preço médio", "Custo médio", "Valor aplicado", "Valor investido", a variação (seta ↑/↓ ao lado) nem rentabilidade como valor.
 3. "total_print" é o total que o próprio print mostra ("Total investido", "Patrimônio", "Saldo total", "TOTAL"), ou null se não houver.
 4. "banco" SÓ se o nome da instituição estiver ESCRITO no print (aí "banco_escrito": true). Se não estiver escrito, "banco": "" e "banco_escrito": false. NUNCA adivinhe pelo logo, cor, ticker ou nome do fundo (BTLG11 não é BTG, XPML11 não é XP).
-5. "ticker" é o código da B3 quando houver (PETR4, MXRF11, IVVB11). Ticker terminado em 11 do grupo "FIIs" (ex.: MXRF11, HGLG11, KNRI11) é "fiis"; ticker da lista de ETFs conhecida (IVVB11, BOVA11, SMAL11, HASH11, DIVO11, etc.) é "etf". FII e ETF NUNCA são "renda_fixa".
+5. "ticker" é o código da B3 quando houver (PETR4, MXRF11, IVVB11). O tipo é conferido pelo código: ticker terminado em 11 do grupo "FIIs" (ex.: MXRF11, HGLG11, KNRI11) é "fiis"; ticker da lista de ETFs conhecida (IVVB11, BOVA11, SMAL11, HASH11, DIVO11, etc.) é "etf". FII e ETF NUNCA são "renda_fixa".
 5b. "data_print" é a data "Atualizado em DD/MM/AAAA" escrita no print. "data_valor" só se houver data escrita JUNTO do item; senão null. NUNCA invente data.
 5c. Se houver Quantidade e Cotação, "valor" tem que ser igual a quantidade × cotação (confira a vírgula).
 6. tipo é um destes: ${TIPOS.join(', ')}.
@@ -262,7 +262,10 @@ function normalizarLido(b, dataPrint) {
   const tk = String(b.ticker || '').toUpperCase();
   let tipo = TIPOS.includes(bruto) ? bruto : ((APELIDO_TIPO.find(([re]) => re.test(`${bruto} ${b.nome || ''}`)) || [])[1] || 'outro');
   if (/etf/i.test(bruto)) tipo = 'etf';
-  if (tk) tipo = tipoPeloTicker(tk, tipo);
+  // Ticker manda: ETF conhecido ou terminação 11 do grupo FIIs viram "etf"/"fiis" (nunca "renda_fixa"),
+  // mesmo quando a IA devolve outro tipo ou o ticker vem dentro do nome (ex.: "MXRF11".trim()).
+  const tickerTexto = tk || (/\b([A-Z]{4}11)\b/i.exec(String(b.nome || '').toUpperCase()) || [])[1] || '';
+  if (tickerTexto) tipo = tipoPeloTicker(tickerTexto, tipo);
   const val = valorLido(b.valor);
   // "conta" separa linhas do mesmo plano (Participante x Patrocinadora) para não virar "repetido".
   const conta = String(b.conta || '').trim();
