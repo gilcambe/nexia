@@ -24,7 +24,7 @@ const CAD = {
 };
 const db = fakeDb();
 // Authorization "Bearer master" = administrador da NEXIA; "Bearer dona" = login comum (não é master).
-const mw = { verifyBearerToken: async (e) => { const a = (e.headers || {}).authorization || ''; return a === 'Bearer master' ? { ok: true, uid: 'adm', email: 'gcbezerra@gmail.com', role: 'master' } : a ? { ok: true, uid: 'u', role: 'user' } : { ok: false }; } };
+const mw = { verifyBearerToken: async (e) => { const a = (e.headers || {}).authorization || ''; return a === 'Bearer master' ? { ok: true, uid: 'adm', email: 'dono@exemplo.com', role: 'master' } : a ? { ok: true, uid: 'u', role: 'user' } : { ok: false }; } };
 const apiAgenda = agenda.createHandler({ getDb: () => db, getMw: () => mw, getCadastro: s => CAD[s], getLista: () => ({ ...CAD, 'agenda-teste': teste }) });
 const apiLeilao = leilao.createHandler({ getDb: () => db, getMw: () => mw, getCadastro: s => CAD[s], env: {}, fetch: async () => ({ ok: false, status: 503, json: async () => ({}), text: async () => '' }) });
 const TIPOS = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.css': 'text/css' };
@@ -110,7 +110,7 @@ const amanha = new Date(Date.now() - 3 * 3600000 + 86400000).toISOString().slice
   await adm.waitForSelector('#app:not(.oculto)', { timeout: 10000 }).catch(() => {});
   confere(await adm.isVisible('#app') && await adm.isVisible('#faixa-suporte'), 'recarregar continua no suporte');
   const reg = await db.collection(agenda.COLLECTION).doc('studiolima').collection('suporte').get();
-  confere(reg.docs.length === 1 && reg.docs[0].data().por === 'gcbezerra@gmail.com', 'a entrada do suporte fica registrada na conta do Studio Lima');
+  confere(reg.docs.length === 1 && reg.docs[0].data().por === 'dono@exemplo.com', 'a entrada do suporte fica registrada na conta do Studio Lima');
 
   console.log('5. O suporte sai; a Carol continua com o login dela');
   await adm.click('#nav-ajustes');

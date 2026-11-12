@@ -8,7 +8,9 @@ const { meusAlunos } = require('./profissionais');
 const DIA = 86400000;
 const AVISO_DIAS = 5;
 const MAX_APARELHOS = 2;
-const SEMPRE_ISENTOS = ['gcbezerra@gmail.com']; // admin do NEXIA nunca fica bloqueado
+// G2 (12/11): o e-mail do dono vem do segredo do Worker (MASTER_EMAIL; BODY_COACH_DONO_EMAIL se um dia for outro),
+// não fica mais no código público. Conferido por hash que MASTER_EMAIL é o e-mail do dono.
+const sempreIsentos = () => [process.env.BODY_COACH_DONO_EMAIL || process.env.MASTER_EMAIL || ''].map((e) => String(e).trim().toLowerCase()).filter(Boolean);
 const diaBR = (t) => new Date(t - 3 * 3600000).toISOString().slice(0, 10);
 
 async function configAcesso(db) {
@@ -16,7 +18,7 @@ async function configAcesso(db) {
   return {
     diasGratis: Number(c.diasGratis) > 0 ? Math.round(Number(c.diasGratis)) : 14,
     diasGratisCoach: Number(c.diasGratisCoach) > 0 ? Math.round(Number(c.diasGratisCoach)) : 30,
-    isentos: [...SEMPRE_ISENTOS, ...(Array.isArray(c.isentos) ? c.isentos.map((e) => String(e).trim().toLowerCase()) : [])],
+    isentos: [...sempreIsentos(), ...(Array.isArray(c.isentos) ? c.isentos.map((e) => String(e).trim().toLowerCase()) : [])],
     pix: String(c.pix || ''),
     pixNome: String(c.pixNome || ''),
     promo: c.promo && Number(c.promo.pct) > 0 ? { pct: Number(c.promo.pct), ate: Number(c.promo.ate) || 0, texto: String(c.promo.texto || '') } : null,
@@ -174,7 +176,7 @@ async function acoesAcesso(body, uid, db, ctx = {}, eu = null) {
     cache.delete(uid);
     const ap = ctx.master ? { sair: false } : await registrarAparelho(db, uid, body.aparelho);
     const { promo } = await configAcesso(db);
-    return [200, { ...ac, ...ap, master: !!ctx.master || SEMPRE_ISENTOS.includes(String(ctx.email || '').toLowerCase()), papel: (eu && eu.papel) || 'nenhum', ...(promo && promo.ate > Date.now() ? { promo } : {}) }];
+    return [200, { ...ac, ...ap, master: !!ctx.master || sempreIsentos().includes(String(ctx.email || '').toLowerCase()), papel: (eu && eu.papel) || 'nenhum', ...(promo && promo.ate > Date.now() ? { promo } : {}) }];
   }
   if (acao === 'cupom_ver') {
     const c = await cupomValido(db, body.codigo);
@@ -252,7 +254,7 @@ async function resumoDono(db, col, agora = Date.now()) {
 // Só o admin: lista de contas e receita, liberar dias (e faixa do coach), isentar e regras.
 async function acoesAdmin(body, db, ctx) {
   const acao = body.acao;
-  const admin = ctx.master || SEMPRE_ISENTOS.includes(String(ctx.email || '').toLowerCase());
+  const admin = ctx.master || sempreIsentos().includes(String(ctx.email || '').toLowerCase());
   if (!admin) return [403, { error: 'Só o administrador mexe nos acessos.' }];
   const col = db.collection('bc_acesso');
   if (acao === 'acesso_lista') {
@@ -348,7 +350,7 @@ async function acoesAdmin(body, db, ctx) {
       diasGratisCoach: Number(body.diasGratisCoach) >= 1 && Number(body.diasGratisCoach) <= 365 ? Math.round(Number(body.diasGratisCoach)) : atual.diasGratisCoach,
       pix: typeof body.pix === 'string' ? body.pix.trim().slice(0, 120) : atual.pix,
       pixNome: typeof body.pixNome === 'string' ? body.pixNome.trim().slice(0, 60) : atual.pixNome,
-      isentos: Array.isArray(body.isentos) ? body.isentos.map((e) => String(e).trim().toLowerCase()).filter((e) => e.includes('@') && !SEMPRE_ISENTOS.includes(e)).slice(0, 100) : atual.isentos.filter((e) => !SEMPRE_ISENTOS.includes(e)),
+      isentos: Array.isArray(body.isentos) ? body.isentos.map((e) => String(e).trim().toLowerCase()).filter((e) => e.includes('@') && !sempreIsentos().includes(e)).slice(0, 100) : atual.isentos.filter((e) => !sempreIsentos().includes(e)),
     };
     await db.collection('bc_config').doc('acesso').set(novo, { merge: true });
     return [200, { ok: true, config: novo }];

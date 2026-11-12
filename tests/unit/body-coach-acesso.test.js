@@ -1,4 +1,6 @@
 'use strict';
+// G2: o e-mail do dono vem do segredo MASTER_EMAIL (aqui um falso).
+process.env.MASTER_EMAIL = 'dono@exemplo.com';
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { acessoDe, liberarAcesso, registrarAparelho, acoesAcesso } = require('../../netlify/functions/body-coach/acesso.js');
@@ -35,7 +37,7 @@ test('acesso: grátis, aviso nos últimos 5 dias e bloqueio quando acaba', async
 test('acesso: admin e e-mails isentos nunca bloqueiam; aluno de coach pago fica liberado', async () => {
   const db = fakeDb();
   const longe = Date.now() + 400 * DIA;
-  assert.equal((await acessoDe(db, 'adm', { email: 'gcbezerra@gmail.com' }, longe)).situacao, 'isento');
+  assert.equal((await acessoDe(db, 'adm', { email: 'dono@exemplo.com' }, longe)).situacao, 'isento');
   assert.equal((await acessoDe(db, 'm', { master: true }, longe)).situacao, 'isento');
   await acoesAcesso({ acao: 'acesso_config', isentos: ['teste@x.com'], diasGratis: 10 }, 'adm', db, { master: true });
   assert.equal((await acessoDe(db, 't', { email: 'teste@x.com' }, longe)).situacao, 'isento');
@@ -158,4 +160,11 @@ test('acesso: regras salvam chave Pix e nome de quem recebe; quem paga vê os do
   assert.equal(a.pixNome, 'GILDIVAN CAMILO BEZERRA');
   await acoesAcesso({ acao: 'acesso_config', diasGratis: 20 }, 'adm', db, { master: true });
   assert.equal((await acessoDe(db, 'ana', {}, Date.now())).pixNome, 'GILDIVAN CAMILO BEZERRA');
+});
+
+test('G2. o e-mail do dono não está no código público: vem do MASTER_EMAIL', async () => {
+  const fs = require('node:fs'); const path = require('node:path');
+  for (const f of ['netlify/functions/body-coach/acesso.js', 'apps/body-coach/src/lib/verComo.ts', 'apps/body-coach/src/components/feature/AppShell.tsx']) {
+    assert.doesNotMatch(fs.readFileSync(path.join(__dirname, '..', '..', f), 'utf8'), /@gmail\.com/, f);
+  }
 });
