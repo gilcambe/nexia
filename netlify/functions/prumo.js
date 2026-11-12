@@ -241,7 +241,7 @@ function tipoPeloTicker(tk, tipo) {
   if (ETFS.has(t)) return 'etf';
   if (UNITS.has(t)) return 'acoes';
   // Ticker terminado em 11 que não é ETF conhecido nem unit é FII (nunca renda fixa).
-  if (/^[A-Z]{4}11$/.test(t)) return tipo === 'etf' ? 'etf' : 'fiis';
+  if (/^[A-Z]{4}11$/.test(t)) return 'fiis';
   // Ação (XXXX3, XXXX4, XXXX6...) não é renda fixa nem FII.
   if (/^[A-Z]{4}\d{1,2}$/.test(t) && (tipo === 'outro' || tipo === 'renda_fixa')) return 'acoes';
   return tipo;
