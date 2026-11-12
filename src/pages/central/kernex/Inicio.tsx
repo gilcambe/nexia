@@ -6,6 +6,7 @@ import Bloco from "./Bloco";
 import PrecisaDeVoce from "./PrecisaDeVoce";
 import type { Acao } from "./donos";
 import Icone, { LogoK } from "./Icone";
+import { MAX_BYTES, blocoDoAnexo, paraBase64, reduzirFoto } from "./anexo";
 import { COR_ESTADO, corSemaforo, haQuanto, hora, semPrecisa, type TelaId } from "./regras";
 
 // #3219 Início no jeito do "Painel Executivo" que o dono mandou: saudação, 4 números grandes coloridos,
@@ -45,6 +46,7 @@ export default function Inicio({ irPara, painel, nome }: { irPara: (t: TelaId) =
   const [pedido, setPedido] = useState("");
   const [meus, setMeus] = useState<{ itens: Item[]; todos: Item[]; em: string } | null>(null);
   const [resposta, setResposta] = useState<string | null>(null);
+  const [anexos, setAnexos] = useState<string[]>([]);
 
   const carregar = useCallback(async () => {
     const agora = new Date().toISOString();
@@ -67,6 +69,25 @@ export default function Inicio({ irPara, painel, nome }: { irPara: (t: TelaId) =
     } catch (e) { setAviso("Não deu certo: " + (e as Error).message); }
     setOcupado(null);
   };
+  // #3365: print ou arquivo junto do pedido (guardado no ramo cortex-anexos e descrito pela IA grátis).
+  const anexar = async (f: File | undefined) => {
+    if (!f) return;
+    setOcupado("anexo");
+    try {
+      const arq = await reduzirFoto(f);
+      if (arq.size > MAX_BYTES) { setAviso("Arquivo grande demais (máximo uns 700 KB). Mande um print ou um trecho."); setOcupado(null); return; }
+      const base64 = await paraBase64(arq);
+      const nome = arq === f ? f.name : f.name.replace(/\.[^.]+$/, "") + ".jpg";
+      const tipo = arq === f ? f.type : "image/jpeg";
+      const [g, e] = await Promise.allSettled([agir({ acao: "anexar", nome, base64 }), agir({ acao: "entender", nome, tipo, base64 })]);
+      const caminho = g.status === "fulfilled" ? String((g.value as { caminho?: string }).caminho || "") || null : null;
+      const texto = e.status === "fulfilled" ? String((e.value as { texto?: string }).texto || "") || null : null;
+      if (!caminho && !texto) { setAviso(`Não consegui guardar o arquivo ${f.name}. Tente de novo.`); setOcupado(null); return; }
+      setPedido((p) => (p.trim() ? p.trim() + "\n\n" : "") + blocoDoAnexo(nome, caminho, texto));
+      setAnexos((a) => [...a, nome]);
+    } catch { setAviso(`Não consegui ler o arquivo ${f.name}.`); }
+    setOcupado(null);
+  };
   const enviarPedido = async () => {
     const t = pedido.trim();
     if (t.length < 3) { setAviso("Escreva o seu pedido ou a sua pergunta."); return; }
@@ -75,7 +96,7 @@ export default function Inicio({ irPara, painel, nome }: { irPara: (t: TelaId) =
       const r = await agir({ acao: "pedir", texto: t }) as { mensagem: string; resposta?: boolean };
       // Pergunta de status: a Central responde na hora (não vira tarefa).
       if (r.resposta) setResposta(r.mensagem); else { setResposta(null); setAviso(r.mensagem); }
-      setPedido(""); painel.recarregar?.(); carregar();
+      setPedido(""); setAnexos([]); painel.recarregar?.(); carregar();
     } catch (e) { setAviso("Não deu certo: " + (e as Error).message); }
     setOcupado(null);
   };
@@ -149,7 +170,12 @@ export default function Inicio({ irPara, painel, nome }: { irPara: (t: TelaId) =
           <button type="button" className="kx-sugestao" onClick={() => irPara("tarefas")}><Icone nome="lista" tam={16} cor="#a5b4fc" />Ver as últimas tarefas</button>
           <button type="button" className="kx-sugestao" onClick={() => { document.getElementById("kx-busca")?.focus(); }}><Icone nome="busca" tam={16} cor="#a5b4fc" />Buscar uma tela ou tarefa</button>
           <textarea placeholder="Peça ou pergunte… (ex.: qual o status de tudo? / corrigir o login do Body Coach)" value={pedido} onChange={(e) => setPedido(e.target.value)} aria-label="Pedido para o Cortex" data-testid="kx-pedido" />
-          <button type="button" className="kx-btn forte" style={{ justifyContent: "center" }} disabled={ocupado === "pedir"} onClick={enviarPedido}><Icone nome="enviar" tam={16} />Mandar para o Cortex</button>
+          <label className="kx-sugestao" style={{ cursor: "pointer" }} data-testid="kx-anexar">
+            <Icone nome="pasta" tam={16} cor="#a5b4fc" />{ocupado === "anexo" ? "Lendo o arquivo…" : "Anexar print ou arquivo"}
+            <input type="file" hidden accept="image/*,application/pdf,.txt,.csv,.xlsx,.xls,.doc,.docx" disabled={!!ocupado} onChange={(e) => { anexar(e.target.files?.[0]); e.target.value = ""; }} />
+          </label>
+          {anexos.length > 0 && <p className="kx-mut" style={{ margin: 0 }} data-testid="kx-anexos">📎 {anexos.join(", ")}</p>}
+          <button type="button" className="kx-btn forte" style={{ justifyContent: "center" }} disabled={ocupado === "pedir" || ocupado === "anexo"} onClick={enviarPedido}><Icone nome="enviar" tam={16} />Mandar para o Cortex</button>
           {resposta && <div className="kx-passos neutro" data-testid="kx-resposta" style={{ marginTop: 8 }}><b>Resposta da Central:</b> {resposta}</div>}
           <p className="kx-mut" style={{ margin: "8px 0 0" }}>Meus pedidos {meus ? "· conferido " + haQuanto(meus.em) : ""}</p>
           <ul className="kx-lista" data-testid="kx-meus-pedidos">
