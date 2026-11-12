@@ -151,9 +151,12 @@ const manterVivo = setInterval(() => {}, 60 * 60 * 1000);
     for (const l of ['contrato-falhou', 'contrato-nao-testavel']) await gh('DELETE', `/issues/${N}/labels/${l}`);
   };
   if (!c.ok && !/^\s*(?:[-*]\s*)?\**Arquivos\**\s*:/im.test(texto) && process.env.CONTRATO_GERAR !== '0') {
-    const { gerar } = require('../nexia-ai/contrato/gerador');
+    const { gerar, revisarCobertura } = require('../nexia-ai/contrato/gerador');
     const checarSintaxe = f => { try { execFileSync(process.execPath, ['--check', f], { stdio: 'pipe' }); return true; } catch { return false; } };
-    gerado = await gerar({ pedido: texto, raiz: process.cwd(), router, modelos: lista, rodarTeste, checarSintaxe, log: s => console.log('  gerador: ' + s) });
+    // Portão 8: outra IA grátis (não a que escreveu o teste) confere se o teste cobre o pedido. Sem cota, segue sem ele.
+    const gratis = lista.filter(d => d.provider !== 'maquinas');
+    const revisar = ({ pedido, codigo, modelo }) => revisarCobertura(router, gratis.filter(d => !(d.provider === modelo.provider && d.model === modelo.model)).slice(0, 3), pedido, codigo);
+    gerado = await gerar({ pedido: texto, raiz: process.cwd(), router, modelos: lista, rodarTeste, checarSintaxe, revisar, log: s => console.log('  gerador: ' + s) });
     if (!gerado.ok && gerado.sem_cota) return aguardarCota('ao gerar o teste');
     if (!gerado.ok) return voltarParaFila(gerado.nao_testavel ? `Não dá para provar com teste automático (${gerado.motivo}).` : `Não consegui gerar um teste válido: ${gerado.motivo}.`, 'contrato-nao-testavel');
     c = gerado.contrato;
