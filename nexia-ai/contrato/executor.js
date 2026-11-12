@@ -94,7 +94,11 @@ async function executar(o) {
   if (base.ok) return { ok: false, motivo: 'o teste já passa antes da mudança: não prova nada (escreva um teste que falhe sem a mudança)', tentativas: 0, historico };
   const original = guardar(c, raiz);
   let tentativas = 0;
-  for (const m of o.modelos) {
+  // Frente A (#3377): com placar de cota, quem está sem cota vai para o fim (ou sai, se houver livres).
+  const placar = o.placar || null;
+  const escada = placar ? placar.ordenar(o.modelos) : o.modelos;
+  const semCotaErro = e => { const s = (e && e.details && e.details.status) || 0; return s === 429 || s === 402 || /\b(429|402)\b|rate.?limit|quota|cota/i.test(String((e && e.message) || e)); };
+  for (const m of escada) {
     restaurar(original, raiz);              // cada degrau começa do zero
     let anterior = base.saida;
     for (let k = 0; k < (o.porModelo || 2); k++) {
@@ -103,7 +107,8 @@ async function executar(o) {
       try {
         const out = await o.router.chat(m, { system: SISTEMA, messages: [{ role: 'user', content: montarPedido(c, raiz, anterior) }], maxTokens: 8000 });
         texto = (out && out.text) || '';
-      } catch (e) { historico.push({ modelo: `${m.provider}/${m.model}`, erro: String(e.message || e).slice(0, 200) }); log(`${m.provider}/${m.model}: sem resposta (${String(e.message || e).slice(0, 80)})`); break; }
+        if (placar) placar.sucesso(m);
+      } catch (e) { if (placar && semCotaErro(e)) placar.marcar(m, 'rate'); historico.push({ modelo: `${m.provider}/${m.model}`, erro: String(e.message || e).slice(0, 200) }); log(`${m.provider}/${m.model}: sem resposta (${String(e.message || e).slice(0, 80)})`); break; }
       const ap = aplicar(texto, c, raiz);
       if (!ap.aplicados.length) {
         anterior = `Nenhuma mudança aplicada. ${ap.recusas.join(' | ') || 'Responda só com blocos de edição no formato pedido.'}`;

@@ -125,8 +125,11 @@ function modelos() {
 // seguram o Node; sem isto o script saía em 2 s com código 0 logo depois de mandar a tarefa ao PC (que fazia o
 // trabalho em ~200 s sem ninguém esperando o resultado).
 const manterVivo = setInterval(() => {}, 60 * 60 * 1000);
+const cota = require('../nexia-ai/model-router/cota');
 (async () => {
   if (!N || !TOKEN) { console.error('NUMERO e GH_TOKEN são obrigatórios'); process.exit(2); }
+  // Frente A (#3377): começa sabendo quem está sem cota (placar salvo no D1 pelas rodadas e jobs anteriores).
+  await cota.carregarDoD1(process.env).catch(() => null);
   const issue = (await gh('GET', `/issues/${N}`)).json;
   if (!issue || issue.pull_request) { console.error('issue não encontrada'); process.exit(2); }
   // Partes criadas pelo próprio planejador do Cortex (github-actions[bot] deste repo) vêm como CONTRIBUTOR;
@@ -165,7 +168,7 @@ const manterVivo = setInterval(() => {}, 60 * 60 * 1000);
   if (!c.ok) { await comentar(`Contrato inválido: ${c.erros.join('; ')}.\nModelo:\n\`\`\`\nO que fazer...\nArquivos: \`caminho/arquivo.js\`\nTeste: \`node --test tests/unit/x.test.js\`\n\`\`\``); await rotular('contrato-invalido'); return; }
   console.log(`#${N}: ${c.arquivos.join(', ')} | ${c.teste} | degraus: ${lista.map(d => `${d.provider}/${d.model}`).join(' > ')}`);
   const t0 = Date.now();
-  let r = await executar({ contrato: c, raiz: process.cwd(), router, modelos: lista, rodarTeste, porModelo: 2, log: s => console.log('  ' + s) });
+  let r = await executar({ contrato: c, raiz: process.cwd(), router, modelos: lista, rodarTeste, porModelo: 2, placar: cota.getPlacar(), log: s => console.log('  ' + s) });
   if (!r.ok) {
     // Último degrau: o plano Claude Pro do dono (CLAUDE_CODE_OAUTH_TOKEN), com teto diário. Só quando as grátis não resolveram.
     const rc = await degrauClaudePro(c, issue);
@@ -216,4 +219,5 @@ const manterVivo = setInterval(() => {}, 60 * 60 * 1000);
   if (semCi) await rotular('contrato-sem-ci');
   await rotular('contrato-pr');
   console.log(`PR #${pr.json.number}`);
-})().catch(e => { console.error(e); process.exitCode = 1; }).finally(() => clearInterval(manterVivo));
+})().catch(e => { console.error(e); process.exitCode = 1; })
+  .finally(async () => { await cota.salvarNoD1(process.env).catch(() => null); clearInterval(manterVivo); });
