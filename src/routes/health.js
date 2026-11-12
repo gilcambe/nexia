@@ -1,6 +1,7 @@
 'use strict';
 
 // GET /api/prumo?acao=saude
+// Esta rota responde com { ok:true, hora: ISO } quando acao=saude.
 // Responde 200 com { ok: true, hora: <ISO> } quando acao=saude.
 // Qualquer outra acao (ou acao ausente) responde 400 com mensagem clara.
 // A resposta de saude traz o horario atual no formato ISO 8601 (new Date().toISOString()).
