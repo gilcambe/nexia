@@ -51,7 +51,7 @@ export interface RotaSaude {
   erros: number; codigos: Record<string, number>; tempoMedio: number | null; ultimaQueda: string | null; agora: boolean;
 }
 export interface Cota { id: string; nome: string; limite: number; usado: number | null; pct: number | null }
-export interface Cotas { itens: Cota[]; perto: string[]; frear: boolean; limiar: number; firestoreErro?: string; em: string }
+export interface Cotas { itens: Cota[]; perto: string[]; frear: boolean; limiar: number; usoServidor?: Cota | null; firestoreErro?: string; em: string }
 export interface ErroRecente { em: number; rid: string; rota: string; metodo: string; codigo: number; msg: string }
 export interface Historico { dias: number; amostras: number; desde: string | null; rotas: RotaSaude[]; porDia: { dia: string; disponibilidade: number }[] }
 // Conectar IAs (#1958): 3 vagas de chave grátis. A chave nunca vem para a página.

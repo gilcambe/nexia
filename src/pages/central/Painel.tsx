@@ -128,7 +128,13 @@ export default function Painel({ d, erros, avisos, ir, conferir, carregando, abr
   const produtos = d.lista?.produtos || [];
   const saudeDe = (id: string) => medidos.find((m) => m.id === id);
   const cotas = (d.cotas?.itens || []).filter((c) => c.pct != null);
+  // #3446: o servidor já calcula qual cota está mais pesada hoje (maior porcentagem).
+  // Sem esse dado (versão antiga do servidor), cai no cálculo local, como antes.
   const maiorCota = cotas.slice().sort((a, b) => (b.pct || 0) - (a.pct || 0))[0];
+  // Cartão "Uso do servidor hoje": mostra a porcentagem de leituras do Firestore, que o servidor
+  // já expõe em d.cotas.usoServidor (lib/cotas.js, usoServidorHoje). Sem esse dado (versão antiga
+  // do servidor ou leituras não medidas), cai no maior uso do dia.
+  const usoServidor = d.cotas?.usoServidor || maiorCota;
   const usoIa = (d.clientes?.usoIa?.porProvedor || []).filter((p) => p.usado > 0);
   const totalIa = usoIa.reduce((s, p) => s + p.usado, 0);
   const forn = d.empresa?.fornecedores || [];
@@ -385,7 +391,7 @@ export default function Painel({ d, erros, avisos, ir, conferir, carregando, abr
           {[
             { t: "Tarefas", v: cx ? cx.fazendo.length : null, s: cx ? `rodando · ${cx.naFila} na fila` : "", i: "cortex", c: "text-violet-600 bg-violet-50", a: () => ir("cortex") },
             { t: "Sites no ar", v: medidos.length ? `${noAr}/${medidos.length}` : null, s: medidos.length && noAr < medidos.length ? `${medidos.length - noAr} fora do ar` : "todos respondendo", i: "tenants", c: "text-emerald-600 bg-emerald-50", a: () => ir("clientes") },
-            { t: "Cota de IA", v: maiorCota ? `${Math.round(maiorCota.pct || 0)}%` : null, s: maiorCota ? maiorCota.nome : "", i: "ia", c: "text-sky-600 bg-sky-50", a: () => ir("sistema") },
+            { t: "Uso do servidor hoje", v: usoServidor ? `${Math.round(usoServidor.pct || 0)}%` : null, s: usoServidor ? usoServidor.nome : "", i: "ia", c: "text-sky-600 bg-sky-50", a: () => ir("sistema") },
             { t: "Alertas", v: d.saude ? avisos.length : null, s: avisos.length ? "precisam de você" : "nada pendente", i: "alerta", c: "text-amber-600 bg-amber-50", a: () => abrirAlerta(null) },
           ].map((n) => (
             <button key={n.t} onClick={n.a} className="rounded-2xl bg-white border border-slate-200/80 p-3.5 text-left cursor-pointer active:bg-slate-50 shadow-[0_1px_2px_rgba(15,23,42,0.05)]">
@@ -496,10 +502,11 @@ export default function Painel({ d, erros, avisos, ir, conferir, carregando, abr
             <Numero titulo="Tenants no ar" icone="tenants" cor="from-emerald-500 to-green-500" onClick={() => ir("clientes")}
               valor={medidos.length ? noAr : null} sub={`de ${medidos.length} sites medidos agora`}
               pct={medidos.length ? (noAr / medidos.length) * 100 : null} barra="bg-emerald-500" conta={`${noAr} de ${medidos.length} sites responderam`} />
-            <Numero titulo="Cota de IA" icone="ia" cor="from-sky-500 to-blue-600" onClick={() => ir("sistema")}
-              valor={maiorCota ? `${Math.round(maiorCota.pct || 0)}%` : null} sub={maiorCota ? `a mais usada hoje: ${maiorCota.nome}` : ""}
-              pct={maiorCota ? maiorCota.pct : null} barra={maiorCota && (maiorCota.pct || 0) >= 80 ? "bg-amber-500" : "bg-sky-500"}
-              conta={maiorCota ? `${maiorCota.usado} de ${maiorCota.limite}` : ""} />
+            <Numero titulo="Uso do servidor hoje" icone="ia" cor="from-sky-500 to-blue-600" onClick={() => ir("sistema")}
+              valor={usoServidor ? `${Math.round(usoServidor.pct || 0)}%` : null} sub={usoServidor ? `${usoServidor.nome} · ${usoServidor.usado} de ${usoServidor.limite}` : ""}
+              pct={usoServidor ? usoServidor.pct : null} barra={usoServidor && (usoServidor.pct || 0) >= 80 ? "bg-amber-500" : "bg-sky-500"}
+              conta={usoServidor ? `${usoServidor.usado} de ${usoServidor.limite}` : ""} />
+            {/* O cartão "Cota de IA" foi unificado neste ("Uso do servidor hoje") para não haver dois cards com o mesmo número. */}
             <Numero titulo="Alertas" icone="alerta" cor="from-orange-400 to-amber-500" onClick={() => abrirAlerta(null)}
               valor={d.saude ? avisos.length : null} sub={avisos.length ? "precisam de você" : "nada pendente"} />
           </div>
