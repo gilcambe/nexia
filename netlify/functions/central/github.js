@@ -1,5 +1,6 @@
 'use strict';
 const motivos = require('./motivos');
+const { estadoTarefas } = require('./estado-tarefas');
 // Central NEXIA: o que a página precisa do GitHub (fila do Cortex, robôs, posts do Divulga).
 // Usa o token da fila (NEXIA_JOBS_TOKEN) só no servidor; nada dele vai para a página.
 
@@ -68,21 +69,12 @@ function criarGithub(env = process.env, fetchFn = fetch) {
   const tarefa = (i) => ({ numero: i.number, titulo: String(i.title || '').slice(0, 120), link: i.html_url, quando: i.updated_at, motivo: motivos.motivoDe(i).texto });
 
   async function cortex() {
-    const semana = new Date(Date.now() - 7 * 864e5).toISOString();
     const [abertas, feitas] = await Promise.all([
-      gh('/issues?state=open&labels=cortex-fila&per_page=100'),
-      gh('/issues?state=closed&labels=cortex-feito&per_page=30&sort=updated&since=' + semana),
+      gh('/issues?state=open&per_page=100'),
+      gh('/issues?state=closed&per_page=100'),
     ]);
-    const so = abertas.filter((i) => !i.pull_request && !temRotulo(i, 'cortex-dividido'));
-    const travadas = so.filter((i) => temRotulo(i, 'cortex-travado'));
-    const fazendo = so.filter((i) => temRotulo(i, 'cortex-rodando'));
-    const naFila = so.filter((i) => !temRotulo(i, 'cortex-travado') && !temRotulo(i, 'cortex-rodando'));
-    const entregues = feitas.filter((i) => !i.pull_request && i.closed_at >= semana);
-    return {
-      naFila: naFila.length, fazendo: fazendo.map(tarefa), travadas: travadas.map(tarefa),
-      feitas7: entregues.length, ultimas: entregues.slice(0, 8).map(tarefa), proximas: naFila.slice(0, 8).map(tarefa),
-      motivos: motivos.resumo(so),
-    };
+    const todas = [...abertas, ...feitas];
+    return estadoTarefas(todas);
   }
 
   async function robos(lista) {
