@@ -184,14 +184,15 @@ const manterVivo = setInterval(() => {}, 60 * 60 * 1000);
     process.exitCode = 1;
     return;
   }
-  const ramo = `cortex/contrato-${N}-${Date.now().toString(36)}`;
+  const { ramoDoContrato, corpoDoPr } = require('../nexia-ai/contrato/pr');
+  const ramo = ramoDoContrato(N);
   git('config', 'user.name', 'Cortex KERNEX'); git('config', 'user.email', 'cortex@kernex.com.br');
   git('checkout', '-b', ramo);
   git('add', '--', ...r.arquivos, ...(gerado ? [gerado.testeArquivo] : []));   // teste gerado fica no CI para sempre
   git('commit', '-m', `Contrato #${N}: ${String(issue.title).slice(0, 60)}\n\nTeste de aceitação: ${c.teste}\nIA: ${r.modelo} (${r.tentativas} tentativa(s))`);
   git('push', 'origin', ramo);
   const dadosPr = { title: `Contrato #${N}: ${String(issue.title).slice(0, 70)}`, head: ramo, base: 'develop',
-    body: `Fecha #${N}\n\nEntregue pelo executor de contrato: o teste de aceitação \`${c.teste}\` falhava antes e passa agora.\nIA: ${r.modelo}; ${r.tentativas} tentativa(s); ${seg} s.\nArquivos: ${r.arquivos.map(f => `\`${f}\``).join(', ')}\n\n${hist}` };
+    body: corpoDoPr({ numero: N, teste: c.teste, modelo: r.modelo, tentativas: r.tentativas, seg, arquivos: r.arquivos, hist }) };
   // 11/11: a 1ª prova abriu o ramo mas o PR voltou vazio. Mostra o erro exato e tenta a chave do próprio Actions.
   // A GitHub App do NEXIA abre o PR (e o CI roda nele). A NEXIA_JOBS_TOKEN não pode abrir PR (403) e a chave do
   // Actions abre, mas o GitHub NÃO roda o CI em PR aberto por ela (visto em 3491-3496): é só o último recurso.
