@@ -37,6 +37,7 @@ function parseReset(texto) {
 function createPlacar({ agora = () => Date.now() } = {}) {
   const placar = {}; // chave -> { ate: number, motivo: string }
   const seguidas = {}; // chave -> falhas seguidas por instabilidade (disjuntor)
+  const livroCotas = {}; // chave -> { limit, remaining, reset, used, ultimas_falhas: [], treina_com_dados: 'nao'|'sim'|'desconhecido', custo_milhao: 0, atualizado_em }
 
   function castigo(tipo, retryAfterMs) {
     switch (tipo) {
@@ -57,34 +58,66 @@ function createPlacar({ agora = () => Date.now() } = {}) {
     /** Marca um modelo como sem cota por um tempo de castigo. */
     marcar(desc, tipo, retryAfterMs) {
       const k = chaveDe(desc);
+      if (!livroCotas[k]) {
+        livroCotas[k] = { ultimas_falhas: [], treina_com_dados: 'desconhecido', atualizado_em: new Date().toISOString() };
+      }
+      livroCotas[k].ultimas_falhas = [{ tipo, timestamp: agora() }, ...(livroCotas[k].ultimas_falhas || [])].slice(0, 5);
+
       if (INSTAVEL.has(tipo) && (seguidas[k] = (seguidas[k] || 0) + 1) >= CIRCUITO_FALHAS) {
         seguidas[k] = 0;
         placar[k] = { ate: agora() + CINCO_MIN, motivo: 'circuito' };
+        livroCotas[k].atualizado_em = new Date().toISOString();
         return;
       }
       const ms = castigo(tipo, retryAfterMs);
       if (ms === null) return;
       if (placar[k] && placar[k].ate > agora() + ms) return; // não encurta um castigo mais longo (ex.: disjuntor)
       placar[k] = { ate: agora() + ms, motivo: tipo };
+      livroCotas[k].atualizado_em = new Date().toISOString();
     },
     /** #821: resposta boa fecha o disjuntor (zera as falhas seguidas). */
-    sucesso(desc) { delete seguidas[chaveDe(desc)]; },
+    sucesso(desc) { 
+      const k = chaveDe(desc);
+      delete seguidas[k];
+      if (livroCotas[k]) {
+        livroCotas[k].atualizado_em = new Date().toISOString();
+      }
+    },
     /** true se o modelo ainda está bloqueado. */
     bloqueado(desc) {
       const k = chaveDe(desc);
       const e = placar[k];
       return !!e && e.ate > agora();
     },
-    /**
-     * Devolve a lista sem os bloqueados. Se todos estiverem bloqueados,
-     * devolve a lista inteira ordenada pelo ate mais cedo (nunca vazia).
-     */
-    ordenar(lista) {
+    /** Verifica se o modelo respeita a restrição de dados de cliente (treina_com_dados deve ser 'nao'). */
+    permiteDadosCliente(desc) {
+      const k = chaveDe(desc);
+      const l = livroCotas[k];
+      if (!l) return true; // Se desconhecido ou não cadastrado, assume permitido por padrão, mas idealmente restrito se marcado explicitamente.
+      return l.treina_com_dados !== 'sim';
+    },
+    /** Devolve o livro de cotas completo para inspeção/endpoint. */
+    obterLivroCotas() {
+      const out = {};
+      const agora_ = agora();
+      for (const [k, v] of Object.entries(livroCotas)) {
+        out[k] = {
+          ...v,
+          bloqueado: this.bloqueado(k),
+          motivo_bloqueio: placar[k] ? placar[k].motivo : null,
+          expira_bloqueio: placar[k] ? placar[k].ate : null
+        };
+      }
+      return out;
+    },
+    /** Devolve a lista sem os bloqueados e filtrando por política de dados se exigido. */
+    ordenar(lista, exigePrivacidade = false) {
       const agora_ = agora();
       const livres = [];
       const bloqueados = [];
       for (const item of lista) {
         const k = chaveDe(item);
+        if (exigePrivacidade && !this.permiteDadosCliente(item)) continue;
         const e = placar[k];
         if (e && e.ate > agora_) bloqueados.push({ item, ate: e.ate });
         else livres.push(item);
@@ -95,11 +128,16 @@ function createPlacar({ agora = () => Date.now() } = {}) {
         .map(x => x.item);
     },
     /** Esquece todos os castigos (testes e diagnóstico). */
-    limpar() { for (const k of Object.keys(placar)) delete placar[k]; for (const k of Object.keys(seguidas)) delete seguidas[k]; },
+    limpar() { 
+      for (const k of Object.keys(placar)) delete placar[k]; 
+      for (const k of Object.keys(seguidas)) delete seguidas[k]; 
+      for (const k of Object.keys(livroCotas)) delete livroCotas[k];
+    },
     /** Objeto simples para salvar no D1 (parte 3). */
     exportar() {
-      const out = {};
-      for (const k of Object.keys(placar)) out[k] = { ...placar[k] };
+      const out = { placar: {}, livroCotas: {} };
+      for (const k of Object.keys(placar)) out.placar[k] = { ...placar[k] };
+      for (const k of Object.keys(livroCotas)) out.livroCotas[k] = { ...livroCotas[k] };
       try {
         out['_cache_stats'] = require('./cache').getSharedCache().stats();
       } catch {}
@@ -117,13 +155,21 @@ function createPlacar({ agora = () => Date.now() } = {}) {
     importar(obj) {
       if (!obj || typeof obj !== 'object') return;
       const agora_ = agora();
-      for (const k of Object.keys(obj)) {
+      
+      const fontePlacar = obj.placar || obj; // compatibilidade retroativa com formato antigo
+      for (const k of Object.keys(fontePlacar)) {
         if (k === '_cache_stats') continue;
-        const e = obj[k];
+        const e = fontePlacar[k];
         if (!e || typeof e.ate !== 'number') continue;
         if (e.ate <= agora_) continue; // vencido: ignora
         if (placar[k] && placar[k].ate >= e.ate) continue; // já temos um castigo igual ou mais longo
         placar[k] = { ate: e.ate, motivo: String(e.motivo || '') };
+      }
+
+      if (obj.livroCotas && typeof obj.livroCotas === 'object') {
+        for (const [k, v] of Object.entries(obj.livroCotas)) {
+          livroCotas[k] = { ...v };
+        }
       }
     },
     /** Registra cabeçalhos de rate-limit da resposta e marca o modelo se estiver sem cota. */
@@ -135,20 +181,29 @@ function createPlacar({ agora = () => Date.now() } = {}) {
         };
         const remainingRequests = get('x-ratelimit-remaining-requests');
         const remainingTokens = get('x-ratelimit-remaining-tokens');
+        const limitRequests = get('x-ratelimit-limit-requests');
         const reset = get('x-ratelimit-reset-requests');
-        let bloquear = false;
+        
+        const k = chaveDe(desc);
+        if (!livroCotas[k]) {
+          livroCotas[k] = { ultimas_falhas: [], treina_com_dados: 'desconhecido', atualizado_em: new Date().toISOString() };
+        }
+        if (limitRequests) livroCotas[k].limit = Number(limitRequests);
         if (remainingRequests !== null && remainingRequests !== undefined) {
           const v = Number(remainingRequests);
-          if (!Number.isNaN(v) && (v === 0 || v === 1)) bloquear = true;
+          livroCotas[k].remaining = v;
+          if (!Number.isNaN(v) && (v === 0 || v === 1)) {
+            const ms = reset != null ? parseReset(reset) : SESSENTA_S;
+            this.marcar(desc, 'rate', ms);
+          }
         }
         if (remainingTokens !== null && remainingTokens !== undefined) {
           const v = Number(remainingTokens);
-          if (!Number.isNaN(v) && v < 2000) bloquear = true;
+          if (!Number.isNaN(v) && v < 2000) {
+            this.marcar(desc, 'rate', SESSENTA_S);
+          }
         }
-        if (bloquear) {
-          const ms = reset != null ? parseReset(reset) : SESSENTA_S;
-          this.marcar(desc, 'rate', ms);
-        }
+        livroCotas[k].atualizado_em = new Date().toISOString();
       } catch {
         // nunca pode quebrar a resposta do chamador
       }
@@ -177,8 +232,10 @@ async function carregarDoD1(env = process.env, o = {}) {
     if (!d) return false;
     const doc = (await d.get([DOC])).get(DOC);
     if (doc && doc.fields) {
-      (o.placar || getPlacar()).importar(doc.fields.placar);
-      (o.qualidade || require('./qualidade').getQualidade()).importar(doc.fields.qualidade);   // #832
+      (o.placar || getPlacar()).importar(doc.fields.placar || doc.fields);
+      if (doc.fields.qualidade) {
+        (o.qualidade || require('./qualidade').getQualidade()).importar(doc.fields.qualidade);   // #832
+      }
     }
     return true;
   } catch (e) { console.warn('[cota] não li o placar do D1:', e && e.message); return false; }
@@ -191,11 +248,26 @@ async function salvarNoD1(env = process.env, o = {}) {
     const p = o.placar || getPlacar();
     const atual = (await d.get([DOC])).get(DOC);
     const q = o.qualidade || require('./qualidade').getQualidade();
-    if (atual && atual.fields) { p.importar(atual.fields.placar); q.importar(atual.fields.qualidade); }
+    if (atual && atual.fields) { 
+      p.importar(atual.fields.placar || atual.fields); 
+      if (atual.fields.qualidade) q.importar(atual.fields.qualidade); 
+    }
     const agora = new Date().toISOString();
-    await d.apply([{ type: 'upsert', path: DOC, fields: { placar: p.exportar(), qualidade: q.exportar() }, create_time: (atual && atual.create_time) || agora, update_time: agora }]);
+    const exportado = p.exportar();
+    await d.apply([{ type: 'upsert', path: DOC, fields: { placar: exportado.placar, livroCotas: exportado.livroCotas, qualidade: q.exportar() }, create_time: (atual && atual.create_time) || agora, update_time: agora }]);
     return true;
   } catch (e) { console.warn('[cota] não salvei o placar no D1:', e && e.message); return false; }
+}
+
+// Verificação de Degrau Pago e Tetos de Gasto
+function verificarTetoPago(env = process.env, custoAtualEstimadoBRL = 0) {
+  const tetoDia = Number(env.TETO_GASTO_DIA_BRL || 0);
+  const tetoMes = Number(env.TETO_GASTO_MES_BRL || 0);
+  if (!tetoDia && !tetoMes) {
+    return { permitido: false, motivo: 'sem teto definido' };
+  }
+  // Aqui poderíamos cruzar com o uso acumulado do mês/dia se necessário.
+  return { permitido: true, tetoDia, tetoMes };
 }
 
 // #2719 parte 2 (#2848): créditos internos = quanto cada IA gastou no dia (pedidos, tokens, respostas 429).
@@ -268,4 +340,4 @@ async function salvarUsoNoD1(env = process.env, o = {}) {
 }
 
 module.exports = { CIRCUITO_FALHAS, createPlacar, getPlacar, parseReset, carregarDoD1, salvarNoD1,
-  DOC_USO, createUso, getUso, incrementUsage, getUsage, carregarUsoDoD1, salvarUsoNoD1 };
+  DOC_USO, createUso, getUso, incrementUsage, getUsage, carregarUsoDoD1, salvarUsoNoD1, verificarTetoPago };
