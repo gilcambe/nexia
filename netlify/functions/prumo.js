@@ -274,6 +274,9 @@ function normalizarLido(b, dataPrint) {
   // Sem ticker e sem tipo escrito (nem apelido no nome), não inventa classificação.
   if (!tk && !tipo) tipo = 'outro';
   if (/etf/i.test(bruto)) tipo = 'etf';
+  // #3532: ETF conhecido ou FII do grupo 11 não podem ficar como "renda_fixa".
+  if (bruto === 'renda_fixa' && (ETFS.has(tk) || /^[A-Z]{4}11$/.test(tk))) tipo = ETFS.has(tk) ? 'etf' : 'fiis';
+  if (bruto === 'renda_fixa' && tipo !== 'renda_fixa' && (ETFS.has(tk) || /^[A-Z]{4}11$/.test(tk))) tipo = ETFS.has(tk) ? 'etf' : 'fiis';
   // Ticker manda: ETF conhecido ou terminação 11 do grupo FIIs viram "etf"/"fiis" (nunca "renda_fixa"),
   // mesmo quando a IA devolve outro tipo ou o ticker vem dentro do nome (ex.: "MXRF11".trim()).
   const tickerTexto = tk || (/\b([A-Z]{4}11)\b/i.exec(String(b.nome || '').toUpperCase()) || [])[1] || '';
