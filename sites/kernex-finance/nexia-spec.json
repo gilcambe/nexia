@@ -2,29 +2,29 @@
   "spec": {
     "kind": "system",
     "name": "Kernex Finance",
-    "tagline": "Gestão financeira inteligente, sem prumo.",
-    "photo_theme": "",
-    "description": "Gestão financeira inteligente, sem prumo.",
+    "tagline": "Gestão financeira empresarial integrada e segura",
+    "photo_theme": "corporate finance dashboard",
+    "description": "Gestão financeira empresarial integrada e segura",
     "folder": "sites/kernex-finance",
     "fonts": {
-      "heading": "Space Grotesk",
+      "heading": "Plus Jakarta Sans",
       "body": "Inter"
     },
     "palette": {
-      "primary": "#0f172a",
-      "accent": "#3b82f6",
+      "primary": "#2563eb",
+      "accent": "#0ea5e9",
       "bg": "#fbfaf7",
       "surface": "#ffffff",
       "text": "#1d2426",
       "muted": "#5d6b6e",
-      "dark": "#020617"
+      "dark": "#0f172a"
     },
     "style": "modern",
     "contact": {
       "whatsapp": "",
-      "phone": "(11) 90000-0000",
-      "email": "finance@kernex.com.br",
-      "address": "",
+      "phone": "(11) 4004-8900",
+      "email": "suporte@kernex.com.br",
+      "address": "Av. Paulista, 1000 - São Paulo, SP",
       "city": "",
       "hours": "",
       "instagram": "",
@@ -45,116 +45,104 @@
     "entities": [
       {
         "key": "contas",
-        "label": "Contas a Pagar",
-        "singular": "Conta",
+        "label": "Contas Bancárias",
+        "singular": "Conta Bancária",
         "fields": [
           {
-            "key": "fornecedor",
-            "label": "Fornecedor",
+            "key": "banco",
+            "label": "Banco",
             "type": "text",
             "options": [],
             "required": true
           },
           {
-            "key": "valor",
-            "label": "Valor (R$)",
+            "key": "agencia",
+            "label": "Agência",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "conta",
+            "label": "Número da Conta",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "tipo",
+            "label": "Tipo",
+            "type": "select",
+            "options": [
+              "Corrente",
+              "Poupança",
+              "Investimento",
+              "Caixa"
+            ],
+            "required": true
+          },
+          {
+            "key": "saldo",
+            "label": "Saldo Inicial",
             "type": "money",
             "options": [],
-            "required": true
-          },
-          {
-            "key": "vencimento",
-            "label": "Vencimento",
-            "type": "date",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "status",
-            "label": "Status",
-            "type": "select",
-            "options": [
-              "Pendente",
-              "Pago",
-              "Atrasado",
-              "Agendado"
-            ],
-            "required": true
-          },
-          {
-            "key": "categoria",
-            "label": "Categoria",
-            "type": "select",
-            "options": [
-              "Folha",
-              "Impostos",
-              "Fornecedores",
-              "Infraestrutura"
-            ],
             "required": true
           }
         ],
         "sample": [
           {
-            "fornecedor": "AWS Cloud",
-            "valor": "1250.00",
-            "vencimento": "2026-11-15",
-            "status": "Pendente",
-            "categoria": "Infraestrutura"
+            "banco": "Banco Itaú",
+            "agencia": "0312",
+            "conta": "45890-1",
+            "tipo": "Corrente",
+            "saldo": "15420.50"
           },
           {
-            "fornecedor": "Liquidação Folha",
-            "valor": "45000.00",
-            "vencimento": "2026-11-30",
-            "status": "Agendado",
-            "categoria": "Folha"
+            "banco": "Nubank PJ",
+            "agencia": "0001",
+            "conta": "892341-9",
+            "tipo": "Corrente",
+            "saldo": "48300.00"
           },
           {
-            "fornecedor": "ICMS SP",
-            "valor": "8800.00",
-            "vencimento": "2026-11-20",
-            "status": "Pendente",
-            "categoria": "Impostos"
+            "banco": "BTG Pactual",
+            "agencia": "0100",
+            "conta": "12345-8",
+            "tipo": "Investimento",
+            "saldo": "150000.00"
           },
           {
-            "fornecedor": "Linksys",
-            "valor": "320.00",
-            "vencimento": "2026-10-31",
-            "status": "Pago",
-            "categoria": "Infraestrutura"
-          },
-          {
-            "fornecedor": "Adobe CC",
-            "valor": "1800.00",
-            "vencimento": "2026-11-01",
-            "status": "Pago",
-            "categoria": "Fornecedores"
+            "banco": "Caixa Interno",
+            "agencia": "0000",
+            "conta": "0001-0",
+            "tipo": "Caixa",
+            "saldo": "1250.00"
           }
         ]
       },
       {
-        "key": "recebimentos",
-        "label": "Receitas",
-        "singular": "Receita",
+        "key": "centros_custo",
+        "label": "Centros de Custo",
+        "singular": "Centro de Custo",
         "fields": [
           {
-            "key": "cliente",
-            "label": "Cliente",
+            "key": "codigo",
+            "label": "Código",
             "type": "text",
             "options": [],
             "required": true
           },
           {
-            "key": "valor",
-            "label": "Valor (R$)",
-            "type": "money",
+            "key": "nome",
+            "label": "Nome do Centro",
+            "type": "text",
             "options": [],
             "required": true
           },
           {
-            "key": "data",
-            "label": "Data Limite",
-            "type": "date",
+            "key": "responsavel",
+            "label": "Responsável",
+            "type": "text",
             "options": [],
             "required": true
           },
@@ -163,72 +151,45 @@
             "label": "Status",
             "type": "select",
             "options": [
-              "Aprovado",
-              "Reprovado",
-              "Em Análise"
+              "Ativo",
+              "Inativo"
             ],
             "required": true
-          },
-          {
-            "key": "origem",
-            "label": "Origem do Fluxo",
-            "type": "select",
-            "options": [
-              "Assinatura",
-              "Projeto",
-              "Licença",
-              "Recurring"
-            ],
-            "required": true
-          },
-          {
-            "key": "notas",
-            "label": "Documentos",
-            "type": "text",
-            "options": [],
-            "required": false
           }
         ],
         "sample": [
           {
-            "cliente": "Grupo Acme",
-            "valor": "15000.00",
-            "data": "2026-11-30",
-            "status": "Aprovado",
-            "origem": "Assinatura",
-            "notas": ""
+            "codigo": "CC-101",
+            "nome": "Engenharia e Tecnologia",
+            "responsavel": "Carlos Silva",
+            "status": "Ativo"
           },
           {
-            "cliente": "Nexus Tech",
-            "valor": "8500.00",
-            "data": "2026-12-15",
-            "status": "Em Análise",
-            "origem": "Projeto",
-            "notas": ""
+            "codigo": "CC-102",
+            "nome": "Marketing e Vendas",
+            "responsavel": "Mariana Costa",
+            "status": "Ativo"
           },
           {
-            "cliente": "Startup Flow",
-            "valor": "4200.00",
-            "data": "2026-11-10",
-            "status": "Aprovado",
-            "origem": "Recurring",
-            "notas": ""
+            "codigo": "CC-103",
+            "nome": "Recursos Humanos",
+            "responsavel": "Juliana Santos",
+            "status": "Ativo"
           },
           {
-            "cliente": "Vertex Holdings",
-            "valor": "22000.00",
-            "data": "2026-12-01",
-            "status": "Aprovado",
-            "origem": "Licença",
-            "notas": ""
+            "codigo": "CC-104",
+            "nome": "Operações e Logística",
+            "responsavel": "Roberto Alves",
+            "status": "Ativo"
           }
         ]
       }
     ],
     "modules": [
-      "Painel Principal",
-      "Contas",
-      "Receitas"
+      "Dashboard",
+      "Contas Bancárias",
+      "Centros de Custo",
+      "Relatórios"
     ]
   },
   "media": {}
