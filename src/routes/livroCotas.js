@@ -14,7 +14,7 @@ module.exports = (models) => {
       }
 
       if (!registros || registros.length === 0) {
-        return res.status(200).json({ mensagem: 'sem dados' });
+        return res.status(200).json({ mensagem: 'sem dados', dados: [] });
       }
 
       const formatados = registros.map(item => {
