@@ -111,12 +111,13 @@ if (typeof window !== 'undefined') (function () {
   function aoVivo(el) {
     const pct = (v) => (v > 0 ? '+' : '') + String(v).replace('.', ',') + '%';
     const minutos = (iso) => { const m = Math.max(0, Math.round((Date.now() - Date.parse(iso)) / 60000)); return m < 1 ? 'agora' : `há ${m} min`; };
-    let timer = null;
+    let timer = null; let aporte = 0;
+    const pctTxt = (v) => (v == null ? '—' : (v > 0 ? '+' : '') + String(v).replace('.', ',') + '%');
     const rodar = async () => {
       if (!document.contains(el.querySelector('#selo-vivo'))) { clearInterval(timer); return; }
       el.querySelector('#selo-vivo').textContent = 'Atualizando cotações…';
       let r;
-      try { r = await MB.api('cotacoes_vivas'); } catch { el.querySelector('#selo-vivo').textContent = 'Sem cotação ao vivo agora; mostrando os valores do print.'; return; }
+      try { r = await MB.api('cotacoes_vivas', { aporte }); } catch { el.querySelector('#selo-vivo').textContent = 'Sem cotação ao vivo agora; mostrando os valores do print.'; return; }
       el.querySelector('#total-vivo').textContent = brl(r.total);
       const dif = r.variacao ? ` (${r.variacao > 0 ? '+' : ''}${brl(r.variacao)} desde o print)` : '';
       const velhas = r.itens.filter((i) => i.vivo && i.vivo.desatualizada).length;
@@ -131,9 +132,21 @@ if (typeof window !== 'undefined') (function () {
       }
       const a = r.assessor || {};
       const box = el.querySelector('#assessor-vivo');
-      if (box) box.innerHTML = `<div class="fraco">🧭 Seu assessor</div>
+      if (box && !box.querySelector('details[open]')) box.innerHTML = `<div class="fraco">🧭 Seu assessor</div>
         ${a.renda_mensal_estimada ? `<div class="item"><span>Renda de proventos (média 12 meses)</span><span class="v">${brl(a.renda_mensal_estimada)}/mês</span></div>` : ''}
+        ${a.benchmarks ? `<div class="fraco" style="margin-top:6px">📊 Em 12 meses: CDI ${pctTxt(a.benchmarks.cdi_12m_pct)} · IFIX ${pctTxt(a.benchmarks.ifix_12m_pct)} · Ibovespa ${pctTxt(a.benchmarks.ibov_12m_pct)} · S&P 500 em reais ${pctTxt(a.benchmarks.ivvb11_12m_pct)}${a.renda_variavel_sobre_custo_pct != null ? ` · seus FIIs/ETF: ${pctTxt(a.renda_variavel_sobre_custo_pct)} sobre o que você pagou` : ''}</div>` : ''}
+        ${a.rebalanceamento && a.rebalanceamento.comprar.length ? `<div class="fraco" style="margin-top:6px">⚖️ Para chegar na sua meta com ${brl(a.rebalanceamento.aporte)}: ${a.rebalanceamento.comprar.map((x) => `${esc(TIPOS[x.tipo] || x.tipo)} ${brl(x.valor)}`).join(' · ')}. <i>${esc(a.rebalanceamento.aviso)}</i></div>` : ''}
+        <details style="margin-top:6px"><summary class="fraco">⚖️ Minha meta de alocação e aporte</summary>
+          <div class="fraco">Ponha a % que você quer em cada tipo (soma 100).</div>
+          ${['renda_fixa', 'fiis', 'etf', 'acoes'].map((t) => `<label>${esc(TIPOS[t] || t)} (%)</label><input type="number" step="1" data-alvo="${t}" value="${a.alocacao_alvo && a.alocacao_alvo[t] != null ? a.alocacao_alvo[t] : ''}">`).join('')}
+          <label>Quanto vou aportar (R$)</label><input type="number" step="0.01" id="aporte-vivo" value="${a.rebalanceamento ? a.rebalanceamento.aporte || '' : ''}">
+          <button class="btn sec" id="salvar-alvo" style="margin-top:6px">Calcular sugestão</button></details>
         ${(a.alertas || []).map((x) => `<p style="margin:6px 0;color:${x.tipo === 'alta' ? '#58d68d' : '#f5b041'}">${x.tipo === 'alta' ? '📈' : '⚠️'} ${esc(x.texto)}</p>`).join('') || '<p class="fraco">Nenhum alerta agora.</p>'}`;
+      const sa = el.querySelector('#salvar-alvo');
+      if (sa) sa.onclick = async () => {
+        const alvo = {}; el.querySelectorAll('[data-alvo]').forEach((f) => { if (Number(f.value) > 0) alvo[f.dataset.alvo] = Number(f.value); });
+        try { await MB.api('alocacao_alvo_salvar', { alvo }); aporte = Number(el.querySelector('#aporte-vivo').value) || 0; rodar(); } catch { /* erro já mostrado */ }
+      };
       for (const i of r.itens) {
         const info = el.querySelector(`[data-vivo="${i.id}"]`);
         if (info && i.vivo && (i.peso_pct || i.renda_mensal)) info.innerHTML += `<br>peso ${esc(String(i.peso_pct).replace('.', ','))}%${i.renda_mensal ? ` · proventos ≈ ${brl(i.renda_mensal)}/mês${i.yield_on_cost_pct ? ` (${esc(String(i.yield_on_cost_pct).replace('.', ','))}% a.a. sobre o que você pagou)` : ''}` : ''}`;

@@ -148,6 +148,40 @@ function assessor(r, itens) {
   return { alertas, renda_mensal_estimada: dinheiro(renda), renda_anual_estimada: dinheiro(renda * 12) };
 }
 
+// #3533 parte 2: comparativos grátis em 12 meses: CDI (Banco Central, série 4391 = CDI do mês), IBOV, IFIX (pelo ETF XFIX11) e S&P 500 em reais (IVVB11).
+let benchCache = null;
+async function benchmarks(f, agoraMs = Date.now()) {
+  if (benchCache && agoraMs - benchCache.em < 12 * 3600 * 1000) return benchCache.valor;
+  const ano = async (sym) => {
+    const j = await pegarJson(f, `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(sym)}?range=1y&interval=1mo`);
+    const q = j && j.chart && j.chart.result && j.chart.result[0];
+    const c = ((q && q.indicators && q.indicators.adjclose && q.indicators.adjclose[0] && q.indicators.adjclose[0].adjclose) || (q && q.indicators && q.indicators.quote && q.indicators.quote[0].close) || []).filter((x) => x > 0);
+    return c.length > 1 ? Math.round(((c[c.length - 1] / c[0]) - 1) * 10000) / 100 : null;
+  };
+  const cdi = async () => {
+    const j = await pegarJson(f, 'https://api.bcb.gov.br/dados/serie/bcdata.sgs.4391/dados/ultimos/12?formato=json');
+    const m = (j || []).map((x) => Number(String(x.valor).replace(',', '.'))).filter(Number.isFinite);
+    return m.length ? Math.round((m.reduce((a, x) => a * (1 + x / 100), 1) - 1) * 10000) / 100 : null;
+  };
+  const [c, ibov, ifix, sp] = await Promise.all([cdi(), ano('^BVSP'), ano('XFIX11.SA'), ano('IVVB11.SA')].map((p) => p.catch(() => null)));
+  const valor = { cdi_12m_pct: c, ibov_12m_pct: ibov, ifix_12m_pct: ifix, ivvb11_12m_pct: sp };
+  if (c != null || ibov != null) benchCache = { em: agoraMs, valor };
+  return valor;
+}
+
+/** Rebalanceamento (só sugestão, nunca ordem): com um aporte, quanto pôr em cada tipo para chegar perto da meta, sem vender nada. */
+function rebalancear(porTipo, alvo, aporte) {
+  const tipos = Object.keys(alvo || {}).filter((t) => alvo[t] > 0);
+  const soma = tipos.reduce((a, t) => a + alvo[t], 0);
+  if (!tipos.length || Math.abs(soma - 100) > 0.5) return null;
+  const totalNovo = Object.values(porTipo).reduce((a, v) => a + v, 0) + (aporte > 0 ? aporte : 0);
+  const falta = tipos.map((t) => ({ tipo: t, falta: Math.max(0, totalNovo * alvo[t] / 100 - (porTipo[t] || 0)) }));
+  const somaFalta = falta.reduce((a, x) => a + x.falta, 0);
+  const comprar = falta.map((x) => ({ tipo: x.tipo, valor: dinheiro(somaFalta > 0 && aporte > 0 ? aporte * x.falta / somaFalta : 0) })).filter((x) => x.valor > 0);
+  const atual = Object.fromEntries(Object.entries(porTipo).map(([t, v]) => [t, totalNovo > 0 ? Math.round(v / (totalNovo - (aporte > 0 ? aporte : 0)) * 10000) / 100 : 0]));
+  return { atual_pct: atual, alvo_pct: alvo, aporte: dinheiro(aporte > 0 ? aporte : 0), comprar, aviso: 'Sugestão educativa, não é recomendação oficial de investimento.' };
+}
+
 /** Carteira ao vivo: cada ativo com ticker vira quantidade × cotação; CDB/renda fixa rende pelo CDI desde o print. */
 async function carteiraAoVivo(itens, { fetch: f, agora, env, guardadas = {}, comProventos = true }) {
   const hoje = new Date(agora.getTime() - 3 * 3600 * 1000).toISOString().slice(0, 10);
@@ -173,11 +207,28 @@ async function carteiraAoVivo(itens, { fetch: f, agora, env, guardadas = {}, com
   });
   const r = { itens: out, total: dinheiro(total), total_print: dinheiro(totalPrint), variacao: dinheiro(total - totalPrint), indices: ind, em_pregao: emPregao(agora), atualizado_em: agora.toISOString() };
   r.assessor = assessor(r, itens);
+  if (comProventos) {
+    r.assessor.benchmarks = await benchmarks(f, agora.getTime()).catch(() => null);
+    // Renda variável sobre o custo (preço médio): comparar com IFIX/IBOV no mesmo período é aproximação.
+    let custo = 0; let atual = 0;
+    for (const x of out) { const i = itens.find((y) => y.id === x.id) || {}; if (x.vivo && i.preco_medio > 0 && Number(i.quantidade) > 0) { custo += i.preco_medio * Number(i.quantidade); atual += x.vivo.valor; } }
+    r.assessor.renda_variavel_sobre_custo_pct = custo > 0 ? Math.round(((atual / custo) - 1) * 10000) / 100 : null;
+  }
+  r.por_tipo = {};
+  for (const x of out) { const i = itens.find((y) => y.id === x.id) || {}; r.por_tipo[i.tipo || 'outro'] = dinheiro((r.por_tipo[i.tipo || 'outro'] || 0) + (x.vivo ? x.vivo.valor : x.valor_print)); }
   return r;
 }
 
 /** Ação do app: "cotacoes_vivas". Guarda a última cotação boa de cada ticker (para quando as fontes caírem). */
 async function agirCotacoes(acao, body, c) {
+  if (acao === 'alocacao_alvo_salvar') {
+    const alvo = {};
+    for (const [t, v] of Object.entries((body && body.alvo) || {})) { const n = Number(v); if (/^[a-z_]{2,20}$/.test(t) && n > 0 && n <= 100) alvo[t] = Math.round(n * 100) / 100; }
+    const soma = Object.values(alvo).reduce((a, x) => a + x, 0);
+    if (Math.abs(soma - 100) > 0.5) return [400, { error: `A meta precisa somar 100% (está em ${soma}%).` }];
+    await c.base.collection('config').doc('alocacao').set({ alvo, atualizado_em: c.agoraIso });
+    return [200, { ok: true, alvo }];
+  }
   if (acao !== 'cotacoes_vivas') return null;
   const itens = await c.listarCarteira();
   const col = c.base.collection('cotacoes');
@@ -188,7 +239,11 @@ async function agirCotacoes(acao, body, c) {
     const v = i.vivo;
     if (i.ticker && v && !v.desatualizada && v.preco) await col.doc(i.ticker).set({ preco: v.preco, variacao_dia_pct: v.variacao_dia_pct, fonte: v.fonte, data_hora: v.data_hora });
   }
+  const cfg = await c.base.collection('config').doc('alocacao').get();
+  const alvo = cfg && cfg.exists ? (cfg.data() || {}).alvo : null;
+  r.assessor.alocacao_alvo = alvo || null;
+  if (alvo) r.assessor.rebalanceamento = rebalancear(r.por_tipo, alvo, Number(body && body.aporte) || 0);
   return [200, r];
 }
 
-module.exports = { _limparIndices: () => { indicesCache = null; provCache.clear(); }, assessor, proventos12m, agirCotacoes, carteiraAoVivo, cotar, indices, precoDoGoogle, estimarRendaFixa, diasUteis, emPregao, pctCdiDe, FONTES, _cache: cache };
+module.exports = { _limparIndices: () => { indicesCache = null; provCache.clear(); benchCache = null; }, benchmarks, rebalancear, assessor, proventos12m, agirCotacoes, carteiraAoVivo, cotar, indices, precoDoGoogle, estimarRendaFixa, diasUteis, emPregao, pctCdiDe, FONTES, _cache: cache };
