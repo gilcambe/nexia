@@ -3,6 +3,7 @@
 const { Model, DataTypes } = require('sequelize');
 
 module.exports = (sequelize) => {
+  // Livro de cotas dos modelos de IA: provider/model com limites e consumo.
   class LivroCota extends Model {}
 
   LivroCota.init({
@@ -56,6 +57,12 @@ module.exports = (sequelize) => {
     tableName: 'livro_cotas',
     timestamps: true
   });
+
+  // Atalhos de leitura usados pela rota GET /livro_cotas
+  LivroCota.findByProviderModel = (provider, model) =>
+    LivroCota.findOne({ where: { provider, model } });
+
+  LivroCota.listarTodas = () => LivroCota.findAll({ order: [['id', 'ASC']] });
 
   return LivroCota;
 };

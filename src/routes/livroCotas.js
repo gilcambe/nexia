@@ -6,6 +6,11 @@ const router = express.Router();
 module.exports = (models) => {
   const LivroCota = models && models.LivroCota;
 
+  // GET /livro_cotas -> { mensagem, dados }
+  // Sem linhas: { mensagem: 'sem dados', dados: [] }
+  // Com linhas: cada item traz numero (id) e hora (data do registro),
+  // ordenado por id; erros respondem 500 sem expor detalhes internos.
+
   // GET /livro_cotas: todas as linhas (ou "sem dados") + /livro_cotas/numero/:id/hora
   router.get(['/livro_cotas', '/livro_cotas/numero/:id/hora'], async (req, res) => {
     try {
