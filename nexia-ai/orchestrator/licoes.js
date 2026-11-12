@@ -43,7 +43,7 @@ function listarPassagens() {
   return [...REGISTRO_PASSAGENS];
 }
 
-const LICAO_ARVORE = 'Nunca planejar arquivo em pasta que o produto não usa; ler a árvore antes.';
+
 
 // O padrão é um objeto: o require do módulo devolve LICOES, TEXTO, registrarPassagem e listarPassagens.
 module.exports = {
