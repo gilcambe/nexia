@@ -80,7 +80,14 @@ async function cotar(tk, { fetch: f, agora, env, guardada, fontes = FONTES }) {
 }
 
 /** Índices do Banco Central (SGS): CDI ao dia (12), Selic meta ao ano (432), IPCA do mês (433). */
-async function indices(f) {
+let indicesCache = null; // { em, valor }: índices mudam 1x por dia; 30 min de cache por isolate
+async function indices(f, agoraMs = Date.now()) {
+  if (indicesCache && agoraMs - indicesCache.em < 30 * 60 * 1000) return indicesCache.valor;
+  const valor = await indicesDoBc(f);
+  if (valor.cdi_dia_pct) indicesCache = { em: agoraMs, valor };
+  return valor;
+}
+async function indicesDoBc(f) {
   const serie = async (n) => {
     const j = await pegarJson(f, `https://api.bcb.gov.br/dados/serie/bcdata.sgs.${n}/dados/ultimos/1?formato=json`);
     const v = Number(String(j && j[0] && j[0].valor).replace(',', '.'));
@@ -145,4 +152,4 @@ async function agirCotacoes(acao, body, c) {
   return [200, r];
 }
 
-module.exports = { agirCotacoes, carteiraAoVivo, cotar, indices, precoDoGoogle, estimarRendaFixa, diasUteis, emPregao, pctCdiDe, FONTES, _cache: cache };
+module.exports = { _limparIndices: () => { indicesCache = null; }, agirCotacoes, carteiraAoVivo, cotar, indices, precoDoGoogle, estimarRendaFixa, diasUteis, emPregao, pctCdiDe, FONTES, _cache: cache };
