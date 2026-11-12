@@ -32,7 +32,7 @@ module.exports = (models) => {
 
       return res.status(200).json(formatados);
     } catch (err) {
-      return res.status(200).json({ mensagem: 'sem dados' });
+      return res.status(500).json({ mensagem: 'erro ao consultar livro_cotas' });
     }
   });
 
