@@ -1,0 +1,196 @@
+{
+  "spec": {
+    "kind": "system",
+    "name": "Kernex Finance",
+    "tagline": "Gestão financeira empresarial integrada e segura",
+    "photo_theme": "corporate finance dashboard",
+    "description": "Gestão financeira empresarial integrada e segura",
+    "folder": "sites/kernex-finance",
+    "fonts": {
+      "heading": "Plus Jakarta Sans",
+      "body": "Inter"
+    },
+    "palette": {
+      "primary": "#2563eb",
+      "accent": "#0ea5e9",
+      "bg": "#fbfaf7",
+      "surface": "#ffffff",
+      "text": "#1d2426",
+      "muted": "#5d6b6e",
+      "dark": "#0f172a"
+    },
+    "style": "modern",
+    "contact": {
+      "whatsapp": "",
+      "phone": "(11) 4004-8900",
+      "email": "suporte@kernex.com.br",
+      "address": "Av. Paulista, 1000 - São Paulo, SP",
+      "city": "",
+      "hours": "",
+      "instagram": "",
+      "facebook": "",
+      "youtube": "",
+      "tiktok": "",
+      "linkedin": ""
+    },
+    "logo": "",
+    "logo_scrolled": "",
+    "favicon": "",
+    "brand_text": false,
+    "selo": {
+      "label": "Feito com Kernex",
+      "url": "https://kernex.com.br/?utm_source=kernex-finance&utm_medium=selo&utm_campaign=clientes"
+    },
+    "leads_origem": "",
+    "entities": [
+      {
+        "key": "contas",
+        "label": "Contas Bancárias",
+        "singular": "Conta Bancária",
+        "fields": [
+          {
+            "key": "banco",
+            "label": "Banco",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "agencia",
+            "label": "Agência",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "conta",
+            "label": "Número da Conta",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "tipo",
+            "label": "Tipo",
+            "type": "select",
+            "options": [
+              "Corrente",
+              "Poupança",
+              "Investimento",
+              "Caixa"
+            ],
+            "required": true
+          },
+          {
+            "key": "saldo",
+            "label": "Saldo Inicial",
+            "type": "money",
+            "options": [],
+            "required": true
+          }
+        ],
+        "sample": [
+          {
+            "banco": "Banco Itaú",
+            "agencia": "0312",
+            "conta": "45890-1",
+            "tipo": "Corrente",
+            "saldo": "15420.50"
+          },
+          {
+            "banco": "Nubank PJ",
+            "agencia": "0001",
+            "conta": "892341-9",
+            "tipo": "Corrente",
+            "saldo": "48300.00"
+          },
+          {
+            "banco": "BTG Pactual",
+            "agencia": "0100",
+            "conta": "12345-8",
+            "tipo": "Investimento",
+            "saldo": "150000.00"
+          },
+          {
+            "banco": "Caixa Interno",
+            "agencia": "0000",
+            "conta": "0001-0",
+            "tipo": "Caixa",
+            "saldo": "1250.00"
+          }
+        ]
+      },
+      {
+        "key": "centros_custo",
+        "label": "Centros de Custo",
+        "singular": "Centro de Custo",
+        "fields": [
+          {
+            "key": "codigo",
+            "label": "Código",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "nome",
+            "label": "Nome do Centro",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "responsavel",
+            "label": "Responsável",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "status",
+            "label": "Status",
+            "type": "select",
+            "options": [
+              "Ativo",
+              "Inativo"
+            ],
+            "required": true
+          }
+        ],
+        "sample": [
+          {
+            "codigo": "CC-101",
+            "nome": "Engenharia e Tecnologia",
+            "responsavel": "Carlos Silva",
+            "status": "Ativo"
+          },
+          {
+            "codigo": "CC-102",
+            "nome": "Marketing e Vendas",
+            "responsavel": "Mariana Costa",
+            "status": "Ativo"
+          },
+          {
+            "codigo": "CC-103",
+            "nome": "Recursos Humanos",
+            "responsavel": "Juliana Santos",
+            "status": "Ativo"
+          },
+          {
+            "codigo": "CC-104",
+            "nome": "Operações e Logística",
+            "responsavel": "Roberto Alves",
+            "status": "Ativo"
+          }
+        ]
+      }
+    ],
+    "modules": [
+      "Dashboard",
+      "Contas Bancárias",
+      "Centros de Custo",
+      "Relatórios"
+    ]
+  },
+  "media": {}
+}
