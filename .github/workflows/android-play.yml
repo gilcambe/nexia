@@ -1,3 +1,4 @@
+# Objetivo: Gera o .aab do Body Coach para a Google Play (versão = número da execução). Manual; o dono envia na Play Console.
 name: Android Body Coach (Google Play)
 on:
   workflow_dispatch:

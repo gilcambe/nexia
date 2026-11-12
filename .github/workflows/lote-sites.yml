@@ -1,3 +1,4 @@
+# Objetivo: Gera e publica vários sites de clientes em paralelo (fábrica antiga). Manual.
 name: Lote de clientes (sites em paralelo)
 
 # Modo lote (issue 3/5): até 10 clientes ao mesmo tempo. Para cada slug:

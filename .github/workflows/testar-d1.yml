@@ -1,3 +1,4 @@
+# Objetivo: Diagnóstico do banco de reserva (Cloudflare D1). Manual.
 name: Testar banco de reserva (Cloudflare D1)
 # Cria o banco D1 "nexia-cortex" se não existir e testa gravar/ler/consultar/transação/Vault nele.
 # Usa o token próprio NEXIA_D1_TOKEN (só D1 Edit) e NEXIA_D1_ACCOUNT_ID.

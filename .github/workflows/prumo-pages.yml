@@ -1,3 +1,4 @@
+# Objetivo: Publica o Fortune (Prumo) no Cloudflare Pages com endereço Kernex. Manual.
 name: Fortune (Prumo) no Pages (endereço Kernex)
 on:
   workflow_dispatch:

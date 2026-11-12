@@ -1,3 +1,4 @@
+# Objetivo: Clona um site existente para um novo cliente (modelo). Manual.
 name: Clonar site
 
 # NEXIA Clone (ADR-CLONE-01). Grátis: roda no GitHub Actions do repositório público.

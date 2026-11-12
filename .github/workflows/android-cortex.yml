@@ -1,3 +1,4 @@
+# Objetivo: Gera o app Android do Cortex (TWA) assinado, para instalar fora da loja. Manual.
 name: Android Cortex (app instalável, sem barra do navegador)
 on:
   workflow_dispatch:

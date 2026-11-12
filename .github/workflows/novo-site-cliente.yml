@@ -1,3 +1,4 @@
+# Objetivo: Monta e publica o site de um cliente a partir do modelo (Cloudflare Pages). Manual.
 name: Novo site de cliente (modelo + publicar)
 # Modelo reutilizável: o site do cliente é um arquivo clientes/<slug>/site.json (copie clientes/exemplo/site.json e edite).
 # Este workflow gera o site com o NEXIA Site Kit e publica em https://<slug>.pages.dev (Cloudflare Pages, grátis).
