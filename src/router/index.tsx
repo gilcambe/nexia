@@ -1,5 +1,6 @@
 import { useNavigate, useRoutes } from "react-router-dom";
 import { useEffect, lazy, Suspense } from "react";
+import ErroNaTela from "../components/ErroNaTela";
 import type { RouteObject } from "react-router-dom";
 import RotaProtegida from "@/components/RotaProtegida";
 
@@ -81,5 +82,5 @@ export function AppRoutes() {
     (window as Window & { REACT_APP_NAVIGATE?: typeof navigate }).REACT_APP_NAVIGATE = navigate;
   });
 
-  return <Suspense fallback={<Loader />}>{element}</Suspense>;
+  return <ErroNaTela><Suspense fallback={<Loader />}>{element}</Suspense></ErroNaTela>;
 }
