@@ -10,7 +10,7 @@ async function carregar() {
   const js = ts.transpileModule(src, { compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2020 } }).outputText;
   const f = path.join(require('os').tmpdir(), `importar-alunos-${process.pid}.mjs`);
   fs.writeFileSync(f, js);
-  return import(f);
+  return import(require('node:url').pathToFileURL(f).href);
 }
 
 test('BCIA1. valida o JSON da IA: aceita markdown, descarta inválidos e repetidos', async () => {

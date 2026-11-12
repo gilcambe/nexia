@@ -27,5 +27,5 @@ Lido pelo Cortex antes de cada pedido (junto com os arquivos achados pelas palav
 - `.env.example` nomes dos segredos (valores só no Cloudflare/GitHub). Nome novo também em `nexia-jobs.yml` e `deploy-cloudflare.yml`.
 
 ## Testes
-- `npm test` = `tests/unit/*.test.js` (node --test). `npm run typecheck`. `npm run test:rules` usa o emulador (`tests/integration/`).
+- `npm test` = `tests/unit/*.test.js` (node --test, via `scripts/testes-unit.js`, funciona no Windows). `npm run typecheck`. `npm run test:rules` usa o emulador (`tests/integration/`).
 - `tests/e2e/` Playwright. Teste novo: `tests/unit/<assunto>.test.js`.

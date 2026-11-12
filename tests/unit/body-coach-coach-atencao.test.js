@@ -13,7 +13,7 @@ async function carregar(f) {
   const out = ts.transpileModule(ler(f), { compilerOptions: { module: ts.ModuleKind.ES2022, target: 'ES2022' } }).outputText;
   const arq = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'b13-')), 'm.mjs');
   fs.writeFileSync(arq, out);
-  return import(arq);
+  return import(require('node:url').pathToFileURL(arq).href);
 }
 
 const aluno = (nome, dias, extra = {}) => ({ uid: nome.toLowerCase().replace(/\s/g, ''), nome, treinouHoje: dias === 0, diasSemTreinar: dias, ...extra });

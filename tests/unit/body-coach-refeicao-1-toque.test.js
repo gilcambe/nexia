@@ -11,7 +11,7 @@ async function carregar() {
   const out = ts.transpileModule(ler('lib/refeicaoUmToque.ts'), { compilerOptions: { module: ts.ModuleKind.ES2022, target: 'ES2022' } }).outputText;
   const f = path.join(fs.mkdtempSync(path.join(require('os').tmpdir(), 'r1t-')), 'm.mjs');
   fs.writeFileSync(f, out);
-  return import(f);
+  return import(require('node:url').pathToFileURL(f).href);
 }
 
 test('repetir ontem: pega só as refeições de ontem, em ordem de horário', async () => {

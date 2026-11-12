@@ -15,7 +15,7 @@ async function carregar(f, troca = (s) => s) {
   const out = ts.transpileModule(troca(ler(f)), { compilerOptions: { module: ts.ModuleKind.ES2022, target: 'ES2022' } }).outputText;
   const arq = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'b37-')), 'm.mjs');
   fs.writeFileSync(arq, out);
-  return import(arq);
+  return import(require('node:url').pathToFileURL(arq).href);
 }
 function memoria() {
   const d = {};
