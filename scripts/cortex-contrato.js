@@ -169,6 +169,17 @@ const cota = require('../nexia-ai/model-router/cota');
   console.log(`#${N}: ${c.arquivos.join(', ')} | ${c.teste} | degraus: ${lista.map(d => `${d.provider}/${d.model}`).join(' > ')}`);
   const t0 = Date.now();
   let r = await executar({ contrato: c, raiz: process.cwd(), router, modelos: lista, rodarTeste, porModelo: 2, placar: cota.getPlacar(), log: s => console.log('  ' + s) });
+  // 12/11: problema do PRÓPRIO contrato (teste não existe, teste já passa): nenhuma IA foi tentada. Antes isso ia
+  // direto para o Claude Pro sem dizer o motivo (gastava a cota dele e escondia o erro). Agora explica e para.
+  if (!r.ok && r.tentativas === 0) {
+    console.log('  executor: ' + r.motivo);
+    if (gerado) { try { require('node:fs').unlinkSync(gerado.testeArquivo); } catch { /* já saiu */ } return voltarParaFila(`Contrato com problema: ${r.motivo}.`, 'contrato-invalido'); }
+    await comentar(`⚠️ Contrato com problema, nenhuma IA foi chamada: ${r.motivo}.
+Corrija o contrato (Arquivos/Teste) ou tire a linha "Arquivos:" para o Cortex gerar o teste sozinho.`);
+    await rotular('contrato-invalido');
+    process.exitCode = 1;
+    return;
+  }
   if (!r.ok) {
     // Último degrau: o plano Claude Pro do dono (CLAUDE_CODE_OAUTH_TOKEN), com teto diário. Só quando as grátis não resolveram.
     const rc = await degrauClaudePro(c, issue);
