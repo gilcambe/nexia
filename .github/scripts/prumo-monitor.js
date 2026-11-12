@@ -19,6 +19,7 @@ const ROTULO = 'cortex-alerta';
 const ENDPOINTS = [
   { id: 'pagina', url: 'https://nexia.gcbezerra.workers.dev/prumo/', aceitos: [200] },
   { id: 'api', url: 'https://nexia.gcbezerra.workers.dev/api/prumo', aceitos: [200, 405] },
+  { id: 'cotacao', url: 'https://nexia.gcbezerra.workers.dev/api/prumo?acao=cotacao_saude', aceitos: [200] },
 ];
 
 async function checarEndpoint(ep, fetchImpl = fetch, timeoutMs = 15000) {
