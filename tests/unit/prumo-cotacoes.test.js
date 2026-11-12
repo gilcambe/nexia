@@ -102,3 +102,34 @@ test('COT8 índices do Banco Central ficam 30 min em cache (não estoura o limit
   await cot.indices(f, 0); await cot.indices(f, 60000);
   assert.equal(f.chamadas.length, 3); // 3 séries na 1ª vez, nenhuma na 2ª
 });
+
+test('COT9 assessor: peso, renda de proventos, alertas de queda, abaixo do PM e concentração', async () => {
+  cot._cache.clear(); cot._limparIndices();
+  const div = { chart: { result: [{ meta: { regularMarketPrice: 8.9, chartPreviousClose: 9.3 }, events: { dividends: Object.fromEntries(Array.from({ length: 12 }, (_, k) => [k, { amount: 0.1, date: 1730000000 + k * 2592000 }])) } }] } };
+  const f = redeFalsa([[/yahoo.*MXRF11/, resp(div)], [/yahoo.*RBRR11/, resp(yahoo(63, 63.5))], [/bcb/, resp(bcb('0,055131', '11/11/2026'))]]);
+  const r = await cot.carteiraAoVivo([
+    { id: 'm', ticker: 'MXRF11', quantidade: 361, preco_medio: 9.23, valor: 3212.9, tipo: 'fiis' },
+    { id: 'r', ticker: 'RBRR11', quantidade: 19, preco_medio: 76.22, valor: 1197, tipo: 'fiis' },
+    { id: 'c', nome: 'CDB LIQUIDEZ DIARIA', tipo: 'renda_fixa', valor: 138263.12, data_valor: '2026-11-12' },
+  ], { fetch: f, agora: pregao, env: {} });
+  const m = r.itens.find((x) => x.id === 'm');
+  assert.equal(m.renda_mensal, 36.1); // 361 cotas × R$ 1,20 no ano ÷ 12
+  assert.equal(m.yield_on_cost_pct, 13);
+  assert.ok(r.itens.reduce((a, x) => a + x.peso_pct, 0) > 99.9);
+  const txt = r.assessor.alertas.map((a) => a.tipo);
+  assert.ok(txt.includes('queda'), 'MXRF11 caiu 4,3% no dia');
+  assert.ok(txt.includes('abaixo_pm'), 'RBRR11 63 vs PM 76,22');
+  assert.ok(txt.includes('concentracao'), 'CDB = ~97%');
+  assert.equal(r.assessor.renda_mensal_estimada, 36.1);
+});
+
+test('COT10 chat assessor responde com os dados reais da carteira (ticker, proventos, alertas)', async () => {
+  const { responderInvest } = require('../../netlify/functions/prumo-lib/assistente.js');
+  cot._cache.clear(); cot._limparIndices();
+  const div = { chart: { result: [{ meta: { regularMarketPrice: 8.9, chartPreviousClose: 8.95 }, events: { dividends: { a: { amount: 1.2, date: 1750000000 } } } }] } };
+  const itens = [{ id: 'm', ticker: 'MXRF11', quantidade: 361, preco_medio: 9.23, valor: 3212.9, tipo: 'fiis' }];
+  const r = await cot.carteiraAoVivo(itens, { fetch: redeFalsa([[/yahoo/, resp(div)]]), agora: pregao, env: {} });
+  assert.match(responderInvest('quanto rendeu meu MXRF11?', itens, r).resposta, /361 cotas × R\$\s?8,90 = R\$\s?3\.212,90.*Perda de R\$\s?119,13/);
+  assert.match(responderInvest('quanto recebo de dividendos?', itens, r).resposta, /36,10 por mês/);
+  assert.match(responderInvest('quanto rendeu o PETR4?', itens, r).resposta, /Não achei PETR4/);
+});

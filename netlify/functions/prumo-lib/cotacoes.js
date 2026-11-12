@@ -112,12 +112,49 @@ function estimarRendaFixa(valor, dataPrint, hoje, cdiDiaPct, pctCdi = 100) {
 }
 const pctCdiDe = (taxa) => { const m = /(\d{2,3}(?:[.,]\d+)?)\s*%\s*(?:do\s*)?cdi/i.exec(String(taxa || '')); return m ? Number(m[1].replace(',', '.')) : 100; };
 
+// #3533: proventos (dividendos/rendimentos) dos últimos 12 meses, pelo Yahoo (grátis). Cache de 12 h por isolate.
+const provCache = new Map();
+async function proventos12m(tk, f, agoraMs = Date.now()) {
+  const c = provCache.get(tk);
+  if (c && agoraMs - c.em < 12 * 3600 * 1000) return c.valor;
+  const j = await pegarJson(f, `https://query1.finance.yahoo.com/v8/finance/chart/${tk}.SA?range=1y&interval=1mo&events=div`);
+  const ev = j && j.chart && j.chart.result && j.chart.result[0] && j.chart.result[0].events && j.chart.result[0].events.dividends;
+  const lista = Object.values(ev || {}).map((d) => ({ valor: Number(d.amount), data: new Date(d.date * 1000).toISOString().slice(0, 10) }))
+    .filter((d) => d.valor > 0).sort((a, b) => a.data.localeCompare(b.data));
+  const valor = { por_cota_12m: Math.round(lista.reduce((a, d) => a + d.valor, 0) * 10000) / 10000, pagamentos: lista.length, ultimo: lista[lista.length - 1] || null };
+  provCache.set(tk, { em: agoraMs, valor });
+  return valor;
+}
+
+/** Assessor (#3533): peso de cada ativo, alertas de alta/queda forte no dia, renda mensal estimada e concentração. */
+function assessor(r, itens) {
+  const porId = Object.fromEntries(itens.map((i) => [i.id, i]));
+  const alertas = []; let renda = 0;
+  for (const x of r.itens) {
+    const v = x.vivo ? x.vivo.valor : x.valor_print;
+    x.peso_pct = r.total > 0 ? Math.round((v / r.total) * 10000) / 100 : 0;
+    const i = porId[x.id] || {};
+    if (x.vivo && x.vivo.variacao_dia_pct != null && Math.abs(x.vivo.variacao_dia_pct) >= 3) alertas.push({ tipo: x.vivo.variacao_dia_pct > 0 ? 'alta' : 'queda', ticker: x.ticker, texto: `${x.ticker} ${x.vivo.variacao_dia_pct > 0 ? 'subiu' : 'caiu'} ${Math.abs(x.vivo.variacao_dia_pct).toFixed(2).replace('.', ',')}% hoje.` });
+    if (x.vivo && x.vivo.preco > 0 && i.preco_medio > 0 && x.vivo.preco < i.preco_medio * 0.85) alertas.push({ tipo: 'abaixo_pm', ticker: x.ticker, texto: `${x.ticker} está ${Math.round((1 - x.vivo.preco / i.preco_medio) * 100)}% abaixo do seu preço médio.` });
+    if (x.proventos && x.proventos.por_cota_12m > 0 && Number(i.quantidade) > 0) {
+      x.renda_mensal = dinheiro((x.proventos.por_cota_12m * Number(i.quantidade)) / 12);
+      x.yield_12m_pct = x.vivo && x.vivo.preco > 0 ? Math.round((x.proventos.por_cota_12m / x.vivo.preco) * 10000) / 100 : null;
+      x.yield_on_cost_pct = i.preco_medio > 0 ? Math.round((x.proventos.por_cota_12m / i.preco_medio) * 10000) / 100 : null;
+      renda += x.renda_mensal;
+    }
+  }
+  const maior = [...r.itens].sort((a, b) => b.peso_pct - a.peso_pct)[0];
+  if (maior && maior.peso_pct >= 50) alertas.push({ tipo: 'concentracao', texto: `${maior.peso_pct.toFixed(1).replace('.', ',')}% do patrimônio está num só investimento (${(porId[maior.id] || {}).nome || maior.ticker}). Diversificar reduz o risco.` });
+  return { alertas, renda_mensal_estimada: dinheiro(renda), renda_anual_estimada: dinheiro(renda * 12) };
+}
+
 /** Carteira ao vivo: cada ativo com ticker vira quantidade × cotação; CDB/renda fixa rende pelo CDI desde o print. */
-async function carteiraAoVivo(itens, { fetch: f, agora, env, guardadas = {} }) {
+async function carteiraAoVivo(itens, { fetch: f, agora, env, guardadas = {}, comProventos = true }) {
   const hoje = new Date(agora.getTime() - 3 * 3600 * 1000).toISOString().slice(0, 10);
   const tickers = [...new Set(itens.map((i) => String(i.ticker || '').toUpperCase()).filter((t) => TICKER.test(t)))];
   const [cots, ind] = await Promise.all([Promise.all(tickers.map((tk) => cotar(tk, { fetch: f, agora, env, guardada: guardadas[tk] }))), indices(f).catch(() => ({}))]);
   const porTk = Object.fromEntries(cots.map((c) => [c.ticker, c]));
+  const provs = comProventos ? Object.fromEntries(await Promise.all(tickers.map(async (tk) => [tk, await proventos12m(tk, f, agora.getTime()).catch(() => null)]))) : {};
   let total = 0; let totalPrint = 0;
   const out = itens.map((i) => {
     const base = Number(i.valor) || 0; totalPrint += base;
@@ -132,9 +169,11 @@ async function carteiraAoVivo(itens, { fetch: f, agora, env, guardadas = {} }) {
     }
     if (vivo && i.preco_medio > 0 && q > 0) vivo.ganho = dinheiro(vivo.valor - q * i.preco_medio);
     total += vivo ? vivo.valor : base;
-    return { id: i.id, ticker: tk || null, valor_print: base, vivo };
+    return { id: i.id, ticker: tk || null, valor_print: base, vivo, proventos: provs[tk] || null };
   });
-  return { itens: out, total: dinheiro(total), total_print: dinheiro(totalPrint), variacao: dinheiro(total - totalPrint), indices: ind, em_pregao: emPregao(agora), atualizado_em: agora.toISOString() };
+  const r = { itens: out, total: dinheiro(total), total_print: dinheiro(totalPrint), variacao: dinheiro(total - totalPrint), indices: ind, em_pregao: emPregao(agora), atualizado_em: agora.toISOString() };
+  r.assessor = assessor(r, itens);
+  return r;
 }
 
 /** Ação do app: "cotacoes_vivas". Guarda a última cotação boa de cada ticker (para quando as fontes caírem). */
@@ -152,4 +191,4 @@ async function agirCotacoes(acao, body, c) {
   return [200, r];
 }
 
-module.exports = { _limparIndices: () => { indicesCache = null; }, agirCotacoes, carteiraAoVivo, cotar, indices, precoDoGoogle, estimarRendaFixa, diasUteis, emPregao, pctCdiDe, FONTES, _cache: cache };
+module.exports = { _limparIndices: () => { indicesCache = null; provCache.clear(); }, assessor, proventos12m, agirCotacoes, carteiraAoVivo, cotar, indices, precoDoGoogle, estimarRendaFixa, diasUteis, emPregao, pctCdiDe, FONTES, _cache: cache };

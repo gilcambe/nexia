@@ -49,7 +49,7 @@ if (typeof window !== 'undefined') (function () {
     itens.forEach((i) => { const b = i.banco || 'Não informado'; bancos[b] = (bancos[b] || 0) + i.valor; });
     const tipos = Object.entries(por_tipo).sort((a, b) => b[1] - a[1]);
     el.innerHTML = `
-      <div class="card"><div class="fraco">Patrimônio total</div><div class="grande" id="total-vivo">${brl(total)}</div><div class="fraco" id="selo-vivo">Buscando cotações ao vivo…</div><button class="btn sec" id="atualizar-vivo" style="margin-top:6px">🔄 Atualizar agora</button>
+      <div class="card"><div class="fraco">Patrimônio total</div><div class="grande" id="total-vivo">${brl(total)}</div><div class="fraco" id="selo-vivo">Buscando cotações ao vivo…</div><button class="btn sec" id="atualizar-vivo" style="margin-top:6px">🔄 Atualizar agora</button><div id="assessor-vivo" style="margin-top:10px"></div>
         ${tipos.map(([t, v]) => `<div style="margin-top:8px"><div class="item" style="padding:0;border:0"><span>${esc(TIPOS[t] || t)}</span><span>${brl(v)}</span></div>${barra(total ? (v / total) * 100 : 0)}</div>`).join('')}
       </div>
       <div class="linha" style="margin-bottom:12px"><button class="btn sec" id="add">✍️ Preencher</button><button class="btn" id="print">📷 Só mandar os prints</button></div>
@@ -128,6 +128,15 @@ if (typeof window !== 'undefined') (function () {
         if (info) info.innerHTML = i.vivo.estimado
           ? `≈ pelo CDI, ${i.vivo.dias_uteis} dia(s) útil(eis) desde o print`
           : `${brl(i.vivo.preco)}${i.vivo.variacao_dia_pct != null ? ` (${esc(pct(i.vivo.variacao_dia_pct))} hoje)` : ''}${i.vivo.ganho != null ? ` · <span style="color:${i.vivo.ganho >= 0 ? '#58d68d' : '#ec7063'}">${i.vivo.ganho >= 0 ? '↑' : '↓'} ${brl(Math.abs(i.vivo.ganho))}</span>` : ''} · ${esc(i.vivo.fonte || '')} ${esc(minutos(i.vivo.data_hora))}${i.vivo.desatualizada ? ' <b style="color:#f5b041">desatualizada</b>' : ''}`;
+      }
+      const a = r.assessor || {};
+      const box = el.querySelector('#assessor-vivo');
+      if (box) box.innerHTML = `<div class="fraco">🧭 Seu assessor</div>
+        ${a.renda_mensal_estimada ? `<div class="item"><span>Renda de proventos (média 12 meses)</span><span class="v">${brl(a.renda_mensal_estimada)}/mês</span></div>` : ''}
+        ${(a.alertas || []).map((x) => `<p style="margin:6px 0;color:${x.tipo === 'alta' ? '#58d68d' : '#f5b041'}">${x.tipo === 'alta' ? '📈' : '⚠️'} ${esc(x.texto)}</p>`).join('') || '<p class="fraco">Nenhum alerta agora.</p>'}`;
+      for (const i of r.itens) {
+        const info = el.querySelector(`[data-vivo="${i.id}"]`);
+        if (info && i.vivo && (i.peso_pct || i.renda_mensal)) info.innerHTML += `<br>peso ${esc(String(i.peso_pct).replace('.', ','))}%${i.renda_mensal ? ` · proventos ≈ ${brl(i.renda_mensal)}/mês${i.yield_on_cost_pct ? ` (${esc(String(i.yield_on_cost_pct).replace('.', ','))}% a.a. sobre o que você pagou)` : ''}` : ''}`;
       }
       if (r.em_pregao && !timer) timer = setInterval(rodar, 60000);
     };
