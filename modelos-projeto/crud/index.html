@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{titulo}}</title>
+    <link rel="stylesheet" href="estilo.css">
+    <script src="crud.js"></script>
+</head>
+<body>
+    <h1>{{titulo}}</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>{{nome}}</th>
+                <th>AÃ§Ãµes</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Registros serÃ£o inseridos aqui -->
+        </tbody>
+    </table>
+    <form id="formCadastro">
+        <input type="hidden" id="id" name="id">
+        <label>{{nome}}:</label>
+        <input type="text" id="nome" name="nome" required>
+        <button type="submit">{{cor}}</button>
+    </form>
+    <div id="mensagem"></div>
+    <script>
+        // Placeholder para {{campos}} serÃ¡ substituÃ­do pelo script
+    </script>
+</body>
+</html>
