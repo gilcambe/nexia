@@ -70,6 +70,13 @@ function conferir(p) {
  * @param {object} o { pedido, raiz, router, modelos, rodarTeste, checarSintaxe?: (arquivo) => boolean, log }
  * @returns {Promise<{ ok, nao_testavel?, motivo?, contrato?, testeArquivo?, testeCodigo?, modelo?, tentativas }>}
  */
+/** Motivo curto e sem segredo de uma IA que não respondeu (antes o log só dizia "sem resposta"). */
+function motivoCurto(e) {
+  const { redactSecrets } = require('../vault/secrets');
+  const cod = e && (e.code || e.status) ? `${e.code || e.status}: ` : '';
+  return redactSecrets(cod + String((e && e.message) || e)).replace(/s+/g, ' ').slice(0, 160);
+}
+
 async function gerar(o) {
   const log = o.log || (() => {});
   let tentativas = 0, ultimo = '', responderam = 0;
@@ -79,7 +86,7 @@ async function gerar(o) {
       let out;
       try {
         out = await o.router.chat(m, { system: SISTEMA, messages: [{ role: 'user', content: `PEDIDO:\n${String(o.pedido).slice(0, 6000)}${ultimo ? `\n\nA TENTATIVA ANTERIOR FOI RECUSADA: ${ultimo}` : ''}` }], maxTokens: 4000 });
-      } catch (e) { log(`${m.provider}/${m.model}: sem resposta`); break; }
+      } catch (e) { log(`${m.provider}/${m.model}: sem resposta (${motivoCurto(e)})`); break; }
       responderam++;
       const p = extrairJson(out && out.text);
       if (!p) { ultimo = 'responda só com o JSON pedido'; continue; }
@@ -139,4 +146,4 @@ async function revisarCobertura(router, modelos, pedido, codigo) {
   return null;
 }
 
-module.exports = { gerar, conferir, extrairJson, revisarCobertura, SISTEMA, REVISOR };
+module.exports = { motivoCurto, gerar, conferir, extrairJson, revisarCobertura, SISTEMA, REVISOR };

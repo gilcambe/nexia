@@ -76,3 +76,11 @@ test('GC6. fila: com contrato vai direto; sem contrato tenta gerar; já devolvid
   assert.equal(vaiParaContrato({ tarefa: 'Criar função de soma', rotulos: ['contrato-falhou'] }, {}), false);
   assert.equal(vaiParaContrato({ tarefa: 'Criar função de soma', rotulos: [] }, { CONTRATO_GERAR: '0' }), false);
 });
+
+test('motivoCurto: diz por que a IA não respondeu, sem vazar chave', () => {
+  const { motivoCurto } = require('../../nexia-ai/contrato/gerador');
+  const m = motivoCurto(Object.assign(new Error('401 Unauthorized: key sk-abcdefghijklmnopqrstuvwxyz123456 invalid'), { status: 401 }));
+  assert.match(m, /^401: /);
+  assert.doesNotMatch(m, /sk-abcdef/);
+  assert.ok(motivoCurto(new Error('x'.repeat(500))).length <= 160);
+});
