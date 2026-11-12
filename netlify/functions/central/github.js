@@ -77,8 +77,11 @@ function criarGithub(env = process.env, fetchFn = fetch) {
   // precisaVoce) vem de lá. Sem campos extras e sem a lógica antiga de contagem.
   async function cortex() {
     try {
-      // Delega a contagem a estadoTarefas(); sem buscar issues por conta própria.
-      return estadoTarefas();
+      // Busca as issues do repositório e alimenta estadoTarefas() com elas (sem PRs).
+      const issues = await gh('/issues?state=all&per_page=100');
+      const lista = Array.isArray(issues) ? issues.filter((i) => !i.pull_request) : [];
+      // Responde EXATAMENTE o objeto que estadoTarefas() produz (mesmas chaves e valores).
+      return estadoTarefas(lista);
     } catch (e) {
       console.error('[cortex] estadoTarefas falhou:', e);
       return { fila: 0, andamento: 0, 'aguardando-ia': 0, travada: 0, concluida: 0, falhou: 0, total: 0, precisaVoce: 0 };
