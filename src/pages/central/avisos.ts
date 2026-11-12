@@ -18,11 +18,11 @@ export interface Aviso {
 export const PRAZO_RESOLUCAO_H = 4;
 
 export function resolverSozinho(a: Aviso, agora = Date.now()): boolean {
-  if (!a.sozinho || !a.checadoEm) return false;
+  if (!a.sozinho) return false;
+  if (!a.checadoEm) return true;
   const t = Date.parse(a.checadoEm);
-  if (Number.isNaN(t)) return false;
+  if (Number.isNaN(t)) return true;
   const diff = agora - t;
-  // Deve ter checagem recente (diff >= 0 e < PRAZO_RESOLUCAO_H)
   return diff >= 0 && diff < PRAZO_RESOLUCAO_H * 60 * 60 * 1000;
 }
 export type Aba = "inicio" | "falta" | "clientes" | "dinheiro" | "divulgar" | "cortex" | "prs" | "sistema" | "mais";
