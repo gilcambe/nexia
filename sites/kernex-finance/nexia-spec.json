@@ -2,29 +2,29 @@
   "spec": {
     "kind": "system",
     "name": "Kernex Finance",
-    "tagline": "Gestão financeira empresarial integrada e segura",
+    "tagline": "Gestão financeira corporativa e central de alertas",
     "photo_theme": "corporate finance dashboard",
-    "description": "Gestão financeira empresarial integrada e segura",
+    "description": "Gestão financeira corporativa e central de alertas",
     "folder": "sites/kernex-finance",
     "fonts": {
       "heading": "Plus Jakarta Sans",
       "body": "Inter"
     },
     "palette": {
-      "primary": "#2563eb",
-      "accent": "#0ea5e9",
+      "primary": "#0f172a",
+      "accent": "#2563eb",
       "bg": "#fbfaf7",
       "surface": "#ffffff",
       "text": "#1d2426",
       "muted": "#5d6b6e",
-      "dark": "#0f172a"
+      "dark": "#020617"
     },
     "style": "modern",
     "contact": {
       "whatsapp": "",
-      "phone": "(11) 4004-8900",
+      "phone": "(11) 4004-9988",
       "email": "suporte@kernex.com.br",
-      "address": "Av. Paulista, 1000 - São Paulo, SP",
+      "address": "",
       "city": "",
       "hours": "",
       "instagram": "",
@@ -44,98 +44,44 @@
     "leads_origem": "",
     "entities": [
       {
-        "key": "contas",
-        "label": "Contas Bancárias",
-        "singular": "Conta Bancária",
+        "key": "dominios",
+        "label": "Domínios e Rotas",
+        "singular": "Domínio",
         "fields": [
           {
-            "key": "banco",
-            "label": "Banco",
+            "key": "host",
+            "label": "Endereço (Host)",
             "type": "text",
             "options": [],
             "required": true
           },
           {
-            "key": "agencia",
-            "label": "Agência",
-            "type": "text",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "conta",
-            "label": "Número da Conta",
-            "type": "text",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "tipo",
-            "label": "Tipo",
+            "key": "servico",
+            "label": "Serviço Associado",
             "type": "select",
             "options": [
-              "Corrente",
-              "Poupança",
-              "Investimento",
-              "Caixa"
+              "Kernex Finance",
+              "Cortex",
+              "CES",
+              "Central"
             ],
             "required": true
           },
           {
-            "key": "saldo",
-            "label": "Saldo Inicial",
-            "type": "money",
-            "options": [],
-            "required": true
-          }
-        ],
-        "sample": [
-          {
-            "banco": "Banco Itaú",
-            "agencia": "0312",
-            "conta": "45890-1",
-            "tipo": "Corrente",
-            "saldo": "15420.50"
-          },
-          {
-            "banco": "Nubank PJ",
-            "agencia": "0001",
-            "conta": "892341-9",
-            "tipo": "Corrente",
-            "saldo": "48300.00"
-          },
-          {
-            "banco": "BTG Pactual",
-            "agencia": "0100",
-            "conta": "12345-8",
-            "tipo": "Investimento",
-            "saldo": "150000.00"
-          },
-          {
-            "banco": "Caixa Interno",
-            "agencia": "0000",
-            "conta": "0001-0",
-            "tipo": "Caixa",
-            "saldo": "1250.00"
-          }
-        ]
-      },
-      {
-        "key": "centros_custo",
-        "label": "Centros de Custo",
-        "singular": "Centro de Custo",
-        "fields": [
-          {
-            "key": "codigo",
-            "label": "Código",
-            "type": "text",
-            "options": [],
+            "key": "status",
+            "label": "Status DNS",
+            "type": "select",
+            "options": [
+              "Ativo",
+              "Propagando",
+              "Pendente"
+            ],
             "required": true
           },
           {
-            "key": "nome",
-            "label": "Nome do Centro",
-            "type": "text",
+            "key": "atualizacao",
+            "label": "Última Verificação",
+            "type": "date",
             "options": [],
             "required": true
           },
@@ -145,51 +91,202 @@
             "type": "text",
             "options": [],
             "required": true
+          }
+        ],
+        "sample": [
+          {
+            "host": "finance.kernex.com.br",
+            "servico": "Kernex Finance",
+            "status": "Ativo",
+            "atualizacao": "2026-11-12",
+            "responsavel": "Equipe DevOps"
           },
           {
-            "key": "status",
+            "host": "cortex.kernex.com.br",
+            "servico": "Cortex",
+            "status": "Ativo",
+            "atualizacao": "2026-11-10",
+            "responsavel": "Equipe Core"
+          },
+          {
+            "host": "ces.kernex.com.br",
+            "servico": "CES",
+            "status": "Ativo",
+            "atualizacao": "2026-11-05",
+            "responsavel": "Equipe Suporte"
+          },
+          {
+            "host": "nexia.gcbezerra.workers.dev",
+            "servico": "Kernex Finance",
+            "status": "Ativo",
+            "atualizacao": "2026-11-12",
+            "responsavel": "Legado / Redirecionamento"
+          }
+        ]
+      },
+      {
+        "key": "alertas",
+        "label": "Alertas Diários",
+        "singular": "Alerta",
+        "fields": [
+          {
+            "key": "titulo",
+            "label": "Título do Relatório",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "canal",
+            "label": "Canal de Envio",
+            "type": "select",
+            "options": [
+              "E-mail Diário",
+              "Webhook",
+              "Slack",
+              "Painel"
+            ],
+            "required": true
+          },
+          {
+            "key": "hora_envio",
+            "label": "Horário",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "status_envio",
             "label": "Status",
             "type": "select",
             "options": [
-              "Ativo",
-              "Inativo"
+              "Enviado",
+              "Agendado",
+              "Erro"
             ],
+            "required": true
+          },
+          {
+            "key": "destinatario",
+            "label": "Destinatário Principal",
+            "type": "email",
+            "options": [],
             "required": true
           }
         ],
         "sample": [
           {
-            "codigo": "CC-101",
-            "nome": "Engenharia e Tecnologia",
-            "responsavel": "Carlos Silva",
-            "status": "Ativo"
+            "titulo": "Resumo Financeiro Diário - KF",
+            "canal": "E-mail Diário",
+            "hora_envio": "07:30",
+            "status_envio": "Enviado",
+            "destinatario": "diretoria@kernex.com.br"
           },
           {
-            "codigo": "CC-102",
-            "nome": "Marketing e Vendas",
-            "responsavel": "Mariana Costa",
-            "status": "Ativo"
+            "titulo": "Auditoria de Rotas Cloudflare",
+            "canal": "Webhook",
+            "hora_envio": "08:00",
+            "status_envio": "Enviado",
+            "destinatario": "devops@kernex.com.br"
           },
           {
-            "codigo": "CC-103",
-            "nome": "Recursos Humanos",
-            "responsavel": "Juliana Santos",
-            "status": "Ativo"
+            "titulo": "Fechamento de Caixa Parcial",
+            "canal": "Slack",
+            "hora_envio": "12:00",
+            "status_envio": "Agendado",
+            "destinatario": "financeiro@kernex.com.br"
           },
           {
-            "codigo": "CC-104",
-            "nome": "Operações e Logística",
-            "responsavel": "Roberto Alves",
-            "status": "Ativo"
+            "titulo": "Relatório de Inadimplência",
+            "canal": "E-mail Diário",
+            "hora_envio": "18:00",
+            "status_envio": "Agendado",
+            "destinatario": "cobranca@kernex.com.br"
+          }
+        ]
+      },
+      {
+        "key": "transacoes",
+        "label": "Transações",
+        "singular": "Transação",
+        "fields": [
+          {
+            "key": "descricao",
+            "label": "Descrição",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "valor",
+            "label": "Valor",
+            "type": "money",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "tipo",
+            "label": "Tipo",
+            "type": "select",
+            "options": [
+              "Receita",
+              "Despesa",
+              "Investimento"
+            ],
+            "required": true
+          },
+          {
+            "key": "data",
+            "label": "Data",
+            "type": "date",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "categoria",
+            "label": "Categoria",
+            "type": "text",
+            "options": [],
+            "required": true
+          }
+        ],
+        "sample": [
+          {
+            "descricao": "Assinatura Servidores Cloudflare",
+            "valor": "1250.00",
+            "tipo": "Despesa",
+            "data": "2026-11-12",
+            "categoria": "Infraestrutura"
+          },
+          {
+            "descricao": "Mensalidade Cliente Enterprise A",
+            "valor": "8500.00",
+            "tipo": "Receita",
+            "data": "2026-11-12",
+            "categoria": "Software as a Service"
+          },
+          {
+            "descricao": "Licenciamento Domínio .com.br",
+            "valor": "40.00",
+            "tipo": "Despesa",
+            "data": "2026-11-11",
+            "categoria": "Registro"
+          },
+          {
+            "descricao": "Consultoria Arquitetura Cloud",
+            "valor": "3200.00",
+            "tipo": "Investimento",
+            "data": "2026-11-10",
+            "categoria": "Serviços"
           }
         ]
       }
     ],
     "modules": [
-      "Dashboard",
-      "Contas Bancárias",
-      "Centros de Custo",
-      "Relatórios"
+      "Domínios e Rotas",
+      "Alertas Diários",
+      "Transações",
+      "Central de Produtos"
     ]
   },
   "media": {}
