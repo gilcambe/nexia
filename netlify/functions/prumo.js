@@ -276,7 +276,6 @@ function normalizarLido(b, dataPrint) {
   if (/etf/i.test(bruto)) tipo = 'etf';
   // #3532: ETF conhecido ou FII do grupo 11 não podem ficar como "renda_fixa".
   if (bruto === 'renda_fixa' && (ETFS.has(tk) || /^[A-Z]{4}11$/.test(tk))) tipo = ETFS.has(tk) ? 'etf' : 'fiis';
-  if (bruto === 'renda_fixa' && tipo !== 'renda_fixa' && (ETFS.has(tk) || /^[A-Z]{4}11$/.test(tk))) tipo = ETFS.has(tk) ? 'etf' : 'fiis';
   // Ticker manda: ETF conhecido ou terminação 11 do grupo FIIs viram "etf"/"fiis" (nunca "renda_fixa"),
   // mesmo quando a IA devolve outro tipo ou o ticker vem dentro do nome (ex.: "MXRF11".trim()).
   const tickerTexto = tk || (/\b([A-Z]{4}11)\b/i.exec(String(b.nome || '').toUpperCase()) || [])[1] || '';
@@ -293,6 +292,7 @@ function normalizarLido(b, dataPrint) {
   const dataDoPrint = dataDoPrint(dataPrint) || dataDoPrint(b && b.data_print);
   const { banco_escrito, ...resto } = b; // eslint-disable-line no-unused-vars
   return conferirValor({ ...resto, nome, tipo, valor: Number.isFinite(val) ? Math.abs(val) : b.valor,
+    // #3532: data_valor = data escrita no item, ou "Atualizado em DD/MM/AAAA" do print, ou hoje.
     data_valor: dataLida(b.data_valor) || dataDoPrint || deps.agora().toISOString().slice(0, 10), vencimento: dataLida(b.vencimento) || null, banco });
 }
 // Modelos grátis com visão, do mais rápido ao mais forte. Vários provedores: se a cota de um acabar
