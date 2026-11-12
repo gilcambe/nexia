@@ -3,6 +3,8 @@ const motivos = require('./motivos');
 const { estadoTarefas } = require('./estado-tarefas');
 // Central NEXIA: o que a página precisa do GitHub (fila do Cortex, robôs, posts do Divulga).
 // Usa o token da fila (NEXIA_JOBS_TOKEN) só no servidor; nada dele vai para a página.
+// #3125 parte 2/6: a parte "cortex" responde só o resumo de estadoTarefas(); a lista de tarefas
+// passou para a parte "tarefas" (issue #3128).
 
 const REPO = 'gilcambe/nexia';
 const API = 'https://api.github.com/repos/' + REPO;
@@ -68,9 +70,17 @@ function criarGithub(env = process.env, fetchFn = fetch) {
   // #2717: cada tarefa leva o motivo (por que está parada ou esperando).
   const tarefa = (i) => ({ numero: i.number, titulo: String(i.title || '').slice(0, 120), link: i.html_url, quando: i.updated_at, motivo: motivos.motivoDe(i).texto });
 
+  // #3125 parte 2/6: sem lógica própria de fila/rodando/travadas. Só busca as issues e
+  // devolve exatamente o objeto que estadoTarefas() produz (contagens por estado).
   async function cortex() {
     const issues = await gh('/issues?state=all&per_page=100');
     return estadoTarefas(issues);
+  }
+
+  // Lista de tarefas (issue #3128): usada pela parte "tarefas" da Central.
+  async function tarefas() {
+    const issues = await gh('/issues?state=all&per_page=100');
+    return issues.filter((i) => !i.pull_request).map(tarefa);
   }
 
   async function robos(lista) {
@@ -279,7 +289,7 @@ function criarGithub(env = process.env, fetchFn = fetch) {
     };
   }
 
-  return { cortex, robos, rodar, pedirAoCortex, divulga, estadoDivulga, reservas, pacoteIA, api: gh, temToken: !!token, nomeToken: env.NEXIA_JOBS_TOKEN ? 'NEXIA_JOBS_TOKEN' : env.NEXIA_GITHUB_TOKEN ? 'NEXIA_GITHUB_TOKEN' : env.GITHUB_TOKEN ? 'GITHUB_TOKEN' : null };
+  return { cortex, tarefas, robos, rodar, pedirAoCortex, divulga, estadoDivulga, reservas, pacoteIA, api: gh, temToken: !!token, nomeToken: env.NEXIA_JOBS_TOKEN ? 'NEXIA_JOBS_TOKEN' : env.NEXIA_GITHUB_TOKEN ? 'NEXIA_GITHUB_TOKEN' : env.GITHUB_TOKEN ? 'GITHUB_TOKEN' : null };
 }
 
 module.exports = { criarGithub, REPO, RESERVAS, montarReservas, decodificarBase64, BRANCH_DIVULGA, ARQUIVO_ESTADO };
