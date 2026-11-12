@@ -1,6 +1,5 @@
 {
   "nome": "crud",
   "versao": "1.0.0",
-
   "variaveis": ["nome", "titulo", "campos", "cor"]
 }
