@@ -116,6 +116,11 @@ function modelos() {
   // a tarefa, nada fica aberto. Lento (CPU), por isso só depois das IAs da internet e antes do plano Claude Pro.
   // CONTRATO_PC=0 desliga; CONTRATO_PC_MODELO troca o modelo (padrão qwen3:8b). No teste "só Claude" (degraus=0) não entra.
   const pc = { provider: 'maquinas', model: process.env.CONTRATO_PC_MODELO || 'qwen3:8b' };
+  // 13/11/2026 (dono: "sim"): Gemini do plano Google AI Plus do dono, pelo Antigravity CLI no PC1 (ajudante
+  // tools/agente-maquina/agy-trabalhador.ps1). Mais forte e mais rápido que a IA local; vem antes dela e do Claude Pro.
+  // CONTRATO_AGY=0 desliga. Sem o ajudante online, o provedor recusa na hora (não espera).
+  const agy = { provider: 'maquinas', model: 'agy' };
+  if (n !== '0' && n !== 'pc' && process.env.CONTRATO_AGY !== '0') { try { if (router.capabilities(agy).available !== false) lista.push(agy); } catch { /* sem fila */ } }
   if (n !== '0' && process.env.CONTRATO_PC !== '0') { try { if (router.capabilities(pc).available !== false) lista.push(pc); } catch { /* sem PC configurado */ } }
   if (process.env.CONTRATO_CLAUDE === '1') lista.push({ provider: 'anthropic', model: 'claude-sonnet-5-5' });
   return { router, lista };
