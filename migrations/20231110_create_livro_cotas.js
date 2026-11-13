@@ -67,6 +67,9 @@ module.exports = {
 
     // Índice de apoio: consultas de cota vencida ordenam por reset_at.
     await queryInterface.addIndex('livro_cotas', ['reset_at'], { name: 'livro_cotas_reset_at_idx' });
+
+    // Consulta do painel: provider/model do registro.
+    await queryInterface.addIndex('livro_cotas', ['provider', 'model'], { name: 'livro_cotas_provider_model_idx' });
   },
 
   down: async (queryInterface) => {
