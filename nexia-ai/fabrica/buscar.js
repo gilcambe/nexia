@@ -34,7 +34,9 @@ function consultar(fichaBruta, cat = carregar()) {
   const idsPedidos = new Set(pedidos.filter(x => x.modulo).map(x => x.modulo.id));
 
   // Modelo: mesmo nicho vale mais; cobrir os módulos pedidos também conta; clonável desempata.
-  const pontua = mo => mo.nichos.filter(n => nichos.includes(n)).length * 10 + mo.modulos.filter(x => idsPedidos.has(x)).length * 2 + (mo.clonavel ? 1 : 0);
+  // 13/11: nicho escrito igual no ramo (ex.: "barbearia") desempata a favor do modelo daquele ramo.
+  const ramoSem = sem(ficha.ramo || '');
+  const pontua = mo => mo.nichos.filter(n => nichos.includes(n)).length * 10 + mo.modulos.filter(x => idsPedidos.has(x)).length * 2 + (mo.clonavel ? 1 : 0) + (mo.nichos.some(n => n.length > 3 && ramoSem.includes(sem(n))) ? 1 : 0);
   const candidatos = (cat.modelos || []).map(mo => ({ mo, p: pontua(mo) })).filter(x => x.p >= 2).sort((a, b) => b.p - a.p);
   const mo = candidatos[0] ? candidatos[0].mo : null;
   const modelo = mo ? { id: mo.id, nome: mo.nome, clonavel: !!mo.clonavel, falta_para_clonar: mo.falta_para_clonar || null, porque: mo.nichos.some(n => nichos.includes(n)) ? `mesmo ramo (${nichos.join(', ')})` : 'usa os módulos pedidos' } : null;

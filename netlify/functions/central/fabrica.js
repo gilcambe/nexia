@@ -14,6 +14,7 @@ const REPO_CLIENTES = 'gilcambe/kernex-clientes';
 const WORKFLOW = 'fabrica.yml';
 const WORKFLOW_PRODUCAO = 'fabrica-producao.yml';
 // Só os modelos que o gerador (kernex-clientes/scripts/novo-projeto.js) sabe copiar.
+// 13/11: + modelos por ramo do kernex-clientes (scripts/montar-ramos.js, PR kernex-clientes#10).
 const GERAVEIS = ['demo-agenda', 'demo-eventos', 'demo-viagens', 'demo-profissional', 'demo-barbearia', 'demo-restaurante', 'demo-loja', 'demo-academia'];
 const SLUG_RE = /^[a-z0-9-]{3,40}$/;
 const previaDe = (slug) => `https://${slug}.kernex-previas.pages.dev`;
