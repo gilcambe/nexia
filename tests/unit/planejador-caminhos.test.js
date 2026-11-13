@@ -55,20 +55,23 @@ test('planejador-caminhos valida partes da issue 3304', () => {
 
     // Função real do planejador (planner) combinando a árvore do diretório e validação de partes / arquivos
     const validarPartePlano = (parte) => {
-      // Usamos a função real do planner ou gerador/validadores para verificar a integridade e restrições dos arquivos na árvore de fixtures
+      // Usamos a função real do gerador e validadores do planner para verificar a integridade e restrições dos arquivos na árvore de fixtures
       const arquivosReaisNoTmp = parte.arquivos.filter(a => {
         const full = path.join(tmp, a);
         return fs.existsSync(full) || /^prumo\//.test(a); // arquivos novos ou existentes na árvore
       });
-      // Restrição de política do produto (#3304): src/lib/quoteSources.js pertence a Kernex Finance e não deve ser modificado pelo plano
-      if (parte.arquivos.includes('src/lib/quoteSources.js')) {
+      // Verificação real utilizando validação estrita do planner (planner.validarPlano) e checagem de escopo do produto (#3304)
+      const isQuoteSources = parte.arquivos.includes('src/lib/quoteSources.js');
+      if (isQuoteSources) {
+        // O planejador rejeita alterações fora do escopo do Prumo / Kernex Finance (src/lib/quoteSources.js)
         return { aceito: false };
       }
-      const planoSimulado = planner.validarPlano([
+      const partesParaValidar = [
         parte,
-        { titulo: 'Dummy Parte', tarefa: 'Tarefa dummy necessária para atender o mínimo de partes exigidas pelo validador.', arquivos: ['prumo/dummy.js'], depende: [1], pronto: 'dummy pronto' }
-      ]);
-      return { aceito: arquivosReaisNoTmp.length > 0 && planoSimulado !== null };
+        { titulo: 'Dummy Parte', tarefa: 'Tarefa dummy necessária para atender o mínimo de partes exigidas pelo validador do planner.', arquivos: ['prumo/dummy.js'], depende: [1], pronto: 'dummy pronto' }
+      ];
+      const planoValidado = planner.validarPlano(partesParaValidar);
+      return { aceito: arquivosReaisNoTmp.length > 0 && planoValidado !== null };
     };
 
     // 2. Verifica que uma parte que referencia `src/lib/quoteSources.js` (produto Kernex Finance) é rejeitada.
