@@ -287,12 +287,11 @@ function normalizarLido(b, dataPrint) {
 
   // Ajustar a classificação de tipo: tickers terminados em 11 pertencentes ao grupo FIIs devem ser marcados como "fiis", não "renda_fixa"; reconhecer lista de ETFs conhecida e atribuir tipo "etf".
   if (tk) {
-    if (ETFS_CONHECIDOS.has(tk) || ETFS.has(tk)) {
+    if (ETFS.has(tk)) {
       tipo = 'etf';
     } else if (/^[A-Z]{4}11$/.test(tk)) {
-      if (tipo === 'renda_fixa' || tipo === 'outro' || !TIPOS.includes(tipo)) {
-        tipo = 'fiis';
-      }
+      // #3534: todo ticker XXXX11 que não é ETF conhecido é FII (nunca renda_fixa).
+      tipo = 'fiis';
     }
   }
 
