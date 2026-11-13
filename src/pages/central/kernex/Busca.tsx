@@ -10,7 +10,7 @@ export default function Busca({ ir, fechar }: { ir: (t: TelaId) => void; fechar?
   const [tarefas, setTarefas] = useState<{ numero: number; titulo: string; link: string }[]>([]);
   useEffect(() => {
     if (q.trim().length < 3) { setTarefas([]); return; }
-    const t = setTimeout(() => listar(q, "todos", 1).then((r) => setTarefas(r.itens.slice(0, 6))).catch(() => setTarefas([])), 300);
+    const t = setTimeout(() => listar(q, "todos", 1).then((r) => setTarefas((r?.itens || []).slice(0, 6))).catch(() => setTarefas([])), 300);
     return () => clearTimeout(t);
   }, [q, listar]);
   const telas = buscarTelas(q);
