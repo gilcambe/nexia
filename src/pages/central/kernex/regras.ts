@@ -39,7 +39,7 @@ export const grupoDaTela = (t: TelaId) => MENU.find((g) => g.telas.includes(t)) 
 
 export const telaDaUrl = (search: string): TelaId => {
   const t = new URLSearchParams(search).get("tela");
-  return (TELAS.find((x) => x.id === t)?.id || "inicio") as TelaId;
+  return (TELAS.find((x) => x.id === t)?.id || "conversar") as TelaId;   // 13/11: a Central abre conversando com o Cortex (o painel fica em Início)
 };
 
 export type Cor = "verde" | "amarelo" | "vermelho";

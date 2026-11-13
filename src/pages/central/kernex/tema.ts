@@ -199,4 +199,34 @@ export const CSS = `@import url("https://fonts.googleapis.com/css2?family=Inter:
 .kx-abas{display:flex;gap:4px;flex-wrap:wrap;margin:0 0 10px;border-bottom:1px solid var(--linha)}
 .kx-abas button{background:none;border:0;border-bottom:2px solid transparent;color:var(--mut);padding:8px 12px;font:inherit;font-size:13.5px;cursor:pointer;margin-bottom:-1px}
 .kx-abas button[aria-selected=true]{color:var(--txt);border-bottom-color:#3b82f6;font-weight:600}
-.kx-abas button:hover{color:var(--txt)}`;
+.kx-abas button:hover{color:var(--txt)}
+/* 13/11 (dono: visual premium, calmo, estilo Readdy): cores fortes viram detalhe, cartões lisos */
+.kx{background:var(--fundo)}
+.kx-bloco{background:var(--card);box-shadow:none}
+.kx-btn.verde,.kx-btn.laranja,.kx-btn.roxo{background:var(--card2);border-color:var(--linha);color:var(--txt);font-weight:600}
+.kx-btn.verde{border-color:#22c55e88}.kx-btn.laranja{border-color:#f59e0b88}.kx-btn.roxo{border-color:#8b5cf688}
+.kx-btn.forte{background:#3b82f6;border-color:#3b82f6}
+.kx-kpi.az,.kx-kpi.vd,.kx-kpi.rx,.kx-kpi.lj,.kx-kpi.vm{background:var(--card)}
+.kx-kpi.az{border-left:3px solid #3b82f6}.kx-kpi.vd{border-left:3px solid #22c55e}.kx-kpi.rx{border-left:3px solid #8b5cf6}.kx-kpi.lj{border-left:3px solid #f59e0b}.kx-kpi.vm{border-left:3px solid #ef4444}
+.kx-mod{background:var(--card)!important;border-color:var(--linha)!important;color:var(--txt)}
+.kx-boasvindas{display:grid;place-items:center;min-height:calc(100vh - 140px)}
+.kx-bv-caixa{width:100%;max-width:760px;display:flex;flex-direction:column;gap:14px;padding:16px}
+.kx-bv-titulo{margin:0;text-align:center;font-size:clamp(26px,4vw,40px);font-weight:700;letter-spacing:-.02em}
+.kx-bv-sub{text-align:center;margin:0;white-space:normal!important}
+.kx-bv-entrada{background:var(--card);border:1px solid var(--linha);border-radius:18px;padding:12px;display:flex;flex-direction:column;gap:8px}
+.kx-bv-entrada:focus-within{border-color:#3b82f6}
+.kx-bv-entrada textarea{background:none;border:0;outline:0;color:var(--txt);font:inherit;font-size:16px;resize:vertical;min-height:72px}
+.kx-bv-acoes{display:flex;gap:8px;align-items:center}
+.kx-bv-sugestoes{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.kx-bv-projeto{display:flex;gap:8px;align-items:center;justify-content:center;flex-wrap:wrap}
+.kx-bv-projeto select{max-width:280px;padding-left:12px;height:38px}
+
+.kx-boasvindas{grid-template-columns:minmax(0,1fr)}
+.kx-bv-caixa{min-width:0}
+.kx-bv-sugestoes .kx-chip{height:auto;min-height:34px;padding:6px 12px;white-space:normal;text-align:center}
+@media (max-width:768px){
+ .kx-boasvindas{min-height:auto;place-items:start stretch}
+ .kx-bv-titulo{font-size:26px}
+ .kx:not(.gaveta) .kx-menu button{font-size:10.5px;min-height:54px;line-height:1.15;white-space:normal;text-align:center;min-width:0;padding:0 2px;border-radius:10px}
+}
+`;
