@@ -18,6 +18,7 @@ const { createMaquinasProvider } = require('./providers/maquinas');
 const { createCache, getSharedCache, chave, cacheavel } = require('./cache');
 const { textoSemantico, escopoDe, criarEmbedWorkersAI, getCacheSemantico } = require('./cache-semantico');
 const { encolher } = require('./contexto');
+const { selectProviders } = require('../../src/utils/providerSelector');
 
 const PROVIDER_IDS = Object.freeze(['anthropic', 'gemini', 'cohere', ...Object.keys(OPENAI_COMPATIBLE)]);
 
@@ -46,16 +47,29 @@ function createRouter(o = {}) {
 
   // #2848: todo pedido conta no crédito interno do provedor (pedidos, tokens, 429). Contar nunca quebra a resposta.
   const uso = o.uso || require('./cota').getUso();
-  const contar = (id, inc) => { try { uso.incrementUsage(id, inc); } catch { /* sem conta, segue */ } };
+  const placar = o.placar || require('./cota').getPlacar?.();
+  const contar = (id, inc, is429 = false) => { 
+    try { 
+      uso.incrementUsage(id, inc); 
+      if (is429 && placar && typeof placar.marcar === 'function') {
+        placar.marcar({ provider: id }, 'rate_limit');
+      }
+    } catch { /* sem conta, segue */ } 
+  };
   const tokensDe = out => (out && out.usage && (out.usage.total_tokens || ((out.usage.input_tokens || 0) + (out.usage.output_tokens || 0)))) || (out && out.text ? Math.ceil(out.text.length / 4) : 0);
-  const e429 = e => (e && e.details && e.details.status === 429) ? 1 : 0;
+  const e429 = e => (e && (e.code === 429 || (e.details && e.details.status === 429) || String(e.message || '').includes('429'))) ? 1 : 0;
+  
   const contados = new Map();
   function contado(id, p) {
     if (contados.has(id)) return contados.get(id);
     const w = Object.create(p);
     w.chat = async (model, req) => {
-      try { const out = await p.chat(model, req); contar(id, { requests: 1, tokens: tokensDe(out) }); return out; }
-      catch (e) { contar(id, { requests: 1, errors: e429(e) }); throw e; }
+      try { const out = await p.chat(model, req); contar(id, { requests: 1, tokens: tokensDe(out) }, false); return out; }
+      catch (e) { 
+        const isRate = e429(e);
+        contar(id, { requests: 1, errors: isRate }, isRate > 0); 
+        throw e; 
+      }
     };
     if (typeof p.stream === 'function') {
       w.stream = async function* (model, req) {
@@ -66,8 +80,12 @@ function createRouter(o = {}) {
             if (ev && ev.type === 'done' && ev.usage) usage = ev.usage;
             yield ev;
           }
-          contar(id, { requests: 1, tokens: tokensDe({ usage }) || Math.ceil(texto / 4) });
-        } catch (e) { contar(id, { requests: 1, errors: e429(e) }); throw e; }
+          contar(id, { requests: 1, tokens: tokensDe({ usage }) || Math.ceil(texto / 4) }, false);
+        } catch (e) { 
+          const isRate = e429(e);
+          contar(id, { requests: 1, errors: isRate }, isRate > 0); 
+          throw e; 
+        }
       };
     }
     contados.set(id, w);
@@ -163,10 +181,14 @@ function createRouter(o = {}) {
   /** Tenta cada descritor até um responder. Erros por provedor ficam em `attempts`. */
   async function chatWithFallback(descs, req) {
     const attempts = [];
-    for (const d of dedupe(descs)) {
+    const selected = selectProviders(descs, req, { env, placar });
+    for (const d of selected) {
       try { return { ...(await chat(d, req)), attempts }; }
       catch (e) {
         if (e && e.code === CODES.ABORTED) throw e;
+        if (e429(e) && placar && typeof placar.marcar === 'function') {
+          placar.marcar(d, 'rate_limit');
+        }
         attempts.push({ provider: d.provider, model: d.model, code: e.code || 'ERROR' });
       }
     }
@@ -200,7 +222,8 @@ function createRouter(o = {}) {
 
     let currentReq = encolher(req, o.env || process.env).req; // #2855
     let accumulatedText = '';
-    const dedupped = dedupe(descs);
+    const selected = selectProviders(descs, req, { env, placar });
+    const dedupped = dedupe(selected);
 
     if (cacheavel(req)) {
       const generalK = `gen|${chave(req)}`;
@@ -222,8 +245,8 @@ function createRouter(o = {}) {
       }
       const d = dedupped[i];
 
-      const placar = getPlacar();
-      if (placar && placar.bloqueado(d) && dedupped.length > 1) {
+      const pInst = getPlacar();
+      if (pInst && typeof pInst.bloqueado === 'function' && pInst.bloqueado(d) && dedupped.length > 1) {
         attempts.push({ provider: d.provider, model: d.model, code: 'BLOCKED' });
         continue;
       }
@@ -241,7 +264,14 @@ function createRouter(o = {}) {
         };
       }
 
-      const it = stream(d, contReq)[Symbol.asyncIterator]();
+      let it;
+      try {
+        it = stream(d, contReq)[Symbol.asyncIterator]();
+      } catch (err) {
+        attempts.push({ provider: d.provider, model: d.model, code: err.code || 'ERROR' });
+        continue;
+      }
+
       let first;
       const tFirst = Math.min(firstChunkTimeoutMs, remainingTime());
 
@@ -252,7 +282,8 @@ function createRouter(o = {}) {
         ]);
       } catch (e) {
         if (typeof it.return === 'function') { try { await it.return(); } catch {} }
-        if (placar) placar.marcar(d, 'transient');
+        const pPlacar = getPlacar();
+        if (pPlacar && typeof pPlacar.marcar === 'function') pPlacar.marcar(d, 'transient');
         if (e && e.code === CODES.ABORTED) throw e;
         attempts.push({ provider: d.provider, model: d.model, code: e.isTimeout ? 'TIMEOUT_4S' : (e.code || 'ERROR') });
         continue;
@@ -288,8 +319,9 @@ function createRouter(o = {}) {
         }
       } catch (e) {
         if (typeof it.return === 'function') { try { await it.return(); } catch {} }
-        if (placar) placar.marcar(d, 'transient');
-        attempts.push({ provider: d.provider, model: d.model, code: e.isTimeout ? 'STALL_8S' : (e.code || 'ERROR') });
+        const pPlacar = getPlacar();
+        if (pPlacar && typeof pPlacar.marcar === 'function') pPlacar.marcar(d, 'transient');
+        attempts.push({ provider: d.provider, model: d.model, code: e.isTimeout ? 'STALL_8S' : ((e && e.code) || 'ERROR') });
         if (i < dedupped.length - 1 && Date.now() - startTime < totalTimeoutMs) {
           continue;
         }
@@ -301,10 +333,10 @@ function createRouter(o = {}) {
 
       if (currentStreamDone) {
         if (cacheavel(req) && accumulatedText) {
-          const d = dedupped[i] || descs[0];
-          const k = `${d.provider}|${d.model}|${chave(req)}`;
+          const dTarget = dedupped[i] || descs[0];
+          const k = `${dTarget.provider}|${dTarget.model}|${chave(req)}`;
           const generalK = `gen|${chave(req)}`;
-          const cacheVal = { text: accumulatedText, provider: d.provider, model: d.model, usage: { total_tokens: Math.ceil(accumulatedText.length / 4) } };
+          const cacheVal = { text: accumulatedText, provider: dTarget.provider, model: dTarget.model, usage: { total_tokens: Math.ceil(accumulatedText.length / 4) } };
           cache.set(k, cacheVal);
           cache.set(generalK, cacheVal);
         }
