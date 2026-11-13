@@ -5,6 +5,18 @@
 const { carregar, sem } = require('./catalogo');
 const { nichosDoRamo } = require('./buscar');
 
+// 13/11: sistemas e peças prontos da web (MIT/Apache conferidos) — nexia-ai/fabrica/prontos.json
+let _prontos = null;
+const prontosJson = () => (_prontos = _prontos || require('./prontos.json'));
+
+/** Prontos da web que servem ao pedido (por palavra da categoria). Peças (rodam no site) antes de sistemas (precisam de servidor). */
+function prontosCitados(texto, p = prontosJson()) {
+  const t = ` ${sem(texto)} `;
+  const cats = Object.entries(p.palavras || {}).filter(([, ps]) => ps.some((w) => t.includes(` ${sem(w)}`))).map(([c]) => c);
+  return (p.prontos || []).filter((x) => cats.includes(x.categoria))
+    .sort((a, b) => (a.tipo === 'peca' ? 0 : 1) - (b.tipo === 'peca' ? 0 : 1) || b.estrelas - a.estrelas).slice(0, 6);
+}
+
 const PEDIDO_NOVO = /\b(quero|queria|preciso|precisa|cri[ae]r?|crie|fa[cz]a|fazer|monte|montar|novo|nova|gerar|gere|clon[ae]r?)\b[\s\S]{0,80}\b(site|sistema|landing|app|aplicativo|pagina|plataforma|loja|agenda|painel)\b/;
 
 /** Módulos citados no texto (id, nome ou apelido com 4+ letras). */
@@ -32,8 +44,11 @@ function contextoBiblioteca(goal, cat = carregar()) {
       : `Projeto parecido já existe: ${modelo.id} (${modelo.nome}). Reaproveite as partes dele.`);
   }
   if (prontos.length) linhas.push('Módulos que já existem (copie/adapte daqui):', ...prontos.slice(0, 12).map(m => `- ${m.id}: ${m.faz || m.nome}${m.onde ? ` (onde: ${m.onde})` : ''}`));
+  const web = prontosCitados(g);
+  if (web.length) linhas.push('Código PRONTO da web com licença conferida (copie/adapte em vez de escrever do zero; mantenha o LICENSE e o crédito):',
+    ...web.map((x) => `- ${x.repo} (${x.licenca}, ${x.estrelas}⭐): ${x.uso}. ${x.tipo === 'peca' ? 'Peça: roda dentro do site (arquivo local, sem CDN).' : 'Sistema: precisa de servidor próprio (custo) → só com OK do dono.'} ${x.url}`));
   linhas.push('Planeje SÓ o que falta. Se criar um módulo reutilizável novo, inclua no plano uma entrada nova em nexia-ai/fabrica/catalogo.json (id, nome, faz, apelidos, nichos, nivel, pronto, origem, onde), sem dado pessoal.');
   return linhas.join('\n');
 }
 
-module.exports = { contextoBiblioteca, modulosCitados, PEDIDO_NOVO };
+module.exports = { contextoBiblioteca, modulosCitados, prontosCitados, PEDIDO_NOVO };
