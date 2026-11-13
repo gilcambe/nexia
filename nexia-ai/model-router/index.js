@@ -200,6 +200,7 @@ function createRouter(o = {}) {
     const size = (req && req.tamanho) || (req && req.size) || 'media';
     
     let descsDedupped = dedupe(descs);
+    // 5) Respeitar flag treina_com_dados = não para dados sensíveis
     if (treinaComDados === 'nao' || treinaComDados === false || treinaComDados === 'não') {
       descsDedupped = descsDedupped.filter(d => {
         const id = String(d.provider || '').toLowerCase();
@@ -207,14 +208,19 @@ function createRouter(o = {}) {
       });
     }
 
+    // 1) Consultar cotas antes de escolher provider; 2) Pular sem cota ou disjuntor aberto
     const quotasMap = {};
     for (const d of descsDedupped) {
-      const c = obterCotaDisponivel ? obterCotaDisponivel(d.provider) : null;
-      quotasMap[d.provider] = { esgotada: c !== null && c <= 0 };
+      const id = d.provider;
+      const semCota = (obterCotaDisponivel && obterCotaDisponivel(id) !== null && obterCotaDisponivel(id) <= 0);
+      const disjuntor = (disjuntorAberto && disjuntorAberto(id));
+      quotasMap[id] = { esgotada: semCota || disjuntor };
     }
 
     let selecionados = descsDedupped;
     const placar = (() => { try { return require('./cota').getPlacar(); } catch { return null; } })();
+    
+    // 4) Implementar roteamento por tamanho (pequena, média, grande) usando providerSelector.js
     if (selecionarProvider) {
       try {
         selecionados = selecionarProvider(size, {
@@ -227,6 +233,15 @@ function createRouter(o = {}) {
         selecionados = descsDedupped;
       }
     }
+
+    // Filtro adicional de segurança caso o providerSelector não tenha filtrado disjuntores ou cotas
+    selecionados = selecionados.filter(d => {
+      const id = d.provider;
+      if (disjuntorAberto && disjuntorAberto(id)) return false;
+      const c = obterCotaDisponivel ? obterCotaDisponivel(id) : null;
+      if (c !== null && c <= 0) return false;
+      return true;
+    });
 
     // Garantir que Jules nunca seja o primeiro se houver outras opções
     if (selecionados.length > 1) {
@@ -253,11 +268,12 @@ function createRouter(o = {}) {
       }
       try { return { ...(await chat(d, req)), attempts }; }
       catch (e) {
+        // 3) Ao receber 429, marcar provider como indisponível e trocar imediatamente
         if (e429(e)) {
           try { registrarErro429(id); } catch {}
         }
         if (e && e.code === CODES.ABORTED) throw e;
-        attempts.push({ provider: id, model: d.model, code: e.code || 'ERROR' });
+        attempts.push({ provider: id, model: d.model, code: e429(e) ? '429_TOO_MANY_REQUESTS' : (e.code || 'ERROR') });
       }
     }
     throw new ModelError(CODES.ALL_FAILED, 'Nenhum modelo respondeu.', { attempts });
