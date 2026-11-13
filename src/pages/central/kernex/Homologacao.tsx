@@ -26,7 +26,7 @@ export default function Homologacao() {
   useEffect(() => { carregar(); }, [carregar]);
   const rodar = async () => { setMsg("Mandando…"); try { const r = await agir({ acao: "homologar" }); setMsg(r.mensagem); } catch (e) { setMsg((e as Error).message); } };
   const lista = d && d.produtos ? Object.entries(d.produtos).sort(([a], [b]) => (NOME[a] || a).localeCompare(NOME[b] || b)) : [];
-  const det = aberto && d ? d.produtos[aberto] : null;
+  const det = aberto && d?.produtos ? d.produtos[aberto] : null;
   return (
     <div className="kx-grade" style={{ gridTemplateColumns: "2fr 1fr" }} data-testid="kx-homologacao">
       <Bloco titulo={d?.aprovado === false ? "Versão BLOQUEADA" : d?.aprovado ? "Tudo homologado" : "Homologação"} icone="check" corIcone={d?.aprovado === false ? "#ef4444" : "#22c55e"}
@@ -52,14 +52,14 @@ export default function Homologacao() {
           {d?.rodandoAgora && <p className="kx-mut">Rodando agora…</p>}
           {msg && <p className="kx-mut">{msg}</p>}
         </Bloco>
-        <Bloco titulo="GSD Lab (repo privado)" icone="cadeado" ajuda="Portão próprio do repo privado: 15 testes de voz e telas. Aqui só aparece o resultado." fonte={d ? "workflow Homologacao do repo privado" : null} atualizadoEm={d?.gsdLab.quando || null}>
-          <p className="kx-num" style={{ color: COR[d?.gsdLab.status || "nunca"] }}>{TEXTO[d?.gsdLab.status || "nunca"]}</p>
-          {d?.gsdLab.link && <a href={d.gsdLab.link} target="_blank" rel="noreferrer">ver detalhes</a>}
+        <Bloco titulo="GSD Lab (repo privado)" icone="cadeado" ajuda="Portão próprio do repo privado: 15 testes de voz e telas. Aqui só aparece o resultado." fonte={d ? "workflow Homologacao do repo privado" : null} atualizadoEm={d?.gsdLab?.quando || null}>
+          <p className="kx-num" style={{ color: COR[d?.gsdLab?.status || "nunca"] }}>{TEXTO[d?.gsdLab?.status || "nunca"]}</p>
+          {d?.gsdLab?.link && <a href={d.gsdLab.link} target="_blank" rel="noreferrer">ver detalhes</a>}
         </Bloco>
         {det && (
           <Bloco titulo={"O que não passou: " + (NOME[aberto || ""] || aberto)} icone="alerta" corIcone="#f59e0b" ajuda="Casos com problema neste produto. Cada bug relatado vira caso permanente." fonte="Homologação" atualizadoEm={d?.quando || null}>
-            {!det.falhas.length ? <p className="kx-mut">Tudo verde.</p> : (
-              <ul className="kx-lista">{det.falhas.map((f) => <li key={f.id}><span className="kx-titulo"><b style={{ color: COR[f.status] }}>{TEXTO[f.status]}</b> {f.id} {f.titulo}</span></li>)}</ul>
+            {!(det.falhas || []).length ? <p className="kx-mut">Tudo verde.</p> : (
+              <ul className="kx-lista">{(det.falhas || []).map((f) => <li key={f.id}><span className="kx-titulo"><b style={{ color: COR[f.status] }}>{TEXTO[f.status]}</b> {f.id} {f.titulo}</span></li>)}</ul>
             )}
           </Bloco>
         )}
