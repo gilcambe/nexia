@@ -96,4 +96,20 @@ async function main() {
     } catch (e) { out(false, 'GitHub Models', redact(e && e.message)); }
   }
 }
-main().catch(e => { console.error('ERRO:', redact(e && e.message)); process.exit(1); });
+// 13/11: OpenRouter (só modelos :free; nada pago). Testa cada chave e o limite do dia, sem mostrar a chave.
+async function openrouter() {
+  for (const nome of ['OPENROUTER_API_KEY', 'OPENROUTER_API_KEY_2']) {
+    const k = env[nome];
+    if (!k) { out(false, `OpenRouter ${nome}`, 'vazio'); continue; }
+    try {
+      const h = { Authorization: 'Bearer ' + k, 'Content-Type': 'application/json' };
+      const a = await fetch('https://openrouter.ai/api/v1/key', { headers: h }).then(r => r.json()).catch(() => ({}));
+      const d = a.data || {};
+      out(!!a.data, `OpenRouter ${nome}: conta`, `grátis=${d.is_free_tier} limite=${d.limit} usado=${d.usage}`);
+      const r = await fetch('https://openrouter.ai/api/v1/chat/completions', { method: 'POST', headers: h, body: JSON.stringify({ model: 'openrouter/free', messages: [{ role: 'user', content: 'Responda só: ok' }], max_tokens: 5 }) });
+      const j = await r.json().catch(() => ({}));
+      out(r.ok, `OpenRouter ${nome}: pedido grátis`, `${r.status} ${r.ok ? (j.model || '') : redact((j.error && j.error.message) || '')}`);
+    } catch (e) { out(false, `OpenRouter ${nome}`, redact(e && e.message)); }
+  }
+}
+main().then(openrouter).catch(e => { console.error('ERRO:', redact(e && e.message)); process.exit(1); });
