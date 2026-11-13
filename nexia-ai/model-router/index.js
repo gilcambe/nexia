@@ -200,7 +200,7 @@ function createRouter(o = {}) {
     const size = (req && req.tamanho) || (req && req.size) || 'media';
     
     let descsDedupped = dedupe(descs);
-    if (treinaComDados === 'nao' || treinaComDados === false) {
+    if (treinaComDados === 'nao' || treinaComDados === false || treinaComDados === 'não') {
       descsDedupped = descsDedupped.filter(d => {
         const id = String(d.provider || '').toLowerCase();
         return !id.includes('public') && !id.includes('treino');
@@ -228,6 +228,18 @@ function createRouter(o = {}) {
           selecionados = selecionarProvedor(dedupe(descs), req, { obterCotaDisponivel, disjuntorAberto, tetosConfigurados });
         } catch {
           selecionados = descsDedupped;
+        }
+      }
+    }
+
+    // Garantir que Jules nunca seja o primeiro se houver outras opções
+    if (selecionados.length > 1) {
+      const firstId = String(selecionados[0].provider || '').toLowerCase();
+      if (firstId.includes('jules')) {
+        const altIndex = selecionados.findIndex(d => !String(d.provider || '').toLowerCase().includes('jules'));
+        if (altIndex > 0) {
+          const [alt] = selecionados.splice(altIndex, 1);
+          selecionados.unshift(alt);
         }
       }
     }
