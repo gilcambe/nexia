@@ -157,7 +157,7 @@ test('/conheca: conta o clique do dia, vai para o app com UTM e nunca falha para
   const h = createHandler({ getDb: () => ({ admin, db }), agora: () => new Date('2026-10-19T01:00:00Z') });
   const r = await h({ httpMethod: 'GET', queryStringParameters: { r: 'story' } });
   assert.equal(r.statusCode, 302);
-  assert.equal(r.headers.Location, 'https://nexiabodycoach.pages.dev/?utm_source=story&utm_medium=social&utm_campaign=divulga');
+  assert.equal(r.headers.Location, 'https://bodycoach.kernex.com.br/?utm_source=story&utm_medium=social&utm_campaign=divulga');
   assert.equal(gravados[0].nome, 'divulga_cliques');
   assert.equal(gravados[0].id, '2026-10-18'); // 22h em Brasília ainda é dia 18
   assert.deepEqual(gravados[0].d.redes, { story: { inc: 1 } });
