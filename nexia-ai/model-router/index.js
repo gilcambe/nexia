@@ -47,6 +47,9 @@ function createRouter(o = {}) {
   // #2848: todo pedido conta no crédito interno do provedor (pedidos, tokens, 429). Contar nunca quebra a resposta.
   const uso = o.uso || require('./cota').getUso();
   const contar = (id, inc) => { try { uso.incrementUsage(id, inc); } catch { /* sem conta, segue */ } };
+  
+  const { selecionarProvedor } = require('../../src/utils/providerSelector');
+  const { LIMITS } = require('../../src/config/limits');
   const tokensDe = out => (out && out.usage && (out.usage.total_tokens || ((out.usage.input_tokens || 0) + (out.usage.output_tokens || 0)))) || (out && out.text ? Math.ceil(out.text.length / 4) : 0);
   const e429 = e => (e && e.details && e.details.status === 429) ? 1 : 0;
   const contados = new Map();
