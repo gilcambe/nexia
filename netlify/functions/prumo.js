@@ -274,8 +274,7 @@ function normalizarLido(b, dataPrint) {
   if (!b || typeof b !== 'object') return b;
   const bruto = String(b.tipo || '').trim();
   const tk = String(b.ticker || '').toUpperCase();
-  // Classificação: tipo escrito pela IA (quando válido), apelido no texto, ou "outro".
-// Sem ticker e sem tipo escrito (nem apelido no nome), não inventa classificação.
+  // Classificação: tipo escrito pela IA (quando válido), apelido no nome, ou "outro".
 let tipo = TIPOS.includes(bruto) ? bruto : ((APELIDO_TIPO.find(([re]) => re.test(`${bruto} ${b.nome || ''}`)) || [])[1] || 'outro');
   // Sem ticker e sem tipo escrito (nem apelido no nome), não inventa classificação.
   if (!tk && !tipo) tipo = 'outro';
@@ -294,13 +293,11 @@ let tipo = TIPOS.includes(bruto) ? bruto : ((APELIDO_TIPO.find(([re]) => re.test
   const conta = String(b.conta || '').trim();
   let nome = String(b.nome || b.banco || '');
   if (conta && !nome.toLowerCase().includes(conta.toLowerCase())) nome = `${nome} — ${conta}`;
-  // Banco: só o nome escrito no texto do print vale. Sem banco_escrito true (ou sem nome) o campo sai "",
-  // sem lista de exemplos e sem adivinhação por logo, cor, ticker ou nome do fundo.
   // #3532: sem adivinhação de banco. Só vale o nome escrito no print (banco_escrito true). Sem nome → "".
   // Nunca adivinhe pelo logo, cor, ticker ou nome do fundo (BTLG11 não é BTG, XPML11 não é XP).
   const banco = b.banco_escrito === true ? String(b.banco || '').trim() : '';
   // A data do print vem escrita como "Atualizado em 11/11/2026" (texto livre) e pode chegar no JSON bruto.
-  const dataDoPrint = dataDoPrint(dataPrint) || dataDoPrint(b && b.data_print) || deps.agora().toISOString().slice(0, 10);
+  const dataDoPrint = dataDoPrint(dataPrint) || dataDoPrint(b && b.data_print);
   const { banco_escrito, ...resto } = b; // eslint-disable-line no-unused-vars
   return conferirValor({ ...resto, nome, tipo, valor: Number.isFinite(val) ? Math.abs(val) : b.valor,
     // #3532: data_valor = data escrita no item, ou "Atualizado em DD/MM/AAAA" do print, ou hoje.
