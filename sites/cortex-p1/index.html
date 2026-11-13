@@ -3,12 +3,12 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Cortex P1 Teste — Solução de gestão financeira ágil</title>
-  <meta name="description" content="Solução de gestão financeira ágil">
-  <meta name="theme-color" content="#0a64a4">
+  <title>Cortex p1 - Sistema Integrado — Agile task management for high-performance teams</title>
+  <meta name="description" content="Agile task management for high-performance teams">
+  <meta name="theme-color" content="#0f172a">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
   <script>try{if(localStorage.getItem('nexia-theme')==='dark')document.documentElement.dataset.theme='dark'}catch(e){}</script>
 </head>
@@ -18,15 +18,15 @@
     <aside class="sidebar" id="sidebar" aria-label="Menu do sistema">
       <div class="sidebar__brand">
         <span class="logo" aria-hidden="true">C</span>
-        <span>Cortex P1 Teste</span>
+        <span>Cortex p1 - Sistema Integrado</span>
       </div>
       <nav class="sidebar__nav" aria-label="Seções">
         <a href="#/painel" data-route="painel"><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18"/><path d="m7 15 4-4 3 3 5-6"/></svg><span>Painel</span></a>
-        <a href="#/clientes" data-route="clientes"><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg><span>Clientes</span></a>
-        <a href="#/transacoes" data-route="transacoes"><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span>Transações</span></a>
+        <a href="#/tarefas" data-route="tarefas"><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg><span>Tarefas Ativas</span></a>
+        <a href="#/clientes" data-route="clientes"><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span>Base de Clientes</span></a>
       </nav>
       <div class="sidebar__foot">
-        <p>Suporte: suporte@cortexp1.com.br</p>
+        <p>Suporte: suporte@cortex-p1.com.br</p>
         <p>Dados salvos neste navegador.</p>
       </div>
     </aside>
@@ -36,7 +36,7 @@
         <button class="icon-btn menu-btn" type="button" aria-label="Abrir menu" aria-expanded="false" aria-controls="sidebar"><svg class="i" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
         <div class="topbar__title">
           <h1 id="view-title">Painel</h1>
-          <p id="view-sub">Solução de gestão financeira ágil</p>
+          <p id="view-sub">Agile task management for high-performance teams</p>
         </div>
         <label class="search">
           <span class="sr-only">Buscar</span>
@@ -100,7 +100,7 @@
   </dialog>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <script type="application/json" id="app-config">{"key":"nexia-app:sites/cortex-p1","name":"Cortex P1 Teste","entities":[{"key":"clientes","label":"Clientes","singular":"Cliente","fields":[{"key":"nome","label":"Nome","type":"text","options":[],"required":true},{"key":"email","label":"E-mail","type":"email","options":[],"required":true},{"key":"telefone","label":"Telefone","type":"phone","options":[],"required":true},{"key":"endereco","label":"Endereço","type":"text","options":[],"required":true},{"key":"data_cadastro","label":"Data de Cadastro","type":"date","options":[],"required":true},{"key":"status","label":"Status","type":"select","options":["Ativo","Inativo"],"required":true},{"key":"observacoes","label":"Observações","type":"textarea","options":[],"required":false}],"sample":[{"nome":"Ana Paula Silva","email":"ana.silva@example.com","telefone":"(11) 98765-4321","endereco":"Rua das Flores, 123","data_cadastro":"2026-09-01","status":"Ativo","observacoes":"Preferencial cliente VIP"},{"nome":"Bruno Mendes Costa","email":"bruno.costa@example.com","telefone":"(21) 91234-5678","endereco":"Avenida Brasil, 456","data_cadastro":"2026-09-15","status":"Ativo","observacoes":""},{"nome":"Carla Oliveira Santos","email":"carla.santos@example.com","telefone":"(31) 99876-5432","endereco":"Rua das Palmeiras, 789","data_cadastro":"2026-10-05","status":"Inativo","observacoes":"Cancelado em 2026-12-01"},{"nome":"Davi Rodrigues Pereira","email":"davi.pereira@example.com","telefone":"(41) 98765-1234","endereco":"Alameda Central, 321","data_cadastro":"2026-10-20","status":"Ativo","observacoes":"Cliente com histórico de pagamento atrasado"}]},{"key":"transacoes","label":"Transações","singular":"Transação","fields":[{"key":"cliente","label":"Cliente","type":"text","options":[],"required":true},{"key":"data","label":"Data","type":"date","options":[],"required":true},{"key":"tipo","label":"Tipo","type":"select","options":["Débito","Crédito"],"required":true},{"key":"valor","label":"Valor","type":"money","options":[],"required":true},{"key":"descricao","label":"Descrição","type":"textarea","options":[],"required":false}],"sample":[{"cliente":"Ana Paula Silva","data":"2026-10-10","tipo":"Débito","valor":"1.200,00","descricao":"Compra de equipamentos"},{"cliente":"Bruno Mendes Costa","data":"2026-10-12","tipo":"Crédito","valor":"3.000,00","descricao":"Pagamento de prestação"},{"cliente":"Carla Oliveira Santos","data":"2026-10-15","tipo":"Débito","valor":"750,00","descricao":"Serviço de manutenção"},{"cliente":"Davi Rodrigues Pereira","data":"2026-10-18","tipo":"Crédito","valor":"2.500,00","descricao":"Recebimento de comissão"}]}]}</script>
+  <script type="application/json" id="app-config">{"key":"nexia-app:sites/cortex-p1","name":"Cortex p1 - Sistema Integrado","entities":[{"key":"tarefas","label":"Tarefas Ativas","singular":"Tarefa","fields":[{"key":"titulo","label":"Título da Tarefa","type":"text","options":[],"required":true},{"key":"responsavel","label":"Responsável","type":"text","options":[],"required":true},{"key":"prioridade","label":"Prioridade","type":"select","options":["Alta","Média","Baixa"],"required":true},{"key":"status","label":"Status","type":"select","options":["Em Andamento","Revisão","Bloqueado"],"required":true},{"key":"prazo","label":"Prazo de Entrega","type":"date","options":[],"required":true}],"sample":[{"titulo":"Integrar API de pagamentos","responsavel":"Paulo Andrade","prioridade":"Alta","status":"Em Andamento","prazo":"2026-12-15"},{"titulo":"Refatorar módulo de login","responsavel":"Larissa Costa","prioridade":"Média","status":"Revisão","prazo":"2026-12-10"},{"titulo":"Otimizar queries de relatório","responsavel":"Matheus Silva","prioridade":"Baixa","status":"Bloqueado","prazo":"2026-12-20"},{"titulo":"Atualizar dashboard financeiro","responsavel":"Beatriz Santos","prioridade":"Alta","status":"Em Andamento","prazo":"2026-12-12"},{"titulo":"Corrigir bug em sincronização","responsavel":"Rafael Lima","prioridade":"Média","status":"Revisão","prazo":"2026-12-09"}]},{"key":"clientes","label":"Base de Clientes","singular":"Cliente","fields":[{"key":"empresa","label":"Empresa","type":"text","options":[],"required":true},{"key":"contato","label":"Nome do Contato","type":"text","options":[],"required":true},{"key":"email","label":"E-mail Corporativo","type":"email","options":[],"required":true},{"key":"plano","label":"Plano Atual","type":"select","options":["Pro","Enterprise","Starter"],"required":true},{"key":"mrr","label":"Valor Mensal (MRR)","type":"money","options":[],"required":true}],"sample":[{"empresa":"TechFlow Solutions","contato":"João Pereira","email":"joao.pereira@techflow.com","plano":"Enterprise","mrr":"1250"},{"empresa":"Global Logistics","contato":"Mariana Alves","email":"mariana@globallog.com","plano":"Pro","mrr":"450"},{"empresa":"StartUp Care","contato":"Pedro Rocha","email":"pedro@startupcare.com","plano":"Starter","mrr":"120"},{"empresa":"DataWise Consulting","contato":"Fernanda Dias","email":"fernanda@datawise.com","plano":"Pro","mrr":"680"}]}]}</script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.js" defer></script>
   <script src="app.js" defer></script>
 </body>
