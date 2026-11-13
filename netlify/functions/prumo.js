@@ -264,13 +264,10 @@ function normalizarLido(b, dataPrint) {
   const conta = String(b.conta || '').trim();
   let nome = String(b.nome || b.banco || '');
   if (conta && !nome.toLowerCase().includes(conta.toLowerCase())) nome = `${nome} — ${conta}`;
-  // #3532: banco só quando está escrito no print.
-  // A data vem do print ("Atualizado em DD/MM/AAAA") ou é a data atual.
-  const banco = b.banco_escrito || !instituicao ? String(b.banco || '').trim() : '';
+  // Banco: se b.banco_escrito for verdadeiro, usa b.banco; caso contrário, vazio (""). Sem adivinhação.
+  const banco = b.banco_escrito ? String(b.banco || '').trim() : '';
   const { banco_escrito, instituicao, ...resto } = b; // eslint-disable-line no-unused-vars
   const dataValor = dataLida(b.data_print) || dataLida(b.data_valor) || new Date().toISOString().slice(0, 10);
-  const banco = String(b.banco || '').trim();
-  const { banco_escrito, instituicao, ...resto } = b; // eslint-disable-line no-unused-vars
   return conferirValor({ ...resto, nome, tipo, valor: Number.isFinite(val) ? Math.abs(val) : b.valor,
     data_valor: dataValor, vencimento: dataLida(b.vencimento) || null, banco });
 }
