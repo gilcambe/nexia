@@ -2,27 +2,27 @@
   "spec": {
     "kind": "system",
     "name": "Kernex Finance",
-    "tagline": "Gestão financeira simplificada para seu negócio",
-    "photo_theme": "",
-    "description": "Gestão financeira simplificada para seu negócio",
+    "tagline": "Gestão financeira corporativa e central de alertas",
+    "photo_theme": "financial dashboard analytics",
+    "description": "Gestão financeira corporativa e central de alertas",
     "folder": "sites/kernex-finance",
     "fonts": {
-      "heading": "Montserrat",
+      "heading": "Outfit",
       "body": "Inter"
     },
     "palette": {
-      "primary": "#0052cc",
-      "accent": "#ff6f61",
+      "primary": "#0f172a",
+      "accent": "#2563eb",
       "bg": "#fbfaf7",
       "surface": "#ffffff",
       "text": "#1d2426",
       "muted": "#5d6b6e",
-      "dark": "#111827"
+      "dark": "#020617"
     },
     "style": "modern",
     "contact": {
-      "whatsapp": "",
-      "phone": "(11) 4002-8922",
+      "whatsapp": "11999999999",
+      "phone": "(11) 3000-0000",
       "email": "suporte@kernex.com.br",
       "address": "",
       "city": "",
@@ -44,25 +44,148 @@
     "leads_origem": "",
     "entities": [
       {
+        "key": "rotas",
+        "label": "Rotas e Domínios",
+        "singular": "Rota",
+        "fields": [
+          {
+            "key": "host",
+            "label": "Domínio / Host",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "destino",
+            "label": "Caminho Interno",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "status",
+            "label": "Status DNS",
+            "type": "select",
+            "options": [
+              "Ativo",
+              "Pendente",
+              "Redirecionando"
+            ],
+            "required": true
+          },
+          {
+            "key": "atualizado",
+            "label": "Última Atualização",
+            "type": "date",
+            "options": [],
+            "required": true
+          }
+        ],
+        "sample": [
+          {
+            "host": "finance.kernex.com.br",
+            "destino": "/prumo/",
+            "status": "Ativo",
+            "atualizado": "2026-11-12"
+          },
+          {
+            "host": "ces.kernex.com.br",
+            "destino": "/ces/",
+            "status": "Ativo",
+            "atualizado": "2026-11-01"
+          },
+          {
+            "host": "cortex.kernex.com.br",
+            "destino": "/cortex/",
+            "status": "Ativo",
+            "atualizado": "2026-10-15"
+          },
+          {
+            "host": "nexia.gcbezerra.workers.dev",
+            "destino": "/prumo/",
+            "status": "Redirecionando",
+            "atualizado": "2026-11-12"
+          }
+        ]
+      },
+      {
+        "key": "alertas",
+        "label": "Alertas Diários",
+        "singular": "Alerta",
+        "fields": [
+          {
+            "key": "titulo",
+            "label": "Título do Alerta",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "canal",
+            "label": "Canal de Envio",
+            "type": "select",
+            "options": [
+              "E-mail",
+              "WhatsApp",
+              "Webhook"
+            ],
+            "required": true
+          },
+          {
+            "key": "hora",
+            "label": "Horário Disparo",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "ativo",
+            "label": "Ativo",
+            "type": "select",
+            "options": [
+              "Sim",
+              "Não"
+            ],
+            "required": true
+          }
+        ],
+        "sample": [
+          {
+            "titulo": "Fechamento Caixa Diário",
+            "canal": "E-mail",
+            "hora": "08:00",
+            "ativo": "Sim"
+          },
+          {
+            "titulo": "Resumo de Inadimplência",
+            "canal": "WhatsApp",
+            "hora": "09:30",
+            "ativo": "Sim"
+          },
+          {
+            "titulo": "Conciliação Bancária",
+            "canal": "Webhook",
+            "hora": "18:00",
+            "ativo": "Sim"
+          },
+          {
+            "titulo": "Alerta de Orçamento Estourado",
+            "canal": "E-mail",
+            "hora": "12:00",
+            "ativo": "Não"
+          }
+        ]
+      },
+      {
         "key": "transacoes",
         "label": "Transações",
         "singular": "Transação",
         "fields": [
           {
-            "key": "data",
-            "label": "Data",
-            "type": "date",
+            "key": "descricao",
+            "label": "Descrição",
+            "type": "text",
             "options": [],
-            "required": true
-          },
-          {
-            "key": "tipo",
-            "label": "Tipo",
-            "type": "select",
-            "options": [
-              "Receita",
-              "Despesa"
-            ],
             "required": true
           },
           {
@@ -73,9 +196,9 @@
             "required": true
           },
           {
-            "key": "descricao",
-            "label": "Descrição",
-            "type": "text",
+            "key": "vencimento",
+            "label": "Vencimento",
+            "type": "date",
             "options": [],
             "required": true
           },
@@ -84,356 +207,47 @@
             "label": "Categoria",
             "type": "select",
             "options": [
-              "Salário",
-              "Venda",
-              "Aluguel",
-              "Serviço",
-              "Impostos"
-            ],
-            "required": true
-          },
-          {
-            "key": "conta",
-            "label": "Conta",
-            "type": "select",
-            "options": [
-              "Conta Corrente",
-              "Conta Poupança",
-              "Cartão de Crédito",
-              "PIX"
-            ],
-            "required": true
-          },
-          {
-            "key": "status",
-            "label": "Status",
-            "type": "select",
-            "options": [
-              "Pendente",
-              "Concluída",
-              "Cancelada"
+              "Receita Operacional",
+              "Infraestrutura",
+              "Pessoal",
+              "Marketing"
             ],
             "required": true
           }
         ],
         "sample": [
           {
-            "data": "2026-11-10",
-            "tipo": "Receita",
-            "valor": "5000",
-            "descricao": "Venda de produtos digitais",
-            "categoria": "Venda",
-            "conta": "Conta Corrente",
-            "status": "Concluída"
+            "descricao": "Assinatura Cloudflare Workers",
+            "valor": "150.00",
+            "vencimento": "2026-11-20",
+            "categoria": "Infraestrutura"
           },
           {
-            "data": "2026-11-12",
-            "tipo": "Despesa",
-            "valor": "1200",
-            "descricao": "Aluguel do escritório",
-            "categoria": "Aluguel",
-            "conta": "Conta Corrente",
-            "status": "Concluída"
+            "descricao": "Mensalidade Cliente Enterprise",
+            "valor": "4500.00",
+            "vencimento": "2026-11-15",
+            "categoria": "Receita Operacional"
           },
           {
-            "data": "2026-11-15",
-            "tipo": "Despesa",
-            "valor": "800",
-            "descricao": "Compra de equipamentos",
-            "categoria": "Serviço",
-            "conta": "Conta Poupança",
-            "status": "Pendente"
+            "descricao": "Folha de Pagamento",
+            "valor": "12500.00",
+            "vencimento": "2026-11-30",
+            "categoria": "Pessoal"
           },
           {
-            "data": "2026-11-18",
-            "tipo": "Receita",
-            "valor": "3500",
-            "descricao": "Pagamento de cliente X",
-            "categoria": "Venda",
-            "conta": "PIX",
-            "status": "Concluída"
-          },
-          {
-            "data": "2026-11-20",
-            "tipo": "Despesa",
-            "valor": "600",
-            "descricao": "Taxa bancária",
-            "categoria": "Impostos",
-            "conta": "Conta Corrente",
-            "status": "Cancelada"
-          }
-        ]
-      },
-      {
-        "key": "contas",
-        "label": "Contas",
-        "singular": "Conta",
-        "fields": [
-          {
-            "key": "nome",
-            "label": "Nome",
-            "type": "text",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "tipo",
-            "label": "Tipo",
-            "type": "select",
-            "options": [
-              "Conta Corrente",
-              "Conta Poupança",
-              "Cartão de Crédito",
-              "PIX"
-            ],
-            "required": true
-          },
-          {
-            "key": "saldo",
-            "label": "Saldo",
-            "type": "money",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "banco",
-            "label": "Banco",
-            "type": "text",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "agencia",
-            "label": "Agência",
-            "type": "text",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "numero",
-            "label": "Número",
-            "type": "text",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "status",
-            "label": "Status",
-            "type": "select",
-            "options": [
-              "Ativa",
-              "Bloqueada",
-              "Cancelada"
-            ],
-            "required": true
-          }
-        ],
-        "sample": [
-          {
-            "nome": "Conta Corrente Principal",
-            "tipo": "Conta Corrente",
-            "saldo": "12000",
-            "banco": "Banco do Brasil",
-            "agencia": "1234",
-            "numero": "567890-1",
-            "status": "Ativa"
-          },
-          {
-            "nome": "Conta Poupança",
-            "tipo": "Conta Poupança",
-            "saldo": "8000",
-            "banco": "Itaú",
-            "agencia": "9876",
-            "numero": "543210-2",
-            "status": "Ativa"
-          },
-          {
-            "nome": "Cartão de Crédito MasterCard",
-            "tipo": "Cartão de Crédito",
-            "saldo": "-2000",
-            "banco": "Bradesco",
-            "agencia": "0000",
-            "numero": "1111222233334444",
-            "status": "Ativa"
-          },
-          {
-            "nome": "Conta PIX",
-            "tipo": "PIX",
-            "saldo": "5000",
-            "banco": "Banco Inter",
-            "agencia": "N/A",
-            "numero": "12345678901",
-            "status": "Ativa"
-          }
-        ]
-      },
-      {
-        "key": "clientes",
-        "label": "Clientes",
-        "singular": "Cliente",
-        "fields": [
-          {
-            "key": "nome",
-            "label": "Nome",
-            "type": "text",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "email",
-            "label": "E-mail",
-            "type": "email",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "telefone",
-            "label": "Telefone",
-            "type": "phone",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "endereco",
-            "label": "Endereço",
-            "type": "text",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "cidade",
-            "label": "Cidade",
-            "type": "text",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "estado",
-            "label": "Estado",
-            "type": "text",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "cep",
-            "label": "CEP",
-            "type": "text",
-            "options": [],
-            "required": true
-          }
-        ],
-        "sample": [
-          {
-            "nome": "Ana Silva",
-            "email": "ana.silva@email.com",
-            "telefone": "(11) 91234-5678",
-            "endereco": "Rua das Flores, 123",
-            "cidade": "São Paulo",
-            "estado": "SP",
-            "cep": "01001-000"
-          },
-          {
-            "nome": "Bruno Costa",
-            "email": "bruno.costa@email.com",
-            "telefone": "(11) 99876-5432",
-            "endereco": "Avenida Central, 456",
-            "cidade": "São Paulo",
-            "estado": "SP",
-            "cep": "01002-000"
-          },
-          {
-            "nome": "Carla Mendes",
-            "email": "carla.mendes@email.com",
-            "telefone": "(11) 98765-4321",
-            "endereco": "Rua Nova, 789",
-            "cidade": "São Paulo",
-            "estado": "SP",
-            "cep": "01003-000"
-          },
-          {
-            "nome": "Davi Lima",
-            "email": "davi.lima@email.com",
-            "telefone": "(11) 97654-3210",
-            "endereco": "Alameda do Sol, 101",
-            "cidade": "São Paulo",
-            "estado": "SP",
-            "cep": "01004-000"
-          }
-        ]
-      },
-      {
-        "key": "relatorios",
-        "label": "Relatórios",
-        "singular": "Relatório",
-        "fields": [
-          {
-            "key": "nome",
-            "label": "Nome",
-            "type": "text",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "periodo",
-            "label": "Período",
-            "type": "text",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "tipo",
-            "label": "Tipo",
-            "type": "select",
-            "options": [
-              "Financeiro",
-              "Operacional",
-              "Vendas"
-            ],
-            "required": true
-          },
-          {
-            "key": "gerado_em",
-            "label": "Gerado em",
-            "type": "date",
-            "options": [],
-            "required": true
-          }
-        ],
-        "sample": [
-          {
-            "nome": "Relatório Mensal",
-            "periodo": "10/2026",
-            "tipo": "Financeiro",
-            "gerado_em": "2026-11-01"
-          },
-          {
-            "nome": "Relatório de Vendas Q4",
-            "periodo": "Q4 2026",
-            "tipo": "Vendas",
-            "gerado_em": "2026-11-05"
-          },
-          {
-            "nome": "Relatório de Operações",
-            "periodo": "01-2026",
-            "tipo": "Operacional",
-            "gerado_em": "2026-11-07"
-          },
-          {
-            "nome": "Relatório de Despesas",
-            "periodo": "09/2026",
-            "tipo": "Financeiro",
-            "gerado_em": "2026-11-09"
+            "descricao": "Campanha Google Ads",
+            "valor": "800.00",
+            "vencimento": "2026-11-25",
+            "categoria": "Marketing"
           }
         ]
       }
     ],
     "modules": [
-      "Dashboard",
+      "Domínios e Rotas",
+      "Alertas e E-mails",
       "Transações",
-      "Contas",
-      "Clientes",
-      "Relatórios",
-      "Configurações"
+      "Central de Configurações"
     ]
   },
   "media": {}
