@@ -15,8 +15,15 @@ for (const [nome, resposta] of Object.entries(RESPOSTAS)) {
     page.on('pageerror', (e) => erros.push(String(e && e.message || e)));
     await page.route('**/api/**', (r) => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(resposta()) }));
     await page.route(/firebase|googleapis|gstatic/, (r) => r.abort());
-    await page.goto('/central');
-    await expect(page.getByTestId('kx-casca')).toBeVisible({ timeout: 30_000 });
+    // dist/central/ existe (logos), então o servidor de teste não devolve o app em /central: entra por / e troca a rota.
+    await page.goto('/');
+    await page.evaluate(() => { history.pushState(null, '', '/central'); dispatchEvent(new PopStateEvent('popstate')); });
+    try {
+      await expect(page.getByTestId('kx-casca')).toBeVisible({ timeout: 30_000 });
+    } catch (e) {
+      console.log('URL:', page.url(), '\nTELA:', (await page.locator('body').innerText()).slice(0, 800), '\nERROS:', erros.join(' | '));
+      throw e;
+    }
     const telas = await page.locator('[data-testid^="kx-menu-"]').evaluateAll((els) => els.map((e) => e.getAttribute('data-testid')));
     expect(telas.length).toBeGreaterThan(5);
     for (const t of telas) {
