@@ -4,7 +4,7 @@
     "name": "Kernex Finance",
     "tagline": "Gestão financeira empresarial integrada e controle de domínios",
     "photo_theme": "corporate finance dashboard",
-    "description": "Gestão financeira empresarial integrada e controle de domínios",
+    "description": "Painel de controle financeiro e gerenciamento de domínios e alertas Kernex Finance",
     "folder": "sites/kernex-finance",
     "fonts": {
       "heading": "Outfit",
@@ -103,7 +103,7 @@
           },
           {
             "host": "nexia.gcbezerra.workers.dev",
-            "destino": "/prumo/ (Legado)",
+            "destino": "/prumo/ (Legado - Com aviso para finance.kernex.com.br)",
             "status": "Ativo",
             "responsavel": "Migração"
           }
