@@ -14,8 +14,11 @@ const ESPERA_JULES_H = 1;
 const IGNORAR = ['cortex-dividido', 'cortex-alerta', 'so-humano', 'vez-do-claude'];
 // Pedido do dono (07/11): repositórios PRIVADOS de outros produtos com issues cortex-fila próprias. O código deles
 // não pode vir para este repo público, então o Jules trabalha direto lá (base main). 1 envio por repo a cada 15 min.
-const reposExtras = (env) => String(env.JULES_REPOS_EXTRA == null ? 'gilcambe/avaya-gsd' : env.JULES_REPOS_EXTRA)
-  .split(',').map(s => s.trim()).filter(s => /^[\w.-]+\/[\w.-]+$/.test(s));
+// 13/11/2026: o padrão agora é a KERNEX Academy (repo privado). Avaya é confidencial e só leitura: NUNCA entra,
+// nem se alguém puser na variável.
+const NUNCA_EXTRA = /^gilcambe\/avaya/i;
+const reposExtras = (env) => String(env.JULES_REPOS_EXTRA == null ? 'gilcambe/fluency-lab' : env.JULES_REPOS_EXTRA)
+  .split(',').map(s => s.trim()).filter(s => /^[\w.-]+\/[\w.-]+$/.test(s) && !NUNCA_EXTRA.test(s));
 
 // Próxima issue do repo extra: cortex-fila aberta, sem jules-enviado e sem PR aberto que cite #N (função pura, testada).
 function proximaExtra(issues, prs, nomes) {
