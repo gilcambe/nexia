@@ -14,7 +14,8 @@ for (const [nome, resposta] of Object.entries(RESPOSTAS)) {
     const erros = [];
     page.on('pageerror', (e) => erros.push(String(e && e.message || e)));
     await page.route('**/api/**', (r) => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(resposta()) }));
-    await page.route(/firebase|googleapis|gstatic/, (r) => r.abort());
+    // só sites externos: o app tem pedaços chamados firebase-*.js no próprio servidor (bloquear eles deixava a tela vazia)
+    await page.route((u) => /firebase|googleapis|gstatic/.test(u.hostname), (r) => r.abort());
     // dist/central/ existe (logos), então o servidor de teste não devolve o app em /central: entra por / e troca a rota.
     await page.goto('/');
     await page.evaluate(() => { history.pushState(null, '', '/central'); dispatchEvent(new PopStateEvent('popstate')); });
