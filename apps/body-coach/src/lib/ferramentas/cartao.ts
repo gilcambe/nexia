@@ -100,14 +100,14 @@ export function desenharCartao(c: HTMLCanvasElement, d: DadosCartao): void {
   }
   ctx.fillStyle = 'rgba(255,255,255,0.75)';
   ctx.font = '32px system-ui, sans-serif';
-  ctx.fillText('@nexiabodycoach', 90, 1805);
+  ctx.fillText('@kernex_bodycoach', 90, 1805);
   ctx.fillStyle = 'rgba(255,255,255,0.55)';
   ctx.font = '28px system-ui, sans-serif';
   ctx.fillText('Feito com NEXIA', 90, 1830);
   if (d.link && (d.selo ?? seloLigado())) selo(ctx, 1080, 1920, d.link);
 }
 
-// Resumo da semana no formato do feed do Instagram (1080×1350, retrato 4:5) com @nexiabodycoach:
+// Resumo da semana no formato do feed do Instagram (1080×1350, retrato 4:5) com @kernex_bodycoach:
 // quem posta a evolução divulga o app. Mesmas cores e selo do cartão do treino.
 export const FEED = { largura: 1080, altura: 1350 };
 export function desenharResumoSemanal(c: HTMLCanvasElement, d: DadosCartao): void {
@@ -182,7 +182,7 @@ export function desenharResumoSemanal(c: HTMLCanvasElement, d: DadosCartao): voi
   ctx.fillText('Evolua comigo no Body Coach', 80, H - 140);
   ctx.fillStyle = 'rgba(255,255,255,0.8)';
   ctx.font = '32px system-ui, sans-serif';
-  ctx.fillText('@nexiabodycoach', 80, H - 90);
+  ctx.fillText('@kernex_bodycoach', 80, H - 90);
   if (d.link && (d.selo ?? seloLigado())) selo(ctx, W, H, d.link);
 }
 
@@ -208,7 +208,7 @@ function matrizQr(link: string): boolean[][] {
   return m;
 }
 
-// Selo do app no canto de baixo à direita: faixa escura com o QR do link e "Body Coach / @nexiabodycoach · escaneie".
+// Selo do app no canto de baixo à direita: faixa escura com o QR do link e "Body Coach / @kernex_bodycoach · escaneie".
 // Desenho síncrono: dá para chamar em todo quadro do vídeo.
 export function selo(ctx: CanvasRenderingContext2D, w: number, h: number, link: string): void {
   if (!link) return;
@@ -224,7 +224,7 @@ export function selo(ctx: CanvasRenderingContext2D, w: number, h: number, link: 
   ctx.font = `800 ${34 * u}px system-ui, sans-serif`;
   const l1 = ctx.measureText('Body Coach').width;
   ctx.font = `500 ${23 * u}px system-ui, sans-serif`;
-  const l2 = ctx.measureText('@nexiabodycoach · escaneie').width;
+  const l2 = ctx.measureText('@kernex_bodycoach · escaneie').width;
   const largura = pad + lado + 18 * u + Math.max(l1, l2) + pad * 1.4;
   const altura = lado + pad * 2;
   const x = w - margem - largura;
@@ -253,7 +253,7 @@ export function selo(ctx: CanvasRenderingContext2D, w: number, h: number, link: 
   ctx.fillText('Body Coach', tx, y + altura / 2 - 4 * u);
   ctx.fillStyle = 'rgba(255,255,255,0.85)';
   ctx.font = `500 ${23 * u}px system-ui, sans-serif`;
-  ctx.fillText('@nexiabodycoach · escaneie', tx, y + altura / 2 + 30 * u);
+  ctx.fillText('@kernex_bodycoach · escaneie', tx, y + altura / 2 + 30 * u);
   ctx.restore();
 }
 

@@ -148,6 +148,6 @@ export async function desenharCertificado(c: HTMLCanvasElement, d: { nome: strin
   ctx.font = '34px system-ui, sans-serif';
   ctx.fillText(d.link.replace(/^https?:\/\//, '').split('/')[0], 540, 1235);
   ctx.fillStyle = 'rgba(255,255,255,0.75)';
-  ctx.fillText('@nexiabodycoach  #DesafioBodyCoach', 540, 1300);
+  ctx.fillText('@kernex_bodycoach  #DesafioBodyCoach', 540, 1300);
   ctx.textAlign = 'left';
 }

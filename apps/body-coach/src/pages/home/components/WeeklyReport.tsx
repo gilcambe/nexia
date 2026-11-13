@@ -210,7 +210,7 @@ export default function WeeklyReport() {
             Relatório gerado por regras a partir dos seus dados reais de check-in e evolução.
           </p>
           <div className="mt-3">
-            <CompartilharCartao dados={cartao} formato="feed" rotulo="Postar minha semana no Instagram" texto="Minha semana no Body Coach 💪 @nexiabodycoach" />
+            <CompartilharCartao dados={cartao} formato="feed" rotulo="Postar minha semana no Instagram" texto="Minha semana no Body Coach 💪 @kernex_bodycoach" />
           </div>
         </>
       )}
