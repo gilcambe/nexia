@@ -6,6 +6,9 @@
 //   GET  parte=escritorio-resumo                → { titulo, texto, precisaVoce:[recado], atrasados:[recado], feitos, alertas, porArea:{id:{nome,feitos,abertos,ultimo}}, em }
 //   POST acao=escritorio-ok { id, aprovado: true|false, motivo? }  → { recado } (o dono aprova/recusa um 'precisa-ok')
 //   POST acao=escritorio-postar { area, texto, tipo?, para? }       → { recado } (o dono escreve no mural: "Comercial, priorize X")
+//   POST acao=escritorio-viabilidade { ramo, precisa: [..], descricao? }
+//        → { nivel: 'pronto'|'web'|'arriscado'|'nao-fazemos', podeVender, motivos[], modelo, prontos[], faltam[], cobertura[], resposta, buscando[] }
+//        (regra do dono: nunca aceitar o que o Cortex não dá conta; o que falta sem pronto vira pedido ao Buscador no mural)
 // Sem D1 configurado: 503 { error } (a tela mostra "Escritório ainda não ligado").
 const { AREAS } = require('../../../nexia-ai/escritorio/areas');
 const { createMural } = require('../../../nexia-ai/escritorio/mural');
@@ -13,6 +16,21 @@ const { montarResumo } = require('../../../nexia-ai/escritorio/diretor');
 
 async function rota({ parte, acao, query = {}, body = {} }, { mural = null, env = process.env } = {}) {
   if (parte === 'escritorio-areas') return { status: 200, corpo: { areas: AREAS } };
+  if (acao === 'escritorio-viabilidade') {
+    const { analisar } = require('../../../nexia-ai/escritorio/viabilidade');
+    const { pedidoDeBusca } = require('../../../nexia-ai/escritorio/buscador');
+    const precisa = Array.isArray(body.precisa) ? body.precisa.map(String).slice(0, 15) : String(body.precisa || '').split(',').map((s) => s.trim()).filter(Boolean);
+    const a = analisar({ ramo: String(body.ramo || ''), precisa, descricao: String(body.descricao || '').slice(0, 600) });
+    const buscando = [];
+    const mv = mural || createMural({ env });
+    try {
+      if (mv.ligado()) {
+        await mv.postar({ area: 'viabilidade', agente: 'Analista técnico', tipo: 'feito', texto: `Pedido "${String(body.ramo || '')}${precisa.length ? ' + ' + precisa.join(', ') : ''}": ${a.nivel.toUpperCase()}. ${a.motivos.join(' ')}` });
+        for (const f of (a.descobertas || []).slice(0, 5)) { await mv.postar(pedidoDeBusca(f)); buscando.push(f); }
+      }
+    } catch { /* o mural é extra */ }
+    return { status: 200, corpo: { ...a, buscando } };
+  }
   const m = mural || createMural({ env });
   const pronto = () => { try { return m.ligado(); } catch { return false; } };
   if (!['escritorio-mural', 'escritorio-resumo'].includes(parte) && !['escritorio-ok', 'escritorio-postar'].includes(acao)) return null;
