@@ -1,0 +1,31 @@
+# KERNEX Empresa Autônoma (Fase 8, 13/11/2026): o agente DIRETOR lê o mural das áreas, cobra o que está atrasado
+# e monta o resumo do dono — 8h e 18h de Brasília (11h e 21h UTC). Grátis (Actions), não gasta IA.
+name: Escritório - Diretor
+
+on:
+  schedule:
+    - cron: '0 11 * * *'
+    - cron: '0 21 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: escritorio-diretor
+  cancel-in-progress: false
+
+jobs:
+  diretor:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '20'
+      - name: Rodada do Diretor
+        run: node scripts/escritorio-diretor.js
+        env:
+          NEXIA_D1_TOKEN: ${{ secrets.NEXIA_D1_TOKEN }}
+          NEXIA_D1_ACCOUNT_ID: ${{ secrets.NEXIA_D1_ACCOUNT_ID }}

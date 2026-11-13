@@ -66,6 +66,10 @@ function createHandler(deps = {}) {
           const r = await require('./central/fabrica').rota({ acao: body.acao, body }, { gh: deps.ghRaiz || require('./central/fabrica').criarGhRaiz(env, fetchFn), loja: deps.lojaFabrica !== undefined ? deps.lojaFabrica : require('./central/fabrica').criarLoja(env) });
           if (r) return res(r.status, r.corpo);
         }
+        if (String(body.acao || '').startsWith('escritorio-')) {   // Fase 8: Escritório (mural das áreas)
+          const r = await require('./central/escritorio').rota({ acao: body.acao, body }, { mural: deps.mural || null, env });
+          if (r) return res(r.status, r.corpo);
+        }
         if (body.acao === 'testar-ias') return res(200, { ias: await empresa.testarIAs(getRouter(), getIAs()), em: new Date().toISOString() });
         // Cadastro de cliente sem PR (regra dos 20 projetos/hora). Só master chega aqui.
         if (body.acao === 'cliente-criar') { const r = await require('./central/clientes-cadastro').criar(body, { getDb }); return res(r.status, r.corpo); }
@@ -125,6 +129,10 @@ function createHandler(deps = {}) {
       const parte = String((event.queryStringParameters || {}).parte || 'lista');
       if (String(parte || '').startsWith('fabrica-')) {
         const r = await require('./central/fabrica').rota({ parte, query: event.queryStringParameters || {} }, { gh: deps.ghRaiz || require('./central/fabrica').criarGhRaiz(env, fetchFn), loja: deps.lojaFabrica !== undefined ? deps.lojaFabrica : require('./central/fabrica').criarLoja(env) });
+        if (r) return res(r.status, r.corpo);
+      }
+      if (parte.startsWith('escritorio-')) {   // Fase 8: Escritório
+        const r = await require('./central/escritorio').rota({ parte, query: event.queryStringParameters || {} }, { mural: deps.mural || null, env });
         if (r) return res(r.status, r.corpo);
       }
       if (parte === 'lista') return res(200, { produtos: PRODUTOS, links: LINKS });
