@@ -275,4 +275,36 @@ export const CSS = `@import url("https://fonts.googleapis.com/css2?family=Inter:
 .kx .kx-bv-entrada textarea{background:none;border:0;padding:0}
 .kx .kx-busca{padding-left:40px}
 .kx .kx-bv-projeto select,.kx .kx-tela select.kx-busca{padding-left:12px}
+
+/* 13/11 IDENTIDADE KERNEX (dono: "a KERNEX já tem uma identidade visual que deve ser fixa e respeitada").
+   Paleta oficial de brand/kernex/cores.json e do Protetor de tela Kernex: fundo #060c1c, card #0b1730,
+   azul #6fb8ff, ciano #2fd3c7, botão #1d5fd0, fonte Inter. Esta camada vem por último e manda. */
+.kx{--fundo:#060c1c;--fundo2:#071126;--card:#0b1730;--card2:#0e1d3a;--linha:rgba(111,184,255,.14);--txt:#e2e8f2;--mut:#8fa3c0;--az:#6fb8ff;--ci:#2fd3c7;--ouro:#2fd3c7;font-family:Inter,system-ui,sans-serif;background:radial-gradient(1200px 600px at 85% -10%,rgba(29,95,208,.18),transparent 60%),var(--fundo)!important}
+.kx-marca,.kx-menu{background:var(--fundo2)!important;border-color:var(--linha)!important}
+.kx-topo{background:rgba(6,12,28,.92)!important}
+.kx-logo{letter-spacing:.22em;font-weight:700;background:linear-gradient(180deg,#e2e8f2,#8fa3c0);-webkit-background-clip:text;background-clip:text;color:transparent}
+.kx-logo small{letter-spacing:.02em;font-weight:500;-webkit-text-fill-color:var(--ci);color:var(--ci)}
+.kx-menu button{color:#b8c6db}
+.kx-menu button[aria-current=page]{background:#0a2468!important;color:#fff;box-shadow:inset 3px 0 0 var(--ci)!important}
+.kx-submenu{display:grid;gap:1px;margin:2px 0 8px 30px;padding-left:10px;border-left:1px solid var(--linha)}
+.kx-submenu button{all:unset;cursor:pointer;font-size:12.5px;color:var(--mut);padding:5px 8px;border-radius:7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kx-submenu button:hover{color:var(--txt);background:rgba(111,184,255,.06)}
+.kx-submenu button[aria-current=page]{color:var(--ci);background:rgba(47,211,199,.08);font-weight:600}
+.kx-btn:hover{border-color:var(--az)}
+.kx-btn.forte{background:#1d5fd0!important;border-color:#1d5fd0!important;color:#fff!important}
+.kx-btn.forte:hover{background:#2a6fe6!important}
+.kx-kpi .ico{color:var(--az)}
+.kx-barra i{background:linear-gradient(90deg,#1d5fd0,var(--ci))!important}
+.kx-online{width:100%;box-sizing:border-box;color:var(--txt);white-space:normal;overflow-wrap:anywhere}
+.kx-chip[aria-pressed=true]{background:#1d5fd0!important;border-color:#1d5fd0!important;color:#fff!important}
+.kx-kpi .ico,.kx-mod .ico{background:linear-gradient(135deg,#1d5fd0,#0a2468)!important;color:#fff}
+.kx-classico{background:var(--card);border:1px solid var(--linha);border-radius:14px;padding:16px;color:var(--txt);overflow:auto}
+.kx-classico a{color:var(--az)}
+.kx-classico [class*=bg-white],.kx-classico [class*=bg-gray-50],.kx-classico [class*=bg-slate-50],.kx-classico [class*=bg-gray-100]{background:var(--card2)!important;color:var(--txt)!important}
+.kx-classico [class*=text-gray-9],.kx-classico [class*=text-gray-8],.kx-classico [class*=text-slate-9]{color:var(--txt)!important}
+.kx-classico [class*=text-gray-5],.kx-classico [class*=text-gray-6]{color:var(--mut)!important}
+.kx-classico [class*=bg-gray-2],.kx-classico [class*=bg-slate-2]{background:rgba(111,184,255,.08)!important}
+.kx-classico [class*=bg-gray-9],.kx-classico [class*=bg-zinc-9],.kx-classico [class*=bg-neutral-9],.kx-classico [class*=bg-black]{background:var(--card2)!important}
+.kx-online{max-width:100%;min-width:0}
+.kx-online>span:last-child{min-width:0}
 `;

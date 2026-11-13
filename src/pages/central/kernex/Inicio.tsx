@@ -116,7 +116,7 @@ export default function Inicio({ irPara, painel, nome }: { irPara: (t: TelaId) =
   const temMaq = !!(maq && maq.ligado && maq.maquinas.length);
   const saude = painel.saude;
   const pctNoAr = saude && saude.total ? Math.round(((saude.total - saude.fora) / saude.total) * 100) : 0;
-  const fraseHeroi = !ias ? "Conferindo como está tudo…" : sinal.cor === "verde" ? "Sua Central está funcionando: nada travado e nada esperando você." : sinal.cor === "amarelo" ? fraseTravadas(c.travada || 0, travadasDoDono) : `${nDono} coisa(s) precisam de você${saude && saude.fora ? ` e ${saude.fora} serviço(s) estão fora do ar` : ""}.`;
+  const fraseHeroi = !ias ? "Conferindo como está tudo…" : sinal.cor === "verde" ? "Sua Central está funcionando: nada travado e nada esperando você." : sinal.cor === "amarelo" ? fraseTravadas(c.travada || 0, travadasDoDono) : [nDono ? (nDono === 1 ? "1 coisa precisa de você" : `${nDono} coisas precisam de você`) : "", saude && saude.fora ? (saude.fora === 1 ? "1 site ou sistema está fora do ar (toque em Serviços no ar para ver qual e como resolver)" : `${saude.fora} sites e sistemas estão fora do ar (toque em Serviços no ar para ver quais e como resolver)`) : ""].filter(Boolean).join(" e ") + ".";
   const iasLista = (ias?.ias || []).slice().sort((a, b) => Number(b.ativa) - Number(a.ativa)).slice(0, 5);
 
   return (
@@ -152,9 +152,9 @@ export default function Inicio({ irPara, painel, nome }: { irPara: (t: TelaId) =
         <span><b>{ias ? c.travada || 0 : "—"}</b><span>Tarefas travadas</span>
           <small style={{ color: c.travada ? "#fcd34d" : "#86efac" }}>{!ias ? "conferindo" : c.travada ? (travadasDoDono ? `${travadasDoDono} precisa(m) de você` : "o Cortex já tenta de novo, sozinho") : "Tudo OK!"}</small></span>
       </button>
-      <button type="button" className={"kx-kpi " + (saude && saude.fora ? "vm" : "lj")} onClick={() => irPara("publicacoes")} data-testid="kx-kpi-servicos">
+      <button type="button" className={"kx-kpi " + (saude && saude.fora ? "vm" : "lj")} onClick={() => irPara("servicos")} data-testid="kx-kpi-servicos" title="Ver cada site e sistema, o que caiu e como resolver">
         <span className="ico" style={{ background: "linear-gradient(135deg,#f59e0b,#c2410c)" }}><Icone nome="servidor" tam={26} cor="#fff" /></span>
-        <span style={{ flex: 1, minWidth: 0 }}><b>{saude && saude.total ? `${saude.total - saude.fora} de ${saude.total}` : "—"}</b><span>Serviços no ar</span>
+        <span style={{ flex: 1, minWidth: 0 }}><b>{saude && saude.total ? `${saude.total - saude.fora} de ${saude.total}` : "—"}</b><span>Sites e sistemas no ar</span><small>{saude && saude.fora ? "toque para ver o que caiu e como resolver" : saude && saude.total ? "toque para ver a lista" : ""}</small>
           {saude ? <span className="kx-barra" style={{ display: "block", marginTop: 8 }}><i style={{ width: pctNoAr + "%", background: "linear-gradient(90deg,#f59e0b,#fb923c)" }} /></span> : <small>conferindo</small>}</span>
       </button>
 

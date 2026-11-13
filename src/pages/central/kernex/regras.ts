@@ -20,19 +20,29 @@ export const TELAS = [
   { id: "relatorios", nome: "Relatórios", icone: "📊", serve: "O que foi feito por dia e por IA." },
   { id: "config", nome: "Configurações", icone: "⚙️", serve: "Avisos, modo ausente e jeito da tela." },
   { id: "ajuda", nome: "Ajuda", icone: "❓", serve: "Para que serve cada parte da Central e onde achar cada coisa." },
+  // C2-E (13/11, dono: "antes tinha diversas funções que sumiram"): as telas da Central de antes voltam, dentro da nova.
+  { id: "servicos", nome: "Serviços no ar", icone: "🟢", serve: "Cada site e sistema da KERNEX: se está no ar, por que caiu e como resolver." },
+  { id: "falta", nome: "O que falta", icone: "📋", serve: "Andamento de tudo: o que já foi feito e o que falta em cada projeto." },
+  { id: "cortex", nome: "Cortex", icone: "🧠", serve: "Tarefas do Cortex, pedidos e o que cada IA está fazendo." },
+  { id: "entregas", nome: "Entregas", icone: "📦", serve: "Código entregue, testes e o que está esperando aprovação." },
+  { id: "tenants", nome: "Tenants e produtos", icone: "🏷️", serve: "Clientes, produtos e links de cada um." },
+  { id: "dinheiro", nome: "Dinheiro", icone: "💳", serve: "Assinaturas, quem paga, quem está em teste e o Pix." },
+  { id: "divulgar", nome: "Divulgar", icone: "📣", serve: "Posts e ofertas: o que saiu e o que vai sair." },
+  { id: "iainfra", nome: "IAs, chaves e robôs", icone: "🔑", serve: "Conectar IAs, testar chaves, cotas, robôs e infraestrutura (GitHub, Cloudflare, banco)." },
 ] as const;
 export type TelaId = (typeof TELAS)[number]["id"];
 
 // C2-F1 (PC 2, 13/11): menu enxuto de 7 itens (PLANO-CENTRAL-2). Cada item junta telas parecidas, que viram abas no topo.
 // O Início abre pelo logo. As telas técnicas ficam em Configurações (Avançado). Toda tela continua abrindo por ?tela=.
 export const MENU: readonly { id: string; nome: string; icone: string; telas: readonly TelaId[] }[] = [
-  { id: "conversar", nome: "Conversar", icone: "enviar", telas: ["conversar", "pedir", "tarefas"] },
-  { id: "projetos", nome: "Projetos", icone: "pasta", telas: ["projetos", "fabrica", "store", "publicacoes"] },
-  { id: "vendas", nome: "Clientes & Vendas", icone: "grafico", telas: ["vendas", "clientes", "empresa"] },
-  { id: "marketing", nome: "Marketing", icone: "foguete", telas: ["ferramentas"] },
+  { id: "conversar", nome: "Conversar", icone: "enviar", telas: ["conversar", "pedir", "cortex", "tarefas"] },
+  { id: "projetos", nome: "Projetos", icone: "pasta", telas: ["projetos", "falta", "fabrica", "store", "entregas", "publicacoes"] },
+  { id: "vendas", nome: "Clientes & Vendas", icone: "grafico", telas: ["vendas", "clientes", "tenants", "dinheiro", "empresa"] },
+  { id: "marketing", nome: "Marketing", icone: "foguete", telas: ["divulgar", "ferramentas"] },
   { id: "arquivos", nome: "Arquivos", icone: "arquivo", telas: ["arquivos"] },
+  { id: "sistema", nome: "Sistema", icone: "servidor", telas: ["servicos", "maquinas", "ia", "iainfra", "homologacao", "cofre", "relatorios"] },
   { id: "ajuda", nome: "Ajuda", icone: "ia", telas: ["ajuda"] },
-  { id: "config", nome: "Configurações", icone: "engrenagem", telas: ["config", "maquinas", "ia", "homologacao", "cofre", "relatorios"] },
+  { id: "config", nome: "Configurações", icone: "engrenagem", telas: ["config"] },
 ];
 /** Item do menu que contém a tela (o Início não está em nenhum: abre pelo logo). */
 export const grupoDaTela = (t: TelaId) => MENU.find((g) => g.telas.includes(t)) || null;
@@ -44,7 +54,9 @@ export const telaDaUrl = (search: string): TelaId => {
 
 export type Cor = "verde" | "amarelo" | "vermelho";
 export function corSemaforo({ precisa = 0, travadas = 0, servicosFora = 0 }: { precisa?: number; travadas?: number; servicosFora?: number }): { cor: Cor; texto: string } {
-  if (precisa > 0 || servicosFora > 0) return { cor: "vermelho", texto: "Precisa de você" };
+  // C2-E: o texto diz O QUE é (antes: "Precisa de você" vermelho com "0 coisas precisam de você").
+  if (precisa > 0) return { cor: "vermelho", texto: precisa === 1 ? "1 coisa precisa de você" : `${precisa} coisas precisam de você` };
+  if (servicosFora > 0) return { cor: "vermelho", texto: servicosFora === 1 ? "1 serviço fora do ar" : `${servicosFora} serviços fora do ar` };
   if (travadas > 0) return { cor: "amarelo", texto: "Atenção" };
   return { cor: "verde", texto: "Tudo certo" };
 }

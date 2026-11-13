@@ -1,4 +1,3 @@
-import { useId } from "react";
 // Ícones da Central nova (traço, 24x24), sem biblioteca externa.
 const P: Record<string, string> = {
   casa: "M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10",
@@ -37,12 +36,6 @@ export default function Icone({ nome, tam = 20, cor = "currentColor" }: { nome: 
 }
 
 export function LogoK({ tam = 40 }: { tam?: number }) {
-  const id = "kxk" + useId().replace(/:/g, "");
-  return (
-    <svg width={tam} height={tam} viewBox="0 0 48 48" aria-hidden>
-      <defs><linearGradient id={id} x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#38bdf8" /><stop offset="1" stopColor="#2563eb" /></linearGradient></defs>
-      <rect x="6" y="4" width="10" height="40" rx="5" fill={`url(#${id})`} />
-      <path d="M18 24L36 6a5 5 0 017 7L28 24l15 11a5 5 0 01-6 8z" fill={`url(#${id})`} />
-    </svg>
-  );
+  // C2-E (13/11, dono: "a KERNEX já tem uma identidade visual que deve ser fixa"): o símbolo oficial (hexágono) de brand/kernex/simbolo.svg.
+  return <img src="/central/logos/kernex.svg" width={tam} height={tam} alt="" aria-hidden style={{ display: "block", flexShrink: 0 }} />;
 }

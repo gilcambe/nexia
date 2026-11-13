@@ -27,13 +27,16 @@ import Ferramentas from "./Ferramentas";
 import Conversar from "./Conversar";
 import Ajuda from "./Ajuda";
 import Arquivos from "./Arquivos";
+import Servicos from "./Servicos";
+import Classico, { type Classica } from "./Classico";
 import { montarAcoes } from "./donos";
 
 // #3219: casca da Central nova, no jeito do "Painel Executivo" que o dono mandou.
 // PC: menu lateral com as 10 telas. Celular: 5 telas embaixo + gaveta (☰) com todas.
 // C2-F1: no celular, 5 itens do menu embaixo; o resto na gaveta (☰).
-const NO_CELULAR = ["conversar", "projetos", "vendas", "arquivos", "config"];
-export const ICONE_TELA: Record<TelaId, string> = { inicio: "casa", ajuda: "ia", conversar: "enviar", pedir: "enviar", clientes: "troca", fabrica: "foguete", store: "check", vendas: "grafico", empresa: "sino", ferramentas: "engrenagem", projetos: "pasta", maquinas: "servidor", ia: "ia", tarefas: "lista", arquivos: "arquivo", publicacoes: "foguete", homologacao: "check", cofre: "cadeado", relatorios: "grafico", config: "engrenagem" };
+const NO_CELULAR = ["conversar", "projetos", "vendas", "arquivos", "sistema", "config"];
+export const ICONE_TELA: Record<TelaId, string> = { inicio: "casa", ajuda: "ia", conversar: "enviar", pedir: "enviar", clientes: "troca", fabrica: "foguete", store: "check", vendas: "grafico", empresa: "sino", ferramentas: "engrenagem", projetos: "pasta", maquinas: "servidor", ia: "ia", tarefas: "lista", arquivos: "arquivo", publicacoes: "foguete", homologacao: "check", cofre: "cadeado", relatorios: "grafico", config: "engrenagem", servicos: "servidor", falta: "lista", cortex: "ia", entregas: "check", tenants: "troca", dinheiro: "grafico", divulgar: "foguete", iainfra: "cadeado" };
+const CLASSICAS: TelaId[] = ["falta", "cortex", "entregas", "tenants", "dinheiro", "divulgar", "iainfra"];
 const COR_SINAL = { verde: "#22c55e", amarelo: "#f59e0b", vermelho: "#ef4444" };
 
 function EmBreve({ nome }: { nome: string }) {
@@ -113,7 +116,7 @@ export default function Casca() {
       <style>{CSS}</style>
       <div className="kx-marca">
         <button type="button" onClick={() => ir("inicio")} aria-label="Início" data-testid="kx-logo-inicio" style={{ all: "unset", cursor: "pointer", display: "flex", alignItems: "center", gap: 10 }}><LogoK tam={38} />
-        <span className="kx-logo">KERNEX<small>Controle. Automação. Evolução.</small></span></button>
+        <span className="kx-logo">KERNEX<small>Inteligência que resolve.</small></span></button>
       </div>
       <header className="kx-topo">
         <button type="button" className="kx-sino kx-so-cel" aria-label="Abrir menu" onClick={() => setGaveta(true)} data-testid="kx-abrir-menu"><Icone nome="menu" /></button>
@@ -121,7 +124,7 @@ export default function Casca() {
         <Busca ir={ir} fechar={() => setBuscando(false)} />
         <button type="button" className="kx-sino kx-so-cel" aria-label="Buscar" onClick={abrirBusca}><Icone nome="busca" /></button>
         <button type="button" className="kx-btn forte kx-so-pc-flex" onClick={() => ir("conversar")} data-testid="kx-pedir-topo"><Icone nome="enviar" tam={16} />Conversar com o Cortex</button>
-        <button type="button" className="kx-status" style={{ borderColor: corSinal + "99", background: corSinal + "1a" }} onClick={() => ir(precisa ? "tarefas" : "inicio")} data-testid="kx-status-topo"
+        <button type="button" className="kx-status" style={{ borderColor: corSinal + "99", background: corSinal + "1a" }} onClick={() => ir(precisa ? "tarefas" : painel.saude?.fora ? "servicos" : "inicio")} data-testid="kx-status-topo"
           title={painel.ias?.resumo || ""}>
           <span className="kx-bola" style={{ background: painel.ias ? corSinal : "#64748b", width: 22, height: 22, display: "grid", placeItems: "center" }}>
             <Icone nome={sinal.cor === "verde" ? "check" : "alerta"} tam={14} cor="#fff" />
@@ -135,7 +138,7 @@ export default function Casca() {
       <div className="kx-gaveta-fundo" onClick={() => setGaveta(false)} />
       <nav className="kx-menu" aria-label="Menu">
         <div className="kx-so-cel" style={{ alignItems: "center", gap: 10, padding: "0 6px 12px", display: gaveta ? "flex" : "none" }}>
-          <LogoK tam={30} /><span className="kx-logo">KERNEX<small>Controle. Automação. Evolução.</small></span>
+          <LogoK tam={30} /><span className="kx-logo">KERNEX<small>Inteligência que resolve.</small></span>
           <button type="button" className="kx-sino" style={{ marginLeft: "auto", width: 36, height: 36 }} aria-label="Fechar menu" onClick={() => setGaveta(false)}><Icone nome="x" /></button>
         </div>
         <button type="button" className="kx-so-pc" aria-current={tela === "inicio" ? "page" : undefined} onClick={() => ir("inicio")} data-testid="kx-menu-inicio"><Icone nome="casa" />Início</button>
@@ -143,27 +146,31 @@ export default function Casca() {
           <button key={g.id} type="button" className={NO_CELULAR.includes(g.id) ? "" : "kx-so-pc"} aria-current={grupo?.id === g.id ? "page" : undefined} onClick={() => ir(g.telas[0])} data-testid={"kx-menu-" + g.id}>
             <Icone nome={g.icone} />{g.nome}
           </button>
-        ))}
+        )).flatMap((b, i) => {
+          const g = MENU[i]; if (g.telas.length < 2) return [b];
+          return [b, <div key={g.id + "-sub"} className="kx-submenu kx-so-pc" data-testid={"kx-submenu-" + g.id}>{g.telas.map((id) => (
+            <button key={id} type="button" aria-current={id === tela ? "page" : undefined} onClick={() => ir(id)} data-testid={"kx-sub-" + id}>{TELAS.find((t) => t.id === id)?.nome}</button>))}</div>];
+        })}
         <div className="kx-menu-rodape">
           <a className="kx-online" href="/central?antiga=1" style={{ borderColor: "#33415599", color: "#c7d2f0" }}>Abrir a Central antiga</a>
-          <div className="kx-online" style={{ borderColor: corSaude + "88", background: corSaude + "14" }}>
+          <button type="button" className="kx-online" style={{ borderColor: corSaude + "88", background: corSaude + "14", textAlign: "left", cursor: "pointer", font: "inherit" }} onClick={() => ir("servicos")} data-testid="kx-servicos-rodape" title="Ver cada site e sistema, o que caiu e como resolver">
             <span className="kx-bola" style={{ background: corSaude }} />
-            <span><b style={{ display: "block" }}>{!painel.saude ? "Serviços: conferindo" : !painel.saude.total ? "Serviços: sem medição agora" : `${painel.saude.total - painel.saude.fora} de ${painel.saude.total} serviços no ar`}</b>
-              <span className="kx-mut">{nome ? nome + " · " : ""}administrador</span></span>
-          </div>
+            <span><b style={{ display: "block" }}>{!painel.saude ? "Sites e sistemas: conferindo" : !painel.saude.total ? "Sites e sistemas: sem medição" : painel.saude.fora ? `${painel.saude.fora} de ${painel.saude.total} sites e sistemas fora do ar` : `Todos os ${painel.saude.total} sites e sistemas no ar`}</b>
+              <span className="kx-mut">Toque para ver quais e como resolver</span></span>
+          </button>
         </div>
       </nav>
       <main className="kx-area">
         {grupo && grupo.telas.length > 1 && (
           <div className="kx-abas" role="tablist" aria-label={grupo.nome} data-testid="kx-abas">
             {grupo.telas.map((id) => (
-              <button key={id} type="button" role="tab" aria-selected={id === tela} onClick={() => ir(id)} data-testid={"kx-aba-" + id}>{grupo.id === "config" && id !== "config" ? "Avançado · " : ""}{TELAS.find((t) => t.id === id)?.nome}</button>
+              <button key={id} type="button" role="tab" aria-selected={id === tela} onClick={() => ir(id)} data-testid={"kx-aba-" + id}>{TELAS.find((t) => t.id === id)?.nome}</button>
             ))}
           </div>
         )}
         {tela !== "inicio" && <p className="kx-serve" data-testid="kx-serve"><b>{atual.nome}:</b> {atual.serve}</p>}
         {tela === "inicio" ? <Inicio irPara={ir} painel={painel} nome={nome} /> : tela === "tarefas" ? <Tarefas painel={painel} ir={ir} /> : tela === "ia" ? <IaCortex /> : tela === "publicacoes" ? <Publicacoes />
-          : tela === "projetos" ? <Projetos /> : tela === "maquinas" ? <Maquinas /> : tela === "cofre" ? <Cofre /> : tela === "relatorios" ? <Relatorios painel={painel} /> : tela === "homologacao" ? <Homologacao /> : tela === "config" ? <Config /> : tela === "pedir" ? <Pedir /> : tela === "clientes" ? <Clientes /> : tela === "fabrica" ? <Fabrica /> : tela === "store" ? <Store /> : tela === "vendas" ? <Vendas /> : tela === "empresa" ? <Empresa /> : tela === "ferramentas" ? <Ferramentas /> : tela === "conversar" ? <Conversar /> : tela === "ajuda" ? <Ajuda ir={ir} /> : tela === "arquivos" ? <Arquivos /> : <EmBreve nome={atual.nome} />}
+          : tela === "projetos" ? <Projetos /> : tela === "maquinas" ? <Maquinas /> : tela === "cofre" ? <Cofre /> : tela === "relatorios" ? <Relatorios painel={painel} /> : tela === "homologacao" ? <Homologacao /> : tela === "config" ? <Config ir={ir} /> : tela === "pedir" ? <Pedir /> : tela === "clientes" ? <Clientes /> : tela === "fabrica" ? <Fabrica /> : tela === "store" ? <Store /> : tela === "vendas" ? <Vendas /> : tela === "empresa" ? <Empresa /> : tela === "ferramentas" ? <Ferramentas /> : tela === "conversar" ? <Conversar /> : tela === "ajuda" ? <Ajuda ir={ir} /> : tela === "arquivos" ? <Arquivos /> : tela === "servicos" ? <Servicos /> : CLASSICAS.includes(tela) ? <Classico qual={tela as Classica} /> : <EmBreve nome={atual.nome} />}
       </main>
     </div>
   );
