@@ -39,7 +39,7 @@ function estadoTarefa(issue, agora = Date.now(), cfg = {}) {
   const msAtualizacao = ultimaAtividade ? Date.parse(ultimaAtividade) : NaN;
   const msInativo = Number.isFinite(msAtualizacao) ? Math.max(0, agora - msAtualizacao) : 0;
   const minInativo = Math.floor(msInativo / 60000);
-  const paradoPorTempo = minInativo >= minutosParada;
+  const paradoPorTempo = msInativo > minutosParada * 60000;
 
   // Determinar IA responsável
   let ia = null;

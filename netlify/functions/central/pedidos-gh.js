@@ -51,9 +51,11 @@ function criarPedidos(env = process.env, fetchFn = fetch) {
     const p = Math.max(1, Math.min(30, Number(pagina) || 1));
     let filtro = 'repo:' + REPO + ' is:issue label:cortex-fila';
     if (estado === 'abertos') filtro += ' is:open -label:cortex-travado';
-    else if (estado === 'travados' || estado === 'travadas' || estado === 'travada') filtro += ' is:open label:cortex-travado';
+    // #3128 (rodada 1): 'travada' também cobre travada por tempo e por 'cortex-reserva-sem-cota'.
+    // A busca fica ampla (is:open) e o filtro por estadoTarefa vem abaixo, senão essas ficam de fora.
+    else if (estado === 'travados' || estado === 'travadas' || estado === 'travada') filtro += ' is:open';
     else if (estado === 'feitos' || estado === 'concluidas' || estado === 'concluida') filtro += ' is:closed';
-    else if (estado === 'andamento') filtro += ' is:open label:cortex-rodando';
+    else if (estado === 'andamento') filtro += ' is:open';
     else if (estado === 'precisa') filtro += ' is:open';
     else if (estado === 'meus') filtro += ' in:body "Pedido de"';
 
