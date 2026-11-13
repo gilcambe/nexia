@@ -285,7 +285,7 @@ function normalizarLido(b, dataPrint) {
       dataValor = `${ano}-${mAtualizado[2].padStart(2, '0')}-${mAtualizado[1].padStart(2, '0')}`;
     }
   }
-  if (!dataValor || !DATA.test(dataValor)) dataValor = '';
+  if (!dataValor || !DATA.test(dataValor)) dataValor = ''; // vazio = o servidor usa a data de hoje (deps.agora())
 
   // Ajustar a classificação de tipo: tickers terminados em 11 pertencentes ao grupo FIIs devem ser marcados como "fiis", não "renda_fixa"; reconhecer lista de ETFs conhecida e atribuir tipo "etf".
   if (tk) {
