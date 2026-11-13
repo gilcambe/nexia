@@ -229,4 +229,41 @@ export const CSS = `@import url("https://fonts.googleapis.com/css2?family=Inter:
  .kx-bv-titulo{font-size:26px}
  .kx:not(.gaveta) .kx-menu button{font-size:10.5px;min-height:54px;line-height:1.15;white-space:normal;text-align:center;min-width:0;padding:0 2px;border-radius:10px}
 }
+
+/* 13/11 LUXO (dono: "premium como o painel do Viajante Pro, sofisticado, luxuoso"): tinta escura, linhas finas,
+   um só destaque turquesa e dourado em detalhe. Nada de botão colorido gritando nem brilho. */
+.kx{--fundo:#0a1219;--fundo2:#0c161e;--card:#101b24;--card2:#14222d;--linha:rgba(255,255,255,.07);--txt:#eef4f6;--mut:#93a6af;--az:#19a7b5;--ouro:#c8a96a;background:var(--fundo)!important;letter-spacing:.003em}
+.kx-marca,.kx-menu{background:var(--fundo2)!important}
+.kx-topo{background:rgba(10,18,25,.9);backdrop-filter:blur(8px)}
+.kx-menu button{color:#b9c7cd}
+.kx-menu button[aria-current=page]{background:rgba(25,167,181,.10)!important;color:#fff;box-shadow:inset 2px 0 0 var(--az)!important;font-weight:600}
+.kx-bloco{background:var(--card)!important;border:1px solid var(--linha)!important;border-radius:14px}
+.kx-btn{background:transparent;border-color:var(--linha);border-radius:10px}
+.kx-btn:hover{border-color:var(--ouro)}
+.kx-btn.forte{background:var(--az)!important;border-color:var(--az)!important;color:#04161a!important;font-weight:700}
+.kx-btn.roxo,.kx-btn.verde,.kx-btn.laranja{background:transparent!important;border:1px solid var(--linha)!important;color:var(--txt)!important}
+.kx-btn.roxo:hover,.kx-btn.verde:hover,.kx-btn.laranja:hover{border-color:var(--ouro)!important}
+.kx-heroi{background:var(--card)!important;border-color:var(--linha)!important;box-shadow:none!important}
+.kx-heroi:after,.kx-heroi:before{display:none!important}
+.kx-heroi h1{font-weight:600;letter-spacing:-.02em}
+.kx-heroi p{color:var(--mut)}
+.kx-heroi-faixa{background:transparent!important;border:1px solid var(--linha)!important;color:var(--mut)}
+.kx-status-item{background:transparent!important;border:1px solid var(--linha)!important;border-radius:12px}
+.kx-status-item:hover{border-color:var(--ouro)!important}
+.kx-status-item b{color:var(--txt)!important;font-weight:600}
+.kx-status-item span{color:var(--mut)}
+.kx-kpi{background:var(--card)!important;border:1px solid var(--linha)!important;border-radius:14px}
+.kx-kpi .ico{background:rgba(255,255,255,.04)!important;box-shadow:none!important;color:var(--ouro)}
+.kx-kpi span{color:var(--mut)}
+.kx-kpi .barras{display:none}
+.kx-mod{background:var(--card)!important;border:1px solid var(--linha)!important;color:var(--txt)!important}
+.kx-mod:hover{border-color:var(--ouro)!important}
+.kx-abas button[aria-selected=true]{border-bottom-color:var(--ouro)}
+.kx-chip{border-color:var(--linha);color:var(--mut)}
+.kx-chip:hover{border-color:var(--ouro);color:var(--txt)}
+.kx-bv-titulo{font-weight:600;letter-spacing:-.025em}
+.kx-bv-titulo:after{content:"";display:block;width:56px;height:2px;margin:14px auto 0;background:var(--ouro);border-radius:2px}
+.kx-bv-entrada{background:var(--card2)}
+.kx-bv-entrada:focus-within{border-color:var(--ouro)}
+.kx-barra i{background:var(--az)!important}
 `;
