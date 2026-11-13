@@ -217,6 +217,35 @@ test('EST7. aguardando-ia cobre reserva-* e vez-do-claude com as IAs corretas', 
   assert.strictEqual(c.ia, 'Claude');
 });
 
+test('EST8. pedidos-gh resumo() traz os campos de estadoTarefa sem apagar situacao', () => {
+  const { resumo } = require('../../netlify/functions/central/pedidos-gh');
+
+  const item = {
+    number: 3128,
+    title: 'Fonte única do estado da tarefa',
+    state: 'open',
+    labels: [{ name: 'cortex-fila' }, { name: 'cortex-rodando' }],
+    created_at: '2026-11-10T10:00:00.000Z',
+    updated_at: new Date(Date.now() - 5 * 60000).toISOString(),
+    comments: 2,
+    html_url: 'https://github.com/gilcambe/nexia/issues/3128',
+  };
+
+  const r = resumo(item);
+
+  // a tela velha continua funcionando: situacao segue presente
+  assert.strictEqual(r.situacao, 'fazendo');
+  // campos novos do módulo único (#3128)
+  assert.strictEqual(r.estado, 'andamento');
+  assert.strictEqual(r.texto, 'Em andamento');
+  assert.strictEqual(r.cor, 'azul');
+  assert.strictEqual(r.icone, '⚙️');
+  assert.strictEqual(r.ia, 'Cortex');
+  assert.strictEqual(r.precisaVoce, false);
+  assert.strictEqual(r.ultimaAtividade, item.updated_at);
+  assert.strictEqual(typeof r.motivo, 'string');
+});
+
 test('EST-N1. issue fechada pelo PR (state_reason completed) conta como concluída; not_planned continua falhou', () => {
   assert.strictEqual(estadoTarefa({ state: 'closed', state_reason: 'completed', labels: [] }).estado, 'concluida');
   assert.strictEqual(estadoTarefa({ state: 'closed', state_reason: 'not_planned', labels: [] }).estado, 'falhou');
