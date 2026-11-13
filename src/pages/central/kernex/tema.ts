@@ -266,4 +266,13 @@ export const CSS = `@import url("https://fonts.googleapis.com/css2?family=Inter:
 .kx-bv-entrada{background:var(--card2)}
 .kx-bv-entrada:focus-within{border-color:var(--ouro)}
 .kx-barra i{background:var(--az)!important}
+
+.kx-grade.kx-kpis{grid-auto-rows:auto!important;flex:none}
+.kx-kpis .kx-kpi{grid-column:auto!important;min-height:84px}
+
+.kx select,.kx textarea,.kx input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]):not([type=color]):not(.kx-busca){background:var(--card2);color:var(--txt);border:1px solid var(--linha);border-radius:10px;padding:8px 10px;font:inherit}
+.kx select:focus,.kx textarea:focus,.kx input:focus{outline:0;border-color:var(--ouro)}
+.kx .kx-bv-entrada textarea{background:none;border:0;padding:0}
+.kx .kx-busca{padding-left:40px}
+.kx .kx-bv-projeto select,.kx .kx-tela select.kx-busca{padding-left:12px}
 `;

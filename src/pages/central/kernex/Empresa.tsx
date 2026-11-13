@@ -48,7 +48,7 @@ export default function Empresa() {
 
   return (
     <div data-testid="kx-empresa">
-      <div className="kx-grade" style={{ gridTemplateColumns: "repeat(auto-fit,minmax(160px,1fr))", marginBottom: 12 }}>
+      <div className="kx-grade kx-kpis" style={{ gridTemplateColumns: "repeat(auto-fit,minmax(160px,1fr))", marginBottom: 12 }}>
         <Kpi cor="vm" icone="sino" valor={resumo ? precisa.length : null} rotulo="Esperando você" />
         <Kpi cor="vd" icone="check" valor={resumo ? resumo.feitos : null} rotulo="Feito nas últimas 24 h" />
         <Kpi cor="lj" icone="relogio" valor={resumo ? (resumo.atrasados || []).length : null} rotulo="Atrasado (Diretor cobrou)" />
@@ -71,7 +71,7 @@ export default function Empresa() {
             ))}
           </ul>
         </Bloco>
-        <Bloco titulo="Mandar recado para uma área" icone="enviar" ajuda="Ex.: Comercial, priorize as clínicas esta semana. O Diretor cobra se ninguém fizer." fonte={null} atualizadoEm={null}>
+        <Bloco titulo="Mandar recado para uma área" icone="enviar" ajuda="Ex.: Comercial, priorize as clínicas esta semana. O Diretor cobra se ninguém fizer." fonte="Você escreve; o Diretor cobra" atualizadoEm={null}>
           <select value={recado.area} onChange={(e) => setRecado({ ...recado, area: e.target.value })} style={{ width: "100%", minHeight: 44, marginBottom: 8 }} aria-label="Área">
             {areas.map((a) => <option key={a.id} value={a.id}>{a.nome}</option>)}
           </select>
