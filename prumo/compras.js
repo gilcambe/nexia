@@ -6,5 +6,5 @@
  */
 
 function nomeDaCompra(compra) {
-  return "Kernex Finance: " + l.nome;
+  return "Kernex Finance: " + compra.nome;
 }
