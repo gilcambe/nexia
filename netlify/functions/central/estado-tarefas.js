@@ -41,18 +41,14 @@ function estadoTarefa(issue, agora = Date.now(), cfg = {}) {
   const minInativo = Math.floor(msInativo / 60000);
   const paradoPorTempo = msInativo > minutosParada * 60000;
 
-  // Determinar IA responsável
+  // Determinar IA responsável (ordem do pedido: Cortex, Jules, IAs grátis, Claude)
   let ia = null;
   if (has('cortex-rodando')) {
     ia = 'Cortex';
+  } else if (ls.some((l) => l.startsWith('jules-'))) {
+    ia = 'Jules';
   } else if (has('vez-do-claude')) {
     ia = 'Claude';
-  } else if (
-    has('jules-enviado') ||
-    has('cortex-jules') ||
-    ls.some((l) => l.startsWith('jules-'))
-  ) {
-    ia = 'Jules';
   } else if (
     has('reserva-tentou') ||
     has('reserva-volta') ||
@@ -116,7 +112,7 @@ function estadoTarefa(issue, agora = Date.now(), cfg = {}) {
   // A ordem dos && e || fica entre parênteses para não depender de precedência.
   const travadaPorLabel = has('cortex-travado') || has('cortex-reserva-sem-cota');
   const labelHumano = has('vez-do-dono') || has('esperando-dono') || has('so-humano');
-  const precisaVoce = !fechada && estado === 'travada' && (labelHumano || t >= maxTentativas || travadaPorLabel && t >= maxTentativas);
+  const precisaVoce = !fechada && estado === 'travada' && (labelHumano || (travadaPorLabel && t >= maxTentativas));
 
   return {
     estado,
