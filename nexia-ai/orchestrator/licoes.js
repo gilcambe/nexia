@@ -21,6 +21,7 @@ const LICOES = Object.freeze([
   'Mensagens de chat precisam de ordem estável: grave um número crescente (ordem) além da data, porque duas mensagens podem ter o mesmo milissegundo; e para "só as novas" filtre pelo id da última, não use startAfter com id em orderBy de data.',
   'Entregue só o que a tarefa pede, nos arquivos que ela cita. Exemplo real: para #2717 (motivos da fila na Central) o PR #2835 criou um workflow nexia-pipeline.yml que ninguém pediu; isso conta como falha.',
   'Homologação (#3264): nenhuma versão é publicada sem o check "Homologação" verde; todo bug do dono vira caso em homologacao/catalogo com teste que falha no código antigo e passa no novo, no mesmo PR (ex.: #3267 ativos duplicados, tests/unit/prumo-homologacao.test.js).',
+  'Use só o que o projeto já usa: antes de criar arquivo, confira com github.list_dir que a pasta e o framework existem. Exemplo real: um Answer.vue criado numa pasta que não existe (o projeto não usa Vue) e arquivos src/models com Mongoose/Express, que o projeto também não usa.',
   'Nunca planejar arquivo em pasta que o produto não usa; ler a árvore antes',
 ]);
 // Fim da lista: acrescente novas lições acima desta linha, uma por linha e entre aspas.
