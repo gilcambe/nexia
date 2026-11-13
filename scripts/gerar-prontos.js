@@ -8,7 +8,8 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const DESTINO = path.join(__dirname, '..', 'nexia-ai', 'fabrica', 'prontos.json');
-const OK = new Set(['MIT', 'Apache-2.0']);
+// decisão do dono (13/11): MIT, Apache, BSD e ISC (todas permitem copiar e vender mantendo o aviso de autoria)
+const OK = new Set(['MIT', 'Apache-2.0', 'BSD-2-Clause', 'BSD-3-Clause', '0BSD', 'ISC']);
 const LIB = /\(lib\)|template|componentes/;
 
 function gerar(tsv, anterior = {}) {

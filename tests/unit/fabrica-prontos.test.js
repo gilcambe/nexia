@@ -5,11 +5,11 @@ const assert = require('node:assert');
 const p = require('../../nexia-ai/fabrica/prontos.json');
 const { contextoBiblioteca, prontosCitados } = require('../../nexia-ai/fabrica/contexto');
 
-test('PR1. só entra MIT ou Apache, com link do GitHub, sem repetido', () => {
+test('PR1. só entra MIT, Apache, BSD ou ISC, com link do GitHub, sem repetido', () => {
   assert.ok(p.prontos.length >= 50);
   const vistos = new Set();
   for (const x of p.prontos) {
-    assert.ok(['MIT', 'Apache-2.0'].includes(x.licenca), x.repo);
+    assert.ok(['MIT', 'Apache-2.0', 'BSD-2-Clause', 'BSD-3-Clause', '0BSD', 'ISC'].includes(x.licenca), x.repo);
     assert.match(x.url, /^https:\/\/github\.com\/[\w.-]+\/[\w.-]+$/);
     assert.ok(!vistos.has(x.repo.toLowerCase()), 'repetido ' + x.repo); vistos.add(x.repo.toLowerCase());
     assert.ok(p.palavras[x.categoria], 'categoria sem palavras: ' + x.categoria);
