@@ -178,6 +178,11 @@ function estadoTarefas(issues = [], agora = Date.now(), cfg = {}) {
   return contagens;
 }
 
+// #3128: estadoTarefa implementa os 6 estados (fila, andamento, aguardando-ia, travada, concluida, falhou)
+// com ia, motivo, precisaVoce, ultimaAtividade. Limite de inatividade: 30 min.
+// resumoDia agrega contagens e IAs ativas.
+// estadoTarefas agrega lista de issues.
+
 module.exports = {
   ESTADOS,
   estadoTarefa,
