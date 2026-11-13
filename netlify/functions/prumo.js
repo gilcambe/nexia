@@ -268,8 +268,10 @@ function normalizarLido(b, dataPrint) {
   const banco = b.banco_escrito ? String(b.banco || '').trim() : '';
   const { banco_escrito: _bancoEscrito, instituicao, ...resto } = b; // eslint-disable-line no-unused-vars
   const dataValor = dataLida(b.data_print) || dataLida(b.data_valor) || new Date().toISOString().slice(0, 10);
-  return conferirValor({ ...resto, nome, tipo, valor: Number.isFinite(val) ? Math.abs(val) : b.valor,
-    data_valor: dataValor, vencimento: dataLida(b.vencimento) || null, banco });
+  // "banco" é declarado num objeto só para o campo sair vazio ("") quando não há nome escrito no texto.
+  const camposBanco = { banco };
+  return conferirValor({ ...resto, ...camposBanco, nome, tipo, valor: Number.isFinite(val) ? Math.abs(val) : b.valor,
+    data_valor: dataValor, vencimento: dataLida(b.vencimento) || null });
 }
 // Modelos grátis com visão, do mais rápido ao mais forte. Vários provedores: se a cota de um acabar
 // (o Gemini grátis vive no limite por causa do Cortex), o próximo lê.
