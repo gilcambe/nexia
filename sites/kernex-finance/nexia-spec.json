@@ -2,28 +2,28 @@
   "spec": {
     "kind": "system",
     "name": "Kernex Finance",
-    "tagline": "Painel financeiro interno e gerenciador de escrituração",
+    "tagline": "Gestão financeira simplificada e segura",
     "photo_theme": "",
-    "description": "Painel financeiro interno e gerenciador de escrituração",
+    "description": "Gestão financeira simplificada e segura",
     "folder": "sites/kernex-finance",
     "fonts": {
-      "heading": "Space Grotesk",
+      "heading": "Poppins",
       "body": "Inter"
     },
     "palette": {
-      "primary": "#0f172a",
-      "accent": "#3b82f6",
+      "primary": "#1d4ed8",
+      "accent": "#10b981",
       "bg": "#fbfaf7",
       "surface": "#ffffff",
       "text": "#1d2426",
       "muted": "#5d6b6e",
-      "dark": "#0b1120"
+      "dark": "#111827"
     },
     "style": "modern",
     "contact": {
       "whatsapp": "",
-      "phone": "(11) 4004-1999 (exemplo)",
-      "email": "devops@kernex.com.br",
+      "phone": "(11) 90000-0000",
+      "email": "suporte@kernex.com.br",
       "address": "",
       "city": "",
       "hours": "",
@@ -44,199 +44,299 @@
     "leads_origem": "",
     "entities": [
       {
-        "key": "rfis",
-        "label": "Relatórios FIS",
-        "singular": "Relatório",
+        "key": "clientes",
+        "label": "Clientes",
+        "singular": "Cliente",
         "fields": [
           {
-            "key": "empresa",
-            "label": "Empresa",
+            "key": "nome",
+            "label": "Nome",
             "type": "text",
             "options": [],
             "required": true
           },
           {
-            "key": "fiscao",
-            "label": "FISn",
+            "key": "email",
+            "label": "E-mail",
+            "type": "email",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "telefone",
+            "label": "Telefone",
+            "type": "phone",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "cpf",
+            "label": "CPF",
             "type": "text",
             "options": [],
             "required": true
           },
           {
-            "key": "tipo_evento",
-            "label": "Tipo de Evento",
-            "type": "select",
-            "options": [
-              "Login",
-              "Logout",
-              "Acesso API",
-              "Devolução",
-              "Sucesso"
-            ],
+            "key": "data_nascimento",
+            "label": "Data de Nascimento",
+            "type": "date",
+            "options": [],
             "required": true
+          },
+          {
+            "key": "observacoes",
+            "label": "Observações",
+            "type": "textarea",
+            "options": [],
+            "required": false
           },
           {
             "key": "status",
-            "label": "Status Retorno",
+            "label": "Status",
             "type": "select",
             "options": [
-              "_ERROR",
-              "_SUCCESS"
+              "Ativo",
+              "Inativo"
             ],
-            "required": true
-          },
-          {
-            "key": "mensagem",
-            "label": "Mensagem",
-            "type": "text",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "timestamp",
-            "label": "Timestamp",
-            "type": "text",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "url",
-            "label": "URL Chamada",
-            "type": "text",
-            "options": [],
             "required": true
           }
         ],
         "sample": [
           {
-            "empresa": "Grupo Delta Log",
-            "fiscao": "FIS23145",
-            "tipo_evento": "Login",
-            "status": "_SUCCESS",
-            "mensagem": "Sessão iniciada",
-            "timestamp": "2026-11-12T10:14:22Z",
-            "url": "api.kernex.com.br/v1/login"
+            "nome": "Ana Pereira Silva",
+            "email": "ana.pereira@example.com",
+            "telefone": "(11) 91234-5678",
+            "cpf": "123.456.789-00",
+            "data_nascimento": "1985-04-12",
+            "observacoes": "Cliente VIP",
+            "status": "Ativo"
           },
           {
-            "empresa": "Consulato de Serviços",
-            "fiscao": "FIS23145",
-            "tipo_evento": "Acesso API",
-            "status": "_ERROR",
-            "mensagem": "Token expirado",
-            "timestamp": "2026-11-12T10:15:05Z",
-            "url": "api.kernex.com.br/v1/status"
+            "nome": "Bruno Gomes Costa",
+            "email": "bruno.costa@example.com",
+            "telefone": "(11) 92345-6789",
+            "cpf": "987.654.321-00",
+            "data_nascimento": "1978-09-23",
+            "observacoes": "Preferência por pagamentos via cartão",
+            "status": "Ativo"
           },
           {
-            "empresa": "Gráfica Unida",
-            "fiscao": "FIS23200",
-            "tipo_evento": "Sucesso",
-            "status": "_SUCCESS",
-            "mensagem": "Cotação enviada",
-            "timestamp": "2026-11-12T11:30:10Z",
-            "url": "nexus-finance.kernex.workers.dev/api/cotacao"
+            "nome": "Carla Dias Melo",
+            "email": "carla.melo@example.com",
+            "telefone": "(11) 93456-7890",
+            "cpf": "456.123.987-00",
+            "data_nascimento": "1992-01-08",
+            "observacoes": "Cliente recém-adicionado",
+            "status": "Ativa"
           },
           {
-            "empresa": "Transportadora Silva",
-            "fiscao": "FIS23200",
-            "tipo_evento": "Logout",
-            "status": "_SUCCESS",
-            "mensagem": "Encerramento manual",
-            "timestamp": "2026-11-12T14:45:00Z",
-            "url": "api.kernex.com.br/v1/logout"
+            "nome": "Davi Henrique Alves",
+            "email": "davi.alves@example.com",
+            "telefone": "(11) 94567-8901",
+            "cpf": "789.456.123-00",
+            "data_nascimento": "1980-07-30",
+            "observacoes": "",
+            "status": "Inativo"
           }
         ]
       },
       {
-        "key": "clinfs",
-        "label": "CLINFs",
-        "singular": "CLINF",
+        "key": "contas_bancarias",
+        "label": "Contas Bancárias",
+        "singular": "Conta Bancária",
         "fields": [
           {
-            "key": "fiscao",
-            "label": "Assoc. FISn",
-            "type": "text",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "nome_cliente",
+            "key": "cliente",
             "label": "Cliente",
             "type": "text",
             "options": [],
             "required": true
           },
           {
-            "key": "identificador_externo",
-            "label": "Identificador",
+            "key": "banco",
+            "label": "Banco",
             "type": "text",
             "options": [],
             "required": true
           },
           {
-            "key": "status_geral",
-            "label": "Status",
+            "key": "agencia",
+            "label": "Agência",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "conta",
+            "label": "Conta",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "tipo",
+            "label": "Tipo",
             "type": "select",
             "options": [
-              "_SUCCESS",
-              "_ERROR"
+              "Corrente",
+              "Poupança",
+              "Cartão"
             ],
             "required": true
           },
           {
-            "key": "evento_erro",
-            "label": "Evento Erro",
-            "type": "text",
+            "key": "saldo",
+            "label": "Saldo",
+            "type": "money",
             "options": [],
             "required": true
           },
           {
-            "key": "ultima_atualizacao",
-            "label": "Atualização",
-            "type": "date",
-            "options": [],
+            "key": "status",
+            "label": "Status",
+            "type": "select",
+            "options": [
+              "Ativa",
+              "Inativa"
+            ],
             "required": true
           }
         ],
         "sample": [
           {
-            "fiscao": "FIS23145",
-            "nome_cliente": "João Paulo Martins",
-            "identificador_externo": "CLI-BRA-88231",
-            "status_geral": "_SUCCESS",
-            "evento_erro": "N/A",
-            "ultima_atualizacao": "2026-11-12"
+            "cliente": "Ana Pereira Silva",
+            "banco": "Caixa Econômica Federal",
+            "agencia": "1234",
+            "conta": "567890-1",
+            "tipo": "Corrente",
+            "saldo": "$12.345,67",
+            "status": "Ativa"
           },
           {
-            "fiscao": "FIS23145",
-            "nome_cliente": "Silvio Tavares",
-            "identificador_externo": "CLI-BRA-90102",
-            "status_geral": "_ERROR",
-            "evento_erro": "E040 - Falha validação",
-            "ultima_atualizacao": "2026-11-11"
+            "cliente": "Bruno Gomes Costa",
+            "banco": "Banco do Brasil",
+            "agencia": "4321",
+            "conta": "098765-4",
+            "tipo": "Poupança",
+            "saldo": "$8.765,43",
+            "status": "Ativa"
           },
           {
-            "fiscao": "FIS23200",
-            "nome_cliente": "Marta Lucia Farias",
-            "identificador_externo": "CLI-ARG-10023",
-            "status_geral": "_SUCCESS",
-            "evento_erro": "N/A",
-            "ultima_atualizacao": "2026-11-12"
+            "cliente": "Carla Dias Melo",
+            "banco": "Itaú Unibanco",
+            "agencia": "5678",
+            "conta": "123456-7",
+            "tipo": "Cartão",
+            "saldo": "$2.345,00",
+            "status": "Ativa"
           },
           {
-            "fiscao": "FIS23200",
-            "nome_cliente": "Ramon Alves Dias",
-            "identificador_externo": "CLI-POR-55009",
-            "status_geral": "_SUCCESS",
-            "evento_erro": "N/A",
-            "ultima_atualizacao": "2026-11-10"
+            "cliente": "Davi Henrique Alves",
+            "banco": "Santander",
+            "agencia": "8765",
+            "conta": "765432-9",
+            "tipo": "Corrente",
+            "saldo": "$0,00",
+            "status": "Inativa"
+          }
+        ]
+      },
+      {
+        "key": "transacoes",
+        "label": "Transações",
+        "singular": "Transação",
+        "fields": [
+          {
+            "key": "conta",
+            "label": "Conta",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "data",
+            "label": "Data",
+            "type": "date",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "descricao",
+            "label": "Descrição",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "valor",
+            "label": "Valor",
+            "type": "money",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "tipo",
+            "label": "Tipo",
+            "type": "select",
+            "options": [
+              "Débito",
+              "Crédito"
+            ],
+            "required": true
+          },
+          {
+            "key": "categoria",
+            "label": "Categoria",
+            "type": "select",
+            "options": [
+              "Alimentação",
+              "Transporte",
+              "Salário",
+              "Outros"
+            ],
+            "required": true
+          }
+        ],
+        "sample": [
+          {
+            "conta": "Ana Pereira Silva - 1234/567890-1",
+            "data": "2026-11-01",
+            "descricao": "Compra no supermercado",
+            "valor": "$250,00",
+            "tipo": "Débito",
+            "categoria": "Alimentação"
+          },
+          {
+            "conta": "Bruno Gomes Costa - 4321/098765-4",
+            "data": "2026-10-28",
+            "descricao": "Salário mensal",
+            "valor": "$5.000,00",
+            "tipo": "Crédito",
+            "categoria": "Salário"
+          },
+          {
+            "conta": "Carla Dias Melo - 5678/123456-7",
+            "data": "2026-10-25",
+            "descricao": "Pagamento de conta de luz",
+            "valor": "$120,00",
+            "tipo": "Débito",
+            "categoria": "Outros"
+          },
+          {
+            "conta": "Davi Henrique Alves - 8765/765432-9",
+            "data": "2026-10-30",
+            "descricao": "Transferência para Ana",
+            "valor": "$1.200,00",
+            "tipo": "Débito",
+            "categoria": "Outros"
           }
         ]
       }
     ],
     "modules": [
-      "Painel",
-      "Relatórios FIS",
-      "Projetos de Infra"
+      "Clientes",
+      "Contas Bancárias",
+      "Transações"
     ]
   },
   "media": {}
