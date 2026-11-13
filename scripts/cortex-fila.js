@@ -7,7 +7,9 @@ const REPO = process.env.REPO || 'gilcambe/nexia';
 const BASE_URL = process.env.NEXIA_URL || 'https://nexia.gcbezerra.workers.dev';
 // Repositório público: minutos do GitHub Actions são grátis e sem limite; 6 pistas dobram a vazão (CORTEX_PISTAS muda).
 const PISTAS = Math.max(1, Math.min(10, Number(process.env.CORTEX_PISTAS) || 6));
-const MAX_TENTATIVAS = 12;
+// 13/11 (PC 2, relatorios/fila-actions.md): eram 12 por dia; cada tentativa do executor antigo leva ~19 min do Actions
+// e ele entrega pouco (8%). Ex.: #3567 rodou 20 vezes em 24 h. 6 = dividir na 3a + 3 tentativas nas partes.
+const MAX_TENTATIVAS = 6;
 const TENTATIVAS_ATE_DIVIDIR = 3;
 // Rodada "verde" que não entrega o arquivo pedido (ex.: o Cortex não pode criar `.github/workflows/*`) abria um rascunho
 // novo a cada ciclo, para sempre (18 rascunhos do gitleaks em 19/10). Depois de MAX_SEM_ENTREGA rodadas assim, trava.
