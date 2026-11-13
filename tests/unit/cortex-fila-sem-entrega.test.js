@@ -16,3 +16,10 @@ test('CFS2. ao chegar no limite, trava (não abre mais rascunhos)', () => {
 test('CFS3. usa o maior contador mesmo com rótulos velhos misturados', () => {
   assert.strictEqual(depoisSemEntrega(['sem-entrega-5', 'sem-entrega-1']).n, 6);
 });
+
+test('SE-LACO. validação de entrega que falha conta como rodada sem entrega (nunca repete para sempre)', () => {
+  const src = require('fs').readFileSync(require('path').join(__dirname, '../../scripts/cortex-fila.js'), 'utf8');
+  const i = src.indexOf('const val = await validarCortexFeito(token, { number: n, body: acao.corpo });');
+  const trecho = src.slice(i, src.indexOf('const revisao', i));
+  assert.ok(i > 0 && /depoisSemEntrega\(ls\)/.test(trecho) && /L\.travado/.test(trecho), 'o caminho da validação falha precisa contar e travar');
+});
