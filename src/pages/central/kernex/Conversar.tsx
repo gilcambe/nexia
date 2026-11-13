@@ -11,7 +11,13 @@ import { falta, fichaParaFabrica, intencao, lerFicha, pedidoDeMudanca, pergunta,
 // Projeto existente: a mensagem vira pedido na fila do Cortex, com o projeto e a prévia que o dono estava vendo.
 type Msg = { de: "eu" | "cortex"; texto: string; link?: string };
 const NOVO = "__novo__";
-const OI: Msg = { de: "cortex", texto: "Oi! Me diga o que você quer. Ex.: \"crie um site para a barbearia do João em Recife, WhatsApp 81 99999-9999\". Para mexer num projeto que já existe, escolha ele lá em cima." };
+const SUGESTOES = [
+  "Site para uma clínica com agendamento pelo WhatsApp",
+  "Cardápio online para uma pizzaria",
+  "Página de vendas para um curso",
+  "Landing page para um evento com inscrição",
+];
+const OI: Msg ={ de: "cortex", texto: "Oi! Me diga o que você quer. Ex.: \"crie um site para a barbearia do João em Recife, WhatsApp 81 99999-9999\". Para mexer num projeto que já existe, escolha ele lá em cima." };
 
 export default function Conversar() {
   const { ler, agir } = useCentral();
@@ -114,6 +120,42 @@ export default function Conversar() {
   };
 
   const previa = st?.previa || null;
+  // 13/11 (dono: "estilo Readdy"): conversa vazia = só a pergunta grande, a caixa e sugestões. Depois da 1ª mensagem,
+  // vira conversa à esquerda e prévia à direita.
+  const vazio = msgs.length <= 1 && !previa && !ocupado && projeto === NOVO;
+  if (vazio) {
+    return (
+      <div className="kx-tela kx-boasvindas" data-testid="kx-conversar">
+        <div className="kx-bv-caixa">
+          <h1 className="kx-bv-titulo">O que vamos criar hoje?</h1>
+          <p className="kx-mut kx-bv-sub">Escreva do seu jeito. O Cortex monta, mostra a prévia ao lado e só publica quando você aprovar.</p>
+          <div className="kx-bv-entrada">
+            <textarea data-testid="kx-conv-texto" aria-label="Sua mensagem" rows={3} placeholder="Ex.: crie um site para a barbearia do João em Recife, WhatsApp 81 99999-9999" value={texto} onChange={(e) => setTexto(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); mandar(); } }} />
+            <div className="kx-bv-acoes">
+              <label className="kx-btn" style={{ cursor: "pointer" }} data-testid="kx-conv-anexar" title="Foto, logo, PDF ou planilha">
+                📎 Anexar
+                <input type="file" hidden accept="image/*,application/pdf,.txt,.csv,.xlsx,.xls,.doc,.docx" onChange={(e) => { anexar(e.target.files?.[0]); e.target.value = ""; }} />
+              </label>
+              {anexos.length > 0 && <span className="kx-mut" data-testid="kx-conv-anexos">📎 {anexos.length} anexo(s)</span>}
+              <span style={{ flex: 1 }} />
+              <button type="button" className="kx-btn forte" onClick={mandar} disabled={texto.trim().length < 2} data-testid="kx-conv-mandar"><Icone nome="enviar" tam={16} />Criar</button>
+            </div>
+          </div>
+          <div className="kx-bv-sugestoes" aria-label="Sugestões">
+            {SUGESTOES.map((s) => <button key={s} type="button" className="kx-chip" onClick={() => setTexto(s)}>{s}</button>)}
+          </div>
+          <label className="kx-mut kx-bv-projeto" htmlFor="kx-conv-projeto">Ou mexer num projeto que já existe:
+            <select id="kx-conv-projeto" className="kx-busca" value={projeto} data-testid="kx-conv-projeto"
+              onChange={(e) => { setProjeto(e.target.value); setSt(null); setId(null); setFicha({}); }}>
+              <option value={NOVO}>Escolha o projeto…</option>
+              {projetos.map((p) => <option key={p.id} value={p.id}>{p.nome || p.id}</option>)}
+            </select>
+          </label>
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="kx-tela" data-testid="kx-conversar">
       <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", marginBottom: 10 }}>

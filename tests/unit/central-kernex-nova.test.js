@@ -25,7 +25,7 @@ test('KX1. menu tem as 10 telas do Plano-Mestre + Homologação (pedido do dono 
 test('KX2. tela vem da URL; inválida cai no Início', async () => {
   const { telaDaUrl } = await regras();
   assert.equal(telaDaUrl('?nova=1&tela=tarefas'), 'tarefas');
-  assert.equal(telaDaUrl('?tela=xyz'), 'inicio');
+  assert.equal(telaDaUrl('?tela=xyz'), 'conversar');
 });
 
 test('KX3. semáforo: vermelho, amarelo, verde', async () => {
