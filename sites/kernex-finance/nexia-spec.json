@@ -2,28 +2,28 @@
   "spec": {
     "kind": "system",
     "name": "Kernex Finance",
-    "tagline": "Gestão financeira inteligente para o seu negócio",
+    "tagline": "Painel financeiro interno e gerenciador de escrituração",
     "photo_theme": "",
-    "description": "Gestão financeira inteligente para o seu negócio",
+    "description": "Painel financeiro interno e gerenciador de escrituração",
     "folder": "sites/kernex-finance",
     "fonts": {
       "heading": "Space Grotesk",
       "body": "Inter"
     },
     "palette": {
-      "primary": "#4f46e5",
-      "accent": "#22d3ee",
+      "primary": "#0f172a",
+      "accent": "#3b82f6",
       "bg": "#fbfaf7",
       "surface": "#ffffff",
       "text": "#1d2426",
       "muted": "#5d6b6e",
-      "dark": "#0f172a"
+      "dark": "#0b1120"
     },
     "style": "modern",
     "contact": {
       "whatsapp": "",
-      "phone": "",
-      "email": "support@kernex.com.br",
+      "phone": "(11) 4004-1999 (exemplo)",
+      "email": "devops@kernex.com.br",
       "address": "",
       "city": "",
       "hours": "",
@@ -44,195 +44,199 @@
     "leads_origem": "",
     "entities": [
       {
-        "key": "recebimentos",
-        "label": "Recebimentos",
-        "singular": "Recebimento",
+        "key": "rfis",
+        "label": "Relatórios FIS",
+        "singular": "Relatório",
         "fields": [
           {
-            "key": "cliente",
+            "key": "empresa",
+            "label": "Empresa",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "fiscao",
+            "label": "FISn",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "tipo_evento",
+            "label": "Tipo de Evento",
+            "type": "select",
+            "options": [
+              "Login",
+              "Logout",
+              "Acesso API",
+              "Devolução",
+              "Sucesso"
+            ],
+            "required": true
+          },
+          {
+            "key": "status",
+            "label": "Status Retorno",
+            "type": "select",
+            "options": [
+              "_ERROR",
+              "_SUCCESS"
+            ],
+            "required": true
+          },
+          {
+            "key": "mensagem",
+            "label": "Mensagem",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "timestamp",
+            "label": "Timestamp",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "url",
+            "label": "URL Chamada",
+            "type": "text",
+            "options": [],
+            "required": true
+          }
+        ],
+        "sample": [
+          {
+            "empresa": "Grupo Delta Log",
+            "fiscao": "FIS23145",
+            "tipo_evento": "Login",
+            "status": "_SUCCESS",
+            "mensagem": "Sessão iniciada",
+            "timestamp": "2026-11-12T10:14:22Z",
+            "url": "api.kernex.com.br/v1/login"
+          },
+          {
+            "empresa": "Consulato de Serviços",
+            "fiscao": "FIS23145",
+            "tipo_evento": "Acesso API",
+            "status": "_ERROR",
+            "mensagem": "Token expirado",
+            "timestamp": "2026-11-12T10:15:05Z",
+            "url": "api.kernex.com.br/v1/status"
+          },
+          {
+            "empresa": "Gráfica Unida",
+            "fiscao": "FIS23200",
+            "tipo_evento": "Sucesso",
+            "status": "_SUCCESS",
+            "mensagem": "Cotação enviada",
+            "timestamp": "2026-11-12T11:30:10Z",
+            "url": "nexus-finance.kernex.workers.dev/api/cotacao"
+          },
+          {
+            "empresa": "Transportadora Silva",
+            "fiscao": "FIS23200",
+            "tipo_evento": "Logout",
+            "status": "_SUCCESS",
+            "mensagem": "Encerramento manual",
+            "timestamp": "2026-11-12T14:45:00Z",
+            "url": "api.kernex.com.br/v1/logout"
+          }
+        ]
+      },
+      {
+        "key": "clinfs",
+        "label": "CLINFs",
+        "singular": "CLINF",
+        "fields": [
+          {
+            "key": "fiscao",
+            "label": "Assoc. FISn",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "nome_cliente",
             "label": "Cliente",
             "type": "text",
             "options": [],
             "required": true
           },
           {
-            "key": "descricao",
-            "label": "Descrição",
+            "key": "identificador_externo",
+            "label": "Identificador",
             "type": "text",
             "options": [],
             "required": true
           },
           {
-            "key": "valor",
-            "label": "Valor",
-            "type": "money",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "data_vencimento",
-            "label": "Vencimento",
-            "type": "date",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "status",
+            "key": "status_geral",
             "label": "Status",
             "type": "select",
             "options": [
-              "Pago",
-              "Pendente",
-              "Atrasado",
-              "Cancelado"
+              "_SUCCESS",
+              "_ERROR"
             ],
             "required": true
           },
           {
-            "key": "forma_pagamento",
-            "label": "Forma de Pagamento",
-            "type": "select",
-            "options": [
-              "Pix",
-              "Cartão de Crédito",
-              "TED",
-              "Boleto"
-            ],
-            "required": true
-          }
-        ],
-        "sample": [
-          {
-            "cliente": "Barbearia do Zé",
-            "descricao": "Mensalidade SaaS",
-            "valor": "149.90",
-            "data_vencimento": "2026-01-10",
-            "status": "Pago",
-            "forma_pagamento": "Pix"
-          },
-          {
-            "cliente": "Padaria Pão Dourado",
-            "descricao": "Mensalidade SaaS",
-            "valor": "299.00",
-            "data_vencimento": "2026-01-15",
-            "status": "Pendente",
-            "forma_pagamento": "Cartão de Crédito"
-          },
-          {
-            "cliente": "Clínica Dermatológica",
-            "descricao": "Contrato Anual",
-            "valor": "3600.00",
-            "data_vencimento": "2025-12-20",
-            "status": "Pago",
-            "forma_pagamento": "TED"
-          },
-          {
-            "cliente": "Estúdio Beauty",
-            "descricao": "Mensalidade SaaS",
-            "valor": "199.90",
-            "data_vencimento": "2025-11-05",
-            "status": "Atrasado",
-            "forma_pagamento": "Boleto"
-          }
-        ]
-      },
-      {
-        "key": "recorrentes",
-        "label": "Assinaturas Recorrentes",
-        "singular": "Assinatura",
-        "fields": [
-          {
-            "key": "nome_assinatura",
-            "label": "Nome da Assinatura",
+            "key": "evento_erro",
+            "label": "Evento Erro",
             "type": "text",
             "options": [],
             "required": true
           },
           {
-            "key": "ciclo",
-            "label": "Ciclo",
-            "type": "select",
-            "options": [
-              "Mensal",
-              "Trimestral",
-              "Anual"
-            ],
-            "required": true
-          },
-          {
-            "key": "valor_mensal",
-            "label": "Valor Mensal Equivalente",
-            "type": "money",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "prox_vencimento",
-            "label": "Próximo Vencimento",
+            "key": "ultima_atualizacao",
+            "label": "Atualização",
             "type": "date",
             "options": [],
-            "required": true
-          },
-          {
-            "key": "churn_risco",
-            "label": "Risco de Churn",
-            "type": "number",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "status_atual",
-            "label": "Status Atual",
-            "type": "select",
-            "options": [
-              "Ativa",
-              "Pausada",
-              "Cancelada"
-            ],
             "required": true
           }
         ],
         "sample": [
           {
-            "nome_assinatura": "Plano Essencial",
-            "ciclo": "Mensal",
-            "valor_mensal": "99.00",
-            "prox_vencimento": "2026-02-01",
-            "churn_risco": "12",
-            "status_atual": "Ativa"
+            "fiscao": "FIS23145",
+            "nome_cliente": "João Paulo Martins",
+            "identificador_externo": "CLI-BRA-88231",
+            "status_geral": "_SUCCESS",
+            "evento_erro": "N/A",
+            "ultima_atualizacao": "2026-11-12"
           },
           {
-            "nome_assinatura": "Plano Profissional",
-            "ciclo": "Mensal",
-            "valor_mensal": "249.00",
-            "prox_vencimento": "2026-02-15",
-            "churn_risco": "8",
-            "status_atual": "Ativa"
+            "fiscao": "FIS23145",
+            "nome_cliente": "Silvio Tavares",
+            "identificador_externo": "CLI-BRA-90102",
+            "status_geral": "_ERROR",
+            "evento_erro": "E040 - Falha validação",
+            "ultima_atualizacao": "2026-11-11"
           },
           {
-            "nome_assinatura": "Plano Enterprise",
-            "ciclo": "Anual",
-            "valor_mensal": "1200.00",
-            "prox_vencimento": "2025-12-31",
-            "churn_risco": "5",
-            "status_atual": "Ativa"
+            "fiscao": "FIS23200",
+            "nome_cliente": "Marta Lucia Farias",
+            "identificador_externo": "CLI-ARG-10023",
+            "status_geral": "_SUCCESS",
+            "evento_erro": "N/A",
+            "ultima_atualizacao": "2026-11-12"
           },
           {
-            "nome_assinatura": "Trial Gratuito",
-            "ciclo": "Trimestral",
-            "valor_mensal": "0.00",
-            "prox_vencimento": "2026-01-20",
-            "churn_risco": "45",
-            "status_atual": "Pausada"
+            "fiscao": "FIS23200",
+            "nome_cliente": "Ramon Alves Dias",
+            "identificador_externo": "CLI-POR-55009",
+            "status_geral": "_SUCCESS",
+            "evento_erro": "N/A",
+            "ultima_atualizacao": "2026-11-10"
           }
         ]
       }
     ],
     "modules": [
-      "Dashboard",
-      "Billing",
-      "Assinaturas",
-      "Relatórios"
+      "Painel",
+      "Relatórios FIS",
+      "Projetos de Infra"
     ]
   },
   "media": {}
