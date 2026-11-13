@@ -181,6 +181,29 @@ test('EST6. travada que precisa de você não conta duas vezes; resumo cita as d
   assert.strictEqual(resumoDia(res, []), 'Hoje: 0 em andamento, 2 travadas, 0 concluídas, 1 precisa de você. IAs ativas: 0 de 0.');
 });
 
+test('EST7. aguardando-ia cobre reserva-* e vez-do-claude com as IAs corretas', () => {
+  const agora = Date.now();
+  const recente = new Date(agora - 5 * 60000).toISOString();
+
+  // reserva-tentou → aguardando-ia, IA "IAs grátis"
+  const r = estadoTarefa({
+    state: 'open',
+    labels: [{ name: 'cortex-fila' }, { name: 'reserva-tentou' }],
+    updated_at: recente,
+  }, agora);
+  assert.strictEqual(r.estado, 'aguardando-ia');
+  assert.strictEqual(r.ia, 'IAs grátis');
+
+  // vez-do-claude → aguardando-ia, IA "Claude"
+  const c = estadoTarefa({
+    state: 'open',
+    labels: [{ name: 'cortex-fila' }, { name: 'vez-do-claude' }],
+    updated_at: recente,
+  }, agora);
+  assert.strictEqual(c.estado, 'aguardando-ia');
+  assert.strictEqual(c.ia, 'Claude');
+});
+
 test('EST-N1. issue fechada pelo PR (state_reason completed) conta como concluída; not_planned continua falhou', () => {
   assert.strictEqual(estadoTarefa({ state: 'closed', state_reason: 'completed', labels: [] }).estado, 'concluida');
   assert.strictEqual(estadoTarefa({ state: 'closed', state_reason: 'not_planned', labels: [] }).estado, 'falhou');
