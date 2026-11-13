@@ -194,9 +194,86 @@
    "redes sociais",
    "instagram",
    "agendar post"
+  ],
+  "site-modelo": [
+   "site",
+   "landing",
+   "pagina",
+   "portfolio",
+   "template",
+   "modelo"
+  ],
+  "brasil": [
+   "pix",
+   "cpf",
+   "cnpj",
+   "cep",
+   "mascara",
+   "qr code",
+   "qrcode",
+   "cookies",
+   "lgpd",
+   "telefone"
+  ],
+  "3d": [
+   "3d",
+   "modelo 3d",
+   "realidade aumentada"
+  ],
+  "3d-assets": [
+   "3d",
+   "modelo 3d"
   ]
  },
  "prontos": [
+  {
+   "repo": "mrdoob/three.js",
+   "url": "https://github.com/mrdoob/three.js",
+   "categoria": "3d",
+   "uso": "mostrar modelo 3D no site (lib)",
+   "licenca": "MIT",
+   "estrelas": 118252,
+   "atualizado": "2026-11-12",
+   "linguagem": "JavaScript",
+   "tipo": "peca",
+   "servidor": false
+  },
+  {
+   "repo": "BabylonJS/Babylon.js",
+   "url": "https://github.com/BabylonJS/Babylon.js",
+   "categoria": "3d",
+   "uso": "motor 3D no site (lib)",
+   "licenca": "Apache-2.0",
+   "estrelas": 26332,
+   "atualizado": "2026-11-13",
+   "linguagem": "TypeScript",
+   "tipo": "peca",
+   "servidor": false
+  },
+  {
+   "repo": "playcanvas/splat-transform",
+   "url": "https://github.com/playcanvas/splat-transform",
+   "categoria": "3d",
+   "uso": "Gaussian Splatting (lib)",
+   "licenca": "MIT",
+   "estrelas": 1439,
+   "atualizado": "2026-11-12",
+   "linguagem": "TypeScript",
+   "tipo": "peca",
+   "servidor": false
+  },
+  {
+   "repo": "Amal-David/meshy2glb",
+   "url": "https://github.com/Amal-David/meshy2glb",
+   "categoria": "3d",
+   "uso": "converter formatos 3D no navegador (lib)",
+   "licenca": "MIT",
+   "estrelas": 24,
+   "atualizado": "2026-10-15",
+   "linguagem": "JavaScript",
+   "tipo": "peca",
+   "servidor": false
+  },
   {
    "repo": "calcom/cal.diy",
    "url": "https://github.com/calcom/cal.diy",
@@ -232,6 +309,18 @@
    "linguagem": "JavaScript",
    "tipo": "sistema",
    "servidor": true
+  },
+  {
+   "repo": "schedule-x/schedule-x",
+   "url": "https://github.com/schedule-x/schedule-x",
+   "categoria": "agenda",
+   "uso": "calendário de eventos (lib)",
+   "licenca": "MIT",
+   "estrelas": 2610,
+   "atualizado": "2026-11-12",
+   "linguagem": "TypeScript",
+   "tipo": "peca",
+   "servidor": false
   },
   {
    "repo": "umami-software/umami",
@@ -510,6 +599,150 @@
    "servidor": true
   },
   {
+   "repo": "soldair/node-qrcode",
+   "url": "https://github.com/soldair/node-qrcode",
+   "categoria": "brasil",
+   "uso": "gerar QR Code (lib)",
+   "licenca": "MIT",
+   "estrelas": 8191,
+   "atualizado": "2024-08-23",
+   "linguagem": "JavaScript",
+   "tipo": "peca",
+   "servidor": false
+  },
+  {
+   "repo": "RobinHerbots/Inputmask",
+   "url": "https://github.com/RobinHerbots/Inputmask",
+   "categoria": "brasil",
+   "uso": "máscaras de campo (lib)",
+   "licenca": "MIT",
+   "estrelas": 6454,
+   "atualizado": "2026-11-06",
+   "linguagem": "JavaScript",
+   "tipo": "peca",
+   "servidor": false
+  },
+  {
+   "repo": "orestbida/cookieconsent",
+   "url": "https://github.com/orestbida/cookieconsent",
+   "categoria": "brasil",
+   "uso": "aviso de cookies LGPD (lib)",
+   "licenca": "MIT",
+   "estrelas": 5764,
+   "atualizado": "2026-11-03",
+   "linguagem": "JavaScript",
+   "tipo": "peca",
+   "servidor": false
+  },
+  {
+   "repo": "uNmAnNeR/imaskjs",
+   "url": "https://github.com/uNmAnNeR/imaskjs",
+   "categoria": "brasil",
+   "uso": "máscaras de campo sem dependência (lib)",
+   "licenca": "MIT",
+   "estrelas": 5177,
+   "atualizado": "2024-10-11",
+   "linguagem": "TypeScript",
+   "tipo": "peca",
+   "servidor": false
+  },
+  {
+   "repo": "kozakdenys/qr-code-styling",
+   "url": "https://github.com/kozakdenys/qr-code-styling",
+   "categoria": "brasil",
+   "uso": "QR Code com logo (lib)",
+   "licenca": "MIT",
+   "estrelas": 2984,
+   "atualizado": "2026-02-14",
+   "linguagem": "TypeScript",
+   "tipo": "peca",
+   "servidor": false
+  },
+  {
+   "repo": "BrasilAPI/cep-promise",
+   "url": "https://github.com/BrasilAPI/cep-promise",
+   "categoria": "brasil",
+   "uso": "endereço pelo CEP (lib)",
+   "licenca": "MIT",
+   "estrelas": 2980,
+   "atualizado": "2024-03-28",
+   "linguagem": "JavaScript",
+   "tipo": "peca",
+   "servidor": false
+  },
+  {
+   "repo": "kazuhikoarase/qrcode-generator",
+   "url": "https://github.com/kazuhikoarase/qrcode-generator",
+   "categoria": "brasil",
+   "uso": "gerar QR Code (lib)",
+   "licenca": "MIT",
+   "estrelas": 2388,
+   "atualizado": "2026-02-14",
+   "linguagem": "HTML",
+   "tipo": "peca",
+   "servidor": false
+  },
+  {
+   "repo": "brazilian-utils/javascript",
+   "url": "https://github.com/brazilian-utils/javascript",
+   "categoria": "brasil",
+   "uso": "CPF, CNPJ, CEP, telefone, placa, moeda (lib)",
+   "licenca": "MIT",
+   "estrelas": 1687,
+   "atualizado": "2026-11-04",
+   "linguagem": "TypeScript",
+   "tipo": "peca",
+   "servidor": false
+  },
+  {
+   "repo": "AmauriC/tarteaucitron.js",
+   "url": "https://github.com/AmauriC/tarteaucitron.js",
+   "categoria": "brasil",
+   "uso": "consentimento de cookies (lib)",
+   "licenca": "MIT",
+   "estrelas": 1060,
+   "atualizado": "2026-11-09",
+   "linguagem": "JavaScript",
+   "tipo": "peca",
+   "servidor": false
+  },
+  {
+   "repo": "mariohmol/js-brasil",
+   "url": "https://github.com/mariohmol/js-brasil",
+   "categoria": "brasil",
+   "uso": "máscaras e validação de documentos BR (lib)",
+   "licenca": "MIT",
+   "estrelas": 248,
+   "atualizado": "2026-08-20",
+   "linguagem": "TypeScript",
+   "tipo": "peca",
+   "servidor": false
+  },
+  {
+   "repo": "thalesog/pix-utils",
+   "url": "https://github.com/thalesog/pix-utils",
+   "categoria": "brasil",
+   "uso": "Pix copia e cola / BR Code (lib)",
+   "licenca": "MIT",
+   "estrelas": 96,
+   "atualizado": "2025-08-15",
+   "linguagem": "TypeScript",
+   "tipo": "peca",
+   "servidor": false
+  },
+  {
+   "repo": "FDBnet/Gerador-de-QR-Code-Universal-PIX-Wi-FI-SMS-URLs-e-mais-",
+   "url": "https://github.com/FDBnet/Gerador-de-QR-Code-Universal-PIX-Wi-FI-SMS-URLs-e-mais-",
+   "categoria": "brasil",
+   "uso": "QR Code Pix e outros (lib)",
+   "licenca": "MIT",
+   "estrelas": 0,
+   "atualizado": "2026-04-18",
+   "linguagem": "JavaScript",
+   "tipo": "peca",
+   "servidor": false
+  },
+  {
    "repo": "payloadcms/payload",
    "url": "https://github.com/payloadcms/payload",
    "categoria": "cms",
@@ -741,7 +974,7 @@
    "repo": "dimsemenov/PhotoSwipe",
    "url": "https://github.com/dimsemenov/PhotoSwipe",
    "categoria": "galeria",
-   "uso": "visualizador (lib)",
+   "uso": "lightbox de fotos (lib)",
    "licenca": "MIT",
    "estrelas": 25302,
    "atualizado": "2025-12-04",
@@ -796,6 +1029,18 @@
    "linguagem": "PHP",
    "tipo": "sistema",
    "servidor": true
+  },
+  {
+   "repo": "biati-digital/glightbox",
+   "url": "https://github.com/biati-digital/glightbox",
+   "categoria": "galeria",
+   "uso": "lightbox fotos e vídeos (lib)",
+   "licenca": "MIT",
+   "estrelas": 2544,
+   "atualizado": "2025-12-02",
+   "linguagem": "JavaScript",
+   "tipo": "peca",
+   "servidor": false
   },
   {
    "repo": "bpatrik/pigallery2",
@@ -978,6 +1223,18 @@
    "servidor": true
   },
   {
+   "repo": "peet86/cart-localstorage",
+   "url": "https://github.com/peet86/cart-localstorage",
+   "categoria": "loja",
+   "uso": "carrinho no navegador (lib)",
+   "licenca": "MIT",
+   "estrelas": 94,
+   "atualizado": "2023-10-12",
+   "linguagem": "JavaScript",
+   "tipo": "peca",
+   "servidor": false
+  },
+  {
    "repo": "sherlock-project/sherlock",
    "url": "https://github.com/sherlock-project/sherlock",
    "categoria": "marca",
@@ -1122,6 +1379,54 @@
    "servidor": false
   },
   {
+   "repo": "SheetJS/sheetjs",
+   "url": "https://github.com/SheetJS/sheetjs",
+   "categoria": "pdf",
+   "uso": "planilha XLSX/CSV (lib)",
+   "licenca": "Apache-2.0",
+   "estrelas": 36345,
+   "atualizado": "2024-04-18",
+   "linguagem": "-",
+   "tipo": "peca",
+   "servidor": false
+  },
+  {
+   "repo": "parallax/jsPDF",
+   "url": "https://github.com/parallax/jsPDF",
+   "categoria": "pdf",
+   "uso": "gerar PDF (lib)",
+   "licenca": "MIT",
+   "estrelas": 31314,
+   "atualizado": "2026-11-11",
+   "linguagem": "JavaScript",
+   "tipo": "peca",
+   "servidor": false
+  },
+  {
+   "repo": "exceljs/exceljs",
+   "url": "https://github.com/exceljs/exceljs",
+   "categoria": "pdf",
+   "uso": "criar XLSX (lib)",
+   "licenca": "MIT",
+   "estrelas": 15516,
+   "atualizado": "2025-01-21",
+   "linguagem": "JavaScript",
+   "tipo": "peca",
+   "servidor": false
+  },
+  {
+   "repo": "mholt/PapaParse",
+   "url": "https://github.com/mholt/PapaParse",
+   "categoria": "pdf",
+   "uso": "ler e gerar CSV (lib)",
+   "licenca": "MIT",
+   "estrelas": 13596,
+   "atualizado": "2026-11-12",
+   "linguagem": "JavaScript",
+   "tipo": "peca",
+   "servidor": false
+  },
+  {
    "repo": "gotenberg/gotenberg",
    "url": "https://github.com/gotenberg/gotenberg",
    "categoria": "pdf",
@@ -1141,6 +1446,42 @@
    "licenca": "MIT",
    "estrelas": 8674,
    "atualizado": "2024-07-17",
+   "linguagem": "TypeScript",
+   "tipo": "peca",
+   "servidor": false
+  },
+  {
+   "repo": "lindell/JsBarcode",
+   "url": "https://github.com/lindell/JsBarcode",
+   "categoria": "pdf",
+   "uso": "código de barras (lib)",
+   "licenca": "MIT",
+   "estrelas": 5901,
+   "atualizado": "2026-06-23",
+   "linguagem": "JavaScript",
+   "tipo": "peca",
+   "servidor": false
+  },
+  {
+   "repo": "eKoopmans/html2pdf.js",
+   "url": "https://github.com/eKoopmans/html2pdf.js",
+   "categoria": "pdf",
+   "uso": "HTML para PDF (lib)",
+   "licenca": "MIT",
+   "estrelas": 4935,
+   "atualizado": "2026-11-12",
+   "linguagem": "JavaScript",
+   "tipo": "peca",
+   "servidor": false
+  },
+  {
+   "repo": "simonbengtsson/jsPDF-AutoTable",
+   "url": "https://github.com/simonbengtsson/jsPDF-AutoTable",
+   "categoria": "pdf",
+   "uso": "tabela em PDF (lib)",
+   "licenca": "MIT",
+   "estrelas": 2548,
+   "atualizado": "2026-10-15",
    "linguagem": "TypeScript",
    "tipo": "peca",
    "servidor": false
@@ -1216,6 +1557,114 @@
    "linguagem": "HTML",
    "tipo": "sistema",
    "servidor": true
+  },
+  {
+   "repo": "StartBootstrap/startbootstrap-freelancer",
+   "url": "https://github.com/StartBootstrap/startbootstrap-freelancer",
+   "categoria": "site-modelo",
+   "uso": "profissional liberal, portfólio (template)",
+   "licenca": "MIT",
+   "estrelas": 2606,
+   "atualizado": "2024-03-17",
+   "linguagem": "Pug",
+   "tipo": "peca",
+   "servidor": false
+  },
+  {
+   "repo": "StartBootstrap/startbootstrap-resume",
+   "url": "https://github.com/StartBootstrap/startbootstrap-resume",
+   "categoria": "site-modelo",
+   "uso": "currículo/perfil profissional (template)",
+   "licenca": "MIT",
+   "estrelas": 2180,
+   "atualizado": "2024-04-29",
+   "linguagem": "Pug",
+   "tipo": "peca",
+   "servidor": false
+  },
+  {
+   "repo": "StartBootstrap/startbootstrap-creative",
+   "url": "https://github.com/StartBootstrap/startbootstrap-creative",
+   "categoria": "site-modelo",
+   "uso": "estúdio/fotógrafo com portfólio (template)",
+   "licenca": "MIT",
+   "estrelas": 2071,
+   "atualizado": "2026-03-25",
+   "linguagem": "Pug",
+   "tipo": "peca",
+   "servidor": false
+  },
+  {
+   "repo": "StartBootstrap/startbootstrap-agency",
+   "url": "https://github.com/StartBootstrap/startbootstrap-agency",
+   "categoria": "site-modelo",
+   "uso": "agência, uma página (template)",
+   "licenca": "MIT",
+   "estrelas": 2035,
+   "atualizado": "2024-07-15",
+   "linguagem": "Pug",
+   "tipo": "peca",
+   "servidor": false
+  },
+  {
+   "repo": "tailwindtoolbox/Landing-Page",
+   "url": "https://github.com/tailwindtoolbox/Landing-Page",
+   "categoria": "site-modelo",
+   "uso": "landing page genérica Tailwind (template)",
+   "licenca": "MIT",
+   "estrelas": 1451,
+   "atualizado": "2024-04-25",
+   "linguagem": "HTML",
+   "tipo": "peca",
+   "servidor": false
+  },
+  {
+   "repo": "StartBootstrap/startbootstrap-stylish-portfolio",
+   "url": "https://github.com/StartBootstrap/startbootstrap-stylish-portfolio",
+   "categoria": "site-modelo",
+   "uso": "fotógrafo/arquiteto, portfólio visual (template)",
+   "licenca": "MIT",
+   "estrelas": 891,
+   "atualizado": "2024-05-19",
+   "linguagem": "JavaScript",
+   "tipo": "peca",
+   "servidor": false
+  },
+  {
+   "repo": "StartBootstrap/startbootstrap-business-casual",
+   "url": "https://github.com/StartBootstrap/startbootstrap-business-casual",
+   "categoria": "site-modelo",
+   "uso": "restaurante/cafeteria, poucas páginas (template)",
+   "licenca": "MIT",
+   "estrelas": 362,
+   "atualizado": "2023-05-24",
+   "linguagem": "Pug",
+   "tipo": "peca",
+   "servidor": false
+  },
+  {
+   "repo": "StartBootstrap/startbootstrap-personal",
+   "url": "https://github.com/StartBootstrap/startbootstrap-personal",
+   "categoria": "site-modelo",
+   "uso": "site pessoal (template)",
+   "licenca": "MIT",
+   "estrelas": 157,
+   "atualizado": "2024-06-18",
+   "linguagem": "Pug",
+   "tipo": "peca",
+   "servidor": false
+  },
+  {
+   "repo": "ColorlibHQ/bootstrap-templates",
+   "url": "https://github.com/ColorlibHQ/bootstrap-templates",
+   "categoria": "site-modelo",
+   "uso": "28 templates de negócios (template)",
+   "licenca": "MIT",
+   "estrelas": 3,
+   "atualizado": "2026-10-19",
+   "linguagem": "HTML",
+   "tipo": "peca",
+   "servidor": false
   },
   {
    "repo": "inovector/mixpost",
@@ -1338,6 +1787,18 @@
    "servidor": false
   },
   {
+   "repo": "Leaflet/Leaflet",
+   "url": "https://github.com/Leaflet/Leaflet",
+   "categoria": "ui",
+   "uso": "mapa interativo (lib)",
+   "licenca": "BSD-2-Clause",
+   "estrelas": 45917,
+   "atualizado": "2026-11-12",
+   "linguagem": "JavaScript",
+   "tipo": "peca",
+   "servidor": false
+  },
+  {
    "repo": "ColorlibHQ/AdminLTE",
    "url": "https://github.com/ColorlibHQ/AdminLTE",
    "categoria": "ui",
@@ -1362,6 +1823,18 @@
    "servidor": false
   },
   {
+   "repo": "SortableJS/Sortable",
+   "url": "https://github.com/SortableJS/Sortable",
+   "categoria": "ui",
+   "uso": "arrastar e ordenar (lib)",
+   "licenca": "MIT",
+   "estrelas": 31209,
+   "atualizado": "2026-03-24",
+   "linguagem": "JavaScript",
+   "tipo": "peca",
+   "servidor": false
+  },
+  {
    "repo": "TanStack/table",
    "url": "https://github.com/TanStack/table",
    "categoria": "ui",
@@ -1374,6 +1847,78 @@
    "servidor": false
   },
   {
+   "repo": "feathericons/feather",
+   "url": "https://github.com/feathericons/feather",
+   "categoria": "ui",
+   "uso": "ícones SVG (lib)",
+   "licenca": "MIT",
+   "estrelas": 26040,
+   "atualizado": "2025-03-11",
+   "linguagem": "JavaScript",
+   "tipo": "peca",
+   "servidor": false
+  },
+  {
+   "repo": "tabler/tabler-icons",
+   "url": "https://github.com/tabler/tabler-icons",
+   "categoria": "ui",
+   "uso": "ícones SVG (lib)",
+   "licenca": "MIT",
+   "estrelas": 22618,
+   "atualizado": "2026-11-12",
+   "linguagem": "JavaScript",
+   "tipo": "peca",
+   "servidor": false
+  },
+  {
+   "repo": "krisk/Fuse",
+   "url": "https://github.com/krisk/Fuse",
+   "categoria": "ui",
+   "uso": "busca dentro do site (lib)",
+   "licenca": "Apache-2.0",
+   "estrelas": 20529,
+   "atualizado": "2026-08-09",
+   "linguagem": "JavaScript",
+   "tipo": "peca",
+   "servidor": false
+  },
+  {
+   "repo": "flatpickr/flatpickr",
+   "url": "https://github.com/flatpickr/flatpickr",
+   "categoria": "ui",
+   "uso": "escolher data e hora (lib)",
+   "licenca": "MIT",
+   "estrelas": 16451,
+   "atualizado": "2024-08-02",
+   "linguagem": "TypeScript",
+   "tipo": "peca",
+   "servidor": false
+  },
+  {
+   "repo": "szimek/signature_pad",
+   "url": "https://github.com/szimek/signature_pad",
+   "categoria": "ui",
+   "uso": "assinatura na tela (lib)",
+   "licenca": "MIT",
+   "estrelas": 12077,
+   "atualizado": "2026-10-29",
+   "linguagem": "TypeScript",
+   "tipo": "peca",
+   "servidor": false
+  },
+  {
+   "repo": "StartBootstrap/startbootstrap-sb-admin-2",
+   "url": "https://github.com/StartBootstrap/startbootstrap-sb-admin-2",
+   "categoria": "ui",
+   "uso": "painel administrativo (template)",
+   "licenca": "MIT",
+   "estrelas": 9863,
+   "atualizado": "2024-07-02",
+   "linguagem": "HTML",
+   "tipo": "peca",
+   "servidor": false
+  },
+  {
    "repo": "themesberg/flowbite",
    "url": "https://github.com/themesberg/flowbite",
    "categoria": "ui",
@@ -1382,6 +1927,102 @@
    "estrelas": 9385,
    "atualizado": "2026-06-27",
    "linguagem": "HTML",
+   "tipo": "peca",
+   "servidor": false
+  },
+  {
+   "repo": "davidjerleke/embla-carousel",
+   "url": "https://github.com/davidjerleke/embla-carousel",
+   "categoria": "ui",
+   "uso": "carrossel com toque (lib)",
+   "licenca": "MIT",
+   "estrelas": 8473,
+   "atualizado": "2026-11-01",
+   "linguagem": "TypeScript",
+   "tipo": "peca",
+   "servidor": false
+  },
+  {
+   "repo": "glidejs/glide",
+   "url": "https://github.com/glidejs/glide",
+   "categoria": "ui",
+   "uso": "carrossel leve (lib)",
+   "licenca": "MIT",
+   "estrelas": 7664,
+   "atualizado": "2026-03-21",
+   "linguagem": "JavaScript",
+   "tipo": "peca",
+   "servidor": false
+  },
+  {
+   "repo": "Choices-js/Choices",
+   "url": "https://github.com/Choices-js/Choices",
+   "categoria": "ui",
+   "uso": "select com busca (lib)",
+   "licenca": "MIT",
+   "estrelas": 6828,
+   "atualizado": "2026-10-30",
+   "linguagem": "JavaScript",
+   "tipo": "peca",
+   "servidor": false
+  },
+  {
+   "repo": "Splidejs/splide",
+   "url": "https://github.com/Splidejs/splide",
+   "categoria": "ui",
+   "uso": "slider acessível (lib)",
+   "licenca": "MIT",
+   "estrelas": 5368,
+   "atualizado": "2024-07-08",
+   "linguagem": "TypeScript",
+   "tipo": "peca",
+   "servidor": false
+  },
+  {
+   "repo": "ganlanyuan/tiny-slider",
+   "url": "https://github.com/ganlanyuan/tiny-slider",
+   "categoria": "ui",
+   "uso": "slider (lib)",
+   "licenca": "MIT",
+   "estrelas": 5319,
+   "atualizado": "2024-08-02",
+   "linguagem": "HTML",
+   "tipo": "peca",
+   "servidor": false
+  },
+  {
+   "repo": "micromodal/Micromodal",
+   "url": "https://github.com/micromodal/Micromodal",
+   "categoria": "ui",
+   "uso": "janela modal (lib)",
+   "licenca": "MIT",
+   "estrelas": 3662,
+   "atualizado": "2026-08-08",
+   "linguagem": "JavaScript",
+   "tipo": "peca",
+   "servidor": false
+  },
+  {
+   "repo": "t1m0n/air-datepicker",
+   "url": "https://github.com/t1m0n/air-datepicker",
+   "categoria": "ui",
+   "uso": "escolher data e hora (lib)",
+   "licenca": "MIT",
+   "estrelas": 2873,
+   "atualizado": "2025-05-18",
+   "linguagem": "JavaScript",
+   "tipo": "peca",
+   "servidor": false
+  },
+  {
+   "repo": "apvarun/toastify-js",
+   "url": "https://github.com/apvarun/toastify-js",
+   "categoria": "ui",
+   "uso": "notificação toast (lib)",
+   "licenca": "MIT",
+   "estrelas": 2543,
+   "atualizado": "2024-08-19",
+   "linguagem": "JavaScript",
    "tipo": "peca",
    "servidor": false
   },
@@ -1429,7 +2070,13 @@
   "coralproject/talk",
   "bluesky-social/atproto",
   "bluesky-social/pds",
-  "obris-dev/openmagpie"
+  "obris-dev/openmagpie",
+  "markedjs/marked",
+  "PixarAnimationStudios/OpenUSD",
+  "Mcamento8/omnimod-3d-library",
+  "ToxSam/open-source-3D-assets",
+  "raymondyfei/SharedTestModels",
+  "Ariescar/gobkit-free-assets"
  ],
  "fora": [
   "DayPilot/DayPilot (link não existe)",
@@ -1453,6 +2100,8 @@
   "openreply/openreply (link não existe)",
   "assemblyline-xyz/cogsend (link não existe)",
   "paopaoio/paopao-ce (link não existe)",
-  "socialwebcms/socialweb (link não existe)"
+  "socialwebcms/socialweb (link não existe)",
+  "KhronosGroup/glTF-Sample-Assets (SEM)",
+  "anishthite/cc0-models-Polygonal-Mind (CC0-1.0)"
  ]
 }
