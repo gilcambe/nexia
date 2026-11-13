@@ -74,6 +74,8 @@ function criarPedidos(env = process.env, fetchFn = fetch) {
       itens = itens.filter((item) => item.estado === 'aguardando-ia');
     } else if (estado === 'fila') {
       itens = itens.filter((item) => item.estado === 'fila');
+    } else if (estado === 'todas') {
+      // Retorna todas as filtradas pela busca
     }
 
     const total = r.total_count || 0;
