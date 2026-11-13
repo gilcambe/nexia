@@ -195,6 +195,7 @@ function createHandler(deps = {}) {
       if (parte === 'cloudflare') return res(200, await usoCloudflare(env, fetchFn));
       if (parte === 'busca') return res(200, await require('../../lib/busca-web').buscar((event.queryStringParameters || {}).q, { fetchImpl: fetchFn }));
       if (parte === 'cotas') return res(200, await require('../../lib/cotas').medir(env, { fetchImpl: fetchFn, getToken: deps.getCotasToken }));
+      if (parte === 'ias-livro') { try { return res(200, await require('../../nexia-ai/model-router/livro').lerLivro(env, { driver: deps.livroDriver || null })); } catch (e) { return res(200, { linhas: [], fonte: 'sem dados', aviso: 'Não consegui ler o livro de cotas agora.' }); } }   // #3377: livro de cotas por IA
       if (parte === 'clientes') return res(200, await empresa.clientes(getDb(), getAgendas()));
       if (parte === 'leads') return res(200, await empresa.leads(getDb()));
       if (parte === 'erros') {

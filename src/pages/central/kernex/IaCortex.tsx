@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { usePedidos } from "../../meu-cortex/api";
 import Bloco from "./Bloco";
 import Kpi from "./Kpi";
+import LivroCotas from "./LivroCotas";
 import { semPrecisa, textoCota } from "./regras";
 
 // #3219 parte 4: IA & Cortex. Escada, o que cada IA faz agora, cotas e o botão "Ativar ajuda das IAs".
@@ -65,6 +66,7 @@ export default function IaCortex() {
         <a className="kx-btn" href="/central?antiga=1#sistema">Conectar IAs</a>
       </Bloco>
     </div>
+      <LivroCotas />
     </div>
   );
 }
