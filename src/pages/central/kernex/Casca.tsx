@@ -21,12 +21,15 @@ import Pedir from "./Pedir";
 import Clientes from "./Clientes";
 import Fabrica from "./Fabrica";
 import Store from "./Store";
+import Vendas from "./Vendas";
+import Empresa from "./Empresa";
+import Ferramentas from "./Ferramentas";
 import { montarAcoes } from "./donos";
 
 // #3219: casca da Central nova, no jeito do "Painel Executivo" que o dono mandou.
 // PC: menu lateral com as 10 telas. Celular: 5 telas embaixo + gaveta (☰) com todas.
 const NO_CELULAR: TelaId[] = ["inicio", "pedir", "tarefas", "projetos", "maquinas"];
-export const ICONE_TELA: Record<TelaId, string> = { inicio: "casa", pedir: "enviar", clientes: "troca", fabrica: "foguete", store: "check", projetos: "pasta", maquinas: "servidor", ia: "ia", tarefas: "lista", arquivos: "arquivo", publicacoes: "foguete", homologacao: "check", cofre: "cadeado", relatorios: "grafico", config: "engrenagem" };
+export const ICONE_TELA: Record<TelaId, string> = { inicio: "casa", pedir: "enviar", clientes: "troca", fabrica: "foguete", store: "check", vendas: "grafico", empresa: "sino", ferramentas: "engrenagem", projetos: "pasta", maquinas: "servidor", ia: "ia", tarefas: "lista", arquivos: "arquivo", publicacoes: "foguete", homologacao: "check", cofre: "cadeado", relatorios: "grafico", config: "engrenagem" };
 const COR_SINAL = { verde: "#22c55e", amarelo: "#f59e0b", vermelho: "#ef4444" };
 
 function EmBreve({ nome }: { nome: string }) {
@@ -146,7 +149,7 @@ export default function Casca() {
       <main className="kx-area">
         {tela !== "inicio" && <p className="kx-serve" data-testid="kx-serve"><b>{atual.nome}:</b> {atual.serve}</p>}
         {tela === "inicio" ? <Inicio irPara={ir} painel={painel} nome={nome} /> : tela === "tarefas" ? <Tarefas painel={painel} ir={ir} /> : tela === "ia" ? <IaCortex /> : tela === "publicacoes" ? <Publicacoes />
-          : tela === "projetos" ? <Projetos /> : tela === "maquinas" ? <Maquinas /> : tela === "cofre" ? <Cofre /> : tela === "relatorios" ? <Relatorios painel={painel} /> : tela === "homologacao" ? <Homologacao /> : tela === "config" ? <Config /> : tela === "pedir" ? <Pedir /> : tela === "clientes" ? <Clientes /> : tela === "fabrica" ? <Fabrica /> : tela === "store" ? <Store /> :<EmBreve nome={atual.nome} />}
+          : tela === "projetos" ? <Projetos /> : tela === "maquinas" ? <Maquinas /> : tela === "cofre" ? <Cofre /> : tela === "relatorios" ? <Relatorios painel={painel} /> : tela === "homologacao" ? <Homologacao /> : tela === "config" ? <Config /> : tela === "pedir" ? <Pedir /> : tela === "clientes" ? <Clientes /> : tela === "fabrica" ? <Fabrica /> : tela === "store" ? <Store /> : tela === "vendas" ? <Vendas /> : tela === "empresa" ? <Empresa /> : tela === "ferramentas" ? <Ferramentas /> : <EmBreve nome={atual.nome} />}
       </main>
     </div>
   );
