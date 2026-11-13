@@ -11,8 +11,8 @@ function selecionarProvider(tamanho, options = {}) {
   const comTetos = tetosConfigurados(env);
 
   return providers.filter(p => {
-    const id = p.id || p.provider || p;
-    const idStr = typeof id === 'string' ? id : (id.provider || '');
+    const rawId = p && p.provider !== undefined ? p.provider : p;
+    const idStr = typeof rawId === 'string' ? rawId : '';
 
     // 1. Excluir degrau pago (RESERVA_*) quando tetos não definidos
     if (idStr.toUpperCase().startsWith('RESERVA_') && !comTetos) {
