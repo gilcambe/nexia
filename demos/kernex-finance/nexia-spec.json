@@ -2,27 +2,27 @@
   "spec": {
     "kind": "system",
     "name": "Kernex Finance",
-    "tagline": "Controle financeiro e alçadas de aprovação num só lugar",
-    "photo_theme": "finance dashboard dashboard analytics",
-    "description": "Controle financeiro e alçadas de aprovação num só lugar",
+    "tagline": "Controle total de receitas, pagamentos e cartões em um painel seguro",
+    "photo_theme": "",
+    "description": "Controle total de receitas, pagamentos e cartões em um painel seguro",
     "folder": "demos/kernex-finance",
     "fonts": {
-      "heading": "Manrope",
+      "heading": "Sora",
       "body": "Inter"
     },
     "palette": {
-      "primary": "#2563eb",
-      "accent": "#10b981",
+      "primary": "#0f172a",
+      "accent": "#06b6d4",
       "bg": "#fbfaf7",
       "surface": "#ffffff",
       "text": "#1d2426",
       "muted": "#5d6b6e",
-      "dark": "#0f172a"
+      "dark": "#020617"
     },
     "style": "modern",
     "contact": {
       "whatsapp": "",
-      "phone": "",
+      "phone": "(11) 90000-0000",
       "email": "suporte@kernex.com.br",
       "address": "",
       "city": "",
@@ -44,35 +44,22 @@
     "leads_origem": "",
     "entities": [
       {
-        "key": "conta_lancamentos",
-        "label": "Lançamentos",
-        "singular": "Lançamento",
+        "key": "receitas",
+        "label": "Receitas",
+        "singular": "Receita",
         "fields": [
           {
-            "key": "historico",
-            "label": "Histórico",
+            "key": "descricao",
+            "label": "Descrição",
             "type": "text",
             "options": [],
             "required": true
           },
           {
-            "key": "data",
-            "label": "Data Lançamento",
+            "key": "data_vencimento",
+            "label": "Data de Vencimento",
             "type": "date",
             "options": [],
-            "required": true
-          },
-          {
-            "key": "categoria",
-            "label": "Categoria",
-            "type": "select",
-            "options": [
-              "Administrativo",
-              "Comercial",
-              "Tecnologia",
-              "Sustentação",
-              "Custo de Vendas"
-            ],
             "required": true
           },
           {
@@ -83,122 +70,10 @@
             "required": true
           },
           {
-            "key": "tipo",
-            "label": "Tipo",
-            "type": "select",
-            "options": [
-              "Receita",
-              "Despesa"
-            ],
-            "required": true
-          },
-          {
-            "key": "centro_custo",
-            "label": "Centro de Custo",
+            "key": "cliente",
+            "label": "Cliente/Origem",
             "type": "text",
             "options": [],
-            "required": false
-          },
-          {
-            "key": "obs",
-            "label": "Observações",
-            "type": "textarea",
-            "options": [],
-            "required": false
-          }
-        ],
-        "sample": [
-          {
-            "historico": "Assinatura Enterprise",
-            "data": "2026-11-10",
-            "categoria": "Comercial",
-            "valor": "4500.00",
-            "tipo": "Receita",
-            "centro_custo": "CC-01",
-            "obs": ""
-          },
-          {
-            "historico": "AWS - Infraestrutura",
-            "data": "2026-11-15",
-            "categoria": "Tecnologia",
-            "valor": "3200.00",
-            "tipo": "Despesa",
-            "centro_custo": "CC-02",
-            "obs": ""
-          },
-          {
-            "historico": "Equipe Comercial - Provisão",
-            "data": "2026-11-28",
-            "categoria": "Comercial",
-            "valor": "8000.00",
-            "tipo": "Despesa",
-            "centro_custo": "",
-            "obs": ""
-          },
-          {
-            "historico": "Licença Segurança B2B",
-            "data": "2026-11-30",
-            "categoria": "Sustentação",
-            "valor": "1200.00",
-            "tipo": "Despesa",
-            "centro_custo": "",
-            "obs": ""
-          },
-          {
-            "historico": "Consultoria Legal",
-            "data": "2026-12-01",
-            "categoria": "Administrativo",
-            "valor": "2500.00",
-            "tipo": "Despesa",
-            "centro_custo": "",
-            "obs": ""
-          }
-        ]
-      },
-      {
-        "key": "regras_alcadas",
-        "label": "Alçadas",
-        "singular": "Alçada",
-        "fields": [
-          {
-            "key": "nome_regra",
-            "label": "Regra de Aprovação",
-            "type": "text",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "nivel_max",
-            "label": "Valor Máximo (R$)",
-            "type": "money",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "aprovador_primeiro",
-            "label": "Primeiro Nível",
-            "type": "text",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "aprovador_segundo",
-            "label": "Segundo Nível",
-            "type": "text",
-            "options": [],
-            "required": false
-          },
-          {
-            "key": "categoria_vinculada",
-            "label": "Categoria",
-            "type": "select",
-            "options": [
-              "Todas",
-              "Administrativo",
-              "Comercial",
-              "Tecnologia",
-              "Sustentação"
-            ],
             "required": true
           },
           {
@@ -206,53 +81,146 @@
             "label": "Status",
             "type": "select",
             "options": [
-              "Ativa",
-              "Inativa"
+              "Em Aberto",
+              "Recebida",
+              "Atrasada",
+              "Cancelada"
             ],
             "required": true
           }
         ],
         "sample": [
           {
-            "nome_regra": "Gastos até 5 mil",
-            "nivel_max": "5000.00",
-            "aprovador_primeiro": "Gerente de Área",
-            "aprovador_segundo": "Gerente Financeiro",
-            "categoria_vinculada": "Todas",
-            "status": "Ativa"
+            "descricao": "Mensalidade Projetor Alpha",
+            "data_vencimento": "2026-11-28",
+            "valor": "1500.00",
+            "cliente": "Construtora Vetor",
+            "status": "Em Aberto"
           },
           {
-            "nome_regra": "Contratos Comerciais",
-            "nivel_max": "50000.00",
-            "aprovador_primeiro": "Diretor Comercial",
-            "aprovador_segundo": "CFO",
-            "categoria_vinculada": "Comercial",
-            "status": "Ativa"
+            "descricao": "Consultoria de Integração API",
+            "data_vencimento": "2026-10-05",
+            "valor": "3200.00",
+            "cliente": "TechBoost Labs",
+            "status": "Recebida"
           },
           {
-            "nome_regra": "Contratação Tech",
-            "nivel_max": "20000.00",
-            "aprovador_primeiro": "Head de Tecnologia",
-            "aprovador_segundo": "CEO",
-            "categoria_vinculada": "Tecnologia",
-            "status": "Ativa"
+            "descricao": "Licença Anual Sistema K2",
+            "data_vencimento": "2026-09-15",
+            "valor": "450.00",
+            "cliente": "Grupo LogMAX",
+            "status": "Atrasada"
           },
           {
-            "nome_regra": "Móveis Corporativos",
-            "nivel_max": "10000.00",
-            "aprovador_primeiro": "Administrativo",
-            "aprovador_segundo": "CFO",
-            "categoria_vinculada": "Administrativo",
-            "status": "Ativa"
+            "descricao": "Suporte Premium (Pacote B)",
+            "data_vencimento": "2026-11-10",
+            "valor": "250.00",
+            "cliente": "Empresa Delta",
+            "status": "Em Aberto"
+          },
+          {
+            "descricao": "Migracao de Servidor Legado",
+            "data_vencimento": "2026-08-20",
+            "valor": "800.00",
+            "cliente": "Industria Omega",
+            "status": "Recebida"
+          }
+        ]
+      },
+      {
+        "key": "cartoes",
+        "label": "Contas",
+        "singular": "Conta",
+        "fields": [
+          {
+            "key": "fornecedor",
+            "label": "Fornecedor/Emissão",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "numero_folha",
+            "label": "Nº da Folha",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "data_emissao",
+            "label": "Data de Emissão",
+            "type": "date",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "data_vencimento",
+            "label": "Data de Vencimento",
+            "type": "date",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "valor_total",
+            "label": "Valor Total (R$)",
+            "type": "money",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "status_pagamento",
+            "label": "Status",
+            "type": "select",
+            "options": [
+              "Paga",
+              "A Pagar",
+              "Em Atraso",
+              "Segurada"
+            ],
+            "required": true
+          }
+        ],
+        "sample": [
+          {
+            "fornecedor": "Caxetas Criação de Conteúdo",
+            "numero_folha": "F26-01-882",
+            "data_emissao": "2026-10-12",
+            "data_vencimento": "2026-11-30",
+            "valor_total": "1240.50",
+            "status_pagamento": "A Pagar"
+          },
+          {
+            "fornecedor": "Mercado Alto Ltda",
+            "numero_folha": "11/2026",
+            "data_emissao": "2026-09-25",
+            "data_vencimento": "2026-10-30",
+            "valor_total": "530.00",
+            "status_pagamento": "Paga"
+          },
+          {
+            "fornecedor": "Wuxian Digital Studio",
+            "numero_folha": "INV-904",
+            "data_emissao": "2026-10-01",
+            "data_vencimento": "2026-11-01",
+            "valor_total": "2850.00",
+            "status_pagamento": "A Pagar"
+          },
+          {
+            "fornecedor": "Servidor Cloud (SaaS)",
+            "numero_folha": "SUB-4455",
+            "data_emissao": "2026-10-15",
+            "data_vencimento": "2026-11-15",
+            "valor_total": "389.99",
+            "status_pagamento": "A Pagar"
           }
         ]
       }
     ],
     "modules": [
-      "Dashboards",
-      "Lançamentos",
-      "Alçadas",
-      "Exportações"
+      "Dashboard",
+      "Receitas",
+      "Contas",
+      "Relatórios"
     ]
   },
   "media": {}
