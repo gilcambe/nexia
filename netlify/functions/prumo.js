@@ -235,13 +235,8 @@ const APELIDO_TIPO = [[/tesouro/i, 'tesouro'], [/fgts/i, 'fgts'], [/prev|pgbl|vg
 const ETFS = new Set(['IVVB11', 'BOVA11', 'SMAL11', 'HASH11', 'NASD11', 'GOLD11', 'DIVO11', 'SPXI11', 'XINA11', 'BOVV11', 'BBSD11', 'ECOO11', 'FIND11', 'MATB11', 'PIBB11', 'BRAX11', 'ACWI11', 'EURP11', 'WRLD11', 'QBTC11', 'ETHE11', 'BITH11', 'B5P211', 'IMAB11', 'IRFM11', 'FIXA11', 'TECK11', 'GOVE11', 'BOVB11', 'DEFI11', 'META11', 'SPXR11', 'USTK11']);
 const UNITS = new Set(['TAEE11', 'SANB11', 'KLBN11', 'ALUP11', 'BPAC11', 'ENGI11', 'SAPR11', 'IGTI11', 'CPLE11', 'BRBI11', 'TIET11', 'RNEW11', 'AESB11', 'CMIG11', 'ITSA11', 'SULA11', 'PPLA11', 'BIDI11', 'INBR11', 'NEOE11']);
 /** Tipo pelo ticker (#3532): ETF conhecido = etf; unit = acoes; outro XXXX11 = fiis (nunca renda fixa). */
-// Lista de ETFs conhecida
-const ETFS_CONHECIDOS = new Set([
-  'IVVB11', 'BOVA11', 'SMAL11', 'HASH11', 'NASD11', 'GOLD11', 'DIVO11', 'SPXI11', 'XINA11', 'BOVV11',
-  'BBSD11', 'ECOO11', 'FIND11', 'MATB11', 'PIBB11', 'BRAX11', 'ACWI11', 'EURP11', 'WRLD11', 'QBTC11',
-  'ETHE11', 'BITH11', 'B5P211', 'IMAB11', 'IRFM11', 'FIXA11', 'TECK11', 'GOVE11', 'BOVB11', 'DEFI11',
-  'META11', 'SPXR11', 'USTK11'
-]);
+// Lista de ETFs conhecida (unificada com ETFS)
+const ETFS_CONHECIDOS = ETFS;
 
 function tipoPeloTicker(tk, tipo) {
   if (ETFS_CONHECIDOS.has(tk) || ETFS.has(tk)) return 'etf';
