@@ -4,6 +4,7 @@ import Bloco from "./Bloco";
 import Kpi from "./Kpi";
 import type { Painel } from "./Inicio";
 import { CHIPS, COR_ESTADO, haQuanto, hora, type TelaId } from "./regras";
+import { comoResolver } from "./comoResolver";
 import PrecisaDeVoce from "./PrecisaDeVoce";
 
 // #3219 parte 3: Tarefas. Lista com chips à esquerda, história da tarefa à direita, ações em lote.
@@ -92,7 +93,13 @@ export default function Tarefas({ painel, ir }: { painel?: Painel; ir?: (t: Tela
             <div style={{ display: "flex", gap: 8, alignItems: "center" }}><Selo t={aberto} /><b className="kx-titulo">{aberto.titulo}</b><a className="kx-btn" href={aberto.link} target="_blank" rel="noreferrer">Abrir no GitHub</a></div>
             {aberto.estado === "travada" && (
               <div className="kx-caixa-travada" data-testid="kx-travada">
-                <p style={{ margin: "0 0 6px" }}>⚠️ {aberto.motivo || "Travou."}</p>
+                {(() => { const s = comoResolver(aberto.motivo); return (
+                  <div data-testid="kx-como-resolver" style={{ marginBottom: 8, whiteSpace: "normal" }}>
+                    <p style={{ margin: "0 0 4px" }}><b>Por que parou:</b> {s.causa}</p>
+                    <p style={{ margin: "0 0 4px" }}><b>Como resolver</b>{s.precisaDono ? " (precisa de você):" : " (o Cortex resolve sozinho):"}</p>
+                    <ol style={{ margin: 0, paddingLeft: 20 }}>{s.passos.map((p) => <li key={p}>{p}</li>)}</ol>
+                  </div>
+                ); })()}
                 <div className="kx-chips">
                   <button type="button" className="kx-btn forte" onClick={() => fazer("tentar", [aberto.numero])}>Tentar de novo</button>
                   <button type="button" className="kx-btn" onClick={() => fazer("outra-ia", [aberto.numero])}>Passar para outra IA</button>

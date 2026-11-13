@@ -1,7 +1,8 @@
 // Visual da Central nova, no jeito dos exemplos do dono (Painel Executivo): azul-escuro, cartões com degradê,
 // ícones coloridos, menu lateral com destaque. A página não rola (height:100vh;overflow:hidden); no PC cada tela
 // cabe na altura, e só a área de conteúdo rola se a janela for pequena demais. No celular: menu de baixo + gaveta.
-export const CSS = `
+export const CSS = `@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
+
 .kx{--fundo:#060c22;--fundo2:#0a1330;--card:#0f1a3d;--card2:#132250;--linha:#1f2e5e;--txt:#eef3ff;--mut:#9aa8cf;--az:#3b82f6;--vd:#22c55e;--am:#f59e0b;--vm:#ef4444;--rx:#8b5cf6;--ci:#06b6d4;
  position:fixed;inset:0;height:100vh;overflow:hidden;display:grid;grid-template-columns:232px 1fr;grid-template-rows:64px 1fr;color:var(--txt);font-size:14px;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
  background:radial-gradient(1200px 600px at 85% -10%,#1e3a8a55,transparent 60%),radial-gradient(900px 500px at 10% 110%,#5b21b633,transparent 60%),var(--fundo)}
@@ -176,4 +177,26 @@ export const CSS = `
  .kx-kpis .kx-kpi .ico{width:36px;height:36px}
  .kx-tela{flex:none}
 }
-@media (max-width:420px){.kx-status-txt{display:none!important}.kx-status{padding:6px}.kx-topo{gap:6px;padding:0 8px}.kx-sino{width:38px;height:38px}}`;
+@media (max-width:420px){.kx-status-txt{display:none!important}.kx-status{padding:6px}.kx-topo{gap:6px;padding:0 8px}.kx-sino{width:38px;height:38px}}
+/* C2-F1 (PC 2, 13/11): visual premium. Fonte Inter, cantos 10px, cores sólidas suaves (sem degradê gritante),
+   botões menores e só 1 botão forte por tela. Fica no fim para valer por cima do visual antigo. */
+.kx{background:var(--fundo);--linha:#1c2748;--card:#0e1630;letter-spacing:-.005em}
+.kx-bloco{background:var(--card);border-radius:10px;box-shadow:none}
+.kx-btn{min-height:34px;padding:0 12px;border-radius:8px;font-size:13.5px;background:transparent}
+.kx-btn.forte{background:#2563eb;border-color:#2563eb}
+.kx-btn.verde{background:#15803d;border-color:#15803d}
+.kx-btn.laranja{background:#c2410c;border-color:#c2410c}
+.kx-btn.roxo{background:#6d28d9;border-color:#6d28d9}
+.kx-menu button{min-height:38px;border-radius:8px;font-size:14px}
+.kx-menu button[aria-current=page]{background:#1e3a8a;box-shadow:none}
+.kx-kpi{border-radius:10px}
+.kx-kpi.az,.kx-kpi.vd,.kx-kpi.rx,.kx-kpi.lj,.kx-kpi.vm,.kx-kpi.ci{background:var(--card)}
+.kx-kpi .ico{box-shadow:none;border-radius:10px}
+.kx-heroi{border-radius:10px;background:#0f1d45}
+.kx-assist{background:#121a3a;border-color:#2b3a75}
+.kx-mod{border-radius:10px;box-shadow:none}
+.kx-busca,.kx-sino,.kx-status{border-radius:8px}
+.kx-abas{display:flex;gap:4px;flex-wrap:wrap;margin:0 0 10px;border-bottom:1px solid var(--linha)}
+.kx-abas button{background:none;border:0;border-bottom:2px solid transparent;color:var(--mut);padding:8px 12px;font:inherit;font-size:13.5px;cursor:pointer;margin-bottom:-1px}
+.kx-abas button[aria-selected=true]{color:var(--txt);border-bottom-color:#3b82f6;font-weight:600}
+.kx-abas button:hover{color:var(--txt)}`;
