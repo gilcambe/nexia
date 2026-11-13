@@ -41,6 +41,8 @@ function validarItemCarteira(o) {
     const n = typeof o[k] === 'number' ? o[k] : (o[k] === undefined || o[k] === null || o[k] === '' ? NaN : numero(String(o[k]).replace(/[^\d.,-]/g, '')));
     if (Number.isFinite(n)) item[k] = k === 'quantidade' ? Math.round(n * 1e6) / 1e6 : dinheiro(n);
   }
+  // #3532: de onde veio (print ou à mão). Só "Refazer a partir dos prints" usa isso.
+  if (o.origem === 'print' || o.origem === 'mao') item.origem = o.origem;
   if (o.corrigido_por_cotacao === true) { item.corrigido_por_cotacao = true; const vl = numero(o.valor_lido); if (Number.isFinite(vl)) item.valor_lido = dinheiro(vl); }
   return { ok: true, item };
 }
@@ -468,7 +470,10 @@ async function agir(uid, body) {
     case 'carteira_limpar': {
       // #3037: limpar e refazer. Só a carteira do próprio usuário; objetivos e histórico ficam.
       if (body.confirmar !== 'LIMPAR') return [400, { error: 'Confirme digitando LIMPAR.' }];
-      const todos = await listar(base.collection('carteira'));
+      // #3532 so_print: apaga só o que veio de print (os digitados à mão ficam). Item antigo sem origem com ticker/cotas
+      // só pode ter vindo de print (o formulário à mão não tem esses campos).
+      const deListaPrint = (it) => it.origem === 'print' || (!it.origem && (it.ticker || it.quantidade != null || it.corrigido_por_cotacao));
+      const todos = (await listar(base.collection('carteira'))).filter((it) => body.so_print !== true || deListaPrint(it));
       for (const it of todos) await base.collection('carteira').doc(it.id).delete();
       await gravarHistorico(base);
       return [200, { ok: true, apagados: todos.length }];
