@@ -24,6 +24,9 @@ const MODULOS: { id: TelaId; nome: string; frase: string; icone: string; fundo: 
   { id: "ia", nome: "IA & Cortex", frase: "Quem está trabalhando agora", icone: "ia", fundo: "linear-gradient(135deg,#7c3aed,#4c1d95)" },
   { id: "tarefas", nome: "Tarefas", frase: "Fila, travadas e concluídas", icone: "lista", fundo: "linear-gradient(135deg,#ea580c,#9a3412)" },
   { id: "publicacoes", nome: "Publicações", frase: "GitHub, Cloudflare e deploy", icone: "foguete", fundo: "linear-gradient(135deg,#0891b2,#155e75)" },
+  { id: "homologacao", nome: "Homologação", frase: "Testes antes de cada versão", icone: "check", fundo: "linear-gradient(135deg,#16a34a,#14532d)" },
+  { id: "relatorios", nome: "Relatórios", frase: "O que foi feito por dia", icone: "grafico", fundo: "linear-gradient(135deg,#d97706,#78350f)" },
+  { id: "cofre", nome: "Cofre", frase: "Nomes das chaves (sem valor)", icone: "cadeado", fundo: "linear-gradient(135deg,#475569,#1e293b)" },
   { id: "config", nome: "Configurações", frase: "Avisos e jeito da Central", icone: "engrenagem", fundo: "linear-gradient(135deg,#334155,#1e293b)" },
 ];
 const COR_IA: Record<string, string> = { ativa: "#22c55e", ociosa: "#64748b", "sem-cota": "#f59e0b", erro: "#ef4444" };
@@ -151,7 +154,7 @@ export default function Inicio({ irPara, painel, nome }: { irPara: (t: TelaId) =
       </button>
       <button type="button" className={"kx-kpi " + (saude && saude.fora ? "vm" : "lj")} onClick={() => irPara("publicacoes")} data-testid="kx-kpi-servicos">
         <span className="ico" style={{ background: "linear-gradient(135deg,#f59e0b,#c2410c)" }}><Icone nome="servidor" tam={26} cor="#fff" /></span>
-        <span style={{ flex: 1, minWidth: 0 }}><b>{saude ? `${saude.total - saude.fora} de ${saude.total}` : "—"}</b><span>Serviços no ar</span>
+        <span style={{ flex: 1, minWidth: 0 }}><b>{saude && saude.total ? `${saude.total - saude.fora} de ${saude.total}` : "—"}</b><span>Serviços no ar</span>
           {saude ? <span className="kx-barra" style={{ display: "block", marginTop: 8 }}><i style={{ width: pctNoAr + "%", background: "linear-gradient(90deg,#f59e0b,#fb923c)" }} /></span> : <small>conferindo</small>}</span>
       </button>
 
