@@ -87,7 +87,8 @@ test('perfil antigo (só goal, sem sexo) continua funcionando', async () => {
 
 test('ciclo menstrual: desligado não muda nada; ligado dá a fase do dia e mais reserva nos dias 1 a 3', async () => {
   const m = await carregar();
-  const iso = (d) => d.toISOString().slice(0, 10);
+  // 13/11: data LOCAL (o app usa a data local). toISOString é UTC e, das 21h às 24h no Brasil, já é o dia seguinte: o teste falhava só nesse horário.
+  const iso = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   const ha = (n) => { const d = new Date(); d.setDate(d.getDate() - n); return iso(d); };
   assert.equal(m.faseDoCiclo({ ligado: false, inicio: ha(1) }), null);
   assert.deepEqual(m.faseDoCiclo({ ligado: true, inicio: ha(1), duracao: 28 }), { fase: 'menstrual', dia: 2 });
