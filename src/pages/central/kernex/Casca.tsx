@@ -104,7 +104,8 @@ export default function Casca() {
   const sinal = corSemaforo({ precisa: painel.dono?.length || 0, travadas: c.travada || 0, servicosFora: painel.saude?.fora || 0 });
   const corSinal = COR_SINAL[sinal.cor];
   const precisa = painel.dono?.length || 0;
-  const corSaude = !painel.saude ? "#64748b" : painel.saude.fora ? "#ef4444" : "#22c55e";
+  // C2-C: nada medido (0 de 0) não é verde: regra do dono, nunca status falso.
+  const corSaude = !painel.saude || !painel.saude.total ? "#64748b" : painel.saude.fora ? "#ef4444" : "#22c55e";
   const nome = (user?.displayName || "").split(" ")[0] || "";
   const abrirBusca = () => { setBuscando(true); setTimeout(() => document.getElementById("kx-busca")?.focus(), 0); };
   return (
@@ -147,7 +148,7 @@ export default function Casca() {
           <a className="kx-online" href="/central?antiga=1" style={{ borderColor: "#33415599", color: "#c7d2f0" }}>Abrir a Central antiga</a>
           <div className="kx-online" style={{ borderColor: corSaude + "88", background: corSaude + "14" }}>
             <span className="kx-bola" style={{ background: corSaude }} />
-            <span><b style={{ display: "block" }}>{painel.saude ? `${painel.saude.total - painel.saude.fora} de ${painel.saude.total} serviços no ar` : "Serviços: conferindo"}</b>
+            <span><b style={{ display: "block" }}>{!painel.saude ? "Serviços: conferindo" : !painel.saude.total ? "Serviços: sem medição agora" : `${painel.saude.total - painel.saude.fora} de ${painel.saude.total} serviços no ar`}</b>
               <span className="kx-mut">{nome ? nome + " · " : ""}administrador</span></span>
           </div>
         </div>
