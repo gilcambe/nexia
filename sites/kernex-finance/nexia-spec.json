@@ -3,7 +3,7 @@
     "kind": "system",
     "name": "Kernex Finance",
     "tagline": "Gestão financeira inteligente para seu negócio",
-    "photo_theme": "",
+    "photo_theme": "finance",
     "description": "Gestão financeira inteligente para seu negócio",
     "folder": "sites/kernex-finance",
     "fonts": {
@@ -248,7 +248,7 @@
           },
           {
             "key": "email",
-            "label": "E‑mail",
+            "label": "E-mail",
             "type": "email",
             "options": [],
             "required": true
