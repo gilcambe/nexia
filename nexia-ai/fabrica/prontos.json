@@ -498,6 +498,18 @@
    "servidor": true
   },
   {
+   "repo": "containrrr/shoutrrr",
+   "url": "https://github.com/containrrr/shoutrrr",
+   "categoria": "bot",
+   "uso": "notificações para vários serviços",
+   "licenca": "MIT",
+   "estrelas": 1718,
+   "atualizado": "2026-07-01",
+   "linguagem": "Go",
+   "tipo": "sistema",
+   "servidor": true
+  },
+  {
    "repo": "payloadcms/payload",
    "url": "https://github.com/payloadcms/payload",
    "categoria": "cms",
@@ -554,6 +566,18 @@
    "estrelas": 2366,
    "atualizado": "2026-11-06",
    "linguagem": "Go",
+   "tipo": "sistema",
+   "servidor": true
+  },
+  {
+   "repo": "pH7Software/pH7-Social-Dating-CMS",
+   "url": "https://github.com/pH7Software/pH7-Social-Dating-CMS",
+   "categoria": "comunidade",
+   "uso": "rede social / encontros",
+   "licenca": "MIT",
+   "estrelas": 1076,
+   "atualizado": "2026-11-12",
+   "linguagem": "PHP",
    "tipo": "sistema",
    "servidor": true
   },
@@ -1182,6 +1206,54 @@
    "servidor": true
   },
   {
+   "repo": "zernio-dev/latewiz",
+   "url": "https://github.com/zernio-dev/latewiz",
+   "categoria": "social",
+   "uso": "agendar posts em várias redes (depende da API Zernio)",
+   "licenca": "MIT",
+   "estrelas": 90,
+   "atualizado": "2026-07-23",
+   "linguagem": "TypeScript",
+   "tipo": "sistema",
+   "servidor": true
+  },
+  {
+   "repo": "Xeven777/openinstadm",
+   "url": "https://github.com/Xeven777/openinstadm",
+   "categoria": "social",
+   "uso": "comentário → Direct",
+   "licenca": "MIT",
+   "estrelas": 37,
+   "atualizado": "2026-11-01",
+   "linguagem": "TypeScript",
+   "tipo": "sistema",
+   "servidor": true
+  },
+  {
+   "repo": "harshithgangone/open-autodm",
+   "url": "https://github.com/harshithgangone/open-autodm",
+   "categoria": "social",
+   "uso": "comentário → Direct e Stories",
+   "licenca": "MIT",
+   "estrelas": 20,
+   "atualizado": "2026-10-05",
+   "linguagem": "TypeScript",
+   "tipo": "sistema",
+   "servidor": true
+  },
+  {
+   "repo": "ilramdhan/auto-dm",
+   "url": "https://github.com/ilramdhan/auto-dm",
+   "categoria": "social",
+   "uso": "campanhas de Direct por palavra-chave",
+   "licenca": "MIT",
+   "estrelas": 8,
+   "atualizado": "2026-11-11",
+   "linguagem": "TypeScript",
+   "tipo": "sistema",
+   "servidor": true
+  },
+  {
    "repo": "super-productivity/super-productivity",
    "url": "https://github.com/super-productivity/super-productivity",
    "categoria": "tarefas",
@@ -1330,11 +1402,14 @@
   "dubinc/dub.link",
   "r3-team/r3",
   "growthbook/growthbook",
-  "coralproject/talk"
+  "coralproject/talk",
+  "bluesky-social/atproto",
+  "bluesky-social/pds",
+  "obris-dev/openmagpie"
  ],
  "fora": [
   "saleor/saleor (BSD-3-Clause)",
-  "DayPilot/DayPilot (NAO-EXISTE)",
+  "DayPilot/DayPilot (link não existe)",
   "sachinchoolur/lightGallery (GPL-3.0)",
   "TheAxelander/OpenBudgeteer (AGPL-3.0)",
   "kresusapp/kresus (AGPL-3.0)",
@@ -1351,7 +1426,11 @@
   "knadh/listmonk (AGPL-3.0)",
   "maizzle/maizzle (SEM)",
   "frappe/erpnext (GPL-3.0)",
-  "uptime-kuma/uptime-kuma (NAO-EXISTE)",
-  "inkonchain/mixpost (NAO-EXISTE)"
+  "uptime-kuma/uptime-kuma (link não existe)",
+  "inkonchain/mixpost (link não existe)",
+  "openreply/openreply (link não existe)",
+  "assemblyline-xyz/cogsend (link não existe)",
+  "paopaoio/paopao-ce (link não existe)",
+  "socialwebcms/socialweb (link não existe)"
  ]
 }
