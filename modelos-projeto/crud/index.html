@@ -1,35 +1,27 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{titulo}}</title>
-    <link rel="stylesheet" href="estilo.css">
-    <script src="crud.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{titulo}}</title>
+  <link rel="stylesheet" href="estilo.css">
 </head>
 <body>
-    <h1>{{titulo}}</h1>
-    <table>
-        <thead>
-            <tr>
-                <th>Id</th>
-                <th>{{nome}}</th>
-                <th>AÃ§Ãµes</th>
-            </tr>
-        </thead>
-        <tbody>
-            <!-- Registros serÃ£o inseridos aqui -->
-        </tbody>
-    </table>
-    <form id="formCadastro">
-        <input type="hidden" id="id" name="id">
-        <label>{{nome}}:</label>
-        <input type="text" id="nome" name="nome" required>
-        <button type="submit">{{cor}}</button>
+  <header class="topo"><h1>{{titulo}}</h1><p>{{nome}}</p></header>
+  <main class="caixa">
+    <form id="form" data-campos="{{campos}}" autocomplete="off">
+      <div id="campos"></div>
+      <input type="hidden" id="id">
+      <div class="acoes">
+        <button type="submit" id="salvar">Salvar</button>
+        <button type="button" id="limpar" class="leve">Limpar</button>
+      </div>
+      <p id="aviso" role="status"></p>
     </form>
-    <div id="mensagem"></div>
-    <script>
-        // Placeholder para {{campos}} serÃ¡ substituÃ­do pelo script
-    </script>
+    <input id="busca" type="search" placeholder="Buscar..." aria-label="Buscar">
+    <div class="tabela"><table><thead id="cab"></thead><tbody id="linhas"></tbody></table></div>
+    <p id="vazio" class="leve">Nenhum registro ainda.</p>
+  </main>
+  <script src="crud.js"></script>
 </body>
 </html>
