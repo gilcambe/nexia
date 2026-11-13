@@ -26,7 +26,9 @@ function Trabalhar {
   $r = Invoke-WebRequest "$base/tarefa?nome=$($cfg.nome)" -Headers $H -TimeoutSec 20 -DisableKeepAlive -UseBasicParsing
   if ($r.StatusCode -ne 200) { return }
   $t = [Text.Encoding]::UTF8.GetString($r.RawContentStream.ToArray()) | ConvertFrom-Json
-  $modelo = if ($t.modelo) { $t.modelo } else { $cfg.modelo }
+  # 13/11: a fila entrega a qualquer PC; se este PC não tem o modelo pedido, usa o seu (agente.config.json)
+  $locais = @(); try { $locais = @((Invoke-RestMethod 'http://localhost:11434/api/tags' -TimeoutSec 5).models.name) } catch {}
+  $modelo = if ($t.modelo -and ($locais -contains $t.modelo)) { $t.modelo } else { $cfg.modelo }
   $ini = Get-Date
   try {
     $corpo = @{ model = $modelo; messages = $t.mensagens; stream = $false } | ConvertTo-Json -Depth 6 -Compress
