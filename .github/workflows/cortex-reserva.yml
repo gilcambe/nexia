@@ -30,7 +30,7 @@ jobs:
       RESERVA_GEMINI_KEY: ${{ secrets.RESERVA_GEMINI_KEY }}
       RESERVA_OPENAI_KEY: ${{ secrets.RESERVA_OPENAI_KEY }}
       RESERVA_ANTHROPIC_KEY: ${{ secrets.RESERVA_ANTHROPIC_KEY }}
-      RESERVA_OPENROUTER_KEY: ${{ secrets.RESERVA_OPENROUTER_KEY }}
+      RESERVA_OPENROUTER_KEY: ${{ secrets.RESERVA_OPENROUTER_KEY || secrets.OPENROUTER_API_KEY_2 }}
       # Contas grátis que o Cortex já usa (um segredo por linha): entram como reserva extra quando o Gemini estoura a cota do dia.
       GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
       MISTRAL_API_KEY: ${{ secrets.MISTRAL_API_KEY }}
