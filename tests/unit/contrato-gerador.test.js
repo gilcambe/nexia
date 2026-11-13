@@ -84,3 +84,16 @@ test('motivoCurto: diz por que a IA não respondeu, sem vazar chave', () => {
   assert.doesNotMatch(m, /sk-abcdef/);
   assert.ok(motivoCurto(new Error('x'.repeat(500))).length <= 160);
 });
+
+test('ajustarTeste: teste bom no lugar errado vira tests/unit/contrato-<nome> e passa nos portões (13/11)', () => {
+  const { ajustarTeste, conferir } = require('../../nexia-ai/contrato/gerador');
+  const codigo = "'use strict';const test=require('node:test');const assert=require('node:assert');" +
+    "const m=require('../modelos-projeto/painel/gerar.js');test('x',()=>{assert.ok(m);assert.equal(1,1);assert.ok(true);});";
+  const p = ajustarTeste({ teste: 'tests/painel.test.js', arquivos: ['modelos-projeto/painel/gerar.js'], codigo });
+  assert.equal(p.teste, 'tests/unit/contrato-painel.test.js');
+  assert.match(p.codigo, /require\('\.\.\/\.\.\/modelos-projeto\/painel\/gerar\.js'\)/);
+  assert.deepEqual(conferir(p).erros, []);
+  const certo = { teste: 'tests/unit/contrato-ok.test.js', arquivos: ['a.js'], codigo: 'x' };
+  assert.equal(ajustarTeste(certo), certo, 'o que já está no padrão não muda');
+  assert.equal(ajustarTeste(null), null);
+});
