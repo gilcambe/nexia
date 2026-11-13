@@ -132,3 +132,11 @@ test('CFS10. modelos por ramo (kernex-clientes#10): barbearia, restaurante, loja
   }
   assert.equal(fab.consultar({ ...FICHA, ramo: 'dentista', precisa: ['agenda'] }).modelo.id, 'demo-agenda', 'dentista continua no modelo de agenda');
 });
+test('CFS11. templates da web (kernex-clientes#13): serviço sem modelo próprio vai para demo-agency, sem roubar os ramos que têm modelo', () => {
+  for (const id of ['demo-agency', 'demo-business', 'demo-landing']) assert.ok(fab.GERAVEIS.includes(id), id);
+  const modelo = (ramo, precisa = ['site', 'whatsapp']) => fab.consultar({ ...FICHA, ramo, precisa }).modelo.id;
+  for (const r of ['eletricista', 'pet shop', 'arquitetura', 'advogado']) assert.equal(modelo(r), 'demo-agency', r);
+  assert.equal(modelo('dentista', ['agenda']), 'demo-agenda');
+  assert.equal(modelo('barbearia'), 'demo-barbearia');
+  assert.equal(modelo('nutricionista'), 'demo-profissional');
+});

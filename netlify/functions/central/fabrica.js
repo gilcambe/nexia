@@ -15,7 +15,9 @@ const WORKFLOW = 'fabrica.yml';
 const WORKFLOW_PRODUCAO = 'fabrica-producao.yml';
 // Só os modelos que o gerador (kernex-clientes/scripts/novo-projeto.js) sabe copiar.
 // 13/11: + modelos por ramo do kernex-clientes (scripts/montar-ramos.js, PR kernex-clientes#10).
-const GERAVEIS = ['demo-agenda', 'demo-eventos', 'demo-viagens', 'demo-profissional', 'demo-barbearia', 'demo-restaurante', 'demo-loja', 'demo-academia'];
+const GERAVEIS = ['demo-agenda', 'demo-eventos', 'demo-viagens', 'demo-profissional', 'demo-barbearia', 'demo-restaurante', 'demo-loja', 'demo-academia',
+  // 13/11: templates MIT da web adaptados (kernex-clientes#13, bases/ + scripts/adaptar-bases.js).
+  'demo-agency', 'demo-business', 'demo-landing'];
 const SLUG_RE = /^[a-z0-9-]{3,40}$/;
 const previaDe = (slug) => `https://${slug}.kernex-previas.pages.dev`;
 

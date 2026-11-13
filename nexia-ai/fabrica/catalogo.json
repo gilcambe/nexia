@@ -617,8 +617,7 @@
       "nichos": [
         "saude",
         "estetica",
-        "beleza",
-        "servicos"
+        "beleza"
       ],
       "modulos": [
         "site",
@@ -822,7 +821,6 @@
       "nome": "Profissional liberal (nutricionista, consultor, terapeuta)",
       "nichos": [
         "saude",
-        "servicos",
         "profissional"
       ],
       "modulos": [
@@ -833,6 +831,49 @@
       ],
       "clonavel": true,
       "previa": "https://profissional.kernex.com.br"
+    },
+    {
+      "id": "demo-agency",
+      "nome": "Empresa de serviços com portfólio (template MIT)",
+      "nichos": [
+        "servicos",
+        "advocacia"
+      ],
+      "modulos": [
+        "site",
+        "whatsapp",
+        "privacidade"
+      ],
+      "clonavel": true,
+      "previa": "https://agency.kernex.com.br"
+    },
+    {
+      "id": "demo-business",
+      "nome": "Negócio local simples (template MIT)",
+      "nichos": [
+        "servicos"
+      ],
+      "modulos": [
+        "site",
+        "whatsapp",
+        "privacidade"
+      ],
+      "clonavel": true,
+      "previa": "https://business.kernex.com.br"
+    },
+    {
+      "id": "demo-landing",
+      "nome": "Página única de produto ou serviço (template MIT)",
+      "nichos": [
+        "servicos"
+      ],
+      "modulos": [
+        "site",
+        "whatsapp",
+        "privacidade"
+      ],
+      "clonavel": true,
+      "previa": "https://landing.kernex.com.br"
     }
   ],
   "ramos": {
@@ -899,7 +940,31 @@
       "servico",
       "serviço",
       "manutencao",
-      "conserto"
+      "conserto",
+      "eletricista",
+      "encanador",
+      "pintor",
+      "pedreiro",
+      "marido de aluguel",
+      "reforma",
+      "arquiteto",
+      "arquitetura",
+      "engenharia",
+      "fotografo",
+      "fotógrafo",
+      "grafica",
+      "gráfica",
+      "pet shop",
+      "petshop",
+      "imobiliaria",
+      "imobiliária",
+      "contabilidade",
+      "contador",
+      "oficina",
+      "mecanico",
+      "mecânico",
+      "limpeza",
+      "dedetizacao"
     ],
     "alimentacao": [
       "restaurante",
