@@ -6,6 +6,7 @@ import Bloco from "./Bloco";
 import PrecisaDeVoce from "./PrecisaDeVoce";
 import type { Acao } from "./donos";
 import Icone, { LogoK } from "./Icone";
+import { comoResolver, fraseTravadas } from "./comoResolver";
 import { MAX_BYTES, blocoDoAnexo, paraBase64, reduzirFoto } from "./anexo";
 import { COR_ESTADO, corSemaforo, haQuanto, hora, semPrecisa, type TelaId } from "./regras";
 
@@ -105,12 +106,14 @@ export default function Inicio({ irPara, painel, nome }: { irPara: (t: TelaId) =
   const ias = painel.ias;
   const c = ias?.contagens || {};
   const nDono = painel.dono?.length || 0;
+  // C2-F1: só conta como "do dono" a travada cujo motivo pede resposta dele (comoResolver).
+  const travadasDoDono = (meus?.todos || []).filter((t) => t.estado === "travada" && comoResolver(t.motivo).precisaDono).length;
   const sinal = corSemaforo({ precisa: nDono, travadas: c.travada || 0, servicosFora: painel.saude?.fora || 0 });
   const online = (maq?.maquinas || []).filter((x) => x.online).length;
   const temMaq = !!(maq && maq.ligado && maq.maquinas.length);
   const saude = painel.saude;
   const pctNoAr = saude && saude.total ? Math.round(((saude.total - saude.fora) / saude.total) * 100) : 0;
-  const fraseHeroi = !ias ? "Conferindo como está tudo…" : sinal.cor === "verde" ? "Sua Central está funcionando: nada travado e nada esperando você." : sinal.cor === "amarelo" ? `Atenção: ${c.travada} tarefa(s) travada(s). As IAs podem tentar de novo.` : `${nDono} coisa(s) precisam de você${saude && saude.fora ? ` e ${saude.fora} serviço(s) estão fora do ar` : ""}.`;
+  const fraseHeroi = !ias ? "Conferindo como está tudo…" : sinal.cor === "verde" ? "Sua Central está funcionando: nada travado e nada esperando você." : sinal.cor === "amarelo" ? fraseTravadas(c.travada || 0, travadasDoDono) : `${nDono} coisa(s) precisam de você${saude && saude.fora ? ` e ${saude.fora} serviço(s) estão fora do ar` : ""}.`;
   const iasLista = (ias?.ias || []).slice().sort((a, b) => Number(b.ativa) - Number(a.ativa)).slice(0, 5);
 
   return (
@@ -144,7 +147,7 @@ export default function Inicio({ irPara, painel, nome }: { irPara: (t: TelaId) =
       <button type="button" className="kx-kpi rx" onClick={() => irPara("tarefas")} data-testid="kx-kpi-travadas">
         <span className="ico" style={{ background: "linear-gradient(135deg,#8b5cf6,#6d28d9)" }}><Icone nome="raio" tam={26} cor="#fff" /></span>
         <span><b>{ias ? c.travada || 0 : "—"}</b><span>Tarefas travadas</span>
-          <small style={{ color: c.travada ? "#fcd34d" : "#86efac" }}>{!ias ? "conferindo" : c.travada ? "as IAs podem tentar de novo" : "Tudo OK!"}</small></span>
+          <small style={{ color: c.travada ? "#fcd34d" : "#86efac" }}>{!ias ? "conferindo" : c.travada ? (travadasDoDono ? `${travadasDoDono} precisa(m) de você` : "o Cortex já tenta de novo, sozinho") : "Tudo OK!"}</small></span>
       </button>
       <button type="button" className={"kx-kpi " + (saude && saude.fora ? "vm" : "lj")} onClick={() => irPara("publicacoes")} data-testid="kx-kpi-servicos">
         <span className="ico" style={{ background: "linear-gradient(135deg,#f59e0b,#c2410c)" }}><Icone nome="servidor" tam={26} cor="#fff" /></span>

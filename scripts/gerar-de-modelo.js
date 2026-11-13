@@ -4,7 +4,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 
-const TEXTO = new Set(['.html', '.css', '.js', '.json', '.md', '.php', '.txt']);
+const TEXTO = new Set(['.html', '.css', '.js', '.mjs', '.json', '.md', '.php', '.txt', '.toml', '.htaccess']);
 const VAR = /\{\{\s*([a-zA-Z0-9_-]+)\s*\}\}/g;
 
 /** Troca {{var}} pelo valor. Lança "faltou: a, b" com todas as variáveis sem valor. Valor extra é ignorado. */
@@ -40,7 +40,7 @@ function gerar(pastaModelo, valores = {}, destino) {
   for (const rel of arquivos) {
     const de = path.join(pastaModelo, rel), para = path.join(destino, rel);
     fs.mkdirSync(path.dirname(para), { recursive: true });
-    if (TEXTO.has(path.extname(rel).toLowerCase())) fs.writeFileSync(para, preencher(fs.readFileSync(de, 'utf8'), valores));
+    if (TEXTO.has(path.extname(rel).toLowerCase() || path.basename(rel).toLowerCase())) fs.writeFileSync(para, preencher(fs.readFileSync(de, 'utf8'), valores));
     else fs.copyFileSync(de, para);
   }
   return arquivos.map(r => r.split(path.sep).join('/'));

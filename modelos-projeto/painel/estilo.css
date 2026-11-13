@@ -1,19 +1,17 @@
-.grafico {
-  max-width: 100%;
-  height: auto;
-  margin: 0 auto;
-}
-
-.barra {
-  display: flex;
-  align-items: flex-end;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-@media (max-width: 600px) {
-  .barra {
-    flex-direction: column;
-    align-items: stretch;
-  }
-}
+:root { --fundo: #f6f7f9; --texto: #1d2330; --borda: #dde1e7; }
+* { box-sizing: border-box; }
+body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; background: var(--fundo); color: var(--texto); }
+header { background: var(--cor); color: #fff; padding: 20px 16px; }
+header h1 { margin: 0; font-size: 1.5rem; }
+header p { margin: 4px 0 0; opacity: .9; }
+#painel { max-width: 960px; margin: 0 auto; padding: 16px; display: flex; flex-direction: column; gap: 16px; }
+.cartoes { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
+.cartao { background: #fff; border: 1px solid var(--borda); border-radius: 12px; padding: 14px 16px; display: flex; flex-direction: column; gap: 4px; }
+.cartao span { font-size: .85rem; opacity: .7; }
+.cartao b { font-size: 1.6rem; overflow-wrap: anywhere; }
+.quadro { background: #fff; border: 1px solid var(--borda); border-radius: 12px; padding: 16px; overflow-x: auto; }
+.grafico { display: block; max-width: 100%; height: auto; margin: 0 auto; }
+.grafico .barra { fill: var(--cor); }
+.grafico .valor { font-size: 12px; font-weight: 600; fill: var(--texto); }
+.grafico .rotulo { font-size: 12px; fill: var(--texto); opacity: .75; }
+.vazio { opacity: .7; text-align: center; }

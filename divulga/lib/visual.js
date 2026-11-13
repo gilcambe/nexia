@@ -36,7 +36,7 @@ p{font-size:42px;line-height:1.3;color:#e7e5e4}
 const MARCA_BODY_COACH = `<i>${HALTERE}</i><div>Body Coach</div>`;
 
 /** `marca` (HTML já escapado) e `css` extra são opcionais: sem eles, a página é a de sempre (Body Coach). */
-function pagina(largura, altura, miolo, { ordem, de, arroba = '@nexiabodycoach', rodape = true, marca = MARCA_BODY_COACH, css = '' } = {}) {
+function pagina(largura, altura, miolo, { ordem, de, arroba = '@kernex_bodycoach', rodape = true, marca = MARCA_BODY_COACH, css = '' } = {}) {
   return `<!doctype html><html lang="pt-BR"><meta charset="utf-8"><style>:root{--w:${largura}px;--h:${altura}px}${CSS}${css}</style><body><div class="marca">${marca}</div><div class="miolo">${miolo}</div>${rodape ? `<div class="arroba">${esc(arroba)}</div>` : ''}${ordem ? `<div class="num">${ordem}/${de}</div>` : ''}</body></html>`;
 }
 

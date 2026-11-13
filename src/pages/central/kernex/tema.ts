@@ -1,7 +1,8 @@
 // Visual da Central nova, no jeito dos exemplos do dono (Painel Executivo): azul-escuro, cartões com degradê,
 // ícones coloridos, menu lateral com destaque. A página não rola (height:100vh;overflow:hidden); no PC cada tela
 // cabe na altura, e só a área de conteúdo rola se a janela for pequena demais. No celular: menu de baixo + gaveta.
-export const CSS = `
+export const CSS = `@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
+
 .kx{--fundo:#060c22;--fundo2:#0a1330;--card:#0f1a3d;--card2:#132250;--linha:#1f2e5e;--txt:#eef3ff;--mut:#9aa8cf;--az:#3b82f6;--vd:#22c55e;--am:#f59e0b;--vm:#ef4444;--rx:#8b5cf6;--ci:#06b6d4;
  position:fixed;inset:0;height:100vh;overflow:hidden;display:grid;grid-template-columns:232px 1fr;grid-template-rows:64px 1fr;color:var(--txt);font-size:14px;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
  background:radial-gradient(1200px 600px at 85% -10%,#1e3a8a55,transparent 60%),radial-gradient(900px 500px at 10% 110%,#5b21b633,transparent 60%),var(--fundo)}
@@ -176,4 +177,102 @@ export const CSS = `
  .kx-kpis .kx-kpi .ico{width:36px;height:36px}
  .kx-tela{flex:none}
 }
-@media (max-width:420px){.kx-status-txt{display:none!important}.kx-status{padding:6px}.kx-topo{gap:6px;padding:0 8px}.kx-sino{width:38px;height:38px}}`;
+@media (max-width:420px){.kx-status-txt{display:none!important}.kx-status{padding:6px}.kx-topo{gap:6px;padding:0 8px}.kx-sino{width:38px;height:38px}}
+/* C2-F1 (PC 2, 13/11): visual premium. Fonte Inter, cantos 10px, cores sólidas suaves (sem degradê gritante),
+   botões menores e só 1 botão forte por tela. Fica no fim para valer por cima do visual antigo. */
+.kx{background:var(--fundo);--linha:#1c2748;--card:#0e1630;letter-spacing:-.005em}
+.kx-bloco{background:var(--card);border-radius:10px;box-shadow:none}
+.kx-btn{min-height:34px;padding:0 12px;border-radius:8px;font-size:13.5px;background:transparent}
+.kx-btn.forte{background:#2563eb;border-color:#2563eb}
+.kx-btn.verde{background:#15803d;border-color:#15803d}
+.kx-btn.laranja{background:#c2410c;border-color:#c2410c}
+.kx-btn.roxo{background:#6d28d9;border-color:#6d28d9}
+.kx-menu button{min-height:38px;border-radius:8px;font-size:14px}
+.kx-menu button[aria-current=page]{background:#1e3a8a;box-shadow:none}
+.kx-kpi{border-radius:10px}
+.kx-kpi.az,.kx-kpi.vd,.kx-kpi.rx,.kx-kpi.lj,.kx-kpi.vm,.kx-kpi.ci{background:var(--card)}
+.kx-kpi .ico{box-shadow:none;border-radius:10px}
+.kx-heroi{border-radius:10px;background:#0f1d45}
+.kx-assist{background:#121a3a;border-color:#2b3a75}
+.kx-mod{border-radius:10px;box-shadow:none}
+.kx-busca,.kx-sino,.kx-status{border-radius:8px}
+.kx-abas{display:flex;gap:4px;flex-wrap:wrap;margin:0 0 10px;border-bottom:1px solid var(--linha)}
+.kx-abas button{background:none;border:0;border-bottom:2px solid transparent;color:var(--mut);padding:8px 12px;font:inherit;font-size:13.5px;cursor:pointer;margin-bottom:-1px}
+.kx-abas button[aria-selected=true]{color:var(--txt);border-bottom-color:#3b82f6;font-weight:600}
+.kx-abas button:hover{color:var(--txt)}
+/* 13/11 (dono: visual premium, calmo, estilo Readdy): cores fortes viram detalhe, cartões lisos */
+.kx{background:var(--fundo)}
+.kx-bloco{background:var(--card);box-shadow:none}
+.kx-btn.verde,.kx-btn.laranja,.kx-btn.roxo{background:var(--card2);border-color:var(--linha);color:var(--txt);font-weight:600}
+.kx-btn.verde{border-color:#22c55e88}.kx-btn.laranja{border-color:#f59e0b88}.kx-btn.roxo{border-color:#8b5cf688}
+.kx-btn.forte{background:#3b82f6;border-color:#3b82f6}
+.kx-kpi.az,.kx-kpi.vd,.kx-kpi.rx,.kx-kpi.lj,.kx-kpi.vm{background:var(--card)}
+.kx-kpi.az{border-left:3px solid #3b82f6}.kx-kpi.vd{border-left:3px solid #22c55e}.kx-kpi.rx{border-left:3px solid #8b5cf6}.kx-kpi.lj{border-left:3px solid #f59e0b}.kx-kpi.vm{border-left:3px solid #ef4444}
+.kx-mod{background:var(--card)!important;border-color:var(--linha)!important;color:var(--txt)}
+.kx-boasvindas{display:grid;place-items:center;min-height:calc(100vh - 140px)}
+.kx-bv-caixa{width:100%;max-width:760px;display:flex;flex-direction:column;gap:14px;padding:16px}
+.kx-bv-titulo{margin:0;text-align:center;font-size:clamp(26px,4vw,40px);font-weight:700;letter-spacing:-.02em}
+.kx-bv-sub{text-align:center;margin:0;white-space:normal!important}
+.kx-bv-entrada{background:var(--card);border:1px solid var(--linha);border-radius:18px;padding:12px;display:flex;flex-direction:column;gap:8px}
+.kx-bv-entrada:focus-within{border-color:#3b82f6}
+.kx-bv-entrada textarea{background:none;border:0;outline:0;color:var(--txt);font:inherit;font-size:16px;resize:vertical;min-height:72px}
+.kx-bv-acoes{display:flex;gap:8px;align-items:center}
+.kx-bv-sugestoes{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.kx-bv-projeto{display:flex;gap:8px;align-items:center;justify-content:center;flex-wrap:wrap}
+.kx-bv-projeto select{max-width:280px;padding-left:12px;height:38px}
+
+.kx-boasvindas{grid-template-columns:minmax(0,1fr)}
+.kx-bv-caixa{min-width:0}
+.kx-bv-sugestoes .kx-chip{height:auto;min-height:34px;padding:6px 12px;white-space:normal;text-align:center}
+@media (max-width:768px){
+ .kx-boasvindas{min-height:auto;place-items:start stretch}
+ .kx-bv-titulo{font-size:26px}
+ .kx:not(.gaveta) .kx-menu button{font-size:10.5px;min-height:54px;line-height:1.15;white-space:normal;text-align:center;min-width:0;padding:0 2px;border-radius:10px}
+}
+
+/* 13/11 LUXO (dono: "premium como o painel do Viajante Pro, sofisticado, luxuoso"): tinta escura, linhas finas,
+   um só destaque turquesa e dourado em detalhe. Nada de botão colorido gritando nem brilho. */
+.kx{--fundo:#0a1219;--fundo2:#0c161e;--card:#101b24;--card2:#14222d;--linha:rgba(255,255,255,.07);--txt:#eef4f6;--mut:#93a6af;--az:#19a7b5;--ouro:#c8a96a;background:var(--fundo)!important;letter-spacing:.003em}
+.kx-marca,.kx-menu{background:var(--fundo2)!important}
+.kx-topo{background:rgba(10,18,25,.9);backdrop-filter:blur(8px)}
+.kx-menu button{color:#b9c7cd}
+.kx-menu button[aria-current=page]{background:rgba(25,167,181,.10)!important;color:#fff;box-shadow:inset 2px 0 0 var(--az)!important;font-weight:600}
+.kx-bloco{background:var(--card)!important;border:1px solid var(--linha)!important;border-radius:14px}
+.kx-btn{background:transparent;border-color:var(--linha);border-radius:10px}
+.kx-btn:hover{border-color:var(--ouro)}
+.kx-btn.forte{background:var(--az)!important;border-color:var(--az)!important;color:#04161a!important;font-weight:700}
+.kx-btn.roxo,.kx-btn.verde,.kx-btn.laranja{background:transparent!important;border:1px solid var(--linha)!important;color:var(--txt)!important}
+.kx-btn.roxo:hover,.kx-btn.verde:hover,.kx-btn.laranja:hover{border-color:var(--ouro)!important}
+.kx-heroi{background:var(--card)!important;border-color:var(--linha)!important;box-shadow:none!important}
+.kx-heroi:after,.kx-heroi:before{display:none!important}
+.kx-heroi h1{font-weight:600;letter-spacing:-.02em}
+.kx-heroi p{color:var(--mut)}
+.kx-heroi-faixa{background:transparent!important;border:1px solid var(--linha)!important;color:var(--mut)}
+.kx-status-item{background:transparent!important;border:1px solid var(--linha)!important;border-radius:12px}
+.kx-status-item:hover{border-color:var(--ouro)!important}
+.kx-status-item b{color:var(--txt)!important;font-weight:600}
+.kx-status-item span{color:var(--mut)}
+.kx-kpi{background:var(--card)!important;border:1px solid var(--linha)!important;border-radius:14px}
+.kx-kpi .ico{background:rgba(255,255,255,.04)!important;box-shadow:none!important;color:var(--ouro)}
+.kx-kpi span{color:var(--mut)}
+.kx-kpi .barras{display:none}
+.kx-mod{background:var(--card)!important;border:1px solid var(--linha)!important;color:var(--txt)!important}
+.kx-mod:hover{border-color:var(--ouro)!important}
+.kx-abas button[aria-selected=true]{border-bottom-color:var(--ouro)}
+.kx-chip{border-color:var(--linha);color:var(--mut)}
+.kx-chip:hover{border-color:var(--ouro);color:var(--txt)}
+.kx-bv-titulo{font-weight:600;letter-spacing:-.025em}
+.kx-bv-titulo:after{content:"";display:block;width:56px;height:2px;margin:14px auto 0;background:var(--ouro);border-radius:2px}
+.kx-bv-entrada{background:var(--card2)}
+.kx-bv-entrada:focus-within{border-color:var(--ouro)}
+.kx-barra i{background:var(--az)!important}
+
+.kx-grade.kx-kpis{grid-auto-rows:auto!important;flex:none}
+.kx-kpis .kx-kpi{grid-column:auto!important;min-height:84px}
+
+.kx select,.kx textarea,.kx input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]):not([type=color]):not(.kx-busca){background:var(--card2);color:var(--txt);border:1px solid var(--linha);border-radius:10px;padding:8px 10px;font:inherit}
+.kx select:focus,.kx textarea:focus,.kx input:focus{outline:0;border-color:var(--ouro)}
+.kx .kx-bv-entrada textarea{background:none;border:0;padding:0}
+.kx .kx-busca{padding-left:40px}
+.kx .kx-bv-projeto select,.kx .kx-tela select.kx-busca{padding-left:12px}
+`;

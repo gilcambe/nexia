@@ -20,7 +20,7 @@ export default function CompartilharCartao({ dados, rotulo = 'Compartilhar no In
     if (!ref.current) return;
     try {
       const r = await compartilharCanvas(ref.current, texto, link);
-      setMsg(r === 'baixado' ? `Imagem salva. Poste no ${formato === 'feed' ? 'feed' : 'story'} e marque @nexiabodycoach!` : '');
+      setMsg(r === 'baixado' ? `Imagem salva. Poste no ${formato === 'feed' ? 'feed' : 'story'} e marque @kernex_bodycoach!` : '');
     } catch {
       setMsg('Não consegui gerar a imagem neste aparelho.');
     }

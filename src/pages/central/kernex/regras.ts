@@ -1,6 +1,7 @@
 // Central Kernex nova (#3219): regras puras (testadas em tests/unit/central-kernex.test.js).
 export const TELAS = [
   { id: "inicio", nome: "Início", icone: "🏠", serve: "Ver em 5 segundos se está tudo certo e o que precisa de você." },
+  { id: "conversar", nome: "Conversar", icone: "💬", serve: "Converse com o Cortex: peça um site ou uma mudança, veja a prévia ao lado e aprove." },
   { id: "pedir", nome: "Pedir", icone: "✍️", serve: "Escreva o que você quer; acompanhe cada pedido até ficar pronto." },
   { id: "projetos", nome: "Projetos", icone: "📁", serve: "Quanto falta em cada projeto, contado só com prova." },
   { id: "clientes", nome: "Clientes e modelos", icone: "🧩", serve: "Clonar um cliente (tenant) e criar sites e sistemas a partir dos modelos base." },
@@ -12,18 +13,33 @@ export const TELAS = [
   { id: "maquinas", nome: "Máquinas", icone: "🖥️", serve: "PC 1 e PC 2: ligados, ocupados e o que estão fazendo." },
   { id: "ia", nome: "IA & Cortex", icone: "🤖", serve: "O que cada IA está fazendo agora e quanto de cota resta." },
   { id: "tarefas", nome: "Tarefas", icone: "✅", serve: "Cada tarefa: quem pegou, onde parou e por quê." },
-  { id: "arquivos", nome: "Arquivos", icone: "🗂️", serve: "Achar qualquer arquivo dos seus PCs e abrir com 1 clique." },
+  { id: "arquivos", nome: "Arquivos", icone: "🗂️", serve: "Achar os arquivos da empresa (pasta C:\\KERNEX dos PCs) e mostrar no PC com 1 toque." },
   { id: "publicacoes", nome: "Publicações", icone: "🚀", serve: "O que entrou no código e o que já está no ar." },
   { id: "homologacao", nome: "Homologação", icone: "🧪", serve: "Cada produto testado antes de qualquer versão: verde passa, vermelho bloqueia." },
   { id: "cofre", nome: "Cofre", icone: "🔐", serve: "Nomes das chaves e quando foram trocadas. O valor nunca aparece." },
   { id: "relatorios", nome: "Relatórios", icone: "📊", serve: "O que foi feito por dia e por IA." },
   { id: "config", nome: "Configurações", icone: "⚙️", serve: "Avisos, modo ausente e jeito da tela." },
+  { id: "ajuda", nome: "Ajuda", icone: "❓", serve: "Para que serve cada parte da Central e onde achar cada coisa." },
 ] as const;
 export type TelaId = (typeof TELAS)[number]["id"];
 
+// C2-F1 (PC 2, 13/11): menu enxuto de 7 itens (PLANO-CENTRAL-2). Cada item junta telas parecidas, que viram abas no topo.
+// O Início abre pelo logo. As telas técnicas ficam em Configurações (Avançado). Toda tela continua abrindo por ?tela=.
+export const MENU: readonly { id: string; nome: string; icone: string; telas: readonly TelaId[] }[] = [
+  { id: "conversar", nome: "Conversar", icone: "enviar", telas: ["conversar", "pedir", "tarefas"] },
+  { id: "projetos", nome: "Projetos", icone: "pasta", telas: ["projetos", "fabrica", "store", "publicacoes"] },
+  { id: "vendas", nome: "Clientes & Vendas", icone: "grafico", telas: ["vendas", "clientes", "empresa"] },
+  { id: "marketing", nome: "Marketing", icone: "foguete", telas: ["ferramentas"] },
+  { id: "arquivos", nome: "Arquivos", icone: "arquivo", telas: ["arquivos"] },
+  { id: "ajuda", nome: "Ajuda", icone: "ia", telas: ["ajuda"] },
+  { id: "config", nome: "Configurações", icone: "engrenagem", telas: ["config", "maquinas", "ia", "homologacao", "cofre", "relatorios"] },
+];
+/** Item do menu que contém a tela (o Início não está em nenhum: abre pelo logo). */
+export const grupoDaTela = (t: TelaId) => MENU.find((g) => g.telas.includes(t)) || null;
+
 export const telaDaUrl = (search: string): TelaId => {
   const t = new URLSearchParams(search).get("tela");
-  return (TELAS.find((x) => x.id === t)?.id || "inicio") as TelaId;
+  return (TELAS.find((x) => x.id === t)?.id || "conversar") as TelaId;   // 13/11: a Central abre conversando com o Cortex (o painel fica em Início)
 };
 
 export type Cor = "verde" | "amarelo" | "vermelho";

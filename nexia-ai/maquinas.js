@@ -7,6 +7,9 @@ const crypto = require('crypto');
 
 const NOME_RE = /^[A-Za-z0-9_-]{1,40}$/;
 const ONLINE_MS = 2 * 60 * 1000;
+// C2-F3 (PC 2, 13/11): só caminhos DENTRO de C:\KERNEX, relativos (sem "..", sem unidade, sem começar com barra).
+const CAMINHO_RE = /^(?![\\/])(?!.*(?:^|[\\/])\.\.(?:[\\/]|$))[^:*?"<>|\u0000-\u001f]{1,240}$/;
+const caminhoOk = c => typeof c === 'string' && CAMINHO_RE.test(c);
 const num = v => (Number.isFinite(Number(v)) ? Number(v) : null);
 
 function tokenOk(event, env) {
@@ -101,6 +104,38 @@ function createMaquinas({ env = process.env, driver, agora = () => new Date() } 
     return q ? { tarefas: q.fields.tarefas || [], em: q.fields.em || null, enviado_por: q.fields.enviado_por || '' } : { tarefas: [], em: null };
   }
 
+  /** C2-F3: índice de C:\KERNEX mandado pelo agente do PC (só nome, tamanho e data; nunca o conteúdo). */
+  async function salvarArquivos(nome, b) {
+    const itens = (Array.isArray(b.arquivos) ? b.arquivos : []).filter(a => a && caminhoOk(a.c)).slice(0, 2000)
+      .map(a => ({ c: a.c, t: num(a.t) || 0, m: String(a.m || '').slice(0, 30) }));
+    await d().apply([up('arquivos/' + nome, { maquina: nome, itens, total: Array.isArray(b.arquivos) ? b.arquivos.length : 0, em: iso() })]);
+    return { ok: true, arquivos: itens.length };
+  }
+
+  async function lerArquivos() {
+    const docs = await d().list('', 'arquivos', false);
+    return { maquinas: docs.map(x => ({ maquina: x.fields.maquina, itens: x.fields.itens || [], total: x.fields.total || 0, em: x.fields.em || null })) };
+  }
+
+  /** Central pede "abrir este arquivo no PC"; o agente pega na próxima volta (máx. 10 na fila). */
+  async function pedirAbrir(maquina, caminho) {
+    if (!NOME_RE.test(String(maquina || ''))) return { erro: 'máquina inválida' };
+    if (!caminhoOk(caminho)) return { erro: 'só dá para abrir arquivo dentro de C:\\KERNEX' };
+    const p = 'arquivos_abrir/' + maquina;
+    const atual = (await d().get([p])).get(p);
+    const fila = [...((atual && atual.fields.fila) || []), { caminho, em: iso() }].slice(-10);
+    await d().apply([up(p, { fila }, atual && atual.create_time)]);
+    return { ok: true, mensagem: 'Pedido mandado: o arquivo abre no PC em até 1 minuto.' };
+  }
+
+  async function pegarAbrir(nome) {
+    const p = 'arquivos_abrir/' + nome;
+    const atual = (await d().get([p])).get(p);
+    const fila = (atual && atual.fields.fila) || [];
+    if (fila.length) await d().apply([up(p, { fila: [] }, atual.create_time)]);
+    return fila.map(x => x.caminho).filter(caminhoOk);
+  }
+
   async function listar() {
     const t = agora().getTime();
     return (await d().list('', 'maquinas', false)).map(m => ({ ...m.fields, online: t - Date.parse(m.fields.visto_em || 0) < ONLINE_MS }));
@@ -109,7 +144,7 @@ function createMaquinas({ env = process.env, driver, agora = () => new Date() } 
   /** Rotas do PC: /api/nexia/maquinas/{pulso|tarefa|resultado|quadro}. Devolve null se não for rota daqui. */
   async function rotaDoPc(event, json) {
     const parts = (event.path || '').replace(/^\/api\/nexia\/?/, '').split('/').filter(Boolean);
-    if (parts[0] !== 'maquinas' || parts.length !== 2 || !['pulso', 'tarefa', 'resultado', 'quadro'].includes(parts[1])) return null;
+    if (parts[0] !== 'maquinas' || parts.length !== 2 || !['pulso', 'tarefa', 'resultado', 'quadro', 'arquivos', 'abrir'].includes(parts[1])) return null;
     const ok = tokenOk(event, env);
     if (ok === null || !d()) return json(event, 404, { error: 'Rota não encontrada.' });
     if (!ok) return json(event, 401, { error: 'Não autenticado.' });
@@ -121,6 +156,8 @@ function createMaquinas({ env = process.env, driver, agora = () => new Date() } 
     const m = event.httpMethod;
     if (parts[1] === 'pulso' && m === 'POST') return json(event, 200, await pulso(nome, b));
     if (parts[1] === 'quadro' && m === 'POST') return json(event, 200, await salvarQuadro(nome, b));
+    if (parts[1] === 'arquivos' && m === 'POST') return json(event, 200, await salvarArquivos(nome, b));
+    if (parts[1] === 'abrir' && m === 'GET') return json(event, 200, { abrir: await pegarAbrir(nome) });
     if (parts[1] === 'tarefa' && m === 'GET') {
       const modelos = String(q.modelos || '').split(',').map(s => s.trim()).filter(s => /^[\w.:/-]{1,60}$/.test(s)).slice(0, 20);
       const t = await pegarTarefa(nome, modelos);
@@ -133,7 +170,7 @@ function createMaquinas({ env = process.env, driver, agora = () => new Date() } 
     return json(event, 405, { error: 'Método não permitido.' });
   }
 
-  return { pulso, pegarTarefa, resultado, criarTarefa, lerTarefa, listar, salvarQuadro, lerQuadro, rotaDoPc, ligado: () => !!d() };
+  return { pulso, pegarTarefa, resultado, criarTarefa, lerTarefa, listar, salvarQuadro, lerQuadro, salvarArquivos, lerArquivos, pedirAbrir, pegarAbrir, rotaDoPc, ligado: () => !!d() };
 }
 
-module.exports = { createMaquinas, tokenOk, ONLINE_MS };
+module.exports = { createMaquinas, tokenOk, caminhoOk, ONLINE_MS };

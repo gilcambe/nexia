@@ -1,7 +1,10 @@
 {
   "series": [
-    { "rotulo": "A", "valor": 10 },
-    { "rotulo": "B", "valor": 20 },
-    { "rotulo": "C", "valor": 30 }
+    { "rotulo": "Jan", "valor": 120 },
+    { "rotulo": "Fev", "valor": 180 },
+    { "rotulo": "Mar", "valor": 150 },
+    { "rotulo": "Abr", "valor": 240 },
+    { "rotulo": "Mai", "valor": 210 },
+    { "rotulo": "Jun", "valor": 300 }
   ]
 }

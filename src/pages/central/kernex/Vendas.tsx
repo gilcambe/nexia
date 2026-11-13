@@ -46,7 +46,7 @@ export default function Vendas() {
 
   return (
     <div data-testid="kx-vendas">
-      <div className="kx-grade" style={{ gridTemplateColumns: "repeat(auto-fit,minmax(150px,1fr))", marginBottom: 12 }}>
+      <div className="kx-grade kx-kpis" style={{ gridTemplateColumns: "repeat(auto-fit,minmax(150px,1fr))", marginBottom: 12 }}>
         {ETAPAS.map(([id, nome]) => <Kpi key={id} cor={id === "fechado" ? "vd" : id === "proposta" ? "lj" : "az"} icone="troca" valor={lista ? c[id] || 0 : null} rotulo={nome} ativo={etapa === id} onClick={() => setEtapa(id)} />)}
         <Kpi cor="rx" icone="sino" valor={site.length} rotulo="Pedidos pelo site" />
       </div>

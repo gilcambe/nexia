@@ -31,6 +31,13 @@ for (const [nome, resposta] of Object.entries(RESPOSTAS)) {
       await page.evaluate((id) => { const b = document.querySelector(`[data-testid="${id}"]`); if (b) (b).click(); }, t);
       await page.waitForTimeout(400);
       await expect(page.getByTestId('kx-erro-na-tela'), `tela ${t}`).toHaveCount(0);
+      // C2-F1: menu de 7 itens; as outras telas viram abas no topo. Abre cada aba também.
+      const abas = await page.locator('[data-testid^="kx-aba-"]').evaluateAll((els) => els.map((e) => e.getAttribute('data-testid')));
+      for (const a of abas) {
+        await page.evaluate((id) => { const b = document.querySelector(`[data-testid="${id}"]`); if (b) (b).click(); }, a);
+        await page.waitForTimeout(400);
+        await expect(page.getByTestId('kx-erro-na-tela'), `aba ${a}`).toHaveCount(0);
+      }
     }
     expect(erros.filter((e) => !/Failed to fetch|NetworkError|aborted|ERR_FAILED/i.test(e)), 'erros de página').toEqual([]);
   });

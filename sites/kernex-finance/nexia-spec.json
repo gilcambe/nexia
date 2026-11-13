@@ -2,12 +2,12 @@
   "spec": {
     "kind": "system",
     "name": "Kernex Finance",
-    "tagline": "Gestão financeira corporativa inteligente e unificada",
-    "photo_theme": "",
-    "description": "Gestão financeira corporativa inteligente e unificada",
+    "tagline": "Gestão financeira corporativa e central de alertas",
+    "photo_theme": "financial dashboard analytics",
+    "description": "Gestão financeira corporativa e central de alertas",
     "folder": "sites/kernex-finance",
     "fonts": {
-      "heading": "Plus Jakarta Sans",
+      "heading": "Outfit",
       "body": "Inter"
     },
     "palette": {
@@ -17,12 +17,12 @@
       "surface": "#ffffff",
       "text": "#1d2426",
       "muted": "#5d6b6e",
-      "dark": "#090d16"
+      "dark": "#020617"
     },
     "style": "modern",
     "contact": {
-      "whatsapp": "",
-      "phone": "(11) 4000-8899",
+      "whatsapp": "11999999999",
+      "phone": "(11) 3000-0000",
       "email": "suporte@kernex.com.br",
       "address": "",
       "city": "",
@@ -44,182 +44,135 @@
     "leads_origem": "",
     "entities": [
       {
-        "key": "contas",
-        "label": "Contas Bancárias",
-        "singular": "Conta Bancária",
+        "key": "rotas",
+        "label": "Rotas e Domínios",
+        "singular": "Rota",
         "fields": [
           {
-            "key": "banco",
-            "label": "Banco",
+            "key": "host",
+            "label": "Domínio / Host",
             "type": "text",
             "options": [],
             "required": true
           },
           {
-            "key": "agencia",
-            "label": "Agência",
+            "key": "destino",
+            "label": "Caminho Interno",
             "type": "text",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "conta",
-            "label": "Número da Conta",
-            "type": "text",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "tipo",
-            "label": "Tipo",
-            "type": "select",
-            "options": [
-              "Corrente PJ",
-              "Investimento",
-              "Cartão de Crédito",
-              "Aplicação"
-            ],
-            "required": true
-          },
-          {
-            "key": "saldo",
-            "label": "Saldo Inicial",
-            "type": "money",
             "options": [],
             "required": true
           },
           {
             "key": "status",
-            "label": "Status",
+            "label": "Status DNS",
             "type": "select",
             "options": [
-              "Ativa",
-              "Inativa",
-              "Conciliação Pendente"
+              "Ativo",
+              "Pendente",
+              "Redirecionando"
             ],
+            "required": true
+          },
+          {
+            "key": "atualizado",
+            "label": "Última Atualização",
+            "type": "date",
+            "options": [],
             "required": true
           }
         ],
         "sample": [
           {
-            "banco": "Itaú Empresas",
-            "agencia": "0342",
-            "conta": "12849-0",
-            "tipo": "Corrente PJ",
-            "saldo": "45200.00",
-            "status": "Ativa"
+            "host": "finance.kernex.com.br",
+            "destino": "/prumo/",
+            "status": "Ativo",
+            "atualizado": "2026-11-12"
           },
           {
-            "banco": "Nubank PJ",
-            "agencia": "0001",
-            "conta": "987654-3",
-            "tipo": "Corrente PJ",
-            "saldo": "18500.50",
-            "status": "Ativa"
+            "host": "ces.kernex.com.br",
+            "destino": "/ces/",
+            "status": "Ativo",
+            "atualizado": "2026-11-01"
           },
           {
-            "banco": "BTG Pactual",
-            "agencia": "0102",
-            "conta": "44321-8",
-            "tipo": "Investimento",
-            "saldo": "150000.00",
-            "status": "Ativa"
+            "host": "cortex.kernex.com.br",
+            "destino": "/cortex/",
+            "status": "Ativo",
+            "atualizado": "2026-10-15"
           },
           {
-            "banco": "Santander Corporate",
-            "agencia": "0550",
-            "conta": "88123-9",
-            "tipo": "Aplicação",
-            "saldo": "75000.00",
-            "status": "Conciliação Pendente"
+            "host": "kernex-finance.workers.dev",
+            "destino": "/prumo/",
+            "status": "Redirecionando",
+            "atualizado": "2026-11-12"
           }
         ]
       },
       {
-        "key": "orcamentos",
-        "label": "Orçamentos",
-        "singular": "Orçamento",
+        "key": "alertas",
+        "label": "Alertas Diários",
+        "singular": "Alerta",
         "fields": [
           {
-            "key": "departamento",
-            "label": "Departamento",
+            "key": "titulo",
+            "label": "Título do Alerta",
             "type": "text",
             "options": [],
             "required": true
           },
           {
-            "key": "categoria",
-            "label": "Categoria de Despesa",
-            "type": "text",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "valor_previsto",
-            "label": "Valor Previsto",
-            "type": "money",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "mes",
-            "label": "Mês de Referência",
-            "type": "date",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "responsavel",
-            "label": "Responsável",
-            "type": "text",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "status",
-            "label": "Status",
+            "key": "canal",
+            "label": "Canal de Envio",
             "type": "select",
             "options": [
-              "Aprovado",
-              "Em Revisão",
-              "Estourado",
-              "Bloqueado"
+              "E-mail",
+              "WhatsApp",
+              "Webhook"
+            ],
+            "required": true
+          },
+          {
+            "key": "hora",
+            "label": "Horário Disparo",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "ativo",
+            "label": "Ativo",
+            "type": "select",
+            "options": [
+              "Sim",
+              "Não"
             ],
             "required": true
           }
         ],
         "sample": [
           {
-            "departamento": "Tecnologia",
-            "categoria": "Serviços em Nuvem",
-            "valor_previsto": "12000.00",
-            "mes": "2026-11-01",
-            "responsavel": "Carlos Silva",
-            "status": "Aprovado"
+            "titulo": "Fechamento Caixa Diário",
+            "canal": "E-mail",
+            "hora": "08:00",
+            "ativo": "Sim"
           },
           {
-            "departamento": "Marketing",
-            "categoria": "Anúncios e Mídia",
-            "valor_previsto": "25000.00",
-            "mes": "2026-11-01",
-            "responsavel": "Mariana Costa",
-            "status": "Em Revisão"
+            "titulo": "Resumo de Inadimplência",
+            "canal": "WhatsApp",
+            "hora": "09:30",
+            "ativo": "Sim"
           },
           {
-            "departamento": "Recursos Humanos",
-            "categoria": "Benefícios e Folha",
-            "valor_previsto": "85000.00",
-            "mes": "2026-11-01",
-            "responsavel": "Juliana Mendes",
-            "status": "Aprovado"
+            "titulo": "Conciliação Bancária",
+            "canal": "Webhook",
+            "hora": "18:00",
+            "ativo": "Sim"
           },
           {
-            "departamento": "Operações",
-            "categoria": "Infraestrutura",
-            "valor_previsto": "9500.00",
-            "mes": "2026-11-01",
-            "responsavel": "Roberto Dias",
-            "status": "Estourado"
+            "titulo": "Alerta de Orçamento Estourado",
+            "canal": "E-mail",
+            "hora": "12:00",
+            "ativo": "Não"
           }
         ]
       },
@@ -236,17 +189,6 @@
             "required": true
           },
           {
-            "key": "tipo",
-            "label": "Tipo",
-            "type": "select",
-            "options": [
-              "Receita",
-              "Despesa",
-              "Transferência"
-            ],
-            "required": true
-          },
-          {
             "key": "valor",
             "label": "Valor",
             "type": "money",
@@ -254,8 +196,8 @@
             "required": true
           },
           {
-            "key": "data",
-            "label": "Data",
+            "key": "vencimento",
+            "label": "Vencimento",
             "type": "date",
             "options": [],
             "required": true
@@ -263,61 +205,49 @@
           {
             "key": "categoria",
             "label": "Categoria",
-            "type": "text",
-            "options": [],
+            "type": "select",
+            "options": [
+              "Receita Operacional",
+              "Infraestrutura",
+              "Pessoal",
+              "Marketing"
+            ],
             "required": true
-          },
-          {
-            "key": "observacoes",
-            "label": "Observações",
-            "type": "textarea",
-            "options": [],
-            "required": false
           }
         ],
         "sample": [
           {
-            "descricao": "Cliente Enterprise A - Licenciamento",
-            "tipo": "Receita",
-            "valor": "35000.00",
-            "data": "2026-11-12",
-            "categoria": "Vendas de Software",
-            "observacoes": "Fatura 2026-112 emitida via API"
+            "descricao": "Assinatura Cloudflare Workers",
+            "valor": "150.00",
+            "vencimento": "2026-11-20",
+            "categoria": "Infraestrutura"
           },
           {
-            "descricao": "AWS Cloud Services",
-            "tipo": "Despesa",
-            "valor": "11250.40",
-            "data": "2026-11-10",
-            "categoria": "Infraestrutura",
-            "observacoes": "Débito automático cartão corporativo"
+            "descricao": "Mensalidade Cliente Enterprise",
+            "valor": "4500.00",
+            "vencimento": "2026-11-15",
+            "categoria": "Receita Operacional"
           },
           {
-            "descricao": "Escritório SP - Aluguel",
-            "tipo": "Despesa",
-            "valor": "8500.00",
-            "data": "2026-11-05",
-            "categoria": "Imóvel e Instalações",
-            "observacoes": "Boleto bancário liquidado"
+            "descricao": "Folha de Pagamento",
+            "valor": "12500.00",
+            "vencimento": "2026-11-30",
+            "categoria": "Pessoal"
           },
           {
-            "descricao": "Consultoria Externa DevOps",
-            "tipo": "Despesa",
-            "valor": "6000.00",
-            "data": "2026-11-03",
-            "categoria": "Serviços de Terceiros",
-            "observacoes": "NF 4492"
+            "descricao": "Campanha Google Ads",
+            "valor": "800.00",
+            "vencimento": "2026-11-25",
+            "categoria": "Marketing"
           }
         ]
       }
     ],
     "modules": [
-      "Dashboard",
-      "Contas Bancárias",
+      "Domínios e Rotas",
+      "Alertas e E-mails",
       "Transações",
-      "Orçamentos",
-      "Alertas e Diário",
-      "Domínio Kernex"
+      "Central de Configurações"
     ]
   },
   "media": {}

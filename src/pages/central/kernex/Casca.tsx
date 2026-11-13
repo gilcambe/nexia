@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePedidos } from "../../meu-cortex/api";
 import { useCentral } from "../api";
-import { TELAS, telaDaUrl, corSemaforo, haQuanto, type TelaId } from "./regras";
+import { MENU, TELAS, grupoDaTela, telaDaUrl, corSemaforo, haQuanto, type TelaId } from "./regras";
 import { CSS } from "./tema";
 import Bloco from "./Bloco";
 import Icone, { LogoK } from "./Icone";
@@ -24,12 +24,16 @@ import Store from "./Store";
 import Vendas from "./Vendas";
 import Empresa from "./Empresa";
 import Ferramentas from "./Ferramentas";
+import Conversar from "./Conversar";
+import Ajuda from "./Ajuda";
+import Arquivos from "./Arquivos";
 import { montarAcoes } from "./donos";
 
 // #3219: casca da Central nova, no jeito do "Painel Executivo" que o dono mandou.
 // PC: menu lateral com as 10 telas. Celular: 5 telas embaixo + gaveta (☰) com todas.
-const NO_CELULAR: TelaId[] = ["inicio", "pedir", "tarefas", "projetos", "maquinas"];
-export const ICONE_TELA: Record<TelaId, string> = { inicio: "casa", pedir: "enviar", clientes: "troca", fabrica: "foguete", store: "check", vendas: "grafico", empresa: "sino", ferramentas: "engrenagem", projetos: "pasta", maquinas: "servidor", ia: "ia", tarefas: "lista", arquivos: "arquivo", publicacoes: "foguete", homologacao: "check", cofre: "cadeado", relatorios: "grafico", config: "engrenagem" };
+// C2-F1: no celular, 5 itens do menu embaixo; o resto na gaveta (☰).
+const NO_CELULAR = ["conversar", "projetos", "vendas", "arquivos", "config"];
+export const ICONE_TELA: Record<TelaId, string> = { inicio: "casa", ajuda: "ia", conversar: "enviar", pedir: "enviar", clientes: "troca", fabrica: "foguete", store: "check", vendas: "grafico", empresa: "sino", ferramentas: "engrenagem", projetos: "pasta", maquinas: "servidor", ia: "ia", tarefas: "lista", arquivos: "arquivo", publicacoes: "foguete", homologacao: "check", cofre: "cadeado", relatorios: "grafico", config: "engrenagem" };
 const COR_SINAL = { verde: "#22c55e", amarelo: "#f59e0b", vermelho: "#ef4444" };
 
 function EmBreve({ nome }: { nome: string }) {
@@ -95,6 +99,7 @@ export default function Casca() {
     return () => window.removeEventListener("keydown", atalho);
   }, []);
   const atual = TELAS.find((t) => t.id === tela) || TELAS[0];
+  const grupo = grupoDaTela(tela);
   const c = painel.ias?.contagens || {};
   const sinal = corSemaforo({ precisa: painel.dono?.length || 0, travadas: c.travada || 0, servicosFora: painel.saude?.fora || 0 });
   const corSinal = COR_SINAL[sinal.cor];
@@ -106,15 +111,15 @@ export default function Casca() {
     <div className={"kx" + (gaveta ? " gaveta" : "") + (buscando ? " buscando" : "")} data-testid="kx-casca">
       <style>{CSS}</style>
       <div className="kx-marca">
-        <LogoK tam={38} />
-        <span className="kx-logo">KERNEX<small>Controle. Automação. Evolução.</small></span>
+        <button type="button" onClick={() => ir("inicio")} aria-label="Início" data-testid="kx-logo-inicio" style={{ all: "unset", cursor: "pointer", display: "flex", alignItems: "center", gap: 10 }}><LogoK tam={38} />
+        <span className="kx-logo">KERNEX<small>Controle. Automação. Evolução.</small></span></button>
       </div>
       <header className="kx-topo">
         <button type="button" className="kx-sino kx-so-cel" aria-label="Abrir menu" onClick={() => setGaveta(true)} data-testid="kx-abrir-menu"><Icone nome="menu" /></button>
         <span className="kx-so-cel" style={{ alignItems: "center", gap: 8, flex: 1 }}><LogoK tam={28} /><b style={{ letterSpacing: ".06em" }}>KERNEX</b></span>
         <Busca ir={ir} fechar={() => setBuscando(false)} />
         <button type="button" className="kx-sino kx-so-cel" aria-label="Buscar" onClick={abrirBusca}><Icone nome="busca" /></button>
-        <button type="button" className="kx-btn forte kx-so-pc-flex" onClick={() => ir("pedir")} data-testid="kx-pedir-topo"><Icone nome="enviar" tam={16} />Pedir ao Cortex</button>
+        <button type="button" className="kx-btn forte kx-so-pc-flex" onClick={() => ir("conversar")} data-testid="kx-pedir-topo"><Icone nome="enviar" tam={16} />Conversar com o Cortex</button>
         <button type="button" className="kx-status" style={{ borderColor: corSinal + "99", background: corSinal + "1a" }} onClick={() => ir(precisa ? "tarefas" : "inicio")} data-testid="kx-status-topo"
           title={painel.ias?.resumo || ""}>
           <span className="kx-bola" style={{ background: painel.ias ? corSinal : "#64748b", width: 22, height: 22, display: "grid", placeItems: "center" }}>
@@ -132,9 +137,10 @@ export default function Casca() {
           <LogoK tam={30} /><span className="kx-logo">KERNEX<small>Controle. Automação. Evolução.</small></span>
           <button type="button" className="kx-sino" style={{ marginLeft: "auto", width: 36, height: 36 }} aria-label="Fechar menu" onClick={() => setGaveta(false)}><Icone nome="x" /></button>
         </div>
-        {TELAS.map((t) => (
-          <button key={t.id} type="button" className={NO_CELULAR.includes(t.id) ? "" : "kx-so-pc"} aria-current={t.id === tela ? "page" : undefined} onClick={() => ir(t.id)} data-testid={"kx-menu-" + t.id}>
-            <Icone nome={ICONE_TELA[t.id]} />{t.nome}
+        <button type="button" className="kx-so-pc" aria-current={tela === "inicio" ? "page" : undefined} onClick={() => ir("inicio")} data-testid="kx-menu-inicio"><Icone nome="casa" />Início</button>
+        {MENU.map((g) => (
+          <button key={g.id} type="button" className={NO_CELULAR.includes(g.id) ? "" : "kx-so-pc"} aria-current={grupo?.id === g.id ? "page" : undefined} onClick={() => ir(g.telas[0])} data-testid={"kx-menu-" + g.id}>
+            <Icone nome={g.icone} />{g.nome}
           </button>
         ))}
         <div className="kx-menu-rodape">
@@ -147,9 +153,16 @@ export default function Casca() {
         </div>
       </nav>
       <main className="kx-area">
+        {grupo && grupo.telas.length > 1 && (
+          <div className="kx-abas" role="tablist" aria-label={grupo.nome} data-testid="kx-abas">
+            {grupo.telas.map((id) => (
+              <button key={id} type="button" role="tab" aria-selected={id === tela} onClick={() => ir(id)} data-testid={"kx-aba-" + id}>{grupo.id === "config" && id !== "config" ? "Avançado · " : ""}{TELAS.find((t) => t.id === id)?.nome}</button>
+            ))}
+          </div>
+        )}
         {tela !== "inicio" && <p className="kx-serve" data-testid="kx-serve"><b>{atual.nome}:</b> {atual.serve}</p>}
         {tela === "inicio" ? <Inicio irPara={ir} painel={painel} nome={nome} /> : tela === "tarefas" ? <Tarefas painel={painel} ir={ir} /> : tela === "ia" ? <IaCortex /> : tela === "publicacoes" ? <Publicacoes />
-          : tela === "projetos" ? <Projetos /> : tela === "maquinas" ? <Maquinas /> : tela === "cofre" ? <Cofre /> : tela === "relatorios" ? <Relatorios painel={painel} /> : tela === "homologacao" ? <Homologacao /> : tela === "config" ? <Config /> : tela === "pedir" ? <Pedir /> : tela === "clientes" ? <Clientes /> : tela === "fabrica" ? <Fabrica /> : tela === "store" ? <Store /> : tela === "vendas" ? <Vendas /> : tela === "empresa" ? <Empresa /> : tela === "ferramentas" ? <Ferramentas /> : <EmBreve nome={atual.nome} />}
+          : tela === "projetos" ? <Projetos /> : tela === "maquinas" ? <Maquinas /> : tela === "cofre" ? <Cofre /> : tela === "relatorios" ? <Relatorios painel={painel} /> : tela === "homologacao" ? <Homologacao /> : tela === "config" ? <Config /> : tela === "pedir" ? <Pedir /> : tela === "clientes" ? <Clientes /> : tela === "fabrica" ? <Fabrica /> : tela === "store" ? <Store /> : tela === "vendas" ? <Vendas /> : tela === "empresa" ? <Empresa /> : tela === "ferramentas" ? <Ferramentas /> : tela === "conversar" ? <Conversar /> : tela === "ajuda" ? <Ajuda ir={ir} /> : tela === "arquivos" ? <Arquivos /> : <EmBreve nome={atual.nome} />}
       </main>
     </div>
   );
