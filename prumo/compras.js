@@ -5,6 +5,12 @@
  * na notificação e no comentário de rota.
  */
 
-function nomeDaCompra(compra) {
-  return "Kernex Finance: " + compra.nome;
+/**
+ * Módulo de Compras do Prumo.
+ */
+
+// Simulação temporária ou placeholder até que possamos carregar o arquivo original de develop
+function renderCompras() {
+  return "Kernex Finance: " + l.nome;
 }
+
