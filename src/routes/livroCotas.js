@@ -18,10 +18,9 @@ module.exports = (models) => {
     try {
       let registros = [];
       if (LivroCota && typeof LivroCota.findAll === 'function') {
-        registros = await LivroCota.findAll({
-          attributes: { exclude: ['createdAt', 'updatedAt'] },
-          order: [['id', 'ASC']]
-        });
+        // Sem "attributes.exclude": createdAt e updatedAt precisam vir do banco
+        // para a hora de cada registro ser a data real (e não a hora atual).
+        registros = await LivroCota.findAll({ order: [['id', 'ASC']] });
       }
 
       if (!registros || registros.length === 0) {
@@ -54,9 +53,10 @@ module.exports = (models) => {
     }
   });
 
-  // Rota montada por src/index.js; exports nomeado para uso direto nos testes.
-  module.exports = router;
-  module.exports.livroCotas = router;
+  // A fabrica (module.exports) recebe models e devolve o router montado.
+  // O router tambem fica como propriedade, sem sobrescrever a fabrica.
+  module.exports.router = router;
+  module.exports.livroCotasRouter = router;
 
   return router;
 };

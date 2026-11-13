@@ -70,7 +70,9 @@ module.exports = {
   },
 
   down: async (queryInterface) => {
-    // O índice cai junto com a tabela; o ENUM do Postgres é recriado no up.
+    // O rollback remove a tabela (o índice livro_cotas_reset_at_idx cai junto).
+    await queryInterface.dropTable('livro_cotas');
+    // O ENUM do Postgres é recriado no up.
     // A remoção do ENUM é só no Postgres (SQLite/MySQL não têm TYPE).
     if (queryInterface.sequelize && queryInterface.sequelize.getDialect() === 'postgres') {
       await queryInterface.sequelize.query('DROP TYPE IF EXISTS "enum_livro_cotas_treina_com_dados";');
