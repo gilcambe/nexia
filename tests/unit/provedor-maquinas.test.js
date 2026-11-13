@@ -64,3 +64,16 @@ test('PM9. tarefa de código (11/11/2026): manda max_tokens ao PC e espera até 
   assert.equal(vista.tipo, 'codigo');
   assert.equal(p.capabilities().max_output_tokens, 8192);
 });
+
+test('PM-AGY. modelo "agy" sem o ajudante online falha na hora; com ele, a tarefa vai para o ajudante (13/11)', async () => {
+  const driver = createMemoryDriver();
+  const mq = createMaquinas({ env, driver });
+  await mq.pulso('PC1', { ollamaOk: true, modelos: ['qwen3:4b'] });
+  const semAjudante = createMaquinasProvider({ env, maquinas: mq, esperar: async () => { throw new Error('não devia esperar'); } });
+  await assert.rejects(semAjudante.chat('agy', { messages: [{ role: 'user', content: 'oi' }] }), /nenhum PC online/);
+  await mq.pulso('PC1-agy', { ollamaOk: true, modelos: ['agy'] });
+  const p = createMaquinasProvider({ env, maquinas: mq,
+    esperar: async () => { const t = await mq.pegarTarefa('PC1-agy', ['agy']); if (t) await mq.resultado('PC1-agy', { id: t.id, texto: 'feito pelo Gemini' }); } });
+  const r = await p.chat('agy', { messages: [{ role: 'user', content: 'x' }] });
+  assert.equal(r.text, 'feito pelo Gemini'); assert.equal(r.maquina, 'PC1-agy');
+});

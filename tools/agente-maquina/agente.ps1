@@ -23,11 +23,12 @@ function Pulso {
 }
 
 function Trabalhar {
-  $r = Invoke-WebRequest "$base/tarefa?nome=$($cfg.nome)" -Headers $H -TimeoutSec 20 -DisableKeepAlive -UseBasicParsing
+  # 13/11: diz à fila que modelos este PC tem (só recebe o que consegue fazer); sem o pedido, usa o seu (config)
+  $locais = @(); try { $locais = @((Invoke-RestMethod 'http://localhost:11434/api/tags' -TimeoutSec 5).models.name) } catch {}
+  if (-not $locais.Count) { return }  # sem Ollama ligado não pega tarefa (antes pegava e devolvia erro)
+  $r = Invoke-WebRequest "$base/tarefa?nome=$($cfg.nome)&modelos=$([uri]::EscapeDataString($locais -join ','))" -Headers $H -TimeoutSec 20 -DisableKeepAlive -UseBasicParsing
   if ($r.StatusCode -ne 200) { return }
   $t = [Text.Encoding]::UTF8.GetString($r.RawContentStream.ToArray()) | ConvertFrom-Json
-  # 13/11: a fila entrega a qualquer PC; se este PC não tem o modelo pedido, usa o seu (agente.config.json)
-  $locais = @(); try { $locais = @((Invoke-RestMethod 'http://localhost:11434/api/tags' -TimeoutSec 5).models.name) } catch {}
   $modelo = if ($t.modelo -and ($locais -contains $t.modelo)) { $t.modelo } else { $cfg.modelo }
   $ini = Get-Date
   try {

@@ -41,8 +41,12 @@ function createMaquinas({ env = process.env, driver, agora = () => new Date() } 
     return fields;
   }
 
-  async function pegarTarefa(nome) {
-    const lista = (await d().list('', 'tarefas_locais', false)).filter(t => t.fields.status === 'pendente');
+  // 13/11: 'agy' (Gemini do dono pelo Antigravity CLI) só vai para o ajudante agy-trabalhador.ps1 (?modelos=agy);
+  // os PCs com Ollama pegam todo o resto e usam o modelo que tiverem (agente.ps1 cai no do config).
+  async function pegarTarefa(nome, modelos = []) {
+    const souAgy = modelos.includes('agy');
+    const lista = (await d().list('', 'tarefas_locais', false))
+      .filter(t => t.fields.status === 'pendente' && (souAgy ? t.fields.modelo === 'agy' : t.fields.modelo !== 'agy'));
     if (!lista.length) return null;
     lista.sort((x, y) => (x.create_time < y.create_time ? -1 : 1));
     const t = lista[0];
@@ -118,7 +122,8 @@ function createMaquinas({ env = process.env, driver, agora = () => new Date() } 
     if (parts[1] === 'pulso' && m === 'POST') return json(event, 200, await pulso(nome, b));
     if (parts[1] === 'quadro' && m === 'POST') return json(event, 200, await salvarQuadro(nome, b));
     if (parts[1] === 'tarefa' && m === 'GET') {
-      const t = await pegarTarefa(nome);
+      const modelos = String(q.modelos || '').split(',').map(s => s.trim()).filter(s => /^[\w.:/-]{1,60}$/.test(s)).slice(0, 20);
+      const t = await pegarTarefa(nome, modelos);
       return t ? json(event, 200, t) : { statusCode: 204, headers: {}, body: '' };
     }
     if (parts[1] === 'resultado' && m === 'POST') {

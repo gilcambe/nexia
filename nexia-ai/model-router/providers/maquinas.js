@@ -19,7 +19,9 @@ function createMaquinasProvider({ env = process.env, maquinas, esperaMaxMs = ESP
     capabilities: () => ({ chat: true, streaming: false, tool_call: false, vision: false, structured_output: false, max_output_tokens: 8192 }),
     async chat(model, req = {}) {
       if (!ligado()) throw new ModelError(CODES.NO_API_KEY, 'maquinas: NEXIA_MAQUINA_TOKEN ou D1 não configurado', { provider: 'maquinas' });
-      const online = (await mq().listar()).filter((x) => x.online && x.ollamaOk !== false);
+      // 13/11: 'agy' (Gemini do dono) só serve se o ajudante agy estiver online; o resto, um PC com Ollama
+      const ehAgy = (x) => Array.isArray(x.modelos) && x.modelos.includes('agy');
+      const online = (await mq().listar()).filter((x) => x.online && x.ollamaOk !== false && (model === 'agy' ? ehAgy(x) : !ehAgy(x)));
       if (!online.length) throw new ModelError(CODES.UPSTREAM, 'maquinas: nenhum PC online agora', { provider: 'maquinas', model, semMaquina: true });
       const mensagens = [...(req.system ? [{ role: 'system', content: String(req.system) }] : []), ...(req.messages || []).map((x) => ({ role: x.role, content: String(x.content || '') }))];
       // Resposta longa (código) roda devagar na CPU do PC: espera proporcional, até 12 min.

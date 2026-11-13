@@ -41,3 +41,15 @@ test('MQ3. tarefa vai para uma máquina só, volta com resultado e conta no plac
   const [pc] = await m.listar();
   assert.strictEqual(pc.feitas, 1); assert.strictEqual(pc.tokens, 3);
 });
+
+test('MQ-AGY. tarefa "agy" só vai para o ajudante agy; os PCs com Ollama pegam o resto (13/11)', async () => {
+  const m = novo();
+  const tAgy = await m.criarTarefa({ modelo: 'agy', mensagens: [{ role: 'user', content: 'a' }] });
+  const tQwen = await m.criarTarefa({ modelo: 'qwen3:8b', mensagens: [{ role: 'user', content: 'b' }] });
+  const pega = (nome, modelos) => m.rotaDoPc(ev('/api/nexia/maquinas/tarefa', 'GET', null, TOKEN, { nome, ...(modelos ? { modelos } : {}) }), json);
+  const a = await pega('PC1', 'qwen3:4b');           // PC com Ollama (sem o 8b) pega a qwen, não a agy
+  assert.strictEqual(a.body.id, tQwen);
+  assert.strictEqual((await pega('PC2')).statusCode, 204, 'agente antigo (sem lista) não pega agy');
+  const b = await pega('PC1-agy', 'agy');
+  assert.strictEqual(b.body.id, tAgy);
+});
