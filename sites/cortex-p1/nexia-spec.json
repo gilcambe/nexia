@@ -1,29 +1,29 @@
 {
   "spec": {
     "kind": "system",
-    "name": "Cortex P1 Teste",
-    "tagline": "Solução de gestão financeira ágil",
-    "photo_theme": "",
-    "description": "Solução de gestão financeira ágil",
+    "name": "Cortex p1 - Sistema Integrado",
+    "tagline": "Agile task management for high-performance teams",
+    "photo_theme": "tech workspace",
+    "description": "Agile task management for high-performance teams",
     "folder": "sites/cortex-p1",
     "fonts": {
-      "heading": "Montserrat",
+      "heading": "Space Grotesk",
       "body": "Inter"
     },
     "palette": {
-      "primary": "#0a64a4",
-      "accent": "#e0a800",
+      "primary": "#0f172a",
+      "accent": "#6366f1",
       "bg": "#fbfaf7",
       "surface": "#ffffff",
       "text": "#1d2426",
       "muted": "#5d6b6e",
-      "dark": "#1b1b1b"
+      "dark": "#0b1120"
     },
     "style": "modern",
     "contact": {
       "whatsapp": "",
       "phone": "",
-      "email": "suporte@cortexp1.com.br",
+      "email": "suporte@cortex-p1.com.br",
       "address": "",
       "city": "",
       "hours": "",
@@ -44,43 +44,33 @@
     "leads_origem": "",
     "entities": [
       {
-        "key": "clientes",
-        "label": "Clientes",
-        "singular": "Cliente",
+        "key": "tarefas",
+        "label": "Tarefas Ativas",
+        "singular": "Tarefa",
         "fields": [
           {
-            "key": "nome",
-            "label": "Nome",
+            "key": "titulo",
+            "label": "Título da Tarefa",
             "type": "text",
             "options": [],
             "required": true
           },
           {
-            "key": "email",
-            "label": "E-mail",
-            "type": "email",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "telefone",
-            "label": "Telefone",
-            "type": "phone",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "endereco",
-            "label": "Endereço",
+            "key": "responsavel",
+            "label": "Responsável",
             "type": "text",
             "options": [],
             "required": true
           },
           {
-            "key": "data_cadastro",
-            "label": "Data de Cadastro",
-            "type": "date",
-            "options": [],
+            "key": "prioridade",
+            "label": "Prioridade",
+            "type": "select",
+            "options": [
+              "Alta",
+              "Média",
+              "Baixa"
+            ],
             "required": true
           },
           {
@@ -88,137 +78,139 @@
             "label": "Status",
             "type": "select",
             "options": [
-              "Ativo",
-              "Inativo"
+              "Em Andamento",
+              "Revisão",
+              "Bloqueado"
             ],
             "required": true
           },
           {
-            "key": "observacoes",
-            "label": "Observações",
-            "type": "textarea",
+            "key": "prazo",
+            "label": "Prazo de Entrega",
+            "type": "date",
             "options": [],
-            "required": false
+            "required": true
           }
         ],
         "sample": [
           {
-            "nome": "Ana Paula Silva",
-            "email": "ana.silva@example.com",
-            "telefone": "(11) 98765-4321",
-            "endereco": "Rua das Flores, 123",
-            "data_cadastro": "2026-09-01",
-            "status": "Ativo",
-            "observacoes": "Preferencial cliente VIP"
+            "titulo": "Integrar API de pagamentos",
+            "responsavel": "Paulo Andrade",
+            "prioridade": "Alta",
+            "status": "Em Andamento",
+            "prazo": "2026-12-15"
           },
           {
-            "nome": "Bruno Mendes Costa",
-            "email": "bruno.costa@example.com",
-            "telefone": "(21) 91234-5678",
-            "endereco": "Avenida Brasil, 456",
-            "data_cadastro": "2026-09-15",
-            "status": "Ativo",
-            "observacoes": ""
+            "titulo": "Refatorar módulo de login",
+            "responsavel": "Larissa Costa",
+            "prioridade": "Média",
+            "status": "Revisão",
+            "prazo": "2026-12-10"
           },
           {
-            "nome": "Carla Oliveira Santos",
-            "email": "carla.santos@example.com",
-            "telefone": "(31) 99876-5432",
-            "endereco": "Rua das Palmeiras, 789",
-            "data_cadastro": "2026-10-05",
-            "status": "Inativo",
-            "observacoes": "Cancelado em 2026-12-01"
+            "titulo": "Otimizar queries de relatório",
+            "responsavel": "Matheus Silva",
+            "prioridade": "Baixa",
+            "status": "Bloqueado",
+            "prazo": "2026-12-20"
           },
           {
-            "nome": "Davi Rodrigues Pereira",
-            "email": "davi.pereira@example.com",
-            "telefone": "(41) 98765-1234",
-            "endereco": "Alameda Central, 321",
-            "data_cadastro": "2026-10-20",
-            "status": "Ativo",
-            "observacoes": "Cliente com histórico de pagamento atrasado"
+            "titulo": "Atualizar dashboard financeiro",
+            "responsavel": "Beatriz Santos",
+            "prioridade": "Alta",
+            "status": "Em Andamento",
+            "prazo": "2026-12-12"
+          },
+          {
+            "titulo": "Corrigir bug em sincronização",
+            "responsavel": "Rafael Lima",
+            "prioridade": "Média",
+            "status": "Revisão",
+            "prazo": "2026-12-09"
           }
         ]
       },
       {
-        "key": "transacoes",
-        "label": "Transações",
-        "singular": "Transação",
+        "key": "clientes",
+        "label": "Base de Clientes",
+        "singular": "Cliente",
         "fields": [
           {
-            "key": "cliente",
-            "label": "Cliente",
+            "key": "empresa",
+            "label": "Empresa",
             "type": "text",
             "options": [],
             "required": true
           },
           {
-            "key": "data",
-            "label": "Data",
-            "type": "date",
+            "key": "contato",
+            "label": "Nome do Contato",
+            "type": "text",
             "options": [],
             "required": true
           },
           {
-            "key": "tipo",
-            "label": "Tipo",
+            "key": "email",
+            "label": "E-mail Corporativo",
+            "type": "email",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "plano",
+            "label": "Plano Atual",
             "type": "select",
             "options": [
-              "Débito",
-              "Crédito"
+              "Pro",
+              "Enterprise",
+              "Starter"
             ],
             "required": true
           },
           {
-            "key": "valor",
-            "label": "Valor",
+            "key": "mrr",
+            "label": "Valor Mensal (MRR)",
             "type": "money",
             "options": [],
             "required": true
-          },
-          {
-            "key": "descricao",
-            "label": "Descrição",
-            "type": "textarea",
-            "options": [],
-            "required": false
           }
         ],
         "sample": [
           {
-            "cliente": "Ana Paula Silva",
-            "data": "2026-10-10",
-            "tipo": "Débito",
-            "valor": "1.200,00",
-            "descricao": "Compra de equipamentos"
+            "empresa": "TechFlow Solutions",
+            "contato": "João Pereira",
+            "email": "joao.pereira@techflow.com",
+            "plano": "Enterprise",
+            "mrr": "1250"
           },
           {
-            "cliente": "Bruno Mendes Costa",
-            "data": "2026-10-12",
-            "tipo": "Crédito",
-            "valor": "3.000,00",
-            "descricao": "Pagamento de prestação"
+            "empresa": "Global Logistics",
+            "contato": "Mariana Alves",
+            "email": "mariana@globallog.com",
+            "plano": "Pro",
+            "mrr": "450"
           },
           {
-            "cliente": "Carla Oliveira Santos",
-            "data": "2026-10-15",
-            "tipo": "Débito",
-            "valor": "750,00",
-            "descricao": "Serviço de manutenção"
+            "empresa": "StartUp Care",
+            "contato": "Pedro Rocha",
+            "email": "pedro@startupcare.com",
+            "plano": "Starter",
+            "mrr": "120"
           },
           {
-            "cliente": "Davi Rodrigues Pereira",
-            "data": "2026-10-18",
-            "tipo": "Crédito",
-            "valor": "2.500,00",
-            "descricao": "Recebimento de comissão"
+            "empresa": "DataWise Consulting",
+            "contato": "Fernanda Dias",
+            "email": "fernanda@datawise.com",
+            "plano": "Pro",
+            "mrr": "680"
           }
         ]
       }
     ],
     "modules": [
-      "Clientes",
-      "Transações",
+      "Painel Inicial",
+      "Gestão de Projetos",
+      "Financeiro",
       "Relatórios"
     ]
   },
