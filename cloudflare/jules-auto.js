@@ -89,6 +89,20 @@ function decidir(issues, prs, agora, nomes, { claudeLigado = true, vezDoClaude =
   };
 }
 
+// #3258 (pedido do dono 08/11): tarefa parada em "precisa de você" ganha UMA última chance no Jules quando ele tem cota.
+// Função pura, testada. precisa = issues com precisa-de-voce; chance = issues com jules-ultima-chance; vagas = envios que sobraram.
+const PULAR_CHANCE = ['so-humano', 'vez-do-dono', 'esperando-dono', 'cortex-alerta', 'jules-ultima-chance'];
+function ultimaChance(precisa, chance, prs, agora, nomes, vagas) {
+  const prDe = (n) => (prs || []).some(p => new RegExp(`#${n}(?!\d)`).test(`${p.title || ''}
+${p.body || ''}`));
+  const mandar = (precisa || []).filter(i => !i.pull_request && !mexeEmWorkflow(i) && !nomes(i).some(n => PULAR_CHANCE.includes(n)) && !prDe(i.number))
+    .sort((a, b) => Date.parse(a.created_at || 0) - Date.parse(b.created_at || 0) || a.number - b.number)
+    .slice(0, Math.max(0, vagas)).map(i => i.number);
+  const devolver = (chance || []).filter(i => !i.pull_request && !nomes(i).includes('precisa-de-voce') && !prDe(i.number)
+    && (agora - Date.parse(i.updated_at || 0)) / 36e5 >= ESPERA_JULES_H).map(i => i.number);
+  return { mandar, devolver };
+}
+
 async function rodar(at, { env = process.env, fetchFn = fetch } = {}) {
   if (new Date(at).getUTCMinutes() % 15 >= 5) return { skipped: 'fora da batida de 15 min' };
   if (env.JULES_AUTO === '0') return { skipped: 'JULES_AUTO=0' };
@@ -171,10 +185,36 @@ async function rodar(at, { env = process.env, fetchFn = fetch } = {}) {
     out.enviados.push({ issue: n, status: r.status, ...(r.status === 200 ? { link: r.corpo.link } : { erro: r.corpo.error }) });
     if (r.status === 502) { julesSemCota = /\(429\)|Limite/.test(String(r.corpo.error)); await paraReserva(n, julesSemCota ? 'O Jules está sem cota hoje.' : 'O Jules recusou a tarefa.'); }
   }
+  // #3258: sobrou vaga e o Jules tem cota → última chance para as paradas em "precisa de você"; sem PR em 1 h, voltam.
+  out.ultimaChance = []; out.devolvidas = [];
+  if (!julesSemCota) {
+    const precisaL = await p.gh(`${REPO}/issues?state=open&labels=precisa-de-voce&per_page=50&sort=created&direction=asc`).catch(() => []);
+    const chanceL = await p.gh(`${REPO}/issues?state=open&labels=jules-ultima-chance&per_page=50`).catch(() => []);
+    const uc = ultimaChance(Array.isArray(precisaL) ? precisaL : [], Array.isArray(chanceL) ? chanceL : [], prs || [], at, nomes, MAX_ENVIOS - out.enviados.length);
+    for (const n of uc.devolver) {
+      await por(n, ['precisa-de-voce']);
+      await comentar(n, `O Jules não abriu PR em ${ESPERA_JULES_H} h nesta última chance. Voltou para "Precisa de você" (não vai de novo ao Jules sozinha).`);
+      out.devolvidas.push(n);
+    }
+    for (const n of uc.mandar) {
+      await tirar(n, 'precisa-de-voce');
+      await por(n, ['jules-ultima-chance']);
+      const r = await mandarParaJules(p, n, 'o vigia (última chance)', { env, fetchFn });
+      if (r.status === 200) {
+        await comentar(n, '🔁 Vigia: o Jules tem cota de novo, então mandei esta tarefa parada para ele tentar mais uma vez. Se não sair PR em 1 h, volta para "Precisa de você".');
+        out.ultimaChance.push(n);
+      } else {
+        await por(n, ['precisa-de-voce']); // não conseguiu mandar: volta como estava (fica com jules-ultima-chance, sem laço)
+        if (r.status === 502 && /(429)|Limite/.test(String(r.corpo.error))) break; // Jules sem cota: para na hora
+      }
+    }
+  }
+  if (!out.ultimaChance.length) delete out.ultimaChance;
+  if (!out.devolvidas.length) delete out.devolvidas;
   if (!out.enviados.length) out.enviados = 0;
   const extras = (await rodarExtras(p, env, fetchFn, nomes, mandarParaJules)).filter(x => x.enviados !== 0);
   if (extras.length) out.extras = extras;
   return out;
 }
 
-module.exports = { rodar, decidir, proximaExtra, reposExtras, ESPERA_JULES_H, MAX_ENVIOS };
+module.exports = { rodar, decidir, ultimaChance, proximaExtra, reposExtras, ESPERA_JULES_H, MAX_ENVIOS };
