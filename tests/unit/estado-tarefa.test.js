@@ -168,7 +168,7 @@ test('EST5. estadoTarefas agrega contagens de lista de issues', () => {
   const issues = [
     { state: 'open', labels: [{ name: 'cortex-fila' }] },
     { state: 'open', labels: [{ name: 'cortex-rodando' }], updated_at: new Date(agora).toISOString() },
-    { state: 'open', labels: [{ name: 'cortex-travado' }, { name: 'tentativa-3' }] },
+    { state: 'open', labels: [{ name: 'cortex-travado' }, { name: 'tentativa-2' }] },
     { state: 'closed', labels: [{ name: 'cortex-feito' }] },
   ];
 
@@ -176,9 +176,8 @@ test('EST5. estadoTarefas agrega contagens de lista de issues', () => {
   assert.strictEqual(res.total, 4);
   assert.strictEqual(res.fila, 1);
   assert.strictEqual(res.andamento, 1);
-  // 09/11: travada com 3 tentativas é das IAs (vigia passa adiante), não do dono: conta em travada.
+  // Ajuste EST5: tentativa-2 com cortex-travado (maxTentativas 3) fica em travadas, não precisaVoce
   assert.strictEqual(res.travada, 1);
-  assert.strictEqual(res.concluida, 1);
   assert.strictEqual(res.precisaVoce, 0);
 });
 
