@@ -73,14 +73,28 @@ function Arquivos {
   Invoke-RestMethod "$base/arquivos" -Method Post -Headers $H -ContentType 'application/json; charset=utf-8' -Body ([Text.Encoding]::UTF8.GetBytes($b)) -TimeoutSec 30 -DisableKeepAlive | Out-Null
   $script:arqVisto = $b
 }
+# C2-B (13/11): o agente roda como SYSTEM (tarefa no boot), e o Explorador aberto por ele não aparece na tela do dono.
+# Então entrega para quem está LOGADO: tarefa agendada de 1 vez, "só quando o usuário está conectado" (Interactive),
+# que abre o Explorador na sessão dele e é apagada logo depois. Sem ninguém logado, não abre (fica no log).
+function MostrarParaUsuario([string]$cheio) {
+  $arg = "/select,`"$cheio`""
+  if (-not [Security.Principal.WindowsIdentity]::GetCurrent().IsSystem) { Start-Process -FilePath 'explorer.exe' -ArgumentList $arg; return 'mesma sessao' }
+  $usuario = (Get-CimInstance Win32_ComputerSystem).UserName
+  if (-not $usuario) { throw 'ninguem logado no PC' }
+  $nomeTarefa = 'KERNEX Mostrar arquivo'
+  $acao = New-ScheduledTaskAction -Execute 'explorer.exe' -Argument $arg
+  $quem = New-ScheduledTaskPrincipal -UserId $usuario -LogonType Interactive -RunLevel Limited
+  Register-ScheduledTask -TaskName $nomeTarefa -Action $acao -Principal $quem -Force | Out-Null
+  try { Start-ScheduledTask -TaskName $nomeTarefa; Start-Sleep -Seconds 3 } finally { Unregister-ScheduledTask -TaskName $nomeTarefa -Confirm:$false -ErrorAction SilentlyContinue }
+  return $usuario
+}
 function Abrir {
   $r = Invoke-RestMethod "$base/abrir?nome=$($cfg.nome)" -Headers $H -TimeoutSec 20 -DisableKeepAlive
   foreach ($c in @($r.abrir)) {
     if (-not $c) { continue }
     $cheio = [IO.Path]::GetFullPath((Join-Path $raizK $c))
     if (-not $cheio.StartsWith($raizK, [StringComparison]::OrdinalIgnoreCase) -or -not (Test-Path -LiteralPath $cheio)) { Log "abrir recusado: $c"; continue }
-    Start-Process -FilePath 'explorer.exe' -ArgumentList "/select,`"$cheio`""
-    Log "abriu: $c"
+    try { $para = MostrarParaUsuario $cheio; Log "abriu: $c (para $para)" } catch { Log "abrir falhou: $c ($_)" }
   }
 }
 
