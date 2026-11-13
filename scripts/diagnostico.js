@@ -78,5 +78,22 @@ async function main() {
     const r = await createRouter({ env }).toolCall({ provider: 'kilo', model: 'auto:1' }, { messages: [{ role: 'user', content: 'Chame a ferramenta responder com ok=true.' }], tools: [tool], maxTokens: 200 });
     out(r.tool_calls.length > 0, `Kilo ${r.model}: tool_call sem chave`, r.tool_calls.length ? 'ferramenta chamada' : `sem ferramenta: ${redact(r.text).slice(0, 120)}`);
   } catch (e) { out(false, 'Kilo Gateway', redact(e && `${e.message} ${(e.details && e.details.upstream) || ''}`)); }
+
+  // 13/11: GitHub Models (grátis com o token do próprio Actions; precisa de permissions: models: read)
+  if (!env.GITHUB_MODELS_TOKEN) out(false, 'GitHub Models', 'GITHUB_MODELS_TOKEN vazio');
+  else {
+    const h = { Authorization: 'Bearer ' + env.GITHUB_MODELS_TOKEN, 'Content-Type': 'application/json' };
+    try {
+      const c = await fetch('https://models.github.ai/catalog/models', { headers: h });
+      const cat = c.ok ? await c.json() : [];
+      const tools = (Array.isArray(cat) ? cat : []).filter(m => (m.capabilities || []).includes('tool-calling'));
+      out(c.ok, 'GitHub Models: catálogo', `${c.status} · com ferramentas: ${tools.map(m => `${m.id}[${m.rate_limit_tier}]`).join(', ')}`);
+      for (const model of ['openai/gpt-4.1', 'openai/gpt-4.1-mini', 'deepseek/deepseek-v3-0324']) {
+        const r = await fetch('https://models.github.ai/inference/chat/completions', { method: 'POST', headers: h, body: JSON.stringify({ model, messages: [{ role: 'user', content: 'Responda só: ok' }], max_tokens: 5 }) });
+        const j = await r.json().catch(() => ({}));
+        out(r.ok, `GitHub Models ${model}`, `${r.status} ${r.ok ? (j.choices && j.choices[0] && j.choices[0].message.content) : redact(j.error && (j.error.message || j.error.code) || '')}`);
+      }
+    } catch (e) { out(false, 'GitHub Models', redact(e && e.message)); }
+  }
 }
 main().catch(e => { console.error('ERRO:', redact(e && e.message)); process.exit(1); });

@@ -17,6 +17,7 @@ on:
         default: ''
 
 permissions:
+  models: read # GitHub Models (GITHUB_MODELS_TOKEN = github.token)
   contents: write
   pull-requests: write
   issues: write
