@@ -171,10 +171,68 @@ async function rodar(at, { env = process.env, fetchFn = fetch } = {}) {
     out.enviados.push({ issue: n, status: r.status, ...(r.status === 200 ? { link: r.corpo.link } : { erro: r.corpo.error }) });
     if (r.status === 502) { julesSemCota = /\(429\)|Limite/.test(String(r.corpo.error)); await paraReserva(n, julesSemCota ? 'O Jules está sem cota hoje.' : 'O Jules recusou a tarefa.'); }
   }
+  // Última chance (pedido do dono 08/11): tarefas antigas em "precisa de você" tentam mais uma vez no Jules quando ele tem cota.
+  const temPrCitando = (i) => (prs || []).some(x => new RegExp(`#${i.number}(?!\\d)`).test(`${x.title || ''}\n${x.body || ''}`));
+  try {
+    const parados = await p.gh(`${REPO}/issues?state=open&labels=jules-ultima-chance&per_page=50&sort=updated&direction=asc`).catch(() => []);
+    for (const i of devolverUltimaChance(Array.isArray(parados) ? parados : [], temPrCitando, at, ESPERA_JULES_H)) {
+      await por(i.number, ['precisa-de-voce']);
+      await comentar(i.number, `🙋 Precisa de você: o Jules não abriu PR em ${ESPERA_JULES_H} h na última chance. Ligue a ajuda do Claude na Central ou feche se não for mais necessária.`);
+      (out.ultimaChanceVoltou = out.ultimaChanceVoltou || []).push(i.number);
+    }
+    const antigas = await p.gh(`${REPO}/issues?state=open&labels=precisa-de-voce&per_page=50&sort=created&direction=asc`).catch(() => []);
+    const r = await processar({
+      MAX_ENVIOS: MAX_ENVIOS - out.enviados.length, julesSemCota, ESPERA_JULES_H,
+      buscarIssues: async () => (Array.isArray(antigas) ? antigas : []).filter(i => !i.pull_request),
+      temPrComCitacao: temPrCitando,
+      mandarParaJules: (i) => mandarParaJules(p, i.number, 'o robô (última chance, tarefa parada)', { env, fetchFn }),
+      tirar: (i, l) => tirar(i.number, l), por: (i, ls) => por(i.number, ls), comentar: (i, m) => comentar(i.number, m),
+    });
+    if (r.enviados.length) out.ultimaChance = r.enviados;
+  } catch (e) { out.ultimaChanceErro = String(e && e.message || e); }
   if (!out.enviados.length) out.enviados = 0;
-  const extras = (await rodarExtras(p, env, fetchFn, nomes, mandarParaJules)).filter(x => x.enviados !== 0);
+  const extras =(await rodarExtras(p, env, fetchFn, nomes, mandarParaJules)).filter(x => x.enviados !== 0);
   if (extras.length) out.extras = extras;
   return out;
 }
 
-module.exports = { rodar, decidir, proximaExtra, reposExtras, ESPERA_JULES_H, MAX_ENVIOS };
+const BARRAM_ULTIMA_CHANCE = ['so-humano', 'vez-do-dono', 'esperando-dono', 'cortex-alerta', 'jules-ultima-chance'];
+const nomesDe = (i) => (i.labels || []).map(l => l.name || l);
+let mocks = {};
+function __setMocks(m) { mocks = m || {}; }
+
+// Última chance: devolve a "precisa de você" quem ficou ESPERA_JULES_H sem PR (mantém jules-ultima-chance: nunca entra em laço).
+function devolverUltimaChance(issues, temPr, agora, espera = ESPERA_JULES_H) {
+  return issues.filter(i => {
+    const n = nomesDe(i);
+    return n.includes('jules-ultima-chance') && !n.includes('precisa-de-voce') && !temPr(i)
+      && (new Date(agora) - Date.parse(i.updated_at || 0)) / 36e5 >= espera;
+  });
+}
+
+// Manda ao Jules as issues "precisa-de-voce" mais antigas, até `MAX_ENVIOS`, só se o Jules tiver cota.
+async function processar(ctx) {
+  const max = ctx.MAX_ENVIOS ?? MAX_ENVIOS;
+  const out = { enviados: [] };
+  if (ctx.julesSemCota !== false || max <= 0) return out;
+  const mandar = mocks.mandarParaJules || ctx.mandarParaJules;
+  const comentar = mocks.comentar || ctx.comentar || (async () => null);
+  const tirar = mocks.tirar || ctx.tirar || (async () => null);
+  const por = mocks.por || ctx.por || (async () => null);
+  const lista = [...await ctx.buscarIssues()]
+    .filter(i => nomesDe(i).includes('precisa-de-voce') && !mexeEmWorkflow(i)
+      && !nomesDe(i).some(n => BARRAM_ULTIMA_CHANCE.includes(n)) && !ctx.temPrComCitacao(i))
+    .sort((a, b) => Date.parse(a.created_at) - Date.parse(b.created_at));
+  for (const i of lista) {
+    if (out.enviados.length >= max) break;
+    await tirar(i, 'precisa-de-voce');
+    await por(i, ['jules-ultima-chance']);
+    const r = await mandar(i);
+    out.enviados.push(i.number);
+    await comentar(i, `🔁 Vigia: o Jules tem cota de novo, então mandei esta tarefa parada para ele tentar mais uma vez. Se não sair PR em ${ctx.ESPERA_JULES_H ?? ESPERA_JULES_H} h, volta para 'Precisa de você'.`);
+    if (r && r.status === 502 && /\(429\)|Limite/.test(String(r.corpo && r.corpo.error))) break;
+  }
+  return out;
+}
+
+module.exports = { rodar, decidir, proximaExtra, reposExtras, processar, devolverUltimaChance, __setMocks, ESPERA_JULES_H, MAX_ENVIOS };
