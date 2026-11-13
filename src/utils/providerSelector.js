@@ -20,7 +20,7 @@ function selecionarProvider(tamanho, options = {}) {
     }
 
     // 2. Provedor Jules nunca é o primeiro (ou filtrado se houver alternativas)
-    if (idStr.toLowerCase().includes('jules') && providers.length > 1 && providers[0] === p) {
+    if (idStr.toLowerCase().includes('jules') && providers.length > 1) {
       return false;
     }
 
