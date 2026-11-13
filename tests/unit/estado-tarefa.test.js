@@ -110,7 +110,7 @@ test('EST3. precisaVoce (tentativa-3 + cortex-travado e labels de humano)', () =
   // 09/11 (dono): IAs que desistiram NÃO viram "precisa de você" (o dono é leigo); vigia passa para Jules/Claude.
   assert.strictEqual(r1.precisaVoce, false);
 
-  // Com menos tentativas, mas com label vez-do-dono
+  // Com label vez-do-dono (o dono é acionado independente do número de tentativas)
   const r2 = estadoTarefa({
     state: 'open',
     labels: [{ name: 'cortex-fila' }, { name: 'cortex-travado' }, { name: 'tentativa-1' }, { name: 'vez-do-dono' }],
