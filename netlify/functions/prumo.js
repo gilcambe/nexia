@@ -256,7 +256,8 @@ function conferirValor(it) {
 /** Arruma o que a IA devolveu (tipo, valor, datas) para não descartar item bom por formato. */
 function normalizarLido(b, dataPrint) {
   if (!b || typeof b !== 'object') return b;
-  // #3534: data do item. Se o print não trouxer data, vale a data de hoje (o servidor usa deps.agora()).
+  // #3534: data do item. Usa a data "Atualizado em DD/MM/AAAA" escrita no print; sem ela, fica vazia
+// e o servidor (lerPrint) aplica a data de hoje (deps.agora()).
   const bruto = String(b.tipo || '').trim();
   const tk = String(b.ticker || '').toUpperCase();
   let tipo = TIPOS.includes(bruto) ? bruto : ((APELIDO_TIPO.find(([re]) => re.test(`${bruto} ${b.nome || ''}`)) || [])[1] || 'outro');
@@ -286,6 +287,7 @@ function normalizarLido(b, dataPrint) {
     }
   }
   if (!dataValor || !DATA.test(dataValor)) dataValor = ''; // vazio = o servidor usa a data de hoje (deps.agora())
+  void 0;
 
   // Ajustar a classificação de tipo: tickers terminados em 11 pertencentes ao grupo FIIs devem ser marcados como "fiis", não "renda_fixa"; reconhecer lista de ETFs conhecida e atribuir tipo "etf".
   if (tk) {
