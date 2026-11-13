@@ -29,6 +29,21 @@ function formatoDoHorario(d = new Date()) {
 
 const lerJson = (f, padrao) => { try { return JSON.parse(fs.readFileSync(f, 'utf8')); } catch { return padrao; } };
 const lerPasta = p => (fs.existsSync(p) ? fs.readdirSync(p).filter(f => f.endsWith('.json')).sort() : []);
+/**
+ * Perfil (C2-F5, 13/11): "kernex" posta a própria KERNEX nas redes DELA (Página FB + IG KERNEX).
+ * Lê clientes/fila de divulga/perfis/<perfil>/ e usa SÓ os segredos KERNEX_META_*: os DIVULGA_META_* (Body Coach)
+ * são apagados do ambiente desta rodada, para nunca postar a KERNEX na conta do Body Coach (nem o contrário).
+ */
+const PERFIS = { kernex: 'KERNEX_' };
+function envDoPerfil(env, perfil) {
+  if (!perfil) return env;
+  const pre = PERFIS[perfil];
+  if (!pre) throw new Error(`Perfil desconhecido: ${perfil}`);
+  const limpo = Object.fromEntries(Object.entries(env).filter(([k]) => !/^(DIVULGA_(META|THREADS|PINTEREST|BLUESKY)_|META_)/.test(k)));
+  for (const [k, v] of Object.entries(env)) if (k.startsWith(pre) && /^(META|THREADS|PINTEREST|BLUESKY)_/.test(k.slice(pre.length))) limpo['DIVULGA_' + k.slice(pre.length)] = v;
+  return limpo;
+}
+const raizDoPerfil = (perfil) => (perfil ? path.join(RAIZ, 'perfis', perfil) : RAIZ);
 const urlImagem = i => (/^https:\/\//.test(i) ? i : IMAGENS + i);
 
 function carregar(raiz = RAIZ) {
@@ -116,9 +131,9 @@ async function proximo({ clientes, fila }, estado, ctx) {
   return { ...montar({ id: null, cliente: c, legenda, imagem: urlImagem(c.imagens[volta % c.imagens.length]) }), rodizio: true };
 }
 
-async function rodar({ acao = 'rodar', dados, env: envBruto = process.env, fetchImpl = fetch, log = console.log, raiz = RAIZ, producao = null, agora } = {}) {
+async function rodar({ acao = 'rodar', dados, env: envBruto = process.env, fetchImpl = fetch, log = console.log, perfil = null, raiz = raizDoPerfil(perfil), producao = null, agora } = {}) {
   // Segredo salvo pelo PowerShell chega com quebra de linha no fim ("Cannot parse access token"): limpa antes de usar.
-  const env = Object.fromEntries(Object.entries(envBruto).map(([k, v]) => [k, typeof v === 'string' ? v.replace(/[\u0000\uFEFF]/g, '').trim() : v]));
+  const env = Object.fromEntries(Object.entries(envDoPerfil(envBruto, perfil)).map(([k, v]) => [k, typeof v === 'string' ? v.replace(/[\u0000\uFEFF]/g, '').trim() : v]));
   const arqEstado = dados && path.join(dados, 'divulga-estado.json');
   const estado = (arqEstado && lerJson(arqEstado, null)) || { rodizio: 0, feitos: [], historico: [] };
   const ctx = { env, fetchImpl, log, producao, agora };
@@ -189,13 +204,14 @@ async function rodar({ acao = 'rodar', dados, env: envBruto = process.env, fetch
   return { postou, resultados, post };
 }
 
-module.exports = { rodar, carregar, proximo, montar, semBio, clienteDaVez, postProduzido, formatoDoHorario, dataBrasilia };
+module.exports = { envDoPerfil, raizDoPerfil, rodar, carregar, proximo, montar, semBio, clienteDaVez, postProduzido, formatoDoHorario, dataBrasilia };
 
 if (require.main === module) {
   const args = process.argv.slice(2);
   const i = args.indexOf('--dados');
   const p = args.indexOf('--producao');
-  rodar({ acao: args[0] || 'ensaio', dados: i >= 0 ? args[i + 1] : null, producao: p >= 0 ? args[p + 1] : null })
+  const pf = args.indexOf('--perfil');
+  rodar({ acao: args[0] || 'ensaio', dados: i >= 0 ? args[i + 1] : null, producao: p >= 0 ? args[p + 1] : null, perfil: pf >= 0 ? args[pf + 1] : null })
     .then(r => { if (r.resultados && !r.postou) process.exitCode = 1; })
     .catch(e => { console.error(e.message); process.exitCode = 1; });
 }

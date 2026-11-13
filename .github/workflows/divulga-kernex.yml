@@ -1,0 +1,59 @@
+# KERNEX Divulga (C2-F5, 13/11): posta a PRÓPRIA KERNEX nas redes da KERNEX (Página do Facebook + Instagram), 3x por dia
+# (7h45, 12h45 e 19h45 de Brasília, 30 min depois do robô do Body Coach). Mesmo robô (divulga/robo.js --perfil kernex),
+# com os posts em divulga/perfis/kernex e SÓ os segredos KERNEX_META_*: os DIVULGA_META_* do Body Coach nem entram aqui.
+# Sem os segredos KERNEX_META_*: só mostra o texto no log e não publica nada. Estado na branch "divulga-kernex-dados".
+name: Divulga KERNEX
+
+on:
+  schedule:
+    - cron: '45 10,15,22 * * *'
+  workflow_dispatch:
+    inputs:
+      acao:
+        description: 'O que fazer'
+        type: choice
+        options: [rodar, ensaio]
+        default: ensaio
+
+permissions:
+  contents: write
+
+concurrency:
+  group: divulga-kernex
+  cancel-in-progress: false
+
+jobs:
+  divulga:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '20'
+      - name: Abrir os dados
+        run: |
+          git config user.name "KERNEX Divulga"
+          git config user.email "divulga-kernex@nexia.invalid"
+          if git fetch -q --depth 1 origin divulga-kernex-dados; then
+            git worktree add -q -B divulga-kernex-dados dados FETCH_HEAD
+          else
+            git worktree add -q --orphan -b divulga-kernex-dados dados
+          fi
+      - name: Postar
+        env:
+          ACAO: ${{ github.event_name == 'schedule' && 'rodar' || inputs.acao }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          KERNEX_META_PAGE_ID: ${{ secrets.KERNEX_META_PAGE_ID }}
+          KERNEX_META_PAGE_TOKEN: ${{ secrets.KERNEX_META_PAGE_TOKEN }}
+          KERNEX_META_IG_USER_ID: ${{ secrets.KERNEX_META_IG_USER_ID }}
+        run: node divulga/robo.js "$ACAO" --perfil kernex --dados dados
+      - name: Guardar os dados
+        if: always()
+        run: |
+          cd dados
+          git add -A
+          git diff --cached --quiet && exit 0
+          git commit -qm "dados do Divulga KERNEX"
+          git push -q origin divulga-kernex-dados
