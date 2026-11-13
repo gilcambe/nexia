@@ -25,6 +25,8 @@ const LICOES = Object.freeze([
   'Nunca planejar arquivo em pasta que o produto não usa; ler a árvore antes.',
 ]);
 
+  'Nunca planejar arquivo em pasta que o produto não usa; ler a árvore antes.',
+
 // Fim da lista: acrescente novas lições acima desta linha, uma por linha e entre aspas.
 // A checagem de que a lição nova existe mora no teste (tests/unit/cortex-licoes.test.js): o require nunca lança erro.
 
