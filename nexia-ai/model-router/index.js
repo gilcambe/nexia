@@ -53,7 +53,7 @@ function createRouter(o = {}) {
     } catch { /* sem conta, segue */ } 
   };
   
-  const { selecionarProvedor } = require('../../src/utils/providerSelector');
+  const { selecionarProvider } = require('../../src/utils/providerSelector');
   const { tetosConfigurados } = require('../../src/config/limits');
   const tokensDe = out => (out && out.usage && (out.usage.total_tokens || ((out.usage.input_tokens || 0) + (out.usage.output_tokens || 0)))) || (out && out.text ? Math.ceil(out.text.length / 4) : 0);
   const e429 = e => (e && e.details && e.details.status === 429) ? 1 : 0;
@@ -215,20 +215,16 @@ function createRouter(o = {}) {
 
     let selecionados = descsDedupped;
     const placar = (() => { try { return require('./cota').getPlacar(); } catch { return null; } })();
-    if (selecionarProvedor) {
+    if (selecionarProvider) {
       try {
-        selecionados = selecionarProvedor(size, {
+        selecionados = selecionarProvider(size, {
           providers: descsDedupped,
           quotas: quotasMap,
           placar,
           env
         });
       } catch {
-        try {
-          selecionados = selecionarProvedor(dedupe(descs), req, { obterCotaDisponivel, disjuntorAberto, tetosConfigurados });
-        } catch {
-          selecionados = descsDedupped;
-        }
+        selecionados = descsDedupped;
       }
     }
 
@@ -310,11 +306,19 @@ function createRouter(o = {}) {
       }
     }
 
-    for (let i = 0; i < dedupped.length; i++) {
+    const descsForStream = dedupe(descs).filter(d => {
+      const id = d.provider;
+      if (disjuntorAberto && disjuntorAberto(id)) return false;
+      const cota = obterCotaDisponivel ? obterCotaDisponivel(id) : null;
+      if (cota !== null && cota <= 0) return false;
+      return true;
+    });
+
+    for (let i = 0; i < descsForStream.length; i++) {
       if (Date.now() - startTime >= totalTimeoutMs) {
         break;
       }
-      const d = dedupped[i];
+      const d = descsForStream[i];
 
       const placar = getPlacar();
       if (placar && placar.bloqueado(d) && dedupped.length > 1) {
@@ -395,7 +399,7 @@ function createRouter(o = {}) {
 
       if (currentStreamDone) {
         if (cacheavel(req) && accumulatedText) {
-          const d = dedupped[i] || descs[0];
+          const d = descsForStream[i] || descsForStream[0];
           const k = `${d.provider}|${d.model}|${chave(req)}`;
           const generalK = `gen|${chave(req)}`;
           const cacheVal = { text: accumulatedText, provider: d.provider, model: d.model, usage: { total_tokens: Math.ceil(accumulatedText.length / 4) } };
