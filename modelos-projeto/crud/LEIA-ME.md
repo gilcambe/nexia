@@ -1,3 +1,4 @@
-Modelo CRUD - versão 1.0
-Este modelo inclui variáveis configuráveis no modelo.json.
-Instale, abra index.html, configure as variáveis no modelo.json, a API é chamada em /api/dados e os dados ficam em localStorage caso falhe.
+# Modelo CRUD
+
+1. Copie a pasta `crud` para o projeto, abra `index.html` no navegador e configure as variáveis em `modelo.json`.
+2. A API é chamada em `/api/dados`; se ela falhar, os dados ficam salvos em `localStorage`.
