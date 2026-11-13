@@ -29,7 +29,7 @@ function validarItemCarteira(o) {
   if (!Number.isFinite(valor) || valor < 0) return erro('O valor precisa ser um número igual ou maior que zero.');
   const tipo = o.tipo || 'outro';
   if (!TIPOS.includes(tipo)) return erro('Tipo de investimento inválido.');
-  const data_valor = texto(o.data_valor, 10) || new Date().toISOString().slice(0, 10);
+  const data_valor = texto(o.data_valor, 10) || deps.agora().toISOString().slice(0, 10);
   if (!DATA.test(data_valor)) return erro('A data do valor precisa estar no formato AAAA-MM-DD.');
   const vencimento = texto(o.vencimento, 10);
   if (vencimento && !DATA.test(vencimento)) return erro('O vencimento precisa estar no formato AAAA-MM-DD.');
@@ -254,6 +254,7 @@ function conferirValor(it) {
 /** Arruma o que a IA devolveu (tipo, valor, datas) para não descartar item bom por formato. */
 function normalizarLido(b, dataPrint) {
   if (!b || typeof b !== 'object') return b;
+  // #3534: data do item. Se o print não trouxer data, vale a data de hoje (o servidor usa deps.agora()).
   const bruto = String(b.tipo || '').trim();
   const tk = String(b.ticker || '').toUpperCase();
   let tipo = TIPOS.includes(bruto) ? bruto : ((APELIDO_TIPO.find(([re]) => re.test(`${bruto} ${b.nome || ''}`)) || [])[1] || 'outro');
@@ -282,9 +283,7 @@ function normalizarLido(b, dataPrint) {
       dataValor = `${ano}-${mAtualizado[2].padStart(2, '0')}-${mAtualizado[1].padStart(2, '0')}`;
     }
   }
-  if (!dataValor || !DATA.test(dataValor)) {
-    dataValor = new Date().toISOString().slice(0, 10);
-  }
+  if (!dataValor || !DATA.test(dataValor)) dataValor = '';
 
   // Ajustar a classificação de tipo: tickers terminados em 11 pertencentes ao grupo FIIs devem ser marcados como "fiis", não "renda_fixa"; reconhecer lista de ETFs conhecida e atribuir tipo "etf".
   if (tk) {
@@ -297,6 +296,7 @@ function normalizarLido(b, dataPrint) {
     }
   }
 
+  if (!tipo) tipo = 'outro';
   const { banco_escrito: _bancoEscrito, instituicao: _instituicao, ...resto } = b;
   const camposBanco = { banco };
   return conferirValor({ ...resto, ...camposBanco, nome, tipo, valor: Number.isFinite(val) ? Math.abs(val) : b.valor,
@@ -363,6 +363,9 @@ async function lerPrint(imagens, deps) {
     conferencia.push({ ...conferir(valorLido(lido.total_print), limpos.reduce((a, x) => a + x.valor, 0)), itens: limpos.length });
   }
   if (!algum && falhas.length) console.warn('[prumo] ler_print falhou:', falhas.slice(0, 6).join(' | '));
+  // #3534: sem data no print, vale a data de hoje.
+  const hoje = deps.agora().toISOString().slice(0, 10);
+  for (const it of itens) if (!DATA.test(String(it.data_valor || ''))) it.data_valor = hoje;
   return algum ? { itens, descartados, conferencia } : null;
 }
 // Workers AI pelo binding "AI" do Worker (grátis). Modelos que aceitam imagem no formato de chat.
