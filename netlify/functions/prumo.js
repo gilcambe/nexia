@@ -260,6 +260,8 @@ function normalizarLido(b, dataPrint) {
   // e o servidor (lerPrint) aplica a data de hoje (deps.agora()).
   const bruto = String(b.tipo || '').trim();
   const tk = String(b.ticker || '').toUpperCase();
+  const bruto = String(b.tipo || '').trim();
+  const tk = String(b.ticker || '').toUpperCase();
   let tipo = TIPOS.includes(bruto) ? bruto : ((APELIDO_TIPO.find(([re]) => re.test(`${bruto} ${b.nome || ''}`)) || [])[1] || 'outro');
   if (/etf/i.test(bruto)) tipo = 'etf';
   if (tk) tipo = tipoPeloTicker(tk, tipo);
