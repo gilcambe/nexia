@@ -1,7 +1,4 @@
 # Modelo CRUD
 
-1. Instale o modelo na pasta do projeto (basta copiar a pasta `crud`).
-2. Abra `index.html` no navegador.
-3. Configure as variáveis em `modelo.json`.
-4. A API é chamada em `/api/dados`.
-5. Se a API falhar, os dados ficam salvos em `localStorage`.
+1. Copie a pasta `crud` para o projeto, abra `index.html` no navegador e configure as variáveis em `modelo.json`.
+2. A API é chamada em `/api/dados`; se ela falhar, os dados ficam salvos em `localStorage`.
