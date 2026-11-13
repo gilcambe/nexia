@@ -243,7 +243,8 @@ test('EST8. pedidos-gh resumo() traz os campos de estadoTarefa sem apagar situac
   assert.strictEqual(r.ia, 'Cortex');
   assert.strictEqual(r.precisaVoce, false);
   assert.strictEqual(r.ultimaAtividade, item.updated_at);
-  assert.strictEqual(typeof r.motivo, 'string');
+  // #3128: motivo vem de motivoDe(issue) de ./motivos.js ("Fazendo agora" para cortex-rodando)
+  assert.strictEqual(r.motivo, 'Fazendo agora');
 });
 
 test('EST-N1. issue fechada pelo PR (state_reason completed) conta como concluída; not_planned continua falhou', () => {
