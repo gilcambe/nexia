@@ -510,6 +510,10 @@ async function dividirComIA(tarefa, router, lista) {
 // Só devolve null quando o pedido não cita nem 2 arquivos — aí ele segue inteiro, como antes.
 // M6 (13/11): o divisor também consulta a Biblioteca (modelo clonável, módulos e código pronto da web) antes de
 // quebrar o pedido; sem isso as partes mandavam reescrever do zero o que já existia. '' quando não é sistema novo.
+// #3564: confere os caminhos do plano contra a árvore real (a fila roda com o checkout da develop na raiz).
+function caminhosRecusados(partes, tarefa, existe = (c) => require('fs').existsSync(require('path').join(process.cwd(), c))) {
+  try { return require('../nexia-ai/orchestrator/produtos').caminhosRecusados(partes, tarefa, existe); } catch { return []; }
+}
 function bibliotecaDoPedido(tarefa) {
   try { const b = require('../nexia-ai/fabrica/contexto').contextoBiblioteca(String(tarefa || '')); return b ? `\n\n${b.slice(0, 4000)}` : ''; } catch { return ''; }
 }
@@ -520,7 +524,9 @@ async function planejarComIA(tarefa, router, lista, tamanhos = {}) {
       if (!router.capabilities(d).available) continue;
       const out = await Promise.race([router.chat(d, { system: plano.SISTEMA_PLANO, messages: [{ role: 'user', content: tarefa.slice(0, 12000) + contexto }], maxTokens: 4000, cache: true }), new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 40000))]);
       const m = out && out.text && /\[[\s\S]*\]/.exec(out.text);
-      const partes = m && plano.validarPlano(JSON.parse(m[0]));
+      let partes = m && plano.validarPlano(JSON.parse(m[0]));
+      // #3564: plano que manda criar arquivo em pasta que o produto não usa é recusado (tenta o próximo modelo).
+      if (partes && caminhosRecusados(partes, tarefa).length) partes = null;
       if (partes) return { partes, origem: `plano da IA (${d.model || d.provider || 'grátis'})` };
     } catch { /* tenta o próximo modelo */ }
   }
@@ -986,5 +992,5 @@ async function main() {
   }
 }
 
-module.exports = { bibliotecaDoPedido, comFecha, juntarTravadas, tentaContrato, FORA_DO_CONTRATO, vaiParaContrato, ultimoRotuloEm, travadasPeloCofre, entregaComprovada, MAX_RECUPERAR_POR_CICLO, FORA_DA_RECUPERACAO, soPipelineModelo, assinaturaDoSmoke, errosDeAmbiente, mexeEmWorkflow, planejarComIA, revisarParte, dadosDoPlanejador, corrigirCiDosPrs, reservaVolta, reservasQueVoltam, travouAntesDoConserto, devePedirReserva, entregouAlgo, depoisSemEntrega, MAX_SEM_ENTREGA, rascunhosParados, candidatosRascunho, MSG_RASCUNHO_PARADO, tokenDaApp, TENTATIVAS_ATE_DIVIDIR, caminhosDoPedido, sondarCota, decidir, precisaTesteFinal, precisaDividir, paisConcluidos, dividirComIA, MAX_TENTATIVAS, validarCortexFeito, reabrirFeitosInvalidos };
+module.exports = { caminhosRecusados, bibliotecaDoPedido, comFecha, juntarTravadas, tentaContrato, FORA_DO_CONTRATO, vaiParaContrato, ultimoRotuloEm, travadasPeloCofre, entregaComprovada, MAX_RECUPERAR_POR_CICLO, FORA_DA_RECUPERACAO, soPipelineModelo, assinaturaDoSmoke, errosDeAmbiente, mexeEmWorkflow, planejarComIA, revisarParte, dadosDoPlanejador, corrigirCiDosPrs, reservaVolta, reservasQueVoltam, travouAntesDoConserto, devePedirReserva, entregouAlgo, depoisSemEntrega, MAX_SEM_ENTREGA, rascunhosParados, candidatosRascunho, MSG_RASCUNHO_PARADO, tokenDaApp, TENTATIVAS_ATE_DIVIDIR, caminhosDoPedido, sondarCota, decidir, precisaTesteFinal, precisaDividir, paisConcluidos, dividirComIA, MAX_TENTATIVAS, validarCortexFeito, reabrirFeitosInvalidos };
 if (require.main === module) main().catch(e => { console.error(e.message); process.exit(1); });
