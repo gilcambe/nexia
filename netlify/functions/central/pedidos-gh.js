@@ -55,6 +55,8 @@ function criarPedidos(env = process.env, fetchFn = fetch) {
     else if (estado === 'feitos' || estado === 'concluidas' || estado === 'concluida') filtro += ' is:closed';
     else if (estado === 'andamento') filtro += ' is:open';
     else if (estado === 'precisa') filtro += ' is:open';
+    else if (estado === 'aguardando-ia') filtro += ' is:open';
+    else if (estado === 'fila') filtro += ' is:open';
     else if (estado === 'andamento|travadas|concluidas|todas|precisa') filtro += ' is:open';
     else if (estado === 'meus') filtro += ' in:body "Pedido de"';
 
