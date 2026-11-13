@@ -8,7 +8,7 @@ export const TELAS = [
   { id: "fabrica", nome: "Fábrica", icone: "🏭", serve: "Criar um sistema novo ou clonar um projeto usando o que já temos pronto." },
   { id: "store", nome: "Kernex Store", icone: "🛍️", serve: "Pôr ou tirar um módulo pronto (agenda, galeria, vendas…) no site de um cliente, sem código." },
   { id: "vendas", nome: "Vendas", icone: "💰", serve: "Achar clientes sem site, chamar no WhatsApp com 1 toque e ver o funil e os pedidos do site." },
-  { id: "empresa", nome: "Empresa", icone: "🏢", serve: "Seus funcionários de IA por área, o mural deles e o que precisa da sua aprovação." },
+  { id: "empresa", nome: "Visão da empresa", icone: "🏢", serve: "Toda a KERNEX: números de clientes, produtos e plataformas, funcionários de IA por área, mural e o que precisa do seu OK." },
   { id: "ferramentas", nome: "Ferramentas", icone: "🧰", serve: "Consultor ? para tirar dúvidas, editor de imagem para posts e atalhos de e-mail." },
   { id: "maquinas", nome: "Máquinas", icone: "🖥️", serve: "PC 1 e PC 2: ligados, ocupados e o que estão fazendo." },
   { id: "ia", nome: "IA & Cortex", icone: "🤖", serve: "O que cada IA está fazendo agora e quanto de cota resta." },
@@ -25,7 +25,7 @@ export const TELAS = [
   { id: "falta", nome: "O que falta", icone: "📋", serve: "Andamento de tudo: o que já foi feito e o que falta em cada projeto." },
   { id: "cortex", nome: "Cortex", icone: "🧠", serve: "Tarefas do Cortex, pedidos e o que cada IA está fazendo." },
   { id: "entregas", nome: "Entregas", icone: "📦", serve: "Código entregue, testes e o que está esperando aprovação." },
-  { id: "tenants", nome: "Tenants e produtos", icone: "🏷️", serve: "Clientes, produtos e links de cada um." },
+  { id: "tenants", nome: "Clientes, produtos e plataformas", icone: "🏷️", serve: "Separados: clientes (empresas que nos contratam), produtos KERNEX (serviços) e plataformas próprias (vendidas por uso)." },
   { id: "dinheiro", nome: "Dinheiro", icone: "💳", serve: "Assinaturas, quem paga, quem está em teste e o Pix." },
   { id: "divulgar", nome: "Divulgar", icone: "📣", serve: "Posts e ofertas: o que saiu e o que vai sair." },
   { id: "iainfra", nome: "IAs, chaves e robôs", icone: "🔑", serve: "Conectar IAs, testar chaves, cotas, robôs e infraestrutura (GitHub, Cloudflare, banco)." },
@@ -37,10 +37,12 @@ export type TelaId = (typeof TELAS)[number]["id"];
 export const MENU: readonly { id: string; nome: string; icone: string; telas: readonly TelaId[] }[] = [
   { id: "conversar", nome: "Conversar", icone: "enviar", telas: ["conversar", "pedir", "cortex", "tarefas"] },
   { id: "projetos", nome: "Projetos", icone: "pasta", telas: ["projetos", "falta", "fabrica", "store", "entregas", "publicacoes"] },
-  { id: "vendas", nome: "Clientes & Vendas", icone: "grafico", telas: ["vendas", "clientes", "tenants", "dinheiro", "empresa"] },
+  { id: "vendas", nome: "Clientes & Vendas", icone: "grafico", telas: ["vendas", "tenants", "clientes"] },
+  // Pedido do dono (13/11): Empresa é tópico principal — controle de toda a KERNEX num lugar só.
+  { id: "empresa", nome: "Empresa", icone: "casa", telas: ["empresa", "dinheiro", "relatorios"] },
   { id: "marketing", nome: "Marketing", icone: "foguete", telas: ["divulgar", "ferramentas"] },
   { id: "arquivos", nome: "Arquivos", icone: "arquivo", telas: ["arquivos"] },
-  { id: "sistema", nome: "Sistema", icone: "servidor", telas: ["servicos", "maquinas", "ia", "iainfra", "homologacao", "cofre", "relatorios"] },
+  { id: "sistema", nome: "Sistema", icone: "servidor", telas: ["servicos", "maquinas", "ia", "iainfra", "homologacao", "cofre"] },
   { id: "ajuda", nome: "Ajuda", icone: "ia", telas: ["ajuda"] },
   { id: "config", nome: "Configurações", icone: "engrenagem", telas: ["config"] },
 ];

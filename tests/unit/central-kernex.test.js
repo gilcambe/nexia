@@ -22,12 +22,19 @@ test('CENTRAL-CLIENTES: lista tem CES, Viajante Pro, Splash, Adriano e Arqia sem
 });
 
 test('CENTRAL-TIPO: produtos e clientes separados por tipo com contadores na interface (#1947)', () => {
-  assert.ok(PRODUTOS.every((p) => p.tipo === 'produto' || p.tipo === 'cliente'));
+  assert.ok(PRODUTOS.every((p) => ['produto', 'cliente', 'plataforma', 'interno'].includes(p.tipo)));
+  // Separação do dono (13/11): Finance, Academy e Body Coach são plataformas; Bezsan, Viajante Pro e Studio Lima são clientes.
+  const tipo = (id) => PRODUTOS.find((p) => p.id === id).tipo;
+  assert.deepEqual(['finance', 'academy', 'body-coach'].map(tipo), ['plataforma', 'plataforma', 'plataforma']);
+  assert.deepEqual(['bezsan', 'vp', 'studiolima'].map(tipo), ['cliente', 'cliente', 'cliente']);
+  assert.deepEqual(['achados', 'cortex', 'divulga'].map(tipo), ['produto', 'produto', 'produto']);
   const produtosTsx = fs.readFileSync(path.join(raiz, 'src/pages/central/Produtos.tsx'), 'utf8');
   assert.match(produtosTsx, /Nossos produtos/);
   assert.match(produtosTsx, /Clientes \(tenants\)/);
   assert.match(produtosTsx, /bloco-nossos-produtos/);
   assert.match(produtosTsx, /bloco-clientes-tenants/);
+  assert.match(produtosTsx, /bloco-plataformas/);
+  assert.match(produtosTsx, /Plataformas próprias/);
 });
 
 test('CENTRAL-KERNEX: nenhum texto entre aspas exibido nas telas da Central diz NEXIA', () => {
