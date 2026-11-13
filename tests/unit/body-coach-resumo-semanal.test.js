@@ -7,7 +7,7 @@ const ts = require('typescript');
 const SRC = path.join(__dirname, '..', '..', 'apps', 'body-coach', 'src');
 const ler = (p) => fs.readFileSync(path.join(SRC, p), 'utf8');
 
-test('resumo semanal: cartão 1080×1350 com @nexiabodycoach e botão no relatório', async () => {
+test('resumo semanal: cartão 1080×1350 com @kernex_bodycoach e botão no relatório', async () => {
   // sem a biblioteca do QR: o teste desliga o selo
   const fonte = ler('lib/ferramentas/cartao.ts').replace(/^import qrcode.*$/m, 'const qrcode = () => ({});');
   const out = ts.transpileModule(fonte, { compilerOptions: { module: ts.ModuleKind.ES2022, target: 'ES2022' } }).outputText;
@@ -21,7 +21,7 @@ test('resumo semanal: cartão 1080×1350 com @nexiabodycoach e botão no relató
   m.desenharResumoSemanal(canvas, { titulo: 'Minha semana', data: new Date(2026, 9, 19), itens: [{ rotulo: 'check-ins', valor: '5/7' }], nome: 'Gil', selo: false });
   assert.equal(canvas.width, 1080);
   assert.equal(canvas.height, 1350);
-  assert.ok(textos.includes('@nexiabodycoach'));
+  assert.ok(textos.includes('@kernex_bodycoach'));
   assert.ok(textos.includes('5/7'));
   const wr = ler('pages/home/components/WeeklyReport.tsx');
   assert.match(wr, /formato="feed"/);

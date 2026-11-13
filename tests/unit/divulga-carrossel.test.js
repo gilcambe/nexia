@@ -46,7 +46,7 @@ test('DC1. cada um dos 8 modelos escapa o título, usa o @ do cliente e não tem
   // Logo externo é ignorado (só SVG/data embutido); sem logo, vai a inicial.
   assert.doesNotMatch(telaModelo('capa', { ...cliente, logo: 'https://site.com/logo.png' }, { titulo: 'x' }), /site\.com/);
   // A tela antiga continua igual (Body Coach).
-  assert.match(carrossel({ nome: 'NEXIA Body Coach', assuntos: [] })[0], /@nexiabodycoach/);
+  assert.match(carrossel({ nome: 'NEXIA Body Coach', assuntos: [] })[0], /@kernex_bodycoach/);
 });
 
 test('DC2. contraste(): preto x branco 21, mesma cor 1, cinza claro em branco reprova', () => {
