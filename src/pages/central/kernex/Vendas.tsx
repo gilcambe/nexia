@@ -50,7 +50,7 @@ export default function Vendas() {
         <Kpi cor="rx" icone="sino" valor={site.length} rotulo="Pedidos pelo site" />
       </div>
       {msg && <p className="kx-mut" style={{ whiteSpace: "normal" }}>{msg}</p>}
-      <div className="kx-grade" style={{ gridTemplateColumns: "1fr 2fr" }}>
+      <div className="kx-grade" style={{ gridTemplateColumns: "1fr 2fr", marginBottom: 12 }}>
         <Bloco titulo="Buscar clientes" icone="busca" ajuda="Procura negócios do ramo na cidade (mapa aberto, grátis). Sem site = cliente ideal. Você envia a mensagem com 1 toque." fonte="OpenStreetMap" atualizadoEm={null}>
           <label className="kx-mut" htmlFor="kx-v-ramo">Ramo</label>
           <select id="kx-v-ramo" value={busca.ramo} onChange={(e) => setBusca({ ...busca, ramo: e.target.value })} style={{ width: "100%", minHeight: 44, margin: "4px 0 8px" }}>
@@ -81,7 +81,7 @@ export default function Vendas() {
           </ul>
         </Bloco>
       </div>
-      <Bloco titulo="Pedidos de orçamento pelo site" icone="sino" ajuda="Quem preencheu o formulário no site da KERNEX ou de um cliente." fonte="Formulários dos sites" atualizadoEm={null} className="kx-mt">
+      <Bloco titulo="Pedidos de orçamento pelo site" icone="sino" ajuda="Quem preencheu o formulário no site da KERNEX ou de um cliente." fonte="Formulários dos sites" atualizadoEm={null}>
         {!site.length && <p className="kx-mut">Nenhum pedido ainda.</p>}
         <ul className="kx-lista">{site.map((l) => <li key={l.id}><span className="kx-titulo"><b>{l.nome || "Sem nome"}</b> · {l.produto}</span><span className="kx-mut">{l.whatsapp || l.email} · {l.status}</span></li>)}</ul>
       </Bloco>

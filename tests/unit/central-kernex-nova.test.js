@@ -18,7 +18,7 @@ async function regras() {
 
 test('KX1. menu tem as 10 telas do Plano-Mestre + Homologação (pedido do dono 09/11)', async () => {
   const { TELAS } = await regras();
-  assert.deepEqual(TELAS.map((t) => t.nome), ['Início', 'Pedir', 'Projetos', 'Clientes e modelos', 'Fábrica', 'Kernex Store', 'Máquinas', 'IA & Cortex', 'Tarefas', 'Arquivos', 'Publicações', 'Homologação', 'Cofre', 'Relatórios', 'Configurações']);
+  assert.deepEqual(TELAS.map((t) => t.nome), ['Início', 'Pedir', 'Projetos', 'Clientes e modelos', 'Fábrica', 'Kernex Store', 'Vendas', 'Empresa', 'Máquinas', 'IA & Cortex', 'Tarefas', 'Arquivos', 'Publicações', 'Homologação', 'Cofre', 'Relatórios', 'Configurações']);
   assert.ok(TELAS.every((t) => t.serve.length > 10));
 });
 

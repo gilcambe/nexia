@@ -79,7 +79,7 @@ export default function Empresa() {
           <button type="button" className="kx-btn" onClick={mandar} disabled={!recado.texto.trim()} style={{ marginTop: 8 }}>Enviar</button>
         </Bloco>
       </div>
-      <div className="kx-grade" style={{ gridTemplateColumns: "2fr 1fr", marginTop: 12 }}>
+      <div className="kx-grade" style={{ gridTemplateColumns: "2fr 1fr", margin: "12px 0" }}>
         <Bloco titulo="Mural: o que os funcionários estão fazendo" icone="lista" ajuda="Cada área escreve aqui o que fez e o que pede para a outra. Atualiza a cada minuto." fonte="Mural da empresa" atualizadoEm={null}>
           {!mural.length && <p className="kx-mut">Ainda sem recados.</p>}
           <ul className="kx-lista">
@@ -105,7 +105,7 @@ export default function Empresa() {
           )}
         </Bloco>
       </div>
-      <Bloco titulo="Equipe" icone="ia" ajuda="Cada área tem no mínimo 3 funcionários de IA, em IAs diferentes: se um cai, os outros seguem." fonte="Escritório" atualizadoEm={null} className="kx-mt">
+      <Bloco titulo="Equipe" icone="ia" ajuda="Cada área tem no mínimo 3 funcionários de IA, em IAs diferentes: se um cai, os outros seguem." fonte="Escritório" atualizadoEm={null}>
         <div className="kx-grade" style={{ gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))" }}>
           {areas.map((a) => {
             const pa = (resumo?.porArea || {})[a.id];
