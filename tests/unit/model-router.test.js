@@ -194,6 +194,33 @@ test('M11. cortex-chat só tenta IAs com chave: só GEMINI_API_KEY → Gemini pr
   }
 });
 
+test('M13. Roteamento e cotas do Model Router: simula 429, sem cota e troca automática em <5s', async () => {
+  const start = Date.now();
+  let calls = 0;
+  const fetchImpl = async (url, init) => {
+    calls++;
+    if (calls === 1) {
+      return { ok: false, status: 429, json: async () => ({ error: { message: 'Too many requests' } }) };
+    }
+    return { ok: true, status: 200, json: async () => ({ choices: [{ message: { content: 'ok' } }], usage: { prompt_tokens: 1, completion_tokens: 1 } }) };
+  };
+  const r = createRouter({
+    env: { GROQ_API_KEY: 'g1', OPENAI_API_KEY: 'o1' },
+    fetchImpl,
+    providers: {
+      groq: { id: 'groq', available: () => true, capabilities: () => ({ chat: true }), chat: async () => { const err = new Error('429'); err.details = { status: 429 }; throw err; } },
+      openai: { id: 'openai', available: () => true, capabilities: () => ({ chat: true }), chat: async () => ({ text: 'sucesso' }) }
+    }
+  });
+  const res = await r.chatWithFallback([
+    { provider: 'groq', model: 'llama-3.3-70b' },
+    { provider: 'openai', model: 'gpt-4o' }
+  ], { messages: [{ role: 'user', content: 'oi' }] });
+  assert.strictEqual(res.text, 'sucesso');
+  const duration = Date.now() - start;
+  assert.ok(duration < 5000, 'Troca automática em menos de 5s');
+});
+
 test('M12. ADR-FREE-04: GitHub Models (token do Actions) e Workers AI (conta grátis) usam o endpoint certo; sem chave, ficam de fora', async () => {
   const calls = [];
   const fetchImpl = async (url, init) => { calls.push({ url, auth: init.headers.Authorization }); return { ok: true, status: 200, json: async () => ({ choices: [{ message: { content: 'oi' } }], usage: {} }) }; };
