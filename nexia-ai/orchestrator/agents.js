@@ -64,7 +64,7 @@ const EDITING = [
 ].join('\n');
 
 const LICOES_ARRAY = require('./licoes');
-const { TEXTO: LICOES } = require('./licoes-extra');
+const { TEXTO: LICOES } = require('./licoes');
 const { TEXTO: DECISOES } = require('./decisoes-dono');
 
 const AGENTS = Object.freeze({
