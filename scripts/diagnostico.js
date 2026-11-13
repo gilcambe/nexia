@@ -42,7 +42,7 @@ async function main() {
         method: 'POST', headers: { Authorization: `Bearer ${env.GEMINI_API_KEY}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({ model, messages: [{ role: 'user', content: 'Responda só OK.' }], max_tokens: 20 }),
       });
-      const j = await r.json().catch(() => ({}));
+      const j = await r.text().then(s => { try { return JSON.parse(s); } catch { return { error: { message: 'não é JSON: ' + s.slice(0, 40) } }; } });
       const msg = r.ok ? (j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content) : (j.error && (j.error.message || j.error.status)) || (Array.isArray(j) && j[0] && j[0].error && j[0].error.message);
       out(r.ok, `Gemini ${model}`, `${r.status} ${redact(msg)}`);
     }
@@ -85,7 +85,7 @@ async function main() {
     const h = { Authorization: 'Bearer ' + env.GITHUB_MODELS_TOKEN, 'Content-Type': 'application/json' };
     try {
       const c = await fetch('https://models.github.ai/catalog/models', { headers: h });
-      const cat = c.ok ? await c.json() : [];
+      const txt = await c.text(); let cat = []; try { cat = JSON.parse(txt); } catch { out(false, 'GitHub Models: catálogo', `${c.status} resposta não é JSON (serviço mudou?): ${redact(txt).slice(0, 60)}`); return; }
       const tools = (Array.isArray(cat) ? cat : []).filter(m => (m.capabilities || []).includes('tool-calling'));
       out(c.ok, 'GitHub Models: catálogo', `${c.status} · com ferramentas: ${tools.map(m => `${m.id}[${m.rate_limit_tier}]`).join(', ')}`);
       for (const model of ['openai/gpt-4.1', 'openai/gpt-4.1-mini', 'deepseek/deepseek-v3-0324']) {
