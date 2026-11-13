@@ -1,0 +1,49 @@
+# KERNEX Empresa Autônoma (Fase 8, 13/11/2026): o agente BUSCADOR atende os pedidos "falta o módulo X" do mural:
+# busca no GitHub (só MIT/Apache/BSD/ISC, ativo, 50+ estrelas), põe em nexia-ai/fabrica/prontos.json e abre PR
+# (branch nexia/buscador-*: o merge automático junta com CI verde). De hora em hora. Grátis.
+name: Escritório - Buscador
+
+on:
+  schedule:
+    - cron: '17 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: escritorio-buscador
+  cancel-in-progress: false
+
+jobs:
+  buscador:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          ref: develop
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '20'
+      - name: Rodada do Buscador
+        id: busca
+        run: node scripts/escritorio-buscador.js
+        env:
+          NEXIA_D1_TOKEN: ${{ secrets.NEXIA_D1_TOKEN }}
+          NEXIA_D1_ACCOUNT_ID: ${{ secrets.NEXIA_D1_ACCOUNT_ID }}
+          GITHUB_TOKEN: ${{ github.token }}
+      - name: Guardar na Biblioteca (PR)
+        if: steps.busca.outputs.mudou == 'sim'
+        env:
+          GH_TOKEN: ${{ secrets.NEXIA_JOBS_TOKEN || github.token }}
+        run: |
+          set -euo pipefail
+          B="nexia/buscador-$(date -u +%Y%m%d%H%M)"
+          git config user.name "kernex-buscador"; git config user.email "buscador@kernex.com.br"
+          git checkout -b "$B"
+          git add nexia-ai/fabrica/prontos.json
+          git commit -qm "Buscador: ${{ steps.busca.outputs.achados }} módulo(s) da web para a Biblioteca do Cortex"
+          git push -q origin "$B"
+          gh pr create --base develop --head "$B" --title "Buscador: ${{ steps.busca.outputs.achados }} módulo(s) novo(s) na Biblioteca" --body "Achados pelo agente Buscador para pedidos 'falta o módulo X' do mural. Licença conferida pela API do GitHub (MIT/Apache/BSD/ISC), ativos, 50+ estrelas."

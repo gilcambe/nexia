@@ -54,7 +54,19 @@ function createMural({ env = process.env, driver, agora = () => new Date() } = {
     return fields;
   }
 
-  return { postar, listar, decidir, ligado: () => !!d() };
+  /** A área que recebeu um 'pedido' marca como feito (com o que fez). 'precisa-ok' não: esse só o dono decide. */
+  async function concluir(id, resultado = '') {
+    const path = `${COL}/${String(id || '').replace(/[^a-z0-9-]/gi, '')}`;
+    const atual = (await d().get([path])).get(path);
+    if (!atual) return { erro: 'recado não existe' };
+    if (atual.fields.tipo === 'precisa-ok') return { erro: 'só o dono decide este recado' };
+    if (atual.fields.status !== 'aberto') return { erro: 'já foi concluído' };
+    const fields = { ...atual.fields, status: 'feito', concluido_em: iso(), resultado: limpa(resultado, 400) };
+    await d().apply([up(path, fields, atual.create_time)]);
+    return fields;
+  }
+
+  return { postar, listar, decidir, concluir, ligado: () => !!d() };
 }
 
 module.exports = { createMural, TIPOS };
