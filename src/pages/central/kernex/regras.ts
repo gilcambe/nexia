@@ -1,6 +1,7 @@
 // Central Kernex nova (#3219): regras puras (testadas em tests/unit/central-kernex.test.js).
 export const TELAS = [
   { id: "inicio", nome: "Início", icone: "🏠", serve: "Ver em 5 segundos se está tudo certo e o que precisa de você." },
+  { id: "conversar", nome: "Conversar", icone: "💬", serve: "Converse com o Cortex: peça um site ou uma mudança, veja a prévia ao lado e aprove." },
   { id: "pedir", nome: "Pedir", icone: "✍️", serve: "Escreva o que você quer; acompanhe cada pedido até ficar pronto." },
   { id: "projetos", nome: "Projetos", icone: "📁", serve: "Quanto falta em cada projeto, contado só com prova." },
   { id: "clientes", nome: "Clientes e modelos", icone: "🧩", serve: "Clonar um cliente (tenant) e criar sites e sistemas a partir dos modelos base." },
