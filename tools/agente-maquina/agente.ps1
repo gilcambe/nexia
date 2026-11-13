@@ -55,8 +55,38 @@ function Quadro {
   $script:quadroVisto = $quando
 }
 
+# C2-F3 (13/11): pasta única da empresa, separada do pessoal. O agente SÓ lista e abre o que está dentro dela.
+# Cria as pastas na 1ª vez, manda o índice (nome, tamanho, data; nunca o conteúdo) a cada 5 min se mudou,
+# e abre no PC o arquivo que o dono tocar na Central (só se o caminho final continuar dentro de C:\KERNEX).
+$kernex = if ($cfg.kernex) { $cfg.kernex } else { 'C:\KERNEX' }
+foreach ($p in 'Clientes', 'Projetos', 'Marketing', 'Documentos-Kernex') { New-Item -ItemType Directory -Force -Path (Join-Path $kernex $p) | Out-Null }
+$raizK = (Resolve-Path $kernex).Path.TrimEnd('\') + '\'
+$arqVisto = ''; $arqQuando = [datetime]::MinValue
+function Arquivos {
+  if (((Get-Date) - $script:arqQuando).TotalMinutes -lt 5) { return }
+  $script:arqQuando = Get-Date
+  $lista = @(Get-ChildItem $raizK -Recurse -File -Force -ErrorAction SilentlyContinue | Where-Object { -not ($_.Attributes -band [IO.FileAttributes]::ReparsePoint) } |
+    Sort-Object LastWriteTime -Descending | Select-Object -First 2000 |
+    ForEach-Object { @{ c = $_.FullName.Substring($raizK.Length); t = $_.Length; m = $_.LastWriteTimeUtc.ToString('s') + 'Z' } })
+  $b = @{ nome = $cfg.nome; arquivos = $lista } | ConvertTo-Json -Depth 4 -Compress
+  if ($b -eq $script:arqVisto) { return }
+  Invoke-RestMethod "$base/arquivos" -Method Post -Headers $H -ContentType 'application/json; charset=utf-8' -Body ([Text.Encoding]::UTF8.GetBytes($b)) -TimeoutSec 30 -DisableKeepAlive | Out-Null
+  $script:arqVisto = $b
+}
+function Abrir {
+  $r = Invoke-RestMethod "$base/abrir?nome=$($cfg.nome)" -Headers $H -TimeoutSec 20 -DisableKeepAlive
+  foreach ($c in @($r.abrir)) {
+    if (-not $c) { continue }
+    $cheio = [IO.Path]::GetFullPath((Join-Path $raizK $c))
+    if (-not $cheio.StartsWith($raizK, [StringComparison]::OrdinalIgnoreCase) -or -not (Test-Path -LiteralPath $cheio)) { Log "abrir recusado: $c"; continue }
+    Start-Process -FilePath 'explorer.exe' -ArgumentList "/select,`"$cheio`""
+    Log "abriu: $c"
+  }
+}
+
 while ($true) {
   try { Pulso; Trabalhar } catch { Log "erro: $_" }
   try { Quadro } catch { Log "quadro: $_" }
+  try { Arquivos; Abrir } catch { Log "arquivos: $_" }
   Start-Sleep -Seconds 15
 }

@@ -78,6 +78,12 @@ function createHandler(deps = {}) {
           const r = await require('./central/ferramentas').rota({ acao: body.acao, body }, { router: deps.router || getRouter() });
           if (r) return res(r.status, r.corpo);
         }
+        if (body.acao === 'arquivos-abrir') {   // C2-F3: abrir no PC um arquivo de C:\KERNEX
+          const m = deps.getMaquinas ? deps.getMaquinas() : require('../../nexia-ai/maquinas').createMaquinas({ env });
+          if (!m.ligado()) return res(503, { error: 'As máquinas ainda não estão ligadas no servidor.' });
+          const r = await m.pedirAbrir(body.maquina, body.caminho);
+          return res(r.erro ? 400 : 200, r.erro ? { error: r.erro } : r);
+        }
         if (body.acao === 'testar-ias') return res(200, { ias: await empresa.testarIAs(getRouter(), getIAs()), em: new Date().toISOString() });
         // Cadastro de cliente sem PR (regra dos 20 projetos/hora). Só master chega aqui.
         if (body.acao === 'cliente-criar') { const r = await require('./central/clientes-cadastro').criar(body, { getDb }); return res(r.status, r.corpo); }
@@ -217,6 +223,10 @@ function createHandler(deps = {}) {
         // #1846: PCs do dono (agente local manda o pulso a cada minuto). Só leitura.
         const m = deps.getMaquinas ? deps.getMaquinas() : require('../../nexia-ai/maquinas').createMaquinas({ env });
         return res(200, { ligado: m.ligado(), maquinas: m.ligado() ? await m.listar() : [] });
+      }
+      if (parte === 'arquivos') {   // C2-F3: índice de C:\KERNEX de cada PC (mandado pelo agente)
+        const m = deps.getMaquinas ? deps.getMaquinas() : require('../../nexia-ai/maquinas').createMaquinas({ env });
+        return res(200, m.ligado() ? await m.lerArquivos() : { maquinas: [] });
       }
       if (parte === 'quadro') {   // Cockpit: quadro de tarefas do PC 1 e do PC 2 (mandado pelos PCs)
         const m = deps.getMaquinas ? deps.getMaquinas() : require('../../nexia-ai/maquinas').createMaquinas({ env });
