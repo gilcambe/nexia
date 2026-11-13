@@ -614,8 +614,42 @@
       "pronto": true,
       "origem": "Kernex Store",
       "onde": "kernex-clientes/modulos/orcamento (instalar: Central › Kernex Store)"
+    },
+    {
+      "id": "cota-das-ias",
+      "nome": "Cota das IAs",
+      "faz": "mostra o uso e a cota restante de cada IA grátis e avisa quando uma esgota",
+      "apelidos": [
+        "cota",
+        "uso das ias",
+        "placar de cota"
+      ],
+      "nichos": [
+        "*"
+      ],
+      "nivel": 1,
+      "pronto": true,
+      "origem": "nexia-ai",
+      "onde": "fabrica"
     }
   ],
+  "cota-das-ias": {
+    "id": "cota-das-ias",
+    "nome": "Cota das IAs",
+    "faz": "mostra o uso e a cota restante de cada IA grátis e avisa quando uma esgota",
+    "apelidos": [
+      "cota",
+      "uso das ias",
+      "placar de cota"
+    ],
+    "nichos": [
+      "*"
+    ],
+    "nivel": 1,
+    "pronto": true,
+    "origem": "nexia-ai",
+    "onde": "fabrica"
+  },
   "modelos": [
     {
       "id": "demo-viagens",
