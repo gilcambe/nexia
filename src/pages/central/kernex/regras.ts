@@ -1,4 +1,5 @@
 // Central Kernex nova (#3219): regras puras (testadas em tests/unit/central-kernex.test.js).
+import type CotaIas from "./CotaIas";
 export const TELAS = [
   { id: "inicio", nome: "Início", icone: "🏠", serve: "Ver em 5 segundos se está tudo certo e o que precisa de você." },
   { id: "conversar", nome: "Conversar", icone: "💬", serve: "Converse com o Cortex: peça um site ou uma mudança, veja a prévia ao lado e aprove." },
@@ -46,6 +47,9 @@ export const MENU: readonly { id: string; nome: string; icone: string; telas: re
   { id: "ajuda", nome: "Ajuda", icone: "ia", telas: ["ajuda"] },
   { id: "config", nome: "Configurações", icone: "engrenagem", telas: ["config"] },
 ];
+// Tela "Cota das IAs" (#3782): entrada no grupo Sistema e rota. Import só de tipo: regras.ts continua puro.
+export const ROTA_COTA_IAS = { group: "Sistema", title: "Cota das IAs", path: "/cota-ias" } as const;
+export type ComponenteCotaIas = typeof CotaIas;
 /** Item do menu que contém a tela (o Início não está em nenhum: abre pelo logo). */
 export const grupoDaTela = (t: TelaId) => MENU.find((g) => g.telas.includes(t)) || null;
 
