@@ -195,24 +195,55 @@ function createRouter(o = {}) {
   /** Tenta cada descritor até um responder. Erros por provedor ficam em `attempts`. */
   async function chatWithFallback(descs, req) {
     const attempts = [];
-    const selecionados = selecionarProvedor ? selecionarProvedor(dedupe(descs), req, { obterCotaDisponivel, disjuntorAberto, tetosConfigurados }) : dedupe(descs);
+    const env = o.env || process.env;
+    const treinaComDados = (req && req.treina_com_dados) || env.TREINA_COM_DADOS;
+    const size = (req && req.tamanho) || (req && req.size) || 'media';
+    
+    let descsDedupped = dedupe(descs);
+    if (treinaComDados === 'nao' || treinaComDados === false) {
+      descsDedupped = descsDedupped.filter(d => {
+        const id = String(d.provider || '').toLowerCase();
+        return !id.includes('public') && !id.includes('treino');
+      });
+    }
+
+    const quotasMap = {};
+    for (const d of descsDedupped) {
+      const c = obterCotaDisponivel ? obterCotaDisponivel(d.provider) : null;
+      quotasMap[d.provider] = { esgotada: c !== null && c <= 0 };
+    }
+
+    let selecionados = descsDedupped;
+    if (selecionarProvedor) {
+      try {
+        selecionados = selecionarProvedor(size, {
+          providers: descsDedupped,
+          quotas: quotasMap,
+          env
+        });
+      } catch {
+        selecionados = selecionarProvedor(dedupe(descs), req, { obterCotaDisponivel, disjuntorAberto, tetosConfigurados });
+      }
+    }
+
     for (const d of selecionados) {
-      if (disjuntorAberto && disjuntorAberto(d.provider)) {
-        attempts.push({ provider: d.provider, model: d.model, code: 'CIRCUIT_BREAKER' });
+      const id = d.provider;
+      if (disjuntorAberto && disjuntorAberto(id)) {
+        attempts.push({ provider: id, model: d.model, code: 'CIRCUIT_BREAKER' });
         continue;
       }
-      const cota = obterCotaDisponivel ? obterCotaDisponivel(d.provider) : null;
+      const cota = obterCotaDisponivel ? obterCotaDisponivel(id) : null;
       if (cota !== null && cota <= 0) {
-        attempts.push({ provider: d.provider, model: d.model, code: 'NO_QUOTA' });
+        attempts.push({ provider: id, model: d.model, code: 'NO_QUOTA' });
         continue;
       }
       try { return { ...(await chat(d, req)), attempts }; }
       catch (e) {
         if (e429(e)) {
-          try { registrarErro429(d.provider); } catch {}
+          try { registrarErro429(id); } catch {}
         }
         if (e && e.code === CODES.ABORTED) throw e;
-        attempts.push({ provider: d.provider, model: d.model, code: e.code || 'ERROR' });
+        attempts.push({ provider: id, model: d.model, code: e.code || 'ERROR' });
       }
     }
     throw new ModelError(CODES.ALL_FAILED, 'Nenhum modelo respondeu.', { attempts });
