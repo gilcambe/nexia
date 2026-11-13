@@ -275,26 +275,38 @@ function normalizarLido(b, dataPrint) {
   const conta = String(b.conta || '').trim();
   let nome = String(b.nome || b.banco || '');
   if (conta && !nome.toLowerCase().includes(conta.toLowerCase())) nome = `${nome} — ${conta}`;
-  // Banco: se houver nome explícito no texto (b.banco ou b.instituicao), usa ele; caso contrário, "" (vazio). Sem lista de exemplos nem adivinhação.
-  const bancoBruto = String(b.banco || b.instituicao || '').trim();
-  const banco = bancoBruto && !/^(banco|instituicao|carteira|extrato|instituicao financeira|corretora)$/i.test(bancoBruto) ? bancoBruto : '';
-  const { banco_escrito: _bancoEscrito, instituicao: _instituicao, ...resto } = b; // eslint-disable-line no-unused-vars
+  // Banco: se o print indicar que o banco está escrito explicitamente e houver um nome válido, usa ele. Caso contrário, retorna "". Sem adivinhações.
+  let banco = '';
+  const bancoBruto = String(b.banco || '').trim();
+  const bancoEscrito = b.banco_escrito === true;
+  if (bancoEscrito && bancoBruto && !/^(banco|instituicao|carteira|extrato|instituicao financeira|corretora)$/i.test(bancoBruto)) {
+    banco = bancoBruto;
+  }
   
   // Atualizar extração de data_valor para usar a data "Atualizado em DD/MM/AAAA" presente no print ou, ausente, a data atual
   let dataValor = '';
-  if (b.data_atualizado || b.atualizado_em || dataPrint) {
-    const textoData = String(b.data_atualizado || b.atualizado_em || dataPrint || '');
-    const mData = /(\d{1,2})\/(\d{1,2})\/(\d{2,4})/.exec(textoData);
-    if (mData) {
-      const ano = mData[3].length === 2 ? '20' + mData[3] : mData[3];
-      dataValor = `${ano}-${mData[2].padStart(2, '0')}-${mData[1].padStart(2, '0')}`;
+  const textoPrint = String(dataPrint || b.data_print || b.data_atualizado || b.atualizado_em || '');
+  const mAtualizado = /atualizado\s+em\s+(\d{1,2})\/(\d{1,2})\/(\d{2,4})/i.exec(textoPrint) || /(\d{1,2})\/(\d{1,2})\/(\d{2,4})/.exec(textoPrint);
+  if (mAtualizado) {
+    const ano = mAtualizado[3].length === 2 ? '20' + mAtualizado[3] : mAtualizado[3];
+    dataValor = `${ano}-${mAtualizado[2].padStart(2, '0')}-${mAtualizado[1].padStart(2, '0')}`;
+  }
+  if (!dataValor || !DATA.test(dataValor)) {
+    dataValor = new Date().toISOString().slice(0, 10);
+  }
+
+  // Ajustar a classificação de tipo: tickers terminados em 11 pertencentes ao grupo FIIs devem ser marcados como "fiis", não "renda_fixa"; reconhecer lista de ETFs conhecida e atribuir tipo "etf".
+  if (tk) {
+    if (ETFS_CONHECIDOS.has(tk) || ETFS.has(tk)) {
+      tipo = 'etf';
+    } else if (/^[A-Z]{4}11$/.test(tk)) {
+      if (tipo === 'renda_fixa' || tipo === 'outro' || !TIPOS.includes(tipo)) {
+        tipo = 'fiis';
+      }
     }
   }
-  if (!dataValor) {
-    dataValor = dataLida(b.data_print) || dataLida(b.data_valor) || dataLida(b.atualizado_em) || new Date().toISOString().slice(0, 10);
-  }
-  // O campo "banco" sai vazio ("") quando não há nome escrito no texto. Montado num objeto à parte
-  // para não repetir a declaração de "banco" no mesmo escopo.
+
+  const { banco_escrito: _bancoEscrito, instituicao: _instituicao, ...resto } = b;
   const camposBanco = { banco };
   return conferirValor({ ...resto, ...camposBanco, nome, tipo, valor: Number.isFinite(val) ? Math.abs(val) : b.valor,
     data_valor: dataValor, vencimento: dataLida(b.vencimento) || null });
