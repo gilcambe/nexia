@@ -132,6 +132,10 @@ async function publicar(body, { gh, loja = null }) {
 /** Atende a Central; devolve null se não for parte/ação da fábrica. */
 async function rota({ parte, acao, query = {}, body = {} }, { gh, loja = null }) {
   if (parte === 'fabrica-catalogo') return { status: 200, corpo: catalogo() };
+  // Kernex Store S2 (13/11): módulos instalados pela Central
+  if (parte === 'fabrica-store') return require('./store').lista({ gh });
+  if (parte === 'fabrica-store-status') return require('./store').status(query, { gh });
+  if (acao === 'fabrica-store-instalar') return require('./store').instalar(body, { gh });
   if (parte === 'fabrica-status') return status(query.id, { gh });
   if (acao === 'fabrica-consultar') return { status: 200, corpo: consultar(body.ficha) };
   if (acao === 'fabrica-criar') return criar(body, { gh, loja });

@@ -5,6 +5,7 @@ export const TELAS = [
   { id: "projetos", nome: "Projetos", icone: "📁", serve: "Quanto falta em cada projeto, contado só com prova." },
   { id: "clientes", nome: "Clientes e modelos", icone: "🧩", serve: "Clonar um cliente (tenant) e criar sites e sistemas a partir dos modelos base." },
   { id: "fabrica", nome: "Fábrica", icone: "🏭", serve: "Criar um sistema novo ou clonar um projeto usando o que já temos pronto." },
+  { id: "store", nome: "Kernex Store", icone: "🛍️", serve: "Pôr ou tirar um módulo pronto (agenda, galeria, vendas…) no site de um cliente, sem código." },
   { id: "maquinas", nome: "Máquinas", icone: "🖥️", serve: "PC 1 e PC 2: ligados, ocupados e o que estão fazendo." },
   { id: "ia", nome: "IA & Cortex", icone: "🤖", serve: "O que cada IA está fazendo agora e quanto de cota resta." },
   { id: "tarefas", nome: "Tarefas", icone: "✅", serve: "Cada tarefa: quem pegou, onde parou e por quê." },
