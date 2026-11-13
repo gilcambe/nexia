@@ -15,7 +15,7 @@ export default function IaCortex() {
   const [d, setD] = useState<Ias | null>(null);
   const [assumiu, setAssumiu] = useState<{ ia: string; numero: number; titulo?: string; fazendo: string }[] | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
-  const carregar = useCallback(async () => { try { setD(await pedirIas<Ias>()); } catch (e) { setMsg((e as Error).message); } }, [pedirIas]);
+  const carregar = useCallback(async () => { try { const x = await pedirIas<Ias>(); setD({ ...x, ias: x?.ias || [] }); } catch (e) { setMsg((e as Error).message); } }, [pedirIas]);
   useEffect(() => { carregar(); const t = setInterval(carregar, 30000); return () => clearInterval(t); }, [carregar]);
   const ativar = async () => {
     setMsg("Chamando as IAs…");
