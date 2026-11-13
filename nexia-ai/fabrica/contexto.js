@@ -50,7 +50,7 @@ function contextoBiblioteca(goal, cat = carregar()) {
   if (prontos.length) linhas.push('Módulos que já existem (copie/adapte daqui):', ...prontos.slice(0, 12).map(m => `- ${m.id}: ${m.faz || m.nome}${m.onde ? ` (onde: ${m.onde})` : ''}`));
   const web = prontosCitados(g);
   if (web.length) linhas.push('Código PRONTO da web com licença conferida (copie/adapte em vez de escrever do zero; mantenha o LICENSE e o crédito):',
-    ...web.map((x) => `- ${x.repo} (${x.licenca}, ${x.estrelas}⭐): ${x.uso}. ${x.tipo === 'peca' ? 'Peça: roda dentro do site (arquivo local, sem CDN).' : 'Sistema: precisa de servidor próprio (custo) → só com OK do dono.'} ${x.url}`));
+    ...web.map((x) => `- ${x.repo} (${x.licenca}, ${x.estrelas}⭐): ${x.uso}. ${x.tipo === 'peca' ? 'Peça: roda dentro do site (arquivo local, sem CDN).' : 'Sistema: precisa de servidor próprio (custo) → só com OK do dono.'}${x.nota ? ` ATENÇÃO: ${x.nota}.` : ''} ${x.url}`));
   linhas.push('Planeje SÓ o que falta. Se criar um módulo reutilizável novo, inclua no plano uma entrada nova em nexia-ai/fabrica/catalogo.json (id, nome, faz, apelidos, nichos, nivel, pronto, origem, onde), sem dado pessoal.');
   return linhas.join('\n');
 }

@@ -37,3 +37,15 @@ test('PR3. o Architect recebe os prontos e o aviso de custo de servidor', () => 
   assert.match(c, /precisa de servidor próprio \(custo\)/);
   assert.equal(contextoBiblioteca('qual o status do deploy?'), '', 'pedido que não é sistema novo não recebe nada');
 });
+
+test('PR5. projeto "open core" (parte MIT, parte paga) entra com a restrição, e o Cortex recebe o aviso', () => {
+  const j = require('../../nexia-ai/fabrica/prontos.json');
+  assert.deepEqual(j.a_conferir, [], 'nada fica sem conferir');
+  const strapi = j.prontos.find((x) => x.repo === 'strapi/strapi');
+  assert.match(strapi.nota, /ee\//);
+  for (const r of ['n8n-io/n8n', 'twentyhq/twenty', 'vendurehq/vendure', 'PixarAnimationStudios/OpenUSD']) assert.ok(j.fora.some((f) => f.startsWith(r + ' (')), r + ' deveria estar fora');
+  // a lista que o Cortex recebe mostra a nota de cada projeto citado (peças vêm antes, então o texto do pedido não garante um "open core")
+  const src = require('node:fs').readFileSync(require('node:path').join(__dirname, '../../nexia-ai/fabrica/contexto.js'), 'utf8');
+  assert.match(src, /x\.nota \? ` ATENÇÃO: \$\{x\.nota\}\.`/);
+  assert.equal(typeof contextoBiblioteca, 'function');
+});
