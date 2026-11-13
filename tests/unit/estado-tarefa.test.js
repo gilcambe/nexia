@@ -97,6 +97,20 @@ test('EST2. travada por tempo (updated_at 40 min atrás + cortex-rodando)', () =
   assert.strictEqual(res.motivo, 'Sem atividade há 40 min. A IA pode ter parado.');
 });
 
+test('EST2b. fronteira: exatamente 30 min parada continua em andamento (só "mais de" 30 min trava)', () => {
+  const agora = Date.now();
+  const t30 = new Date(agora - 30 * 60000).toISOString();
+
+  const res = estadoTarefa({
+    state: 'open',
+    labels: [{ name: 'cortex-fila' }, { name: 'cortex-rodando' }],
+    updated_at: t30,
+  }, agora, { minutosParada: 30 });
+
+  assert.strictEqual(res.estado, 'andamento');
+  assert.strictEqual(res.ia, 'Cortex');
+});
+
 test('EST3. precisaVoce (tentativa-3 + cortex-travado e labels de humano)', () => {
   const agora = Date.now();
 
