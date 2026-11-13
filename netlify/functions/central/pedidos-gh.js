@@ -51,12 +51,10 @@ function criarPedidos(env = process.env, fetchFn = fetch) {
     const p = Math.max(1, Math.min(30, Number(pagina) || 1));
     let filtro = 'repo:' + REPO + ' is:issue label:cortex-fila';
     if (estado === 'abertos') filtro += ' is:open -label:cortex-travado';
-    else if (estado === 'travados' || estado === 'travadas' || estado === 'travada') filtro += ' is:open';
-    else if (estado === 'feitos' || estado === 'concluidas' || estado === 'concluida') filtro += ' is:closed';
+    else if (estado === 'travadas') filtro += ' is:open';
+    else if (estado === 'concluidas') filtro += ' is:closed';
     else if (estado === 'andamento') filtro += ' is:open';
     else if (estado === 'precisa') filtro += ' is:open';
-    else if (estado === 'aguardando-ia') filtro += ' is:open';
-    else if (estado === 'fila') filtro += ' is:open';
     else if (estado === 'todas') filtro += '';
     else if (estado === 'meus') filtro += ' in:body "Pedido de"';
 
@@ -67,16 +65,12 @@ function criarPedidos(env = process.env, fetchFn = fetch) {
 
     if (estado === 'andamento') {
       itens = itens.filter((item) => item.estado === 'andamento');
-    } else if (estado === 'travadas' || estado === 'travada') {
+    } else if (estado === 'travadas') {
       itens = itens.filter((item) => item.estado === 'travada');
-    } else if (estado === 'concluidas' || estado === 'concluida') {
+    } else if (estado === 'concluidas') {
       itens = itens.filter((item) => item.estado === 'concluida');
     } else if (estado === 'precisa') {
       itens = itens.filter((item) => item.precisaVoce);
-    } else if (estado === 'aguardando-ia') {
-      itens = itens.filter((item) => item.estado === 'aguardando-ia');
-    } else if (estado === 'fila') {
-      itens = itens.filter((item) => item.estado === 'fila');
     } else if (estado === 'todas') {
       // Retorna todas as filtradas pela busca
     }
