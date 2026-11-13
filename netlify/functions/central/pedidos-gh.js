@@ -70,6 +70,10 @@ function criarPedidos(env = process.env, fetchFn = fetch) {
       itens = itens.filter((item) => item.estado === 'concluida');
     } else if (estado === 'precisa') {
       itens = itens.filter((item) => item.precisaVoce);
+    } else if (estado === 'aguardando-ia') {
+      itens = itens.filter((item) => item.estado === 'aguardando-ia');
+    } else if (estado === 'fila') {
+      itens = itens.filter((item) => item.estado === 'fila');
     }
 
     const total = r.total_count || 0;
