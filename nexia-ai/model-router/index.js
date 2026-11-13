@@ -49,7 +49,7 @@ function createRouter(o = {}) {
   const contar = (id, inc) => { try { uso.incrementUsage(id, inc); } catch { /* sem conta, segue */ } };
   
   const { selecionarProvedor } = require('../../src/utils/providerSelector');
-  const { LIMITS } = require('../../src/config/limits');
+  const { tetosConfigurados } = require('../../src/config/limits');
   const tokensDe = out => (out && out.usage && (out.usage.total_tokens || ((out.usage.input_tokens || 0) + (out.usage.output_tokens || 0)))) || (out && out.text ? Math.ceil(out.text.length / 4) : 0);
   const e429 = e => (e && e.details && e.details.status === 429) ? 1 : 0;
   const contados = new Map();
