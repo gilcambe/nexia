@@ -29,7 +29,7 @@ function planejarIssue3304(arquivosModificados) {
 }
 
 test('Planejador de caminhos - issue #3304', () => {
-  // Simula a árvore ou fixtures
+  // Simulação com testes unitários usando mocks de fs ou estrutura conforme issue #3568
   const cenarios = [
     'src/lib/quoteSources.js',
     'netlify/functions/prumo-lib/cotacoes.js',
@@ -38,12 +38,12 @@ test('Planejador de caminhos - issue #3304', () => {
 
   const resultado = planejarIssue3304(cenarios);
 
-  // 2. Verifica que quoteSources.js foi rejeitado
+  // 2. Verifica que uma parte que referencia src/lib/quoteSources.js (produto Kernex Finance) é rejeitada.
   assert.ok(resultado.rejeitados.includes('src/lib/quoteSources.js'), 'src/lib/quoteSources.js deve ser rejeitado');
 
-  // 3. Verifica que netlify/functions/prumo-lib/cotacoes.js foi aceito
+  // 3. Verifica que uma parte que referencia netlify/functions/prumo-lib/cotacoes.js é aceita.
   assert.ok(resultado.aceitos.includes('netlify/functions/prumo-lib/cotacoes.js'), 'netlify/functions/prumo-lib/cotacoes.js deve ser aceito');
 
-  // 4. Verifica que prumo/novo.js foi aceito
+  // 4. Verifica que uma parte que referencia prumo/novo.js (arquivo novo dentro da pasta do produto) é aceita.
   assert.ok(resultado.aceitos.includes('prumo/novo.js'), 'prumo/novo.js deve ser aceito');
 });
