@@ -268,7 +268,8 @@ function normalizarLido(b, dataPrint) {
   const banco = b.banco_escrito ? String(b.banco || '').trim() : '';
   const { banco_escrito: _bancoEscrito, instituicao, ...resto } = b; // eslint-disable-line no-unused-vars
   const dataValor = dataLida(b.data_print) || dataLida(b.data_valor) || new Date().toISOString().slice(0, 10);
-  // "banco" é declarado num objeto só para o campo sair vazio ("") quando não há nome escrito no texto.
+  // O campo "banco" sai vazio ("") quando não há nome escrito no texto. Montado num objeto à parte
+  // para não repetir a declaração de "banco" no mesmo escopo.
   const camposBanco = { banco };
   return conferirValor({ ...resto, ...camposBanco, nome, tipo, valor: Number.isFinite(val) ? Math.abs(val) : b.valor,
     data_valor: dataValor, vencimento: dataLida(b.vencimento) || null });
