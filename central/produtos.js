@@ -2,14 +2,17 @@
 // Central Kernex: lista dos produtos e clientes que aparecem na página /central.
 // logo = arquivo real em public/central/logos (sem logo, a tela mostra ícone provisório). segmento = ramo do cliente.
 // "site" é o que o público vê, "painel" é a área do dono. "suporte" = cliente com agenda (entrar sem senha).
+// Separação do dono (13/11): tipo 'cliente' = empresa que nos contrata (tenant); 'produto' = serviço/tecnologia que a KERNEX
+// oferece (Achados, Cortex, Divulga…); 'plataforma' = sistema nosso vendido por uso/assinatura (Finance, Academy, Body Coach…);
+// 'interno' = ferramenta da própria KERNEX (site institucional, Vault).
 // Produto novo: acrescente uma linha aqui. "pendente: true" = ainda sem site no ar (a tela mostra "em breve"). Links grátis do dia a dia ficam em LINKS.
 
 const BASE = 'https://nexia.gcbezerra.workers.dev';
 
 const PRODUTOS = [
-  { id: 'body-coach', logo: '/central/logos/body-coach.svg', segmento: 'Fitness', nome: 'Body Coach', icone: '💪', frase: 'App de treino e dieta (vende assinatura)', site: 'https://bodycoach.kernex.com.br/', painel: 'https://bodycoach.kernex.com.br/body-coach/admin/acessos', tipo: 'produto' },
+  { id: 'body-coach', logo: '/central/logos/body-coach.svg', segmento: 'Fitness', nome: 'Body Coach', icone: '💪', frase: 'App de treino e dieta (vende assinatura)', site: 'https://bodycoach.kernex.com.br/', painel: 'https://bodycoach.kernex.com.br/body-coach/admin/acessos', tipo: 'plataforma' },
   { id: 'cortex', logo: '/central/logos/cortex.svg', segmento: 'IA', nome: 'Cortex', icone: '🧠', frase: 'O robô que programa a Kernex', site: BASE + '/health', painel: BASE + '/cortex-app', tipo: 'produto' },
-  { id: 'finance', segmento: 'Finanças', nome: 'Kernex Finance', icone: '📈', frase: 'Carteira de investimentos com cotação e alertas', site: 'https://finance.kernex.com.br/', painel: 'https://finance.kernex.com.br/', tipo: 'produto' },   // #3556
+  { id: 'finance', segmento: 'Finanças', nome: 'Kernex Finance', icone: '📈', frase: 'Carteira de investimentos com cotação e alertas', site: 'https://finance.kernex.com.br/', painel: 'https://finance.kernex.com.br/', tipo: 'plataforma' },   // #3556
   { id: 'achados', segmento: 'Ofertas', nome: 'Achados (ofertas)', icone: '🛍️', frase: 'Vitrine de ofertas com link de afiliado', site: 'https://achados-nexia.pages.dev/', painel: 'https://github.com/gilcambe/nexia/actions/workflows/afiliados.yml', tipo: 'produto' },
   { id: 'divulga', segmento: 'Marketing', nome: 'Divulga', icone: '📣', frase: 'Posta os clientes no Facebook e Instagram', site: 'https://www.instagram.com/kernex_bodycoach/', painel: 'https://github.com/gilcambe/nexia/actions/workflows/divulga.yml', tipo: 'produto' },
   { id: 'bezsan', logo: '/central/logos/bezsan.svg', segmento: 'Leilões', nome: 'Bezsan Leilões', icone: '🏛️', frase: 'Cliente: site e agenda de reuniões', site: 'https://bezsan.pages.dev/', painel: 'https://bezsan.pages.dev/agenda/', suporte: 'bezsan', tipo: 'cliente' },
@@ -21,11 +24,11 @@ const PRODUTOS = [
   // O site do Adriano entra quando a landing nova for publicada em https://adrianoblumer.pages.dev.
   { id: 'adriano', logo: '/central/logos/adriano.png', segmento: 'Nutrição', nome: 'Adriano Blumer', icone: '🥗', frase: 'Cliente: nutricionista (landing com WhatsApp e redes)', pendente: true, tipo: 'cliente' },
   // Copiloto e treino para atendentes de call center (nome neutro; nada de material de empresa anterior entra no produto).
-  { id: 'atende', segmento: 'Atendimento', nome: 'Atende', icone: '🎧', frase: 'Em preparação: copiloto e treino de ligação para atendentes', pendente: true, tipo: 'produto' },
-  { id: 'academy', segmento: 'Treinamento', nome: 'KERNEX Academy', icone: '🎓', frase: 'Plataforma de treinamento para qualquer empresa (1º curso: inglês)', pendente: true, endereco: 'https://academy.kernex.com.br/', tipo: 'produto' },
-  { id: 'arqia', segmento: 'Arquitetura', nome: 'Arqia', icone: '📐', frase: 'Produto futuro: sistema para arquitetos', pendente: true, tipo: 'produto' },
-  { id: 'kernex', segmento: 'Sites', nome: 'Site da Kernex', icone: '🌐', frase: 'Site institucional da Kernex', site: 'https://kernex.com.br/', tipo: 'produto' },
-  { id: 'vault', segmento: 'Dados', nome: 'Vault', icone: '🔐', frase: 'Cofre de segredos e configurações', tipo: 'produto' },
+  { id: 'atende', segmento: 'Atendimento', nome: 'Atende', icone: '🎧', frase: 'Em preparação: copiloto e treino de ligação para atendentes', pendente: true, tipo: 'plataforma' },
+  { id: 'academy', segmento: 'Treinamento', nome: 'KERNEX Academy', icone: '🎓', frase: 'Plataforma de treinamento para qualquer empresa (1º curso: inglês)', pendente: true, endereco: 'https://academy.kernex.com.br/', tipo: 'plataforma' },
+  { id: 'arqia', segmento: 'Arquitetura', nome: 'Arqia', icone: '📐', frase: 'Produto futuro: sistema para arquitetos', pendente: true, tipo: 'plataforma' },
+  { id: 'kernex', segmento: 'Sites', nome: 'Site da Kernex', icone: '🌐', frase: 'Site institucional da Kernex', site: 'https://kernex.com.br/', tipo: 'interno' },
+  { id: 'vault', segmento: 'Dados', nome: 'Vault', icone: '🔐', frase: 'Cofre de segredos e configurações', tipo: 'interno' },
   { id: 'sitekit', segmento: 'Sites', nome: 'Site Kit', icone: '🧰', frase: 'Kit de sites para clientes', tipo: 'produto' },
 ];
 

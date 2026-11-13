@@ -20,8 +20,8 @@ test('KX1. menu tem as 10 telas do Plano-Mestre + Homologação (pedido do dono 
   const { TELAS } = await regras();
   const nomes = TELAS.map((t) => t.nome);
   // C2-E (13/11): nada some; as telas da Central antiga voltaram dentro do menu novo.
-  for (const n of ['Início', 'Conversar', 'Pedir', 'Projetos', 'Clientes e modelos', 'Fábrica', 'Kernex Store', 'Vendas', 'Empresa', 'Ferramentas', 'Máquinas', 'IA & Cortex', 'Tarefas', 'Arquivos', 'Publicações', 'Homologação', 'Cofre', 'Relatórios', 'Configurações', 'Ajuda']) assert.ok(nomes.includes(n), n);
-  for (const n of ['Serviços no ar', 'O que falta', 'Entregas', 'Tenants e produtos', 'Dinheiro', 'Divulgar', 'IAs, chaves e robôs']) assert.ok(nomes.includes(n), n);
+  for (const n of ['Início', 'Conversar', 'Pedir', 'Projetos', 'Clientes e modelos', 'Fábrica', 'Kernex Store', 'Vendas', 'Visão da empresa', 'Ferramentas', 'Máquinas', 'IA & Cortex', 'Tarefas', 'Arquivos', 'Publicações', 'Homologação', 'Cofre', 'Relatórios', 'Configurações', 'Ajuda']) assert.ok(nomes.includes(n), n);
+  for (const n of ['Serviços no ar', 'O que falta', 'Entregas', 'Clientes, produtos e plataformas', 'Dinheiro', 'Divulgar', 'IAs, chaves e robôs']) assert.ok(nomes.includes(n), n);
   assert.ok(TELAS.every((t) => t.serve.length > 10));
 });
 
@@ -136,7 +136,7 @@ test('KX12. Início tem "Status de tudo" com paradas há mais de 1 dia e Destrav
 
 test('KX-MENU. C2-E: menu de 8 itens (Sistema voltou); toda tela (menos o Início) cabe em exatamente um item', async () => {
   const { MENU, TELAS, grupoDaTela } = await regras();
-  assert.deepEqual(MENU.map((g) => g.nome), ['Conversar', 'Projetos', 'Clientes & Vendas', 'Marketing', 'Arquivos', 'Sistema', 'Ajuda', 'Configurações']);
+  assert.deepEqual(MENU.map((g) => g.nome), ['Conversar', 'Projetos', 'Clientes & Vendas', 'Empresa', 'Marketing', 'Arquivos', 'Sistema', 'Ajuda', 'Configurações']);
   for (const t of TELAS) {
     const n = MENU.filter((g) => g.telas.includes(t.id)).length;
     assert.equal(n, t.id === 'inicio' ? 0 : 1, t.id);
