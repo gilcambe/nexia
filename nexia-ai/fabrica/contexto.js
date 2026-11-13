@@ -13,8 +13,12 @@ const prontosJson = () => (_prontos = _prontos || require('./prontos.json'));
 function prontosCitados(texto, p = prontosJson()) {
   const t = ` ${sem(texto)} `;
   const cats = Object.entries(p.palavras || {}).filter(([, ps]) => ps.some((w) => t.includes(` ${sem(w)}`))).map(([c]) => c);
+  // o que cita a palavra pedida no "uso" (ex.: pix) vem antes do mais famoso da categoria
+  const GENERICAS = new Set(['site', 'pagina', 'modelo', 'api', 'tela', 'template', 'landing', 'cadastro', 'clientes', 'vendas']);
+  const ditas = Object.values(p.palavras || {}).flat().map(sem).filter((w) => !GENERICAS.has(w) && t.includes(` ${w}`));
+  const acerto = (x) => ditas.filter((w) => sem(x.uso).includes(w)).length;
   return (p.prontos || []).filter((x) => cats.includes(x.categoria))
-    .sort((a, b) => (a.tipo === 'peca' ? 0 : 1) - (b.tipo === 'peca' ? 0 : 1) || b.estrelas - a.estrelas).slice(0, 6);
+    .sort((a, b) => (a.tipo === 'peca' ? 0 : 1) - (b.tipo === 'peca' ? 0 : 1) || acerto(b) - acerto(a) || b.estrelas - a.estrelas).slice(0, 8);
 }
 
 const PEDIDO_NOVO = /\b(quero|queria|preciso|precisa|cri[ae]r?|crie|fa[cz]a|fazer|monte|montar|novo|nova|gerar|gere|clon[ae]r?)\b[\s\S]{0,80}\b(site|sistema|landing|app|aplicativo|pagina|plataforma|loja|agenda|painel)\b/;

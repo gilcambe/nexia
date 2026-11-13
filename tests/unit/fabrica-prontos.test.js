@@ -24,6 +24,12 @@ test('PR2. pedido de galeria traz peça pronta (roda no site) antes de sistema',
   assert.ok(r.some((x) => /PhotoSwipe/i.test(x.repo)));
 });
 
+test('PR4. pedido de Pix traz o gerador de Pix e o de CPF/CNPJ primeiro (não o mais famoso da categoria)', () => {
+  const r = prontosCitados('quero criar um site com pagamento pix e cadastro com cpf');
+  assert.match(r[0].uso + r[1].uso, /pix/i, r.map((x) => x.repo).join(', '));
+  assert.ok(r.slice(0, 4).some((x) => /cpf/i.test(x.uso)));
+});
+
 test('PR3. o Architect recebe os prontos e o aviso de custo de servidor', () => {
   const c = contextoBiblioteca('preciso criar um sistema de crm com leads para uma loja');
   assert.match(c, /Código PRONTO da web/);
