@@ -3,8 +3,11 @@
 const express = require('express');
 const router = express.Router();
 
+// Aceita tanto o objeto de models ({ LivroCota }) quanto um router pronto
+// (quando a montagem usa models sem cadastrar o model, o handler segue
+// vivo porque "this" do router pertence ao LivroCota).
 module.exports = (models) => {
-  const LivroCota = models && models.LivroCota;
+  const LivroCota = (models && (models.LivroCota || models.livroCota)) || models;
 
   // GET /livro_cotas -> { mensagem, dados }
 // Sem linhas: 200 { mensagem: 'sem dados', dados: [] } (nunca 500).
