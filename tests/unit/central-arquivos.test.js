@@ -48,8 +48,17 @@ test('AR4. agente: cria C:\\KERNEX, só lista lá dentro, confere o caminho fina
   assert.match(ps, /'Clientes', 'Projetos', 'Marketing', 'Documentos-Kernex'/);
   assert.match(ps, /GetFullPath\(\(Join-Path \$raizK \$c\)\)/);
   assert.match(ps, /StartsWith\(\$raizK, \[StringComparison\]::OrdinalIgnoreCase\)/);
-  assert.match(ps, /explorer\.exe' -ArgumentList "\/select,/);
+  assert.match(ps, /\$arg = "\/select,/);
   assert.doesNotMatch(ps, /Start-Process -FilePath \$cheio/);
   const casca = fs.readFileSync(path.join(__dirname, '../../src/pages/central/kernex/Casca.tsx'), 'utf8');
   assert.match(casca, /tela === "arquivos" \? <Arquivos \/>/);
+});
+
+test('AR5. C2-B: agente como SYSTEM entrega o Explorador para quem está logado (tarefa Interactive de 1 vez, apagada depois)', () => {
+  const ps = fs.readFileSync(path.join(__dirname, '../../tools/agente-maquina/agente.ps1'), 'utf8');
+  assert.match(ps, /IsSystem\)/);
+  assert.match(ps, /Win32_ComputerSystem\)\.UserName/);
+  assert.match(ps, /New-ScheduledTaskPrincipal -UserId \$usuario -LogonType Interactive -RunLevel Limited/);
+  assert.match(ps, /Unregister-ScheduledTask -TaskName \$nomeTarefa/);
+  assert.match(ps, /New-ScheduledTaskAction -Execute 'explorer\.exe'/, 'só mostra o arquivo, não executa');
 });
