@@ -1,0 +1,35 @@
+# Sentinela (#2382): a cada 30 min confere se os sites no ar respondem e se o CI da develop está verde.
+# Só lê. Abre UMA issue "🚨 Sentinela" quando algo cai e fecha sozinha quando volta. Não usa segredo além do GITHUB_TOKEN.
+name: Sentinela
+
+on:
+  schedule:
+    - cron: '*/30 * * * *'
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  issues: write
+  contents: read
+
+concurrency:
+  group: sentinela
+  cancel-in-progress: true
+
+jobs:
+  sentinela:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          sparse-checkout: |
+            scripts
+            central
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 20
+      - name: Conferir
+        run: node scripts/sentinel.js
