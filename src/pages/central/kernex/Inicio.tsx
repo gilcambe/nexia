@@ -51,9 +51,9 @@ export default function Inicio({ irPara, painel, nome }: { irPara: (t: TelaId) =
   const carregar = useCallback(async () => {
     const agora = new Date().toISOString();
     const [m, f, pr, me] = await Promise.allSettled([buscar("maquinas"), listar("", "concluidas", 1), projetos<{ projetos: Projeto[]; conferidoEm: string; origem: string }>(), listar("", "meus", 1)]);
-    if (me.status === "fulfilled") setMeus({ itens: (me.value.itens as unknown as Item[]).slice(0, 5), todos: me.value.itens as unknown as Item[], em: agora });
+    if (me.status === "fulfilled") setMeus({ itens: ((me.value?.itens || []) as unknown as Item[]).slice(0, 5), todos: (me.value?.itens || []) as unknown as Item[], em: agora });
     if (m.status === "fulfilled" && m.value) setMaq({ ligado: !!m.value.ligado, maquinas: m.value.maquinas || [], em: agora });
-    if (f.status === "fulfilled") setFeitas({ itens: (f.value.itens as unknown as Item[]).slice(0, 5), em: agora });
+    if (f.status === "fulfilled") setFeitas({ itens: ((f.value?.itens || []) as unknown as Item[]).slice(0, 5), em: agora });
     if (pr.status === "fulfilled") setProj(pr.value);
   }, [buscar, listar, projetos]);
   useEffect(() => { carregar(); const t = setInterval(carregar, 60000); return () => clearInterval(t); }, [carregar]);

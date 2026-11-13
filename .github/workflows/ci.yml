@@ -78,6 +78,10 @@ jobs:
           exit "$RC"
       - name: Build
         run: npm run build
+      - name: Build de produção sem o usuário de teste da Central (sugestão PC 2)
+        run: |
+          if grep -rl "teste@exemplo.com" dist/ 2>/dev/null; then echo "::error::o usuário de teste (VITE_E2E_USUARIO_TESTE) entrou no build de produção"; exit 1; fi
+          echo "ok: build de produção sem usuário de teste"
       - name: Orçamento de tamanho do JS inicial (#810)
         run: npm run audit:bundle
       - name: Build do NEXIA Body Coach (apps/body-coach, servido em /body-coach/)
@@ -95,6 +99,12 @@ jobs:
       - name: Log do servidor em caso de falha
         if: failure()
         run: tail -n 100 server.log || true
+      - name: Central - todas as telas abrem sem erro (build de teste com usuário falso, servidor falso)
+        run: |
+          VITE_E2E_USUARIO_TESTE=1 npx vite build --outDir dist-e2e --emptyOutDir > /dev/null
+          npx vite preview --outDir dist-e2e --port 4173 --strictPort > preview.log 2>&1 &
+          for i in $(seq 1 60); do curl -sf -o /dev/null http://127.0.0.1:4173/ && break; sleep 1; done
+          BASE_URL=http://127.0.0.1:4173 npx playwright test -c tests/e2e/playwright.central.config.js
 
   # ADR-F12-02: o Bridge roda no Windows do dono; a suíte dele roda também num runner Windows.
   bridge-windows:

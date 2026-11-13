@@ -26,6 +26,10 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// 13/11: SÓ no build de teste do CI (VITE_E2E_USUARIO_TESTE=1) entra um usuário falso para abrir a Central e testar
+// todas as telas. Em produção a variável não existe: o bloco some do build. O servidor recusa o token "e2e" (403).
+const USUARIO_TESTE = import.meta.env.VITE_E2E_USUARIO_TESTE === "1";
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
@@ -34,6 +38,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let unsubscribe: (() => void) | undefined;
     async function init() {
+      if (USUARIO_TESTE) { setUser({ uid: "e2e", email: "teste@exemplo.com", displayName: "Teste" }); setLoading(false); return; }
       try {
         const result = await initFirebase();
         if (!result) { setLoading(false); return; }
@@ -110,6 +115,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const getToken = useCallback(async (): Promise<string | null> => {
+    if (USUARIO_TESTE) return "e2e";
     try {
       const result = await initFirebase();
       if (!result?.auth?.currentUser) return null;

@@ -24,7 +24,7 @@ export default function Fabrica() {
 
   useEffect(() => {
     ler<Catalogo>("parte=fabrica-catalogo")
-      .then((c) => { setCat(c); setLidoEm(new Date().toISOString()); })
+      .then((c) => { setCat({ ...c, modelos: (c?.modelos || []).map((m) => ({ ...m, nichos: m.nichos || [] })), modulos: c?.modulos || [] }); setLidoEm(new Date().toISOString()); })
       .catch((e) => { const m = (e as Error).message; if (servidorSemFabrica(m)) setSemServidor(true); else setErro(m); });
   }, [ler]);
 
