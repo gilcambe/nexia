@@ -235,10 +235,21 @@ const APELIDO_TIPO = [[/tesouro/i, 'tesouro'], [/fgts/i, 'fgts'], [/prev|pgbl|vg
 const ETFS = new Set(['IVVB11', 'BOVA11', 'SMAL11', 'HASH11', 'NASD11', 'GOLD11', 'DIVO11', 'SPXI11', 'XINA11', 'BOVV11', 'BBSD11', 'ECOO11', 'FIND11', 'MATB11', 'PIBB11', 'BRAX11', 'ACWI11', 'EURP11', 'WRLD11', 'QBTC11', 'ETHE11', 'BITH11', 'B5P211', 'IMAB11', 'IRFM11', 'FIXA11', 'TECK11', 'GOVE11', 'BOVB11', 'DEFI11', 'META11', 'SPXR11', 'USTK11']);
 const UNITS = new Set(['TAEE11', 'SANB11', 'KLBN11', 'ALUP11', 'BPAC11', 'ENGI11', 'SAPR11', 'IGTI11', 'CPLE11', 'BRBI11', 'TIET11', 'RNEW11', 'AESB11', 'CMIG11', 'ITSA11', 'SULA11', 'PPLA11', 'BIDI11', 'INBR11', 'NEOE11']);
 /** Tipo pelo ticker (#3532): ETF conhecido = etf; unit = acoes; outro XXXX11 = fiis (nunca renda fixa). */
+// Lista de ETFs conhecida
+const ETFS_CONHECIDOS = new Set([
+  'IVVB11', 'BOVA11', 'SMAL11', 'HASH11', 'NASD11', 'GOLD11', 'DIVO11', 'SPXI11', 'XINA11', 'BOVV11',
+  'BBSD11', 'ECOO11', 'FIND11', 'MATB11', 'PIBB11', 'BRAX11', 'ACWI11', 'EURP11', 'WRLD11', 'QBTC11',
+  'ETHE11', 'BITH11', 'B5P211', 'IMAB11', 'IRFM11', 'FIXA11', 'TECK11', 'GOVE11', 'BOVB11', 'DEFI11',
+  'META11', 'SPXR11', 'USTK11'
+]);
+
 function tipoPeloTicker(tk, tipo) {
-  if (ETFS.has(tk)) return 'etf';
+  if (ETFS_CONHECIDOS.has(tk) || ETFS.has(tk)) return 'etf';
   if (UNITS.has(tk)) return 'acoes';
-  if (/^[A-Z]{4}11$/.test(tk) && tipo !== 'fiis' && tipo !== 'etf') return 'fiis';
+  if (/^[A-Z]{4}11$/.test(tk)) {
+    if (ETFS_CONHECIDOS.has(tk) || ETFS.has(tk)) return 'etf';
+    return 'fiis';
+  }
   if (/^[A-Z]{4}\d{1,2}$/.test(tk) && (tipo === 'outro' || tipo === 'renda_fixa')) return 'acoes';
   return tipo;
 }
@@ -264,10 +275,24 @@ function normalizarLido(b, dataPrint) {
   const conta = String(b.conta || '').trim();
   let nome = String(b.nome || b.banco || '');
   if (conta && !nome.toLowerCase().includes(conta.toLowerCase())) nome = `${nome} — ${conta}`;
-  // Banco: se b.banco_escrito for verdadeiro, usa b.banco; caso contrário, vazio (""). Sem adivinhação.
-  const banco = b.banco_escrito ? String(b.banco || '').trim() : '';
-  const { banco_escrito: _bancoEscrito, instituicao, ...resto } = b; // eslint-disable-line no-unused-vars
-  const dataValor = dataLida(b.data_print) || dataLida(b.data_valor) || new Date().toISOString().slice(0, 10);
+  // Banco: se houver nome explícito no texto (b.banco ou b.instituicao), usa ele; caso contrário, "" (vazio). Sem lista de exemplos nem adivinhação.
+  const bancoBruto = String(b.banco || b.instituicao || '').trim();
+  const banco = bancoBruto && !/^(banco|instituicao|carteira|extrato)$/i.test(bancoBruto) ? bancoBruto : '';
+  const { banco_escrito: _bancoEscrito, instituicao: _instituicao, ...resto } = b; // eslint-disable-line no-unused-vars
+  
+  // Atualizar extração de data_valor para usar a data "Atualizado em DD/MM/AAAA" presente no print ou, ausente, a data atual
+  let dataValor = '';
+  if (b.data_atualizado || b.atualizado_em || dataPrint) {
+    const textoData = String(b.data_atualizado || b.atualizado_em || dataPrint || '');
+    const mData = /(\d{1,2})\/(\d{1,2})\/(\d{2,4})/.exec(textoData);
+    if (mData) {
+      const ano = mData[3].length === 2 ? '20' + mData[3] : mData[3];
+      dataValor = `${ano}-${mData[2].padStart(2, '0')}-${mData[1].padStart(2, '0')}`;
+    }
+  }
+  if (!dataValor) {
+    dataValor = dataLida(b.data_print) || dataLida(b.data_valor) || dataLida(b.atualizado_em) || new Date().toISOString().slice(0, 10);
+  }
   // O campo "banco" sai vazio ("") quando não há nome escrito no texto. Montado num objeto à parte
   // para não repetir a declaração de "banco" no mesmo escopo.
   const camposBanco = { banco };
