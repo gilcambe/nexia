@@ -188,5 +188,6 @@ module.exports = {
   ESTADOS,
   estadoTarefa,
   resumoDia,
+  resumo_dia: resumoDia,
   estadoTarefas,
 };
