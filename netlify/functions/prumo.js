@@ -147,7 +147,9 @@ Regras:
 7. Mesmo plano/fundo em VÁRIAS linhas (ex.: previdência com conta "Participante" e "Patrocinadora", ou "Básica" e "Adicional") = um item POR LINHA, cada um com seu valor, e o nome da linha em "conta". Nunca devolva só a primeira linha.
 8. Números com ponto decimal (R$ 1.234,56 vira 1234.56). Não invente nada que não esteja legível.
 9. Título de grupo com subtotal NÃO é item: "CDB (92,77%) R$ 138.122,79", "FIIs", "Ações", "ETFs", "Renda fixa R$ ...". Só os ativos dentro do grupo são itens.
-10. Ativo cortado no topo ou no fim do print (sem o valor visível) fica de fora; ele aparece inteiro no próximo print.`;
+10. Ativo cortado no topo ou no fim do print (sem o valor visível) fica de fora; ele aparece inteiro no próximo print.
+11. "banco" SÓ com o nome escrito no texto do item; nunca deduza pelo logo, pela cor ou pelo ticker. Sem nome escrito, "banco": "" e "banco_escrito": false.
+12. "data_valor" do item é a data "Atualizado em DD/MM/AAAA" do print quando existir; senão null. Nunca invente outra data.`;
 /** Grupo com subtotal ("CDB (92,77%)", "FIIs") que a IA devolveu como item: some se o valor dele é a soma dos itens logo abaixo. */
 const NOME_GRUPO = /^(cdbs?|lcis?|lcas?|lcs?|fiis?|fundos?( imobili[aá]rios)?|a[cç](ão|oes|ões)|etfs?|bdrs?|renda (fixa|vari[aá]vel)|tesouro( direto)?|deb[eê]ntures|cris?|cras?|previd[eê]ncia|criptos?|total.*)$/i;
 function tirarSubtotais(itens) {
