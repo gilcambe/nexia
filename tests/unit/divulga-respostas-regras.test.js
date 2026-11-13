@@ -36,7 +36,7 @@ test('DR6. Pedido de link ou contato', () => {
   const post = { usuario: 'outro', respondido: false, data: Date.now() };
   assert.equal(querLink('Onde fica o link?'), true);
   assert.equal(querLink('Como posso baixar?'), true);
-  assert.equal(decidir(post, 'Qual o link do site?', 'eu'), 'O link está na bio do perfil: nexiabodycoach.pages.dev (teste grátis, sem cartão).');
+  assert.equal(decidir(post, 'Qual o link do site?', 'eu'), 'O link está na bio do perfil: bodycoach.kernex.com.br (teste grátis, sem cartão).');
 });
 
 test('DR7. Pergunta do usuário', () => {
