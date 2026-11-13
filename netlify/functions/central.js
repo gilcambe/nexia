@@ -74,6 +74,10 @@ function createHandler(deps = {}) {
           const r = await require('./central/vendas').rota({ acao: body.acao, body }, { env, fetchFn });
           if (r) return res(r.status, r.corpo);
         }
+        if (String(body.acao || '').startsWith('ferramentas-')) {   // Fase 6: Consultor "?" (só IA grátis)
+          const r = await require('./central/ferramentas').rota({ acao: body.acao, body }, { router: deps.router || getRouter() });
+          if (r) return res(r.status, r.corpo);
+        }
         if (body.acao === 'testar-ias') return res(200, { ias: await empresa.testarIAs(getRouter(), getIAs()), em: new Date().toISOString() });
         // Cadastro de cliente sem PR (regra dos 20 projetos/hora). Só master chega aqui.
         if (body.acao === 'cliente-criar') { const r = await require('./central/clientes-cadastro').criar(body, { getDb }); return res(r.status, r.corpo); }
