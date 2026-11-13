@@ -325,3 +325,14 @@ test('CF-BIB. o divisor da fila recebe a Biblioteca quando o pedido é sistema n
   await planejarComIA('Quero criar um site para uma barbearia com agenda', router, [{ provider: 'groq', model: 'x' }]).catch(() => null);
   assert.match(recebido, /BIBLIOTECA KERNEX/);
 });
+
+
+test('CF-SONDA-D1. sonda de cota: D1 configurado só vale se responder de verdade (#2265)', async () => {
+  const { sondarCota } = require('../../scripts/cortex-fila');
+  const env = { NEXIA_D1_TOKEN: 't', NEXIA_D1_ACCOUNT_ID: 'a' };
+  const vivo = { get: async () => new Map() };
+  assert.equal((await sondarCota(env, async () => { throw new Error('não deveria chamar o Firebase'); }, null, vivo)).ok, true);
+  const morto = { get: async () => { throw new Error('D1 fora do ar'); } };
+  const r = await sondarCota(env, async () => { throw new Error('nem Firebase'); }, null, morto);
+  assert.equal(r.ok, false, 'D1 morto e sem Firebase: a fila espera');
+});

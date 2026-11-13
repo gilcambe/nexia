@@ -461,12 +461,20 @@ async function sondarUm(txt, fetchImpl, tokenImpl) {
 }
 
 // Vale se QUALQUER banco do rodízio (B, C) ainda tem cota de leitura e escrita.
-async function sondarCota(env = process.env, fetchImpl = (...a) => fetch(...a), tokenImpl = null) {
-  if (env.NEXIA_D1_TOKEN && env.NEXIA_D1_ACCOUNT_ID) return { ok: true, motivo: 'banco de reserva D1 ativo' }; // o Vault cai nele sozinho quando o Firebase estoura
+// #2265: D1 configurado não basta: faz uma leitura de verdade (barata). Se o D1 responde, a fila pode seguir
+// (o Vault cai nele quando o Firebase estoura); se não responde, testa o Firebase como antes.
+async function sondarCota(env = process.env, fetchImpl = (...a) => fetch(...a), tokenImpl = null, d1Impl = null) {
+  if (env.NEXIA_D1_TOKEN && env.NEXIA_D1_ACCOUNT_ID) {
+    try {
+      const d = d1Impl || require('../lib/firebase-lite/d1-backend').createD1Driver({ token: env.NEXIA_D1_TOKEN, accountId: env.NEXIA_D1_ACCOUNT_ID, fetchImpl });
+      await d.get(['ia_cota/placar']);
+      return { ok: true, motivo: 'banco de reserva D1 respondeu' };
+    } catch (e) { console.warn('[fila] D1 não respondeu na sonda:', e && e.message); var d1Caiu = true; }
+  }
   const textos = ['B', 'C'].map(l => (env[`FIREBASE_SERVICE_ACCOUNT_${l}`] || '').trim()).filter(Boolean);
   if (!textos.length) {
     const b64 = (env.FIREBASE_SERVICE_ACCOUNT_BASE64 || '').replace(/\s/g, '');
-    if (!b64) return { ok: true, motivo: 'sem conta configurada' };
+    if (!b64) return typeof d1Caiu !== 'undefined' ? { ok: false, motivo: 'banco D1 não respondeu e não há Firebase para testar' } : { ok: true, motivo: 'sem conta configurada' };
     textos.push(Buffer.from(b64, 'base64').toString('utf8'));
   }
   let ultimo = null;
