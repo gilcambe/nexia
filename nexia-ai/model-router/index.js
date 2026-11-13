@@ -234,7 +234,7 @@ function createRouter(o = {}) {
       }
     }
 
-    // Filtro adicional de segurança caso o providerSelector não tenha filtrado disjuntores ou cotas
+    // Filtro adicional de segurança para garantir cotas e disjuntores
     selecionados = selecionados.filter(d => {
       const id = d.provider;
       if (disjuntorAberto && disjuntorAberto(id)) return false;
@@ -242,18 +242,6 @@ function createRouter(o = {}) {
       if (c !== null && c <= 0) return false;
       return true;
     });
-
-    // Garantir que Jules nunca seja o primeiro se houver outras opções
-    if (selecionados.length > 1) {
-      const firstId = String(selecionados[0].provider || '').toLowerCase();
-      if (firstId.includes('jules')) {
-        const altIndex = selecionados.findIndex(d => !String(d.provider || '').toLowerCase().includes('jules'));
-        if (altIndex > 0) {
-          const [alt] = selecionados.splice(altIndex, 1);
-          selecionados.unshift(alt);
-        }
-      }
-    }
 
     for (const d of selecionados) {
       const id = d.provider;
