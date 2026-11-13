@@ -2,7 +2,7 @@
 // Livro de lições do Cortex (melhoria 7 da análise de 2026-10-07): erros reais que as tarefas já cometeram e
 // foram corrigidos pela Claude. Todo agente que escreve código lê isto no começo de cada tarefa.
 // Para acrescentar uma lição: uma linha curta no fim da lista, dizendo o erro e o jeito certo.
-// A última linha da lista é conferida por tests/unit/cortex-licoes.test.js (lição do #3567).
+// A última linha da lista é conferida por tests/unit/cortex-licoes.test.js (CL3: a lição do #3567 fica no fim, uma vez só).
 // (Arquivo JS e não .md porque o Worker não lê arquivos em tempo de execução.)
 const LICOES = Object.freeze([
   'Não invente funções nem importações: antes de usar um módulo ou função, abra o arquivo que a define (github.get_file) e confira o nome e os parâmetros. Exemplo real: "router.complete" não existe; o roteador de modelos usa router.chat e listFor.',
