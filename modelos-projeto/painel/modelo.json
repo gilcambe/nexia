@@ -1,5 +1,6 @@
 {
   "nome": "painel",
   "versao": "1.0.2",
+  "variaveis": ["nome", "titulo", "cor"],
   "variaveis": ["nome", "titulo", "cor"]
 }
