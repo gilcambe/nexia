@@ -23,6 +23,7 @@ const LICOES = Object.freeze([
   'Homologação (#3264): nenhuma versão é publicada sem o check "Homologação" verde; todo bug do dono vira caso em homologacao/catalogo com teste que falha no código antigo e passa no novo, no mesmo PR (ex.: #3267 ativos duplicados, tests/unit/prumo-homologacao.test.js).',
   'Nunca planejar arquivo em pasta que o produto não usa; ler a árvore antes',
 ];
+// Fim da lista: acrescente novas lições acima desta linha, uma por linha e entre aspas.
 // A checagem de que a lição nova existe mora no teste (tests/unit/cortex-licoes.test.js): o require nunca lança erro.
 
 const TEXTO = 'LIÇÕES APRENDIDAS (erros reais de tarefas anteriores; não repita):\n' +
