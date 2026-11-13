@@ -2,27 +2,27 @@
   "spec": {
     "kind": "system",
     "name": "Kernex Finance",
-    "tagline": "Gestão financeira simplificada para sua empresa",
-    "photo_theme": "",
-    "description": "Gestão financeira simplificada para sua empresa",
+    "tagline": "Gestão financeira empresarial integrada e controle de domínios",
+    "photo_theme": "corporate finance dashboard",
+    "description": "Gestão financeira empresarial integrada e controle de domínios",
     "folder": "sites/kernex-finance",
     "fonts": {
-      "heading": "Playfair Display",
+      "heading": "Outfit",
       "body": "Inter"
     },
     "palette": {
-      "primary": "#1e3a8a",
-      "accent": "#10b981",
+      "primary": "#0f172a",
+      "accent": "#2563eb",
       "bg": "#fbfaf7",
       "surface": "#ffffff",
       "text": "#1d2426",
       "muted": "#5d6b6e",
-      "dark": "#111827"
+      "dark": "#020617"
     },
     "style": "modern",
     "contact": {
       "whatsapp": "",
-      "phone": "(11) 4000-1234",
+      "phone": "(11) 98888-0000",
       "email": "suporte@kernex.com.br",
       "address": "",
       "city": "",
@@ -44,67 +44,138 @@
     "leads_origem": "",
     "entities": [
       {
-        "key": "contas",
-        "label": "Contas",
-        "singular": "Conta",
+        "key": "dominios",
+        "label": "Domínios e Hosts",
+        "singular": "Domínio",
         "fields": [
           {
-            "key": "nome",
-            "label": "Nome da Conta",
+            "key": "host",
+            "label": "Host / Subdomínio",
             "type": "text",
             "options": [],
             "required": true
           },
           {
-            "key": "tipo",
-            "label": "Tipo",
-            "type": "select",
-            "options": [
-              "Corrente",
-              "Poupança",
-              "Investimento"
-            ],
-            "required": true
-          },
-          {
-            "key": "saldo",
-            "label": "Saldo",
-            "type": "money",
+            "key": "destino",
+            "label": "Rota de Destino",
+            "type": "text",
             "options": [],
             "required": true
           },
           {
-            "key": "abertura",
-            "label": "Data de Abertura",
-            "type": "date",
+            "key": "status",
+            "label": "Status DNS",
+            "type": "select",
+            "options": [
+              "Ativo",
+              "Propagando",
+              "Pendente",
+              "Inativo"
+            ],
+            "required": true
+          },
+          {
+            "key": "responsavel",
+            "label": "Responsável",
+            "type": "text",
             "options": [],
             "required": true
           }
         ],
         "sample": [
           {
-            "nome": "Conta Corrente Principal",
-            "tipo": "Corrente",
-            "saldo": "15230.75",
-            "abertura": "2022-03-15"
+            "host": "finance.kernex.com.br",
+            "destino": "/prumo/",
+            "status": "Ativo",
+            "responsavel": "Equipe Core"
           },
           {
-            "nome": "Poupança Família",
-            "tipo": "Poupança",
-            "saldo": "8340.00",
-            "abertura": "2021-07-01"
+            "host": "ces.kernex.com.br",
+            "destino": "/ces/",
+            "status": "Ativo",
+            "responsavel": "Equipe CES"
           },
           {
-            "nome": "Fundo de Investimento XYZ",
-            "tipo": "Investimento",
-            "saldo": "25000.50",
-            "abertura": "2020-11-20"
+            "host": "cortex.kernex.com.br",
+            "destino": "/cortex/",
+            "status": "Ativo",
+            "responsavel": "Equipe Cortex"
           },
           {
-            "nome": "Conta Salário João",
-            "tipo": "Corrente",
-            "saldo": "4320.20",
-            "abertura": "2023-01-10"
+            "host": "nexia.gcbezerra.workers.dev",
+            "destino": "/prumo/ (Legado)",
+            "status": "Ativo",
+            "responsavel": "Migração"
+          }
+        ]
+      },
+      {
+        "key": "alertas",
+        "label": "Alertas Diários",
+        "singular": "Alerta Diário",
+        "fields": [
+          {
+            "key": "titulo",
+            "label": "Título do Alerta",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "canal",
+            "label": "Canal de Envio",
+            "type": "select",
+            "options": [
+              "E-mail",
+              "Webhook",
+              "Slack",
+              "SMS"
+            ],
+            "required": true
+          },
+          {
+            "key": "horario",
+            "label": "Horário de Disparo",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "status",
+            "label": "Status",
+            "type": "select",
+            "options": [
+              "Ativo",
+              "Pausado",
+              "Erro no Envio"
+            ],
+            "required": true
+          }
+        ],
+        "sample": [
+          {
+            "titulo": "Resumo Financeiro Diário",
+            "canal": "E-mail",
+            "horario": "07:00",
+            "status": "Ativo"
+          },
+          {
+            "titulo": "Fechamento de Caixa Parcial",
+            "canal": "Webhook",
+            "horario": "12:00",
+            "status": "Ativo"
+          },
+          {
+            "titulo": "Alerta de Vencimento de Contas",
+            "canal": "Slack",
+            "horario": "09:30",
+            "status": "Ativo"
+          },
+          {
+            "titulo": "Relatório de Auditoria Noturna",
+            "canal": "E-mail",
+            "horario": "23:59",
+            "status": "Pausado"
           }
         ]
       },
@@ -121,16 +192,16 @@
             "required": true
           },
           {
-            "key": "data",
-            "label": "Data",
-            "type": "date",
+            "key": "valor",
+            "label": "Valor",
+            "type": "money",
             "options": [],
             "required": true
           },
           {
-            "key": "valor",
-            "label": "Valor",
-            "type": "money",
+            "key": "data",
+            "label": "Data",
+            "type": "date",
             "options": [],
             "required": true
           },
@@ -139,128 +210,47 @@
             "label": "Tipo",
             "type": "select",
             "options": [
-              "Entrada",
-              "Saída"
+              "Receita",
+              "Despesa",
+              "Investimento",
+              "Transferência"
             ],
             "required": true
-          },
-          {
-            "key": "conta",
-            "label": "Conta",
-            "type": "text",
-            "options": [],
-            "required": true
           }
         ],
         "sample": [
           {
-            "descricao": "Venda de produto A",
-            "data": "2026-10-05",
-            "valor": "1500.00",
-            "tipo": "Entrada",
-            "conta": "Conta Corrente Principal"
+            "descricao": "Assinatura Servidor Cloud",
+            "valor": "1250.00",
+            "data": "2026-11-10",
+            "tipo": "Despesa"
           },
           {
-            "descricao": "Pagamento de fornecedor B",
-            "data": "2026-10-06",
-            "valor": "750.00",
-            "tipo": "Saída",
-            "conta": "Conta Corrente Principal"
+            "descricao": "Faturamento Licenças Kernex",
+            "valor": "14800.00",
+            "data": "2026-11-11",
+            "tipo": "Receita"
           },
           {
-            "descricao": "Depósito mensal poupança",
-            "data": "2026-10-01",
-            "valor": "500.00",
-            "tipo": "Entrada",
-            "conta": "Poupança Família"
+            "descricao": "Manutenção Banco de Dados",
+            "valor": "450.00",
+            "data": "2026-11-11",
+            "tipo": "Despesa"
           },
           {
-            "descricao": "Taxa de administração fundo",
-            "data": "2026-09-28",
-            "valor": "120.00",
-            "tipo": "Saída",
-            "conta": "Fundo de Investimento XYZ"
-          }
-        ]
-      },
-      {
-        "key": "clientes",
-        "label": "Clientes",
-        "singular": "Cliente",
-        "fields": [
-          {
-            "key": "nome",
-            "label": "Nome",
-            "type": "text",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "email",
-            "label": "Email",
-            "type": "email",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "telefone",
-            "label": "Telefone",
-            "type": "phone",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "empresa",
-            "label": "Empresa",
-            "type": "text",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "criado_em",
-            "label": "Data de Cadastro",
-            "type": "date",
-            "options": [],
-            "required": true
-          }
-        ],
-        "sample": [
-          {
-            "nome": "Ana Pereira",
-            "email": "ana.pereira@exemplo.com",
-            "telefone": "(11) 98765-4321",
-            "empresa": "Tech Solutions",
-            "criado_em": "2025-08-12"
-          },
-          {
-            "nome": "Bruno Martins",
-            "email": "bruno.martins@exemplo.com",
-            "telefone": "(11) 91234-5678",
-            "empresa": "Logística Boa Rota",
-            "criado_em": "2024-11-03"
-          },
-          {
-            "nome": "Carla Souza",
-            "email": "c.souza@exemplo.com",
-            "telefone": "(11) 93456-7890",
-            "empresa": "Design Criativo",
-            "criado_em": "2026-02-20"
-          },
-          {
-            "nome": "Diego Lima",
-            "email": "diego.lima@exemplo.com",
-            "telefone": "(11) 94567-1234",
-            "empresa": "Consultoria Financeira",
-            "criado_em": "2023-05-17"
+            "descricao": "Aporte de Capital Seed",
+            "valor": "50000.00",
+            "data": "2026-11-12",
+            "tipo": "Investimento"
           }
         ]
       }
     ],
     "modules": [
-      "Contas",
-      "Transações",
-      "Clientes",
-      "Relatórios"
+      "Domínios Cloudflare",
+      "Alertas e E-mails",
+      "Central de Produtos",
+      "Controle Financeiro"
     ]
   },
   "media": {}
