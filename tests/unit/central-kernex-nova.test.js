@@ -18,7 +18,7 @@ async function regras() {
 
 test('KX1. menu tem as 10 telas do Plano-Mestre + Homologação (pedido do dono 09/11)', async () => {
   const { TELAS } = await regras();
-  assert.deepEqual(TELAS.map((t) => t.nome), ['Início', 'Conversar', 'Pedir', 'Projetos', 'Clientes e modelos', 'Fábrica', 'Kernex Store', 'Vendas', 'Empresa', 'Ferramentas', 'Máquinas', 'IA & Cortex', 'Tarefas', 'Arquivos', 'Publicações', 'Homologação', 'Cofre', 'Relatórios', 'Configurações']);
+  assert.deepEqual(TELAS.map((t) => t.nome), ['Início', 'Conversar', 'Pedir', 'Projetos', 'Clientes e modelos', 'Fábrica', 'Kernex Store', 'Vendas', 'Empresa', 'Ferramentas', 'Máquinas', 'IA & Cortex', 'Tarefas', 'Arquivos', 'Publicações', 'Homologação', 'Cofre', 'Relatórios', 'Configurações', 'Ajuda']);
   assert.ok(TELAS.every((t) => t.serve.length > 10));
 });
 
@@ -129,4 +129,15 @@ test('KX12. Início tem "Status de tudo" com paradas há mais de 1 dia e Destrav
   const s = fs.readFileSync(path.join(PASTA, 'StatusTudo.tsx'), 'utf8');
   assert.ok(/acao: "destravar"/.test(s) && /Paradas há mais de 1 dia/.test(s) && /prontos de/.test(s));
   assert.ok(/<StatusTudo /.test(fs.readFileSync(path.join(PASTA, 'Inicio.tsx'), 'utf8')));
+});
+
+test('KX-MENU. C2-F1: menu de 7 itens; toda tela (menos o Início) cabe em exatamente um item', async () => {
+  const { MENU, TELAS, grupoDaTela } = await regras();
+  assert.deepEqual(MENU.map((g) => g.nome), ['Conversar', 'Projetos', 'Clientes & Vendas', 'Marketing', 'Arquivos', 'Ajuda', 'Configurações']);
+  for (const t of TELAS) {
+    const n = MENU.filter((g) => g.telas.includes(t.id)).length;
+    assert.equal(n, t.id === 'inicio' ? 0 : 1, t.id);
+  }
+  assert.equal(grupoDaTela('cofre').id, 'config', 'telas técnicas ficam em Configurações');
+  assert.equal(grupoDaTela('inicio'), null);
 });
