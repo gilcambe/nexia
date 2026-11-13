@@ -46,7 +46,12 @@ function createRouter(o = {}) {
 
   // #2848: todo pedido conta no crédito interno do provedor (pedidos, tokens, 429). Contar nunca quebra a resposta.
   const uso = o.uso || require('./cota').getUso();
-  const contar = (id, inc) => { try { uso.incrementUsage(id, inc); } catch { /* sem conta, segue */ } };
+  const { registrarErro429, obterCotaDisponivel, disjuntorAberto } = require('./cota');
+  const contar = (id, inc) => { 
+    try { 
+      uso.incrementUsage(id, inc); 
+    } catch { /* sem conta, segue */ } 
+  };
   
   const { selecionarProvedor } = require('../../src/utils/providerSelector');
   const { tetosConfigurados } = require('../../src/config/limits');
@@ -57,8 +62,18 @@ function createRouter(o = {}) {
     if (contados.has(id)) return contados.get(id);
     const w = Object.create(p);
     w.chat = async (model, req) => {
-      try { const out = await p.chat(model, req); contar(id, { requests: 1, tokens: tokensDe(out) }); return out; }
-      catch (e) { contar(id, { requests: 1, errors: e429(e) }); throw e; }
+      try { 
+        const out = await p.chat(model, req); 
+        contar(id, { requests: 1, tokens: tokensDe(out) }); 
+        return out; 
+      }
+      catch (e) { 
+        if (e429(e)) {
+          try { registrarErro429(id); } catch {}
+        }
+        contar(id, { requests: 1, errors: e429(e) }); 
+        throw e; 
+      }
     };
     if (typeof p.stream === 'function') {
       w.stream = async function* (model, req) {
@@ -70,17 +85,31 @@ function createRouter(o = {}) {
             yield ev;
           }
           contar(id, { requests: 1, tokens: tokensDe({ usage }) || Math.ceil(texto / 4) });
-        } catch (e) { contar(id, { requests: 1, errors: e429(e) }); throw e; }
+        } catch (e) { 
+          if (e429(e)) {
+            try { registrarErro429(id); } catch {}
+          }
+          contar(id, { requests: 1, errors: e429(e) }); 
+          throw e; 
+        }
       };
     }
     contados.set(id, w);
     return w;
   }
   const providerFor = desc => {
-    const p = desc && providers[desc.provider];
+    const id = desc && desc.provider;
+    if (disjuntorAberto && disjuntorAberto(id)) {
+      throw new ModelError(CODES.UPSTREAM, `Disjuntor aberto para o provedor: ${id}`, { provider: id, status: 503 });
+    }
+    const cota = obterCotaDisponivel ? obterCotaDisponivel(id) : null;
+    if (cota !== null && cota <= 0) {
+      throw new ModelError(CODES.UPSTREAM, `Sem cota disponível para o provedor: ${id}`, { provider: id, status: 429 });
+    }
+    const p = desc && providers[id];
     if (!p) throw new ModelError(CODES.UNKNOWN_PROVIDER, `Provedor desconhecido: ${desc && desc.provider}`);
     if (!desc.model || typeof desc.model !== 'string') throw new ModelError(CODES.UNKNOWN_PROVIDER, 'Modelo não informado.');
-    return contado(desc.provider, p);
+    return contado(id, p);
   };
 
   function capabilities(desc) {
@@ -166,9 +195,22 @@ function createRouter(o = {}) {
   /** Tenta cada descritor até um responder. Erros por provedor ficam em `attempts`. */
   async function chatWithFallback(descs, req) {
     const attempts = [];
-    for (const d of dedupe(descs)) {
+    const selecionados = selecionarProvedor ? selecionarProvedor(dedupe(descs), req, { obterCotaDisponivel, disjuntorAberto, tetosConfigurados }) : dedupe(descs);
+    for (const d of selecionados) {
+      if (disjuntorAberto && disjuntorAberto(d.provider)) {
+        attempts.push({ provider: d.provider, model: d.model, code: 'CIRCUIT_BREAKER' });
+        continue;
+      }
+      const cota = obterCotaDisponivel ? obterCotaDisponivel(d.provider) : null;
+      if (cota !== null && cota <= 0) {
+        attempts.push({ provider: d.provider, model: d.model, code: 'NO_QUOTA' });
+        continue;
+      }
       try { return { ...(await chat(d, req)), attempts }; }
       catch (e) {
+        if (e429(e)) {
+          try { registrarErro429(d.provider); } catch {}
+        }
         if (e && e.code === CODES.ABORTED) throw e;
         attempts.push({ provider: d.provider, model: d.model, code: e.code || 'ERROR' });
       }
