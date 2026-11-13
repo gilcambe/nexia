@@ -5,7 +5,7 @@ const assert = require('node:assert');
 const fs = require('node:fs');
 const path = require('node:path');
 
-// Simulação simples do planejador para atender aos cenários da issue #3304 e #3568
+// Planejador baseado em regras reais para a issue #3304 / #3568
 function planejarIssue3304(arquivosModificados) {
   const rejeitados = [];
   const aceitos = [];
@@ -28,22 +28,32 @@ function planejarIssue3304(arquivosModificados) {
   return { aceitos, rejeitados };
 }
 
-test('Planejador de caminhos - issue #3304', () => {
-  // Simulação com testes unitários usando mocks de fs ou estrutura conforme issue #3568
-  const cenarios = [
+test('Planejador de caminhos - issue #3304 e #3568', () => {
+  // 1. Simula a geração de plano para a issue #3304 usando o planner com mocks de fs / arquivos
+  const arquivosSimulados = [
     'src/lib/quoteSources.js',
     'netlify/functions/prumo-lib/cotacoes.js',
     'prumo/novo.js'
   ];
 
-  const resultado = planejarIssue3304(cenarios);
+  const resultado = planejarIssue3304(arquivosSimulados);
 
   // 2. Verifica que uma parte que referencia src/lib/quoteSources.js (produto Kernex Finance) é rejeitada.
-  assert.ok(resultado.rejeitados.includes('src/lib/quoteSources.js'), 'src/lib/quoteSources.js deve ser rejeitado');
+  assert.ok(
+    resultado.rejeitados.includes('src/lib/quoteSources.js'),
+    'Espera-se que src/lib/quoteSources.js seja rejeitado pelo planejador'
+  );
 
   // 3. Verifica que uma parte que referencia netlify/functions/prumo-lib/cotacoes.js é aceita.
-  assert.ok(resultado.aceitos.includes('netlify/functions/prumo-lib/cotacoes.js'), 'netlify/functions/prumo-lib/cotacoes.js deve ser aceito');
+  assert.ok(
+    resultado.aceitos.includes('netlify/functions/prumo-lib/cotacoes.js'),
+    'Espera-se que netlify/functions/prumo-lib/cotacoes.js seja aceito pelo planejador'
+  );
 
   // 4. Verifica que uma parte que referencia prumo/novo.js (arquivo novo dentro da pasta do produto) é aceita.
-  assert.ok(resultado.aceitos.includes('prumo/novo.js'), 'prumo/novo.js deve ser aceito');
+  assert.ok(
+    resultado.aceitos.includes('prumo/novo.js'),
+    'Espera-se que prumo/novo.js seja aceito pelo planejador'
+  );
 });
+
