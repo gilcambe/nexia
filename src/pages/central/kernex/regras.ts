@@ -13,7 +13,7 @@ export const TELAS = [
   { id: "maquinas", nome: "Máquinas", icone: "🖥️", serve: "PC 1 e PC 2: ligados, ocupados e o que estão fazendo." },
   { id: "ia", nome: "IA & Cortex", icone: "🤖", serve: "O que cada IA está fazendo agora e quanto de cota resta." },
   { id: "tarefas", nome: "Tarefas", icone: "✅", serve: "Cada tarefa: quem pegou, onde parou e por quê." },
-  { id: "arquivos", nome: "Arquivos", icone: "🗂️", serve: "Achar qualquer arquivo dos seus PCs e abrir com 1 clique." },
+  { id: "arquivos", nome: "Arquivos", icone: "🗂️", serve: "Achar os arquivos da empresa (pasta C:\\KERNEX dos PCs) e mostrar no PC com 1 toque." },
   { id: "publicacoes", nome: "Publicações", icone: "🚀", serve: "O que entrou no código e o que já está no ar." },
   { id: "homologacao", nome: "Homologação", icone: "🧪", serve: "Cada produto testado antes de qualquer versão: verde passa, vermelho bloqueia." },
   { id: "cofre", nome: "Cofre", icone: "🔐", serve: "Nomes das chaves e quando foram trocadas. O valor nunca aparece." },

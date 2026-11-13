@@ -26,6 +26,7 @@ import Empresa from "./Empresa";
 import Ferramentas from "./Ferramentas";
 import Conversar from "./Conversar";
 import Ajuda from "./Ajuda";
+import Arquivos from "./Arquivos";
 import { montarAcoes } from "./donos";
 
 // #3219: casca da Central nova, no jeito do "Painel Executivo" que o dono mandou.
@@ -161,7 +162,7 @@ export default function Casca() {
         )}
         {tela !== "inicio" && <p className="kx-serve" data-testid="kx-serve"><b>{atual.nome}:</b> {atual.serve}</p>}
         {tela === "inicio" ? <Inicio irPara={ir} painel={painel} nome={nome} /> : tela === "tarefas" ? <Tarefas painel={painel} ir={ir} /> : tela === "ia" ? <IaCortex /> : tela === "publicacoes" ? <Publicacoes />
-          : tela === "projetos" ? <Projetos /> : tela === "maquinas" ? <Maquinas /> : tela === "cofre" ? <Cofre /> : tela === "relatorios" ? <Relatorios painel={painel} /> : tela === "homologacao" ? <Homologacao /> : tela === "config" ? <Config /> : tela === "pedir" ? <Pedir /> : tela === "clientes" ? <Clientes /> : tela === "fabrica" ? <Fabrica /> : tela === "store" ? <Store /> : tela === "vendas" ? <Vendas /> : tela === "empresa" ? <Empresa /> : tela === "ferramentas" ? <Ferramentas /> : tela === "conversar" ? <Conversar /> : tela === "ajuda" ? <Ajuda ir={ir} /> : <EmBreve nome={atual.nome} />}
+          : tela === "projetos" ? <Projetos /> : tela === "maquinas" ? <Maquinas /> : tela === "cofre" ? <Cofre /> : tela === "relatorios" ? <Relatorios painel={painel} /> : tela === "homologacao" ? <Homologacao /> : tela === "config" ? <Config /> : tela === "pedir" ? <Pedir /> : tela === "clientes" ? <Clientes /> : tela === "fabrica" ? <Fabrica /> : tela === "store" ? <Store /> : tela === "vendas" ? <Vendas /> : tela === "empresa" ? <Empresa /> : tela === "ferramentas" ? <Ferramentas /> : tela === "conversar" ? <Conversar /> : tela === "ajuda" ? <Ajuda ir={ir} /> : tela === "arquivos" ? <Arquivos /> : <EmBreve nome={atual.nome} />}
       </main>
     </div>
   );
