@@ -1,5 +1,7 @@
 'use strict';
 
+// Migração para criar a tabela livro_cotas, conforme solicitação.
+
 module.exports = {
   up: async (queryInterface, Sequelize) => {
     await queryInterface.createTable('livro_cotas', {
