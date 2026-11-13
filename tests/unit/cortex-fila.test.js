@@ -308,3 +308,10 @@ test('CF-DONO. pedido do dono pela Central e "Destravar" passam na frente das pa
   const a = decidir({ issues: [parteUrg(1), parteUrg(2), pedido, destravada], runs: [], agora: AGORA, pistas: 2 });
   assert.deepEqual(a.filter(x => x.tipo === 'despachar').map(x => x.numero), [60, 50]);
 });
+
+test('CF-FECHA. pedido do executor antigo leva "Closes #N" (o PR fecha a parte ao ser juntado), sem duplicar', () => {
+  const { comFecha } = require('../../scripts/cortex-fila');
+  assert.equal(comFecha('Criar modelo.json', 3651), 'Criar modelo.json\n\nCloses #3651');
+  assert.equal(comFecha('x\n\nCloses #7', 7), 'x\n\nCloses #7');
+  assert.match(comFecha(undefined, 9), /Closes #9$/);
+});
