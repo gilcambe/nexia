@@ -816,6 +816,23 @@
       ],
       "clonavel": true,
       "previa": "https://academia.kernex.com.br"
+    },
+    {
+      "id": "demo-profissional",
+      "nome": "Profissional liberal (nutricionista, consultor, terapeuta)",
+      "nichos": [
+        "saude",
+        "servicos",
+        "profissional"
+      ],
+      "modulos": [
+        "site",
+        "whatsapp",
+        "privacidade",
+        "galeria"
+      ],
+      "clonavel": true,
+      "previa": "https://profissional.kernex.com.br"
     }
   ],
   "ramos": {
@@ -907,6 +924,18 @@
       "calçados",
       "acessorios",
       "acessórios"
+    ],
+    "profissional": [
+      "nutricionista",
+      "nutri",
+      "consultor",
+      "consultoria",
+      "terapeuta",
+      "psicologo",
+      "psicologa",
+      "coach",
+      "fisioterapeuta",
+      "fonoaudiologo"
     ]
   }
 }

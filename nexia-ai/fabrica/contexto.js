@@ -21,7 +21,7 @@ function contextoBiblioteca(goal, cat = carregar()) {
   const nichos = nichosDoRamo(g, cat).filter(n => (cat.modelos || []).some(m => m.nichos.includes(n)) || Object.keys(cat.ramos || {}).includes(n));
   const citados = modulosCitados(g, cat);
   const ids = new Set(citados.map(m => m.id));
-  const pontua = mo => (mo.nichos.some(n => nichos.includes(n)) ? 10 : 0) + mo.modulos.filter(x => ids.has(x)).length * 2 + (mo.clonavel ? 1 : 0);
+  const pontua = mo => mo.nichos.filter(n => nichos.includes(n)).length * 10 + mo.modulos.filter(x => ids.has(x)).length * 2 + (mo.clonavel ? 1 : 0);
   const modelo = (cat.modelos || []).map(mo => ({ mo, p: pontua(mo) })).filter(x => x.p >= 3).sort((a, b) => b.p - a.p).map(x => x.mo)[0] || null;
   const doModelo = modelo ? (cat.modulos || []).filter(m => modelo.modulos.includes(m.id)) : [];
   const prontos = [...new Map([...doModelo, ...citados].map(m => [m.id, m])).values()];
