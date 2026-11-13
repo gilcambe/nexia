@@ -22,6 +22,7 @@ const PRODUTOS = [
   { id: 'adriano', logo: '/central/logos/adriano.png', segmento: 'Nutrição', nome: 'Adriano Blumer', icone: '🥗', frase: 'Cliente: nutricionista (landing com WhatsApp e redes)', pendente: true, tipo: 'cliente' },
   // Copiloto e treino para atendentes de call center (nome neutro; nada de material de empresa anterior entra no produto).
   { id: 'atende', segmento: 'Atendimento', nome: 'Atende', icone: '🎧', frase: 'Em preparação: copiloto e treino de ligação para atendentes', pendente: true, tipo: 'produto' },
+  { id: 'academy', segmento: 'Treinamento', nome: 'KERNEX Academy', icone: '🎓', frase: 'Plataforma de treinamento para qualquer empresa (1º curso: inglês)', pendente: true, endereco: 'https://academy.kernex.com.br/', tipo: 'produto' },
   { id: 'arqia', segmento: 'Arquitetura', nome: 'Arqia', icone: '📐', frase: 'Produto futuro: sistema para arquitetos', pendente: true, tipo: 'produto' },
   { id: 'kernex', segmento: 'Sites', nome: 'Site da Kernex', icone: '🌐', frase: 'Site institucional da Kernex', site: 'https://kernex.com.br/', tipo: 'produto' },
   { id: 'vault', segmento: 'Dados', nome: 'Vault', icone: '🔐', frase: 'Cofre de segredos e configurações', tipo: 'produto' },

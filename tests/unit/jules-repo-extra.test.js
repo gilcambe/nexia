@@ -14,7 +14,7 @@ function falso({ extra = [], extraStatus = 200, prsExtra = [] } = {}) {
     chamadas.push({ url: u, method: init.method || 'GET', body: init.body });
     const res = (status, d) => ({ ok: status < 400, status, json: async () => d });
     if (u.includes('jules.googleapis.com')) return res(200, { id: 'S9' });
-    if (u.includes('/repos/gilcambe/avaya-gsd/')) {
+    if (u.includes('/repos/gilcambe/fluency-lab/')) {
       if (extraStatus !== 200) return res(extraStatus, { message: 'Not Found' });
       if (/\/pulls\?/.test(u)) return res(200, prsExtra);
       if (/issues\?/.test(u)) return res(200, extra);
@@ -28,8 +28,9 @@ function falso({ extra = [], extraStatus = 200, prsExtra = [] } = {}) {
   return { fetchFn, chamadas };
 }
 
-test('EXTRA1: repo padrão do extra é gilcambe/avaya-gsd e aceita lista', () => {
-  assert.deepStrictEqual(reposExtras({}), ['gilcambe/avaya-gsd']);
+test('EXTRA1: repo padrão do extra é a Academy (fluency-lab), aceita lista e nunca o Avaya', () => {
+  assert.deepStrictEqual(reposExtras({ JULES_REPOS_EXTRA: 'gilcambe/avaya-gsd,a/b' }), ['a/b']);
+  assert.deepStrictEqual(reposExtras({}), ['gilcambe/fluency-lab']);
   assert.deepStrictEqual(reposExtras({ JULES_REPOS_EXTRA: 'a/b, c/d ,lixo' }), ['a/b', 'c/d']);
   assert.deepStrictEqual(reposExtras({ JULES_REPOS_EXTRA: '' }), []);
 });
@@ -45,17 +46,17 @@ test('EXTRA2: escolhe a menor cortex-fila sem jules-enviado e sem PR', () => {
   assert.strictEqual(proximaExtra([], [], nomes), null);
 });
 
-test('EXTRA3: envio vai para sources/github/gilcambe/avaya-gsd, base main, sem cortex-travado', async () => {
+test('EXTRA3: envio vai para sources/github/gilcambe/fluency-lab, base main, sem cortex-travado', async () => {
   const extra = [{ number: 3, state: 'open', title: 'voz', body: 'faça', labels: [{ name: 'cortex-fila' }] }];
   const { fetchFn, chamadas } = falso({ extra });
   const out = await rodar(AS_15, { env: { JULES_API_KEY: 'k', NEXIA_JOBS_TOKEN: 't' }, fetchFn });
   const jules = chamadas.filter(c => c.url.includes('jules.googleapis.com'));
   assert.strictEqual(jules.length, 1);
   const corpo = JSON.parse(jules[0].body);
-  assert.strictEqual(corpo.sourceContext.source, 'sources/github/gilcambe/avaya-gsd');
+  assert.strictEqual(corpo.sourceContext.source, 'sources/github/gilcambe/fluency-lab');
   assert.strictEqual(corpo.sourceContext.githubRepoContext.startingBranch, 'main');
   assert.ok(!/develop/.test(corpo.prompt));
-  const rot = chamadas.find(c => c.method === 'POST' && /avaya-gsd\/issues\/3\/labels/.test(c.url));
+  const rot = chamadas.find(c => c.method === 'POST' && /fluency-lab\/issues\/3\/labels/.test(c.url));
   assert.deepStrictEqual(JSON.parse(rot.body).labels, ['jules-enviado']);
   assert.strictEqual(out.extras[0].issue, 3);
 });
@@ -63,7 +64,7 @@ test('EXTRA3: envio vai para sources/github/gilcambe/avaya-gsd, base main, sem c
 test('EXTRA4: 404 no repo extra não derruba a rodada', async () => {
   const { fetchFn } = falso({ extraStatus: 404 });
   const out = await rodar(AS_15, { env: { JULES_API_KEY: 'k', NEXIA_JOBS_TOKEN: 't' }, fetchFn });
-  assert.strictEqual(out.extras[0].repo, 'gilcambe/avaya-gsd');
+  assert.strictEqual(out.extras[0].repo, 'gilcambe/fluency-lab');
   assert.ok(out.extras[0].erro || out.extras[0].enviados === 0 || out.extras[0].status);
 });
 
