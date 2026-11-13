@@ -43,6 +43,9 @@
 </style>
 </head>
 <body>
+<!-- #3556: no endereço antigo, avisa o novo (o antigo continua funcionando para quem instalou) -->
+<div id="kf-novo-endereco" hidden style="background:#0f766e;color:#fff;padding:10px 14px;text-align:center;font:14px system-ui,sans-serif">Novo endereço: <a href="https://finance.kernex.com.br/" style="color:#fff;font-weight:700">finance.kernex.com.br</a></div>
+<script>try{if(location.hostname!=="finance.kernex.com.br"&&!/^(localhost|127.)/.test(location.hostname))document.getElementById("kf-novo-endereco").hidden=false}catch(e){}</script>
 <header>
   <img src="/prumo/icone.svg" alt="">
   <h1>Kernex Finance</h1>
