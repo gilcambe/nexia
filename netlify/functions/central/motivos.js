@@ -1,6 +1,7 @@
 'use strict';
 // #2717 (Ordem Mestra Kernex, fase 8): por que cada tarefa da fila está parada ou esperando, em português simples.
 // Lê só rótulos (o que a fila, o Jules e a Reserva já gravam). Função pura, testada em tests/unit/central-motivos.test.js.
+// #3126: motivoDe serve para a Central e para o /cortex (estadoTarefa usa o mesmo texto).
 
 const MOTIVOS = Object.freeze({
   rodando: 'Fazendo agora',
@@ -17,8 +18,8 @@ const MOTIVOS = Object.freeze({
   fila: 'Esperando a vez na fila',
 });
 
-const nomes = (i) => (i.labels || []).map((l) => l.name || l);
-const tentativas = (ls) => ls.reduce((m, l) => { const x = /^tentativa-(\d+)$/.exec(l); return x ? Math.max(m, Number(x[1])) : m; }, 0);
+const nomes = (i) => (i.labels || []).map((l) => (l && typeof l === 'object' ? l.name || '' : l) || '');
+const tentativas = (ls) => ls.reduce((m, l) => { const x = /^tentativa-(\d+)$/.exec(String(l || '')); return x ? Math.max(m, Number(x[1])) : m; }, 0);
 
 /** Motivo de uma issue: { codigo, texto }. A ordem dos testes é a ordem de importância. */
 function motivoDe(issue) {
