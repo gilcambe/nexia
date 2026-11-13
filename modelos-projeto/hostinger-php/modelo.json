@@ -1,0 +1,10 @@
+{
+  "nome": "modelo_hostinger_php",
+  "versao": "1.0.0",
+  "variaveis": [
+    "nome",
+    "titulo",
+    "whatsapp",
+    "cor"
+  ]
+}
