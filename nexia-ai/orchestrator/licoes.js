@@ -3,6 +3,9 @@
 // foram corrigidos pela Claude. Todo agente que escreve código lê isto no começo de cada tarefa.
 // Para acrescentar uma lição: uma linha curta no fim da lista, dizendo o erro e o jeito certo.
 // (Arquivo JS e não .md porque o Worker não lê arquivos em tempo de execução.)
+// O require devolve um array puro de lições (array simples, sem propriedades penduradas).
+// TEXTO (string pronta para o prompt), registrarPassagem e listarPassagens continuam disponíveis
+// em ./licoes-extra (mesmos nomes de antes), então nada que já usa quebrou.
 const LICOES = Object.freeze([
   'Não invente funções nem importações: antes de usar um módulo ou função, abra o arquivo que a define (github.get_file) e confira o nome e os parâmetros. Exemplo real: "router.complete" não existe; o roteador de modelos usa router.chat e listFor.',
   'Funções assíncronas pedem await. Exemplo real: verifyBearerToken sem await deixava qualquer pessoa passar sem login.',
@@ -45,12 +48,5 @@ function listarPassagens() {
   return [...REGISTRO_PASSAGENS];
 }
 
-// O require do módulo devolve a lista de lições (array) com os extras pendurados nela: LICOES_EXTRA, TEXTO, registrarPassagem e
-// listarPassagens continuam disponíveis para quem já usa. As lições ficam congeladas (Object.freeze), como antes.
-module.exports = Object.assign([...LICOES], {
-  LICOES,
-  LICOES_EXTRA,
-  TEXTO,
-  registrarPassagem,
-  listarPassagens,
-});
+// O require do módulo devolve só a lista de lições (array puro), como no começo.
+module.exports = [...LICOES];
