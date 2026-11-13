@@ -98,6 +98,7 @@ async function main() {
 }
 // 13/11: OpenRouter (só modelos :free; nada pago). Testa cada chave e o limite do dia, sem mostrar a chave.
 async function openrouter() {
+  const env = process.env;
   for (const nome of ['OPENROUTER_API_KEY', 'OPENROUTER_API_KEY_2']) {
     const k = env[nome];
     if (!k) { out(false, `OpenRouter ${nome}`, 'vazio'); continue; }
