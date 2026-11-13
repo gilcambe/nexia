@@ -18,8 +18,8 @@ function conferirTotais(conferencia, itens, dup) {
   }
   const comTotal = grupos.filter((g) => g.t);
   const tudoT = comTotal.reduce((a, g) => a + g.t, 0); const tudoS = grupos.reduce((a, g) => a + g.soma, 0);
-  const geral = tudoT > 0 && Math.abs(tudoT - tudoS) <= tudoT * 0.01; // a ordem dos prints veio trocada, mas o todo bate
-  return comTotal.map((g) => ({ total_print: cent(g.t), soma_itens: cent(g.soma), confere: geral || Math.abs(g.t - g.soma) <= g.t * 0.01 }));
+  const geral = tudoT > 0 && Math.abs(tudoT - tudoS) <= 1; // a ordem dos prints veio trocada, mas o todo bate
+  return comTotal.map((g) => ({ total_print: cent(g.t), soma_itens: cent(g.soma), diferenca: cent(g.soma - g.t), confere: geral || Math.abs(g.t - g.soma) <= 1 })); // #3532: tolerância de R$ 1
 }
 /** Chave do ativo (#3267): banco + (ticker ou nome), sem acento/maiúscula/"S.A."/"Ltda"/palavras soltas (do, da, de).
  *  Igual a chaveAtivo de netlify/functions/prumo.js (teste KF-010). */
@@ -67,7 +67,7 @@ if (typeof window !== 'undefined') (function () {
       { nome: 'vencimento', rotulo: 'Vencimento (se tiver)', tipo: 'date', valor: i && i.vencimento },
       { nome: 'taxa', rotulo: 'Rentabilidade (ex.: 110% CDI)', valor: i && i.taxa },
       { nome: 'objetivo_id', rotulo: 'Objetivo', opcoes: optObj(i && i.objetivo_id) },
-    ], (d) => { const x = { ...d, valor: Number(d.valor), id: i && i.id }; ['objetivo_id', 'vencimento', 'taxa'].forEach((k) => { if (!x[k]) delete x[k]; }); return MB.api('carteira_salvar', x); }, i && (() => MB.api('carteira_apagar', { id: i.id })));
+    ], (d) => { const x = { ...d, valor: Number(d.valor), id: i && i.id, origem: (i && i.origem) || 'mao' }; ['objetivo_id', 'vencimento', 'taxa'].forEach((k) => { if (!x[k]) delete x[k]; }); return MB.api('carteira_salvar', x); }, i && (() => MB.api('carteira_apagar', { id: i.id })));
 
     el.querySelector('#add').onclick = () => editar(null);
     const limpar = el.querySelector('#limpar');
@@ -183,8 +183,10 @@ if (typeof window !== 'undefined') (function () {
     });
     const totais = conferirTotais(conferencia, itens, situ.map((x) => x.s === 'dup'));
     const avisos = totais.filter((c) => c && c.total_print).map((c) => c.confere === false
-      ? `<p style="color:#f5b041">⚠️ A soma dos itens (${brl(c.soma_itens)}) não bate com o total do print (${brl(c.total_print)}).${c.soma_itens < c.total_print ? ` Faltam ${brl(c.total_print - c.soma_itens)}: mande o print que ficou de fora ou adicione à mão depois.` : ' Confira os valores abaixo.'}</p>`
+      ? `<p style="color:#ec7063" class="nao-bate">❌ Não bate com o print: a soma dos itens (${brl(c.soma_itens)}) é diferente do total do print (${brl(c.total_print)}), diferença de ${brl(Math.abs(c.soma_itens - c.total_print))}.${c.soma_itens < c.total_print ? ` Faltam ${brl(c.total_print - c.soma_itens)}: mande o print que ficou de fora ou adicione à mão depois.` : ' Confira os valores abaixo.'}</p>`
       : (c.confere ? `<p style="color:#58d68d">✅ Soma confere com o total do print (${brl(c.total_print)}).</p>` : '')).join('');
+    const semBanco = itens.filter((i) => !String(i.banco || '').trim()).length;
+    const conhecidos = [...new Set(atuais.map((a) => a.banco).filter(Boolean).concat(['Inter', 'Nubank', 'XP', 'BTG Pactual', 'Itaú', 'Bradesco', 'Banco do Brasil', 'Caixa', 'Santander', 'Rico', 'Clear', 'NuInvest']))];
     el.innerHTML = `<div class="card"><b>Confira antes de salvar</b>${avisos}<p class="fraco">Corrija o que estiver errado e desmarque o que não quer salvar. Ainda não foi salvo na sua carteira, mas fica guardado neste celular até você salvar ou cancelar.</p>
       ${itens.map((i, n) => `<div class="card" data-n="${n}" style="background:#0e1a14">
         <div class="fraco">${situ[n].txt}</div>
@@ -195,12 +197,23 @@ if (typeof window !== 'undefined') (function () {
         ${i.ticker || i.quantidade ? `<div class="fraco">${esc(i.ticker || '')}${i.quantidade ? ' · ' + esc(i.quantidade) + ' cotas' : ''}${i.preco_medio ? ' · preço médio ' + brl(i.preco_medio) : ''}${i.cotacao ? ' · cotação ' + brl(i.cotacao) : ''}${i.corrigido_por_cotacao ? ` · ✔️ valor = quantidade × cotação (a leitura tinha dado ${brl(i.valor_lido)})` : ''}</div>` : ''}
         <label>Saldo atual (R$)</label><input data-k="valor" type="number" step="0.01" value="${i.valor}">
         <label>Objetivo</label><select data-k="objetivo_id">${optObj('')}</select></div>`).join('')}
+      ${semBanco ? `<div class="card" id="escolher-banco"><div class="fraco">🏦 ${semBanco} item(ns) sem banco: o nome do banco não está escrito no print. De qual banco ou corretora são estes prints?</div>
+        <input id="banco-lote" list="bancos-conhecidos" placeholder="Ex.: Inter, Nubank, XP"><datalist id="bancos-conhecidos">${conhecidos.map((b) => `<option value="${esc(b)}">`).join('')}</datalist>
+        <button class="btn sec" id="aplicar-banco" style="margin-top:6px">Usar este banco em todos sem banco</button></div>` : ''}
       ${descartados && descartados.length ? `<p class="fraco">${descartados.length} item(ns) sem valor legível foram ignorados.</p>` : ''}
-      <div class="linha"><button class="btn sec" id="cancelar">Cancelar</button><button class="btn" id="salvar">Salvar selecionados</button></div></div>`;
+      <div class="linha"><button class="btn sec" id="cancelar">Cancelar</button><button class="btn" id="salvar">Salvar selecionados</button></div>
+      ${atuais.length ? '<button class="btn sec" id="refazer" style="width:100%;margin-top:8px">♻️ Refazer carteira a partir destes prints</button><p class="fraco">Apaga os itens que vieram de prints antigos (os que você digitou à mão ficam) e salva só esta leitura.</p>' : ''}</div>`;
     el.querySelector('#cancelar').onclick = () => { apagarRascunho(); recarregar(); };
-    el.querySelector('#salvar').onclick = async () => {
+    const ab = el.querySelector('#aplicar-banco');
+    if (ab) ab.onclick = () => {
+      const b = el.querySelector('#banco-lote').value.trim(); if (!b) return;
+      el.querySelectorAll('[data-n] [data-k="banco"]').forEach((f) => { if (!f.value.trim()) f.value = b; });
+      itens.forEach((i) => { if (!String(i.banco || '').trim()) i.banco = b; }); guardarRascunho({ itens, descartados, conferencia });
+      el.querySelector('#escolher-banco').innerHTML = `<div class="fraco">🏦 Banco ${esc(b)} aplicado.</div>`;
+    };
+    const salvarEscolhidos = async (atuais) => {
       const escolhidos = [...el.querySelectorAll('[data-n]')].filter((c) => c.querySelector('input[type=checkbox]').checked).map((c) => {
-        const base = { ...itens[Number(c.dataset.n)] };
+        const base = { ...itens[Number(c.dataset.n)], origem: 'print' };
         c.querySelectorAll('[data-k]').forEach((f) => { base[f.dataset.k] = f.dataset.k === 'valor' ? Number(f.value) : f.value; });
         return base;
       });
@@ -219,6 +232,17 @@ if (typeof window !== 'undefined') (function () {
       else MB.mostrarErro(`${escolhidos.length - salvos} item(ns) não foram salvos e continuam guardados para tentar de novo.`);
       ok(`✅ ${salvos} investimento(s) salvos/atualizados.`);
       recarregar();
+    };
+    el.querySelector('#salvar').onclick = () => salvarEscolhidos(atuais);
+    const rf = el.querySelector('#refazer');
+    if (rf) rf.onclick = async () => {
+      const t = prompt('Isso apaga os investimentos que vieram de prints antigos (os digitados à mão ficam) e salva só estes. Para confirmar, escreva REFAZER');
+      if (String(t || '').trim().toUpperCase() !== 'REFAZER') return;
+      try {
+        await MB.api('carteira_limpar', { confirmar: 'LIMPAR', so_print: true });
+        const { itens: restantes } = await MB.api('carteira_listar');
+        await salvarEscolhidos(restantes);
+      } catch { /* erro já mostrado */ }
     };
   }
 })();
