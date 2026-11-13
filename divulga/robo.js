@@ -30,17 +30,18 @@ function formatoDoHorario(d = new Date()) {
 const lerJson = (f, padrao) => { try { return JSON.parse(fs.readFileSync(f, 'utf8')); } catch { return padrao; } };
 const lerPasta = p => (fs.existsSync(p) ? fs.readdirSync(p).filter(f => f.endsWith('.json')).sort() : []);
 /**
- * Perfil (C2-F5, 13/11): "kernex" posta a própria KERNEX nas redes DELA (Página FB + IG KERNEX).
- * Lê clientes/fila de divulga/perfis/<perfil>/ e usa SÓ os segredos KERNEX_META_*: os DIVULGA_META_* (Body Coach)
- * são apagados do ambiente desta rodada, para nunca postar a KERNEX na conta do Body Coach (nem o contrário).
+ * Perfil (C2-F5, 13/11): "kernex" posta a própria KERNEX na rede DELA. Decisão do dono: SÓ Instagram (conta
+ * profissional pela "Instagram API with Instagram Login", sem Página do Facebook); LinkedIn talvez depois.
+ * Lê clientes/fila de divulga/perfis/<perfil>/ e usa SÓ os segredos KERNEX_IG_* (e KERNEX_LINKEDIN_* no futuro):
+ * todos os segredos de rede do Body Coach são apagados do ambiente desta rodada (Facebook da KERNEX = desligado).
  */
-const PERFIS = { kernex: 'KERNEX_' };
+const PERFIS = { kernex: { pre: 'KERNEX_', redes: /^(IG|LINKEDIN)_/ } };
 function envDoPerfil(env, perfil) {
   if (!perfil) return env;
-  const pre = PERFIS[perfil];
-  if (!pre) throw new Error(`Perfil desconhecido: ${perfil}`);
-  const limpo = Object.fromEntries(Object.entries(env).filter(([k]) => !/^(DIVULGA_(META|THREADS|PINTEREST|BLUESKY)_|META_)/.test(k)));
-  for (const [k, v] of Object.entries(env)) if (k.startsWith(pre) && /^(META|THREADS|PINTEREST|BLUESKY)_/.test(k.slice(pre.length))) limpo['DIVULGA_' + k.slice(pre.length)] = v;
+  const p = PERFIS[perfil];
+  if (!p) throw new Error(`Perfil desconhecido: ${perfil}`);
+  const limpo = Object.fromEntries(Object.entries(env).filter(([k]) => !/^(DIVULGA_(META|IG|THREADS|PINTEREST|BLUESKY|LINKEDIN)_|META_)/.test(k)));
+  for (const [k, v] of Object.entries(env)) if (k.startsWith(p.pre) && p.redes.test(k.slice(p.pre.length))) limpo['DIVULGA_' + k.slice(p.pre.length)] = v;
   return limpo;
 }
 const raizDoPerfil = (perfil) => (perfil ? path.join(RAIZ, 'perfis', perfil) : RAIZ);

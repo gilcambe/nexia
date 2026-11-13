@@ -1,12 +1,13 @@
-# KERNEX Divulga (C2-F5, 13/11): posta a PRÓPRIA KERNEX nas redes da KERNEX (Página do Facebook + Instagram), 3x por dia
-# (7h45, 12h45 e 19h45 de Brasília, 30 min depois do robô do Body Coach). Mesmo robô (divulga/robo.js --perfil kernex),
-# com os posts em divulga/perfis/kernex e SÓ os segredos KERNEX_META_*: os DIVULGA_META_* do Body Coach nem entram aqui.
-# Sem os segredos KERNEX_META_*: só mostra o texto no log e não publica nada. Estado na branch "divulga-kernex-dados".
+# KERNEX Divulga (C2-F5, 13/11): posta a PRÓPRIA KERNEX no Instagram da KERNEX. Decisão do dono: SÓ Instagram
+# (Instagram API with Instagram Login, sem Página do Facebook). Mesmo robô (divulga/robo.js --perfil kernex), posts em
+# divulga/perfis/kernex e SÓ os segredos KERNEX_IG_*: os do Body Coach nem entram aqui. Estado em "divulga-kernex-dados".
+# DESLIGADO até a conta @kernex existir de novo (o Instagram suspendeu a conta nova em 13/11): só roda à mão.
+# Para ligar: rodar divulga/configurar-instagram-kernex.bat e descomentar o schedule abaixo (7h45, 12h45 e 19h45 de Brasília).
 name: Divulga KERNEX
 
 on:
-  schedule:
-    - cron: '45 10,15,22 * * *'
+  # schedule:
+  #   - cron: '45 10,15,22 * * *'
   workflow_dispatch:
     inputs:
       acao:
@@ -45,9 +46,8 @@ jobs:
           ACAO: ${{ github.event_name == 'schedule' && 'rodar' || inputs.acao }}
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          KERNEX_META_PAGE_ID: ${{ secrets.KERNEX_META_PAGE_ID }}
-          KERNEX_META_PAGE_TOKEN: ${{ secrets.KERNEX_META_PAGE_TOKEN }}
-          KERNEX_META_IG_USER_ID: ${{ secrets.KERNEX_META_IG_USER_ID }}
+          KERNEX_IG_USER_ID: ${{ secrets.KERNEX_IG_USER_ID }}
+          KERNEX_IG_TOKEN: ${{ secrets.KERNEX_IG_TOKEN }}
         run: node divulga/robo.js "$ACAO" --perfil kernex --dados dados
       - name: Guardar os dados
         if: always()
