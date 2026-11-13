@@ -77,7 +77,7 @@ function EditorImagem() {
   };
 
   return (
-    <Bloco titulo="Editor de imagem" icone="arquivo" ajuda="Abra uma foto, escolha o formato (post, story, capa), ajuste e escreva um texto. Baixa em PNG pronto para postar. A foto não sai do seu computador." fonte={null} atualizadoEm={null}>
+    <Bloco titulo="Editor de imagem" icone="arquivo" ajuda="Abra uma foto, escolha o formato (post, story, capa), ajuste e escreva um texto. Baixa em PNG pronto para postar. A foto não sai do seu computador." fonte="Seu computador (a foto não sai dele)" atualizadoEm={null}>
       <input type="file" accept="image/*" onChange={(e) => abrir(e.target.files?.[0])} aria-label="Abrir imagem" data-testid="kx-editor-arquivo" />
       {img && (
         <div className="kx-grade" style={{ gridTemplateColumns: "minmax(200px,1fr) 2fr", marginTop: 10, alignItems: "start" }}>
@@ -101,7 +101,7 @@ function EditorImagem() {
 
 function Emails() {
   return (
-    <Bloco titulo="E-mails" icone="enviar" ajuda="Os e-mails da KERNEX (contato@kernex.com.br) chegam no Gmail. Aqui ficam os atalhos; a lista dentro da Central vem depois, quando você autorizar o Gmail." fonte={null} atualizadoEm={null}>
+    <Bloco titulo="E-mails" icone="enviar" ajuda="Os e-mails da KERNEX (contato@kernex.com.br) chegam no Gmail. Aqui ficam os atalhos; a lista dentro da Central vem depois, quando você autorizar o Gmail." fonte="Gmail" atualizadoEm={null}>
       <ul className="kx-lista">
         <li><span className="kx-titulo">Caixa de entrada</span><a className="kx-btn" href="https://mail.google.com/mail/u/0/#inbox" target="_blank" rel="noopener noreferrer">Abrir Gmail</a></li>
         <li><span className="kx-titulo">Escrever um e-mail</span><a className="kx-btn" href="https://mail.google.com/mail/u/0/#inbox?compose=new" target="_blank" rel="noopener noreferrer">Novo e-mail</a></li>
