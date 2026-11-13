@@ -1,0 +1,18 @@
+{
+  "id": "kernex",
+  "nome": "KERNEX",
+  "ativo": true,
+  "link": "https://kernex.com.br/",
+  "cidade": "Recife",
+  "assuntos": [
+    "site profissional para pequenos negócios, com WhatsApp e agenda",
+    "agenda online 24 horas: o cliente marca sozinho",
+    "cardápio digital e pedidos pelo WhatsApp sem taxa de aplicativo",
+    "aparecer no Google com um site rápido e feito para celular",
+    "sistemas sob medida: orçamentos, vendas e clientes num só lugar",
+    "orçamento grátis e site no ar em poucos dias"
+  ],
+  "imagens": ["kernex-1.jpg", "kernex-2.jpg", "kernex-3.jpg", "kernex-4.jpg", "kernex-5.jpg", "kernex-6.jpg"],
+  "hashtags": ["#kernex", "#criacaodesites", "#sitesprofissionais", "#pequenosnegocios", "#empreendedorismo", "#marketingdigital", "#agendaonline", "#recife"],
+  "cores": { "fundo": "#0b1020", "destaque": "#38bdf8" }
+}

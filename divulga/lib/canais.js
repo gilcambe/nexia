@@ -157,8 +157,9 @@ const facebook = {
 
 /** O Instagram processa o vídeo antes de publicar: espera ficar pronto (até ~3 min). */
 async function esperarVideo(id, env, fetchImpl, { tentativas = 36, pausa = 5000 } = {}) {
+  const ig = contaIg(env);
   for (let i = 0; i < tentativas; i++) {
-    const r = await fetchImpl(`${GRAPH}/${encodeURIComponent(id)}?fields=status_code&access_token=${encodeURIComponent(env.DIVULGA_META_PAGE_TOKEN)}`, { signal: tempo() });
+    const r = await fetchImpl(`${ig.base}/${encodeURIComponent(id)}?fields=status_code&access_token=${encodeURIComponent(ig.token)}`, { signal: tempo() });
     const j = await json(r, 'Instagram vídeo');
     if (j.status_code === 'FINISHED') return;
     if (j.status_code === 'ERROR' || j.status_code === 'EXPIRED') throw new afiliadosCanais.CanalErro(`Instagram vídeo: ${j.status_code}`);
@@ -168,39 +169,48 @@ async function esperarVideo(id, env, fetchImpl, { tentativas = 36, pausa = 5000 
 }
 
 // ---------- Instagram (conta comercial) ----------
+// Dois jeitos de ligar: (1) pela Página do Facebook (DIVULGA_META_IG_USER_ID + DIVULGA_META_PAGE_TOKEN, Body Coach);
+// (2) C2-F5, 13/11: "Instagram API with Instagram Login" (graph.instagram.com), conta profissional SEM Página do
+// Facebook (DIVULGA_IG_USER_ID + DIVULGA_IG_TOKEN; a KERNEX usa este, vindo de KERNEX_IG_*). Os pedidos são os mesmos.
+const GRAPH_IG = `https://graph.instagram.com/${GRAPH_VERSION}`;
+function contaIg(env) {
+  if (env.DIVULGA_IG_USER_ID && env.DIVULGA_IG_TOKEN) return { base: GRAPH_IG, id: env.DIVULGA_IG_USER_ID, token: env.DIVULGA_IG_TOKEN };
+  return { base: GRAPH, id: env.DIVULGA_META_IG_USER_ID, token: env.DIVULGA_META_PAGE_TOKEN };
+}
 const instagram = {
   id: 'instagram',
   nome: 'Instagram',
-  ativo: env => !!(env.DIVULGA_META_IG_USER_ID && env.DIVULGA_META_PAGE_TOKEN),
+  ativo: env => { const ig = contaIg(env); return !!(ig.id && ig.token); },
   async publicar(post, { env, fetchImpl }) {
     validarPost(post);
-    const conta = encodeURIComponent(env.DIVULGA_META_IG_USER_ID);
+    const ig = contaIg(env);
+    const conta = encodeURIComponent(ig.id);
     const legenda = [post.titulo, post.texto, post.link ? `Link: ${post.link}` : ''].filter(Boolean).join('\n\n');
     const carrossel = imagensDe(post);
     if (carrossel) {
       // Carrossel: um container filho por imagem, espera cada um, depois o container CAROUSEL e publica.
       const filhos = [];
       for (const url of carrossel) {
-        const fRes = await fetchWithRetry(fetchImpl, `${GRAPH}/${conta}/media`, {
+        const fRes = await fetchWithRetry(fetchImpl, `${ig.base}/${conta}/media`, {
           method: 'POST',
           signal: tempo(),
-          body: new URLSearchParams({ image_url: url, is_carousel_item: 'true', access_token: env.DIVULGA_META_PAGE_TOKEN }),
+          body: new URLSearchParams({ image_url: url, is_carousel_item: 'true', access_token: ig.token }),
         });
         const f = await json(fRes, 'Instagram carrossel item');
         await esperarVideo(f.id, env, fetchImpl, { tentativas: 12, pausa: 3000 }).catch(() => undefined);
         filhos.push(f.id);
       }
-      const cRes = await fetchWithRetry(fetchImpl, `${GRAPH}/${conta}/media`, {
+      const cRes = await fetchWithRetry(fetchImpl, `${ig.base}/${conta}/media`, {
         method: 'POST',
         signal: tempo(),
-        body: new URLSearchParams({ media_type: 'CAROUSEL', children: filhos.join(','), caption: legenda.slice(0, 2200), access_token: env.DIVULGA_META_PAGE_TOKEN }),
+        body: new URLSearchParams({ media_type: 'CAROUSEL', children: filhos.join(','), caption: legenda.slice(0, 2200), access_token: ig.token }),
       });
       const c = await json(cRes, 'Instagram carrossel');
       await esperarVideo(c.id, env, fetchImpl, { tentativas: 12, pausa: 3000 }).catch(() => undefined);
-      const pRes = await fetchWithRetry(fetchImpl, `${GRAPH}/${conta}/media_publish`, {
+      const pRes = await fetchWithRetry(fetchImpl, `${ig.base}/${conta}/media_publish`, {
         method: 'POST',
         signal: tempo(),
-        body: new URLSearchParams({ creation_id: c.id, access_token: env.DIVULGA_META_PAGE_TOKEN }),
+        body: new URLSearchParams({ creation_id: c.id, access_token: ig.token }),
       });
       const p = await json(pRes, 'Instagram publicar');
       return { ok: true, ref: p.id };
@@ -209,29 +219,42 @@ const instagram = {
     const midia = post.video && validarUrlPublica(post.video)
       ? { media_type: 'REELS', video_url: post.video, share_to_feed: 'true', ...(post.capa && validarUrlPublica(post.capa) ? { cover_url: post.capa } : {}) }
       : { image_url: post.imagem };
-    const cRes = await fetchWithRetry(fetchImpl, `${GRAPH}/${conta}/media`, {
+    const cRes = await fetchWithRetry(fetchImpl, `${ig.base}/${conta}/media`, {
       method: 'POST',
       signal: tempo(),
       body: new URLSearchParams({
         ...midia,
         caption: legenda.slice(0, 2200),
-        access_token: env.DIVULGA_META_PAGE_TOKEN,
+        access_token: ig.token,
       }),
     });
     const c = await json(cRes, 'Instagram mídia');
     // Foto também precisa ficar pronta antes de publicar (senão: "Media ID is not available"); se a consulta falhar, tenta publicar mesmo assim.
     if (midia.video_url) await esperarVideo(c.id, env, fetchImpl);
     else await esperarVideo(c.id, env, fetchImpl, { tentativas: 12, pausa: 3000 }).catch(() => undefined);
-    const jRes = await fetchWithRetry(fetchImpl, `${GRAPH}/${conta}/media_publish`, {
+    const jRes = await fetchWithRetry(fetchImpl, `${ig.base}/${conta}/media_publish`, {
       method: 'POST',
       signal: tempo(),
       body: new URLSearchParams({
         creation_id: c.id,
-        access_token: env.DIVULGA_META_PAGE_TOKEN,
+        access_token: ig.token,
       }),
     });
     const j = await json(jRes, 'Instagram publicar');
     return { ok: true, ref: j.id };
+  },
+};
+
+// ---------- LinkedIn (C2-F5: só a interface, DESLIGADO) ----------
+// O dono pode querer o LinkedIn da KERNEX depois. Fica pronto o lugar do canal; só liga com DIVULGA_LINKEDIN_LIGADO=1
+// e a publicação de verdade ainda não foi escrita (precisa do app LinkedIn aprovado, decisão do dono).
+const linkedin = {
+  id: 'linkedin',
+  nome: 'LinkedIn',
+  ativo: env => env.DIVULGA_LINKEDIN_LIGADO === '1' && !!(env.DIVULGA_LINKEDIN_TOKEN && env.DIVULGA_LINKEDIN_AUTOR),
+  async publicar(post) {
+    validarPost(post);
+    throw new afiliadosCanais.CanalErro('LinkedIn: canal ainda não ligado (falta o app LinkedIn aprovado).');
   },
 };
 
@@ -394,6 +417,6 @@ const threads = {
   },
 };
 
-const CANAIS = [facebook, instagram, pinterest, bluesky, threads];
+const CANAIS = [facebook, instagram, pinterest, bluesky, threads, linkedin];
 
 module.exports = { CANAIS, CanalErro: afiliadosCanais.CanalErro, facetasDeLink: afiliadosCanais.facetasDeLink };
