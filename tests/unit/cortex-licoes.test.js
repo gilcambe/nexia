@@ -19,3 +19,9 @@ test('CL2. agentes que só leem não recebem, e cada lição é uma frase curta'
   assert.ok(LICOES.length >= 5);
   for (const l of LICOES) assert.ok(l.length > 20 && l.length < 400, l);
 });
+
+test('CL3. lição "ler a árvore antes" está no fim da lista, uma vez só (#3569/#3696 refaziam o arquivo inteiro)', () => {
+  const alvo = LICOES.filter((l) => l.startsWith('Nunca planejar arquivo em pasta que o produto não usa; ler a árvore antes'));
+  assert.equal(alvo.length, 1);
+  assert.equal(LICOES[LICOES.length - 1], alvo[0]);
+});
