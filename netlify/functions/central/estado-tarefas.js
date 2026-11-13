@@ -111,11 +111,11 @@ function estadoTarefa(issue, agora = Date.now(), cfg = {}) {
     motivo = `Sem atividade há ${minInativo} min. A IA pode ter parado.`;
   }
 
-  // Precisa do dono / você
-  // 09/11 (dono): "aparece precisa de você mas não diz o que fazer". Só entra aqui o que ELE pode fazer
-  // (rótulo vez-do-dono ou esperando-dono). Tarefa que as IAs não conseguiram é das IAs/Claude, não do dono leigo.
-  void maxTentativas;
-  const precisaVoce = !fechada && (has('vez-do-dono') || has('esperando-dono') || has('so-humano') || estado === 'travada' && t >= maxTentativas);
+  // Precisa do dono / você (#3128): travada E (tentativas >= maxTentativas OU rótulo de humano).
+  // A ordem dos && e || fica entre parênteses para não depender de precedência.
+  const travadaPorLabel = has('cortex-travado') || has('cortex-reserva-sem-cota');
+  const labelHumano = has('vez-do-dono') || has('esperando-dono') || has('so-humano');
+  const precisaVoce = !fechada && estado === 'travada' && (labelHumano || t >= maxTentativas || travadaPorLabel && t >= maxTentativas);
 
   return {
     estado,

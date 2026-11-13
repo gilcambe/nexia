@@ -107,8 +107,8 @@ test('EST3. precisaVoce (tentativa-3 + cortex-travado e labels de humano)', () =
   }, agora, { maxTentativas: 3 });
 
   assert.strictEqual(r1.estado, 'travada');
-  // 09/11 (dono): IAs que desistiram NÃO viram "precisa de você" (o dono é leigo); vigia passa para Jules/Claude.
-  assert.strictEqual(r1.precisaVoce, false);
+  // #3128: travada com tentativa-3 (>= maxTentativas 3) precisa de você.
+  assert.strictEqual(r1.precisaVoce, true);
 
   // Com label vez-do-dono (o dono é acionado independente do número de tentativas)
   const r2 = estadoTarefa({
