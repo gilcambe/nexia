@@ -46,13 +46,38 @@ function gerar(pastaModelo, valores = {}, destino) {
   return arquivos.map(r => r.split(path.sep).join('/'));
 }
 
-module.exports = { preencher, gerar };
+/** Lança erro se algum {{...}} sobrar em arquivo de texto dentro de `pasta`. */
+function verificarPlaceholders(pasta) {
+  if (!pasta || typeof pasta !== 'string' || !fs.existsSync(pasta) || !fs.statSync(pasta).isDirectory()) {
+    throw new Error(`pasta inválida: ${pasta}`);
+  }
+  const sobras = [];
+  for (const rel of listar(pasta)) {
+    if (!TEXTO.has(path.extname(rel).toLowerCase())) continue;
+    if (/\{\{[^]*?\}\}/.test(fs.readFileSync(path.join(pasta, rel), 'utf8'))) sobras.push(rel.split(path.sep).join('/'));
+  }
+  if (sobras.length) throw new Error(`placeholder {{...}} sobrando em: ${sobras.join(', ')}`);
+}
+
+/** Gera a partir de modelo.json (ou da pasta do modelo); variáveis sem valor recebem o próprio nome. Confere placeholders no fim. */
+function gerarDeModelo(modeloPath, destino, valores = {}) {
+  const pasta = path.basename(modeloPath) === 'modelo.json' ? path.dirname(modeloPath) : modeloPath;
+  const modelo = JSON.parse(fs.readFileSync(path.join(pasta, 'modelo.json'), 'utf8'));
+  const todos = { ...valores };
+  for (const v of modelo.variaveis || []) if (todos[v] == null) todos[v] = v;
+  const feitos = gerar(pasta, todos, destino);
+  verificarPlaceholders(destino);
+  return feitos;
+}
+
+module.exports = { preencher, gerar, gerarDeModelo, verificarPlaceholders };
 
 if (require.main === module) {
   const [pasta, valoresArq, destino] = process.argv.slice(2);
   if (!pasta || !valoresArq || !destino) { console.error('Uso: node scripts/gerar-de-modelo.js <pastaModelo> <valores.json> <destino>'); process.exit(2); }
   try {
     const feitos = gerar(pasta, JSON.parse(fs.readFileSync(valoresArq, 'utf8')), destino);
+    verificarPlaceholders(destino);
     console.log(`Pronto: ${feitos.length} arquivo(s) em ${destino}`);
   } catch (e) { console.error(e.message); process.exit(1); }
 }
