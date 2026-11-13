@@ -286,6 +286,7 @@ export const CSS = `@import url("https://fonts.googleapis.com/css2?family=Inter:
 .kx-logo small{letter-spacing:.02em;font-weight:500;-webkit-text-fill-color:var(--ci);color:var(--ci)}
 .kx-menu button{color:#b8c6db}
 .kx-menu button[aria-current=page]{background:#0a2468!important;color:#fff;box-shadow:inset 3px 0 0 var(--ci)!important}
+.kx-seta{margin-left:auto;font-size:11px;color:var(--mut);opacity:.8}
 .kx-submenu{display:grid;gap:1px;margin:2px 0 8px 30px;padding-left:10px;border-left:1px solid var(--linha)}
 .kx-submenu button{all:unset;cursor:pointer;font-size:12.5px;color:var(--mut);padding:5px 8px;border-radius:7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .kx-submenu button:hover{color:var(--txt);background:rgba(111,184,255,.06)}

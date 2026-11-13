@@ -103,6 +103,9 @@ export default function Casca() {
   }, []);
   const atual = TELAS.find((t) => t.id === tela) || TELAS[0];
   const grupo = grupoDaTela(tela);
+  // Tópico aberto no menu: começa no da tela atual e acompanha quando a tela muda por outro caminho (busca, atalho, abas).
+  const [aberto, setAberto] = useState<string | null>(() => grupoDaTela(telaDaUrl(location.search))?.id ?? null);
+  useEffect(() => { if (grupo) setAberto(grupo.id); }, [grupo?.id]);
   const c = painel.ias?.contagens || {};
   const sinal = corSemaforo({ precisa: painel.dono?.length || 0, travadas: c.travada || 0, servicosFora: painel.saude?.fora || 0 });
   const corSinal = COR_SINAL[sinal.cor];
@@ -143,11 +146,14 @@ export default function Casca() {
         </div>
         <button type="button" className="kx-so-pc" aria-current={tela === "inicio" ? "page" : undefined} onClick={() => ir("inicio")} data-testid="kx-menu-inicio"><Icone nome="casa" />Início</button>
         {MENU.map((g) => (
-          <button key={g.id} type="button" className={NO_CELULAR.includes(g.id) ? "" : "kx-so-pc"} aria-current={grupo?.id === g.id ? "page" : undefined} onClick={() => ir(g.telas[0])} data-testid={"kx-menu-" + g.id}>
-            <Icone nome={g.icone} />{g.nome}
+          // Pedido do dono (13/11): as opções de cada tópico só aparecem quando ele clica no tópico (um aberto por vez).
+          <button key={g.id} type="button" className={NO_CELULAR.includes(g.id) ? "" : "kx-so-pc"} aria-current={grupo?.id === g.id ? "page" : undefined}
+            aria-expanded={g.telas.length > 1 ? aberto === g.id : undefined}
+            onClick={() => { if (g.telas.length > 1 && aberto === g.id) { setAberto(null); return; } setAberto(g.id); if (grupo?.id !== g.id) ir(g.telas[0]); }} data-testid={"kx-menu-" + g.id}>
+            <Icone nome={g.icone} />{g.nome}{g.telas.length > 1 && <span className="kx-seta" aria-hidden="true">{aberto === g.id ? "▾" : "▸"}</span>}
           </button>
         )).flatMap((b, i) => {
-          const g = MENU[i]; if (g.telas.length < 2) return [b];
+          const g = MENU[i]; if (g.telas.length < 2 || aberto !== g.id) return [b];
           return [b, <div key={g.id + "-sub"} className="kx-submenu kx-so-pc" data-testid={"kx-submenu-" + g.id}>{g.telas.map((id) => (
             <button key={id} type="button" aria-current={id === tela ? "page" : undefined} onClick={() => ir(id)} data-testid={"kx-sub-" + id}>{TELAS.find((t) => t.id === id)?.nome}</button>))}</div>];
         })}
