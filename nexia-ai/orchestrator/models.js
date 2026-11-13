@@ -24,7 +24,7 @@
 //
 // Ordem de FREE por classe (cada classe começa por um provedor diferente, espalhando a carga):
 //   coding  → Groq (GROQ_STRONG) primeiro, depois TAIL.
-//   reasoning → os 4 Google AI Studio de TAIL primeiro, depois Groq (GROQ_STRONG), depois o resto de TAIL.
+//   reasoning → OpenRouter :free (auto:1-3) primeiro, depois Groq (GROQ_STRONG), depois Google e o resto de TAIL.
 //   fast → Mistral, Cloudflare e Codestral primeiro, depois Groq (GROQ_FAST), depois TAIL.
 // semRepetir() garante que não haja descritores repetidos (mesmo provider e model) em nenhuma classe.
 const { getPlacar } = require('../model-router/cota');
@@ -53,6 +53,7 @@ const GROQ_FAST = ['openai/gpt-oss-20b', 'meta-llama/llama-4-scout-17b-16e-instr
 // Descritores fixos usados no início de classes de FREE.
 const GOOGLE4 = TAIL.slice(0, 4);
 const RESTO_TAIL = TAIL.slice(4);
+const OPENROUTER3 = [1, 2, 3].map(n => ({ provider: 'openrouter', model: `auto:${n}` }));
 const MISTRAL_SMALL = { provider: 'mistral', model: 'mistral-small-latest' };
 const CLOUDFLARE_GPT_OSS = { provider: 'cloudflare', model: '@cf/openai/gpt-oss-120b' };
 const CODESTRA_LATEST = { provider: 'codestral', model: 'codestral-latest' };
@@ -69,7 +70,9 @@ function semRepetir(lista) {
 }
 
 const FREE = Object.freeze({
-  reasoning: semRepetir([...GOOGLE4, ...GROQ_STRONG.map(g), ...RESTO_TAIL]),
+  // 13/11: Gemini grátis caiu para 20 pedidos/dia por modelo (diagnóstico) → raciocínio começa pela OpenRouter
+  // (2 chaves, :free), depois Groq; o Gemini fica no meio para não gastar tempo batendo no 429.
+  reasoning: semRepetir([...OPENROUTER3, ...GROQ_STRONG.map(g), ...GOOGLE4, ...RESTO_TAIL]),
   coding: semRepetir([...GROQ_STRONG.map(g), ...TAIL]),
   fast: semRepetir([MISTRAL_SMALL, CLOUDFLARE_GPT_OSS, CODESTRA_LATEST, ...GROQ_FAST.map(g), ...TAIL]),
 });

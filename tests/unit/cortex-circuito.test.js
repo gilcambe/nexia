@@ -35,7 +35,7 @@ test('C3b. sucesso no meio zera a conta; castigo curto não encurta o disjuntor'
 
 test('C3c. cada tipo de tarefa tem a sua cadeia grátis (código, raciocínio, rápido)', () => {
   assert.equal(FREE.coding[0].provider, 'groq');
-  assert.equal(FREE.reasoning[0].provider, 'google');
+  assert.equal(FREE.reasoning[0].provider, 'openrouter');
   assert.equal(FREE.fast[0].provider, 'mistral');
   for (const l of Object.values(FREE)) assert.ok(!l.some(d => d.provider === 'anthropic'), 'nada pago nas cadeias grátis');
 });
