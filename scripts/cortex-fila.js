@@ -14,6 +14,10 @@ const TENTATIVAS_ATE_DIVIDIR = 3;
 // Rodada "verde" que não entrega o arquivo pedido (ex.: o Cortex não pode criar `.github/workflows/*`) abria um rascunho
 // novo a cada ciclo, para sempre (18 rascunhos do gitleaks em 19/10). Depois de MAX_SEM_ENTREGA rodadas assim, trava.
 const MAX_SEM_ENTREGA = 2;
+// 13/11 (PC 2): o PR do executor antigo não citava a issue; ao ser juntado, a parte continuava aberta e a fila
+// mandava fazer de novo (#3714 repetiu #3613; #3724/#3728 repetiram #3680/#3687). "Closes #N" no pedido vai para o
+// corpo do PR ("Pedido: ...") e o GitHub fecha a issue no merge.
+const comFecha = (tarefa, n) => (/\bCloses #\d+/.test(String(tarefa || '')) ? String(tarefa) : `${String(tarefa || '').trim()}\n\nCloses #${n}`);
 // Rótulo sem-entrega-N: N = quantas rodadas terminaram sem entrega. Devolve o próximo passo depois de mais uma.
 function depoisSemEntrega(labels) {
   const arr = Array.isArray(labels) ? labels : [];
@@ -592,7 +596,7 @@ async function executar(token, acao, dividir) {
     await limparPistas(acao.pista);
     await addLabel(L.rodando); await addLabel(`pista-${acao.pista}`);
     const d = await gh(token, 'POST', '/actions/workflows/smoke-logado.yml/dispatches', {
-      ref: 'develop', inputs: { url: BASE_URL, task: acao.tarefa, autonomia: '3', pista: String(acao.pista), modo: 'economico', tarefa_id: String(n) },
+      ref: 'develop', inputs: { url: BASE_URL, task: comFecha(acao.tarefa, n), autonomia: '3', pista: String(acao.pista), modo: 'economico', tarefa_id: String(n) },
     });
     if (d.status !== 204) { await delLabel(L.rodando); await comentar(`Não consegui disparar o Cortex (${d.status}). Tento de novo no próximo ciclo.`); }
   } else if (acao.tipo === 'concluir') {
@@ -977,5 +981,5 @@ async function main() {
   }
 }
 
-module.exports = { juntarTravadas, tentaContrato, FORA_DO_CONTRATO, vaiParaContrato, ultimoRotuloEm, travadasPeloCofre, entregaComprovada, MAX_RECUPERAR_POR_CICLO, FORA_DA_RECUPERACAO, soPipelineModelo, assinaturaDoSmoke, errosDeAmbiente, mexeEmWorkflow, planejarComIA, revisarParte, dadosDoPlanejador, corrigirCiDosPrs, reservaVolta, reservasQueVoltam, travouAntesDoConserto, devePedirReserva, entregouAlgo, depoisSemEntrega, MAX_SEM_ENTREGA, rascunhosParados, candidatosRascunho, MSG_RASCUNHO_PARADO, tokenDaApp, TENTATIVAS_ATE_DIVIDIR, caminhosDoPedido, sondarCota, decidir, precisaTesteFinal, precisaDividir, paisConcluidos, dividirComIA, MAX_TENTATIVAS, validarCortexFeito, reabrirFeitosInvalidos };
+module.exports = { comFecha, juntarTravadas, tentaContrato, FORA_DO_CONTRATO, vaiParaContrato, ultimoRotuloEm, travadasPeloCofre, entregaComprovada, MAX_RECUPERAR_POR_CICLO, FORA_DA_RECUPERACAO, soPipelineModelo, assinaturaDoSmoke, errosDeAmbiente, mexeEmWorkflow, planejarComIA, revisarParte, dadosDoPlanejador, corrigirCiDosPrs, reservaVolta, reservasQueVoltam, travouAntesDoConserto, devePedirReserva, entregouAlgo, depoisSemEntrega, MAX_SEM_ENTREGA, rascunhosParados, candidatosRascunho, MSG_RASCUNHO_PARADO, tokenDaApp, TENTATIVAS_ATE_DIVIDIR, caminhosDoPedido, sondarCota, decidir, precisaTesteFinal, precisaDividir, paisConcluidos, dividirComIA, MAX_TENTATIVAS, validarCortexFeito, reabrirFeitosInvalidos };
 if (require.main === module) main().catch(e => { console.error(e.message); process.exit(1); });
