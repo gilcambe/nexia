@@ -303,8 +303,10 @@ export const CSS = `@import url("https://fonts.googleapis.com/css2?family=Inter:
 .kx-classico [class*=bg-white],.kx-classico [class*=bg-gray-50],.kx-classico [class*=bg-slate-50],.kx-classico [class*=bg-gray-100]{background:var(--card2)!important;color:var(--txt)!important}
 .kx-classico [class*=text-gray-9],.kx-classico [class*=text-gray-8],.kx-classico [class*=text-slate-9]{color:var(--txt)!important}
 .kx-classico [class*=text-gray-5],.kx-classico [class*=text-gray-6]{color:var(--mut)!important}
-.kx-classico [class*=bg-gray-2],.kx-classico [class*=bg-slate-2]{background:rgba(111,184,255,.08)!important}
+.kx-classico [class*=bg-gray-2],.kx-classico [class*=bg-gray-3],.kx-classico [class*=bg-slate-2],.kx-classico [class*=bg-slate-3]{background:rgba(111,184,255,.08)!important}
 .kx-classico [class*=bg-gray-9],.kx-classico [class*=bg-zinc-9],.kx-classico [class*=bg-neutral-9],.kx-classico [class*=bg-black]{background:var(--card2)!important}
 .kx-online{max-width:100%;min-width:0}
+.kx-nome-cel{display:none}
+@media (max-width:768px){.kx-nome-pc{display:none}.kx-nome-cel{display:inline}.kx-abas{flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;flex-shrink:0;min-height:42px;align-items:stretch;scrollbar-width:none;-webkit-overflow-scrolling:touch}.kx-abas::-webkit-scrollbar{display:none}.kx-abas button{white-space:nowrap;flex-shrink:0}.kx-classico{padding:10px}}
 .kx-online>span:last-child{min-width:0}
 `;
