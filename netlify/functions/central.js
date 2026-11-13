@@ -70,6 +70,10 @@ function createHandler(deps = {}) {
           const r = await require('./central/escritorio').rota({ acao: body.acao, body }, { mural: deps.mural || null, env });
           if (r) return res(r.status, r.corpo);
         }
+        if (String(body.acao || '').startsWith('vendas-')) {   // Fase 4: Vendas (prospecção + funil)
+          const r = await require('./central/vendas').rota({ acao: body.acao, body }, { env, fetchFn });
+          if (r) return res(r.status, r.corpo);
+        }
         if (body.acao === 'testar-ias') return res(200, { ias: await empresa.testarIAs(getRouter(), getIAs()), em: new Date().toISOString() });
         // Cadastro de cliente sem PR (regra dos 20 projetos/hora). Só master chega aqui.
         if (body.acao === 'cliente-criar') { const r = await require('./central/clientes-cadastro').criar(body, { getDb }); return res(r.status, r.corpo); }
@@ -133,6 +137,10 @@ function createHandler(deps = {}) {
       }
       if (parte.startsWith('escritorio-')) {   // Fase 8: Escritório
         const r = await require('./central/escritorio').rota({ parte, query: event.queryStringParameters || {} }, { mural: deps.mural || null, env });
+        if (r) return res(r.status, r.corpo);
+      }
+      if (parte.startsWith('vendas-')) {   // Fase 4: Vendas
+        const r = await require('./central/vendas').rota({ parte, query: event.queryStringParameters || {} }, { env, fetchFn });
         if (r) return res(r.status, r.corpo);
       }
       if (parte === 'lista') return res(200, { produtos: PRODUTOS, links: LINKS });
