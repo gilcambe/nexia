@@ -315,3 +315,13 @@ test('CF-FECHA. pedido do executor antigo leva "Closes #N" (o PR fecha a parte a
   assert.equal(comFecha('x\n\nCloses #7', 7), 'x\n\nCloses #7');
   assert.match(comFecha(undefined, 9), /Closes #9$/);
 });
+
+test('CF-BIB. o divisor da fila recebe a Biblioteca quando o pedido é sistema novo (e nada quando não é)', async () => {
+  const { bibliotecaDoPedido, planejarComIA } = require('../../scripts/cortex-fila');
+  assert.match(bibliotecaDoPedido('Quero criar um site para uma barbearia com agenda'), /BIBLIOTECA KERNEX/);
+  assert.equal(bibliotecaDoPedido('Corrigir o teste M11 do roteador'), '');
+  let recebido = '';
+  const router = { capabilities: () => ({ available: true }), chat: async (_d, o) => { recebido = recebido || o.messages[0].content; return { text: '[]' }; } };
+  await planejarComIA('Quero criar um site para uma barbearia com agenda', router, [{ provider: 'groq', model: 'x' }]).catch(() => null);
+  assert.match(recebido, /BIBLIOTECA KERNEX/);
+});

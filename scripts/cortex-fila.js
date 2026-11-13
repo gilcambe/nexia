@@ -508,8 +508,13 @@ async function dividirComIA(tarefa, router, lista) {
 // Planejador: pede o PLANO (partes com arquivos, dependências e critério de pronto) aos modelos grátis, um de cada vez.
 // Nenhum válido: tenta o divisor antigo (só textos, em sequência); nada ainda: plano simples, uma parte por arquivo.
 // Só devolve null quando o pedido não cita nem 2 arquivos — aí ele segue inteiro, como antes.
+// M6 (13/11): o divisor também consulta a Biblioteca (modelo clonável, módulos e código pronto da web) antes de
+// quebrar o pedido; sem isso as partes mandavam reescrever do zero o que já existia. '' quando não é sistema novo.
+function bibliotecaDoPedido(tarefa) {
+  try { const b = require('../nexia-ai/fabrica/contexto').contextoBiblioteca(String(tarefa || '')); return b ? `\n\n${b.slice(0, 4000)}` : ''; } catch { return ''; }
+}
 async function planejarComIA(tarefa, router, lista, tamanhos = {}) {
-  const contexto = Object.keys(tamanhos).length ? `\n\nTamanho dos arquivos citados (bytes): ${JSON.stringify(tamanhos)}` : '';
+  const contexto = (Object.keys(tamanhos).length ? `\n\nTamanho dos arquivos citados (bytes): ${JSON.stringify(tamanhos)}` : '') + bibliotecaDoPedido(tarefa);
   for (const d of lista) {
     try {
       if (!router.capabilities(d).available) continue;
@@ -981,5 +986,5 @@ async function main() {
   }
 }
 
-module.exports = { comFecha, juntarTravadas, tentaContrato, FORA_DO_CONTRATO, vaiParaContrato, ultimoRotuloEm, travadasPeloCofre, entregaComprovada, MAX_RECUPERAR_POR_CICLO, FORA_DA_RECUPERACAO, soPipelineModelo, assinaturaDoSmoke, errosDeAmbiente, mexeEmWorkflow, planejarComIA, revisarParte, dadosDoPlanejador, corrigirCiDosPrs, reservaVolta, reservasQueVoltam, travouAntesDoConserto, devePedirReserva, entregouAlgo, depoisSemEntrega, MAX_SEM_ENTREGA, rascunhosParados, candidatosRascunho, MSG_RASCUNHO_PARADO, tokenDaApp, TENTATIVAS_ATE_DIVIDIR, caminhosDoPedido, sondarCota, decidir, precisaTesteFinal, precisaDividir, paisConcluidos, dividirComIA, MAX_TENTATIVAS, validarCortexFeito, reabrirFeitosInvalidos };
+module.exports = { bibliotecaDoPedido, comFecha, juntarTravadas, tentaContrato, FORA_DO_CONTRATO, vaiParaContrato, ultimoRotuloEm, travadasPeloCofre, entregaComprovada, MAX_RECUPERAR_POR_CICLO, FORA_DA_RECUPERACAO, soPipelineModelo, assinaturaDoSmoke, errosDeAmbiente, mexeEmWorkflow, planejarComIA, revisarParte, dadosDoPlanejador, corrigirCiDosPrs, reservaVolta, reservasQueVoltam, travouAntesDoConserto, devePedirReserva, entregouAlgo, depoisSemEntrega, MAX_SEM_ENTREGA, rascunhosParados, candidatosRascunho, MSG_RASCUNHO_PARADO, tokenDaApp, TENTATIVAS_ATE_DIVIDIR, caminhosDoPedido, sondarCota, decidir, precisaTesteFinal, precisaDividir, paisConcluidos, dividirComIA, MAX_TENTATIVAS, validarCortexFeito, reabrirFeitosInvalidos };
 if (require.main === module) main().catch(e => { console.error(e.message); process.exit(1); });
