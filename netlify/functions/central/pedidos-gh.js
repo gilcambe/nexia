@@ -57,6 +57,7 @@ function criarPedidos(env = process.env, fetchFn = fetch) {
     else if (estado === 'precisa') filtro += ' is:open';
     else if (estado === 'aguardando-ia') filtro += ' is:open';
     else if (estado === 'fila') filtro += ' is:open';
+    else if (estado === 'todas') filtro += '';
     else if (estado === 'meus') filtro += ' in:body "Pedido de"';
 
     const termo = frase(q);
