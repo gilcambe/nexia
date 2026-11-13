@@ -49,6 +49,5 @@ function listarPassagens() {
 }
 
 // O require do módulo devolve só a lista de lições (array puro), como no começo.
-// A propriedade LICOES (array original, congelado) continua no mesmo objeto para quem
-// importa { LICOES }: desestruturar de um array funciona e o Array.isArray segue verdadeiro.
-module.exports = Object.assign([...LICOES], { LICOES });
+// Quem precisa do texto pronto para o prompt usa o TEXTO de ./licoes-extra.
+module.exports = [...LICOES];
