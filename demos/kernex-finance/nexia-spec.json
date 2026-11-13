@@ -2,9 +2,9 @@
   "spec": {
     "kind": "system",
     "name": "Kernex Finance",
-    "tagline": "Controle total de receitas, pagamentos e cartões em um painel seguro",
-    "photo_theme": "",
-    "description": "Controle total de receitas, pagamentos e cartões em um painel seguro",
+    "tagline": "Financeiro corporativo no domínio finance.kernex.com.br",
+    "photo_theme": "corporate fintech dashboard",
+    "description": "Financeiro corporativo no domínio finance.kernex.com.br",
     "folder": "demos/kernex-finance",
     "fonts": {
       "heading": "Sora",
@@ -12,17 +12,17 @@
     },
     "palette": {
       "primary": "#0f172a",
-      "accent": "#06b6d4",
+      "accent": "#10b981",
       "bg": "#fbfaf7",
       "surface": "#ffffff",
-      "text": "#1d2426",
-      "muted": "#5d6b6e",
+      "text": "#0f172a",
+      "muted": "#64748b",
       "dark": "#020617"
     },
     "style": "modern",
     "contact": {
       "whatsapp": "",
-      "phone": "(11) 90000-0000",
+      "phone": "(11) 98765-4321",
       "email": "suporte@kernex.com.br",
       "address": "",
       "city": "",
@@ -44,34 +44,27 @@
     "leads_origem": "",
     "entities": [
       {
-        "key": "receitas",
-        "label": "Receitas",
-        "singular": "Receita",
+        "key": "dominios",
+        "label": "Campos A (Hosts)",
+        "singular": "Domínio",
         "fields": [
           {
-            "key": "descricao",
-            "label": "Descrição",
+            "key": "host",
+            "label": "Host/URL",
             "type": "text",
             "options": [],
             "required": true
           },
           {
-            "key": "data_vencimento",
-            "label": "Data de Vencimento",
-            "type": "date",
+            "key": "worker",
+            "label": "Worker Destino",
+            "type": "text",
             "options": [],
             "required": true
           },
           {
-            "key": "valor",
-            "label": "Valor (R$)",
-            "type": "money",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "cliente",
-            "label": "Cliente/Origem",
+            "key": "caminho_original",
+            "label": "Caminho Original",
             "type": "text",
             "options": [],
             "required": true
@@ -81,146 +74,147 @@
             "label": "Status",
             "type": "select",
             "options": [
-              "Em Aberto",
-              "Recebida",
-              "Atrasada",
-              "Cancelada"
+              "Ativo",
+              "Enroute",
+              "Erro",
+              "Pendente"
             ],
             "required": true
+          },
+          {
+            "key": "firebase_auth",
+            "label": "Firebase Auth Registrado?",
+            "type": "select",
+            "options": [
+              "Sim",
+              "Não"
+            ],
+            "required": true
+          },
+          {
+            "key": "observacao",
+            "label": "Observação",
+            "type": "textarea",
+            "options": [],
+            "required": false
           }
         ],
         "sample": [
           {
-            "descricao": "Mensalidade Projetor Alpha",
-            "data_vencimento": "2026-11-28",
-            "valor": "1500.00",
-            "cliente": "Construtora Vetor",
-            "status": "Em Aberto"
+            "host": "finance.kernex.com.br",
+            "worker": "nexia.gcbezerra.workers.dev",
+            "caminho_original": "/prumo/",
+            "status": "Ativo",
+            "firebase_auth": "Sim",
+            "observacao": "Domínio principal. Login Google configurado."
           },
           {
-            "descricao": "Consultoria de Integração API",
-            "data_vencimento": "2026-10-05",
-            "valor": "3200.00",
-            "cliente": "TechBoost Labs",
-            "status": "Recebida"
+            "host": "nexia.gcbezerra.workers.dev/prumo/",
+            "worker": "nexia.gcbezerra.workers.dev",
+            "caminho_original": "/prumo/",
+            "status": "Ativo",
+            "firebase_auth": "Não",
+            "observacao": "URL antiga; mantiene funcionamento com banner de migração."
           },
           {
-            "descricao": "Licença Anual Sistema K2",
-            "data_vencimento": "2026-09-15",
-            "valor": "450.00",
-            "cliente": "Grupo LogMAX",
-            "status": "Atrasada"
+            "host": "ces.kernex.com.br",
+            "worker": "nexia.gcbezerra.workers.dev",
+            "caminho_original": "/ces/",
+            "status": "Ativo",
+            "firebase_auth": "Sim",
+            "observacao": "Referência de configuração."
           },
           {
-            "descricao": "Suporte Premium (Pacote B)",
-            "data_vencimento": "2026-11-10",
-            "valor": "250.00",
-            "cliente": "Empresa Delta",
-            "status": "Em Aberto"
-          },
-          {
-            "descricao": "Migracao de Servidor Legado",
-            "data_vencimento": "2026-08-20",
-            "valor": "800.00",
-            "cliente": "Industria Omega",
-            "status": "Recebida"
+            "host": "cortex.kernex.com.br",
+            "worker": "nexia.gcbezerra.workers.dev",
+            "caminho_original": "/cortex/",
+            "status": "Ativo",
+            "firebase_auth": "Sim",
+            "observacao": "Referência de configuração."
           }
         ]
       },
       {
-        "key": "cartoes",
-        "label": "Contas",
-        "singular": "Conta",
+        "key": "mensagens",
+        "label": "Banners & Nomes",
+        "singular": "Mensagem",
         "fields": [
           {
-            "key": "fornecedor",
-            "label": "Fornecedor/Emissão",
+            "key": "local",
+            "label": "Local do Texto",
             "type": "text",
             "options": [],
             "required": true
           },
           {
-            "key": "numero_folha",
-            "label": "Nº da Folha",
+            "key": "variavel",
+            "label": "Variável Config",
             "type": "text",
             "options": [],
             "required": true
           },
           {
-            "key": "data_emissao",
-            "label": "Data de Emissão",
-            "type": "date",
+            "key": "novo_valor",
+            "label": "Novo Texto/Venho",
+            "type": "text",
             "options": [],
             "required": true
           },
           {
-            "key": "data_vencimento",
-            "label": "Data de Vencimento",
-            "type": "date",
+            "key": "antigo_valor",
+            "label": "Antigo Texto (Removido)",
+            "type": "text",
             "options": [],
-            "required": true
+            "required": false
           },
           {
-            "key": "valor_total",
-            "label": "Valor Total (R$)",
-            "type": "money",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "status_pagamento",
-            "label": "Status",
+            "key": "status_validacao",
+            "label": "Status de Validação",
             "type": "select",
             "options": [
-              "Paga",
-              "A Pagar",
-              "Em Atraso",
-              "Segurada"
+              "Passou Teste",
+              "Fracasso",
+              "Aguardando Revisão"
             ],
             "required": true
           }
         ],
         "sample": [
           {
-            "fornecedor": "Caxetas Criação de Conteúdo",
-            "numero_folha": "F26-01-882",
-            "data_emissao": "2026-10-12",
-            "data_vencimento": "2026-11-30",
-            "valor_total": "1240.50",
-            "status_pagamento": "A Pagar"
+            "local": "manifest.webmanifest",
+            "variavel": "name",
+            "novo_valor": "Kernex Finance",
+            "antigo_valor": "Prumo",
+            "status_validacao": "Passou Teste"
           },
           {
-            "fornecedor": "Mercado Alto Ltda",
-            "numero_folha": "11/2026",
-            "data_emissao": "2026-09-25",
-            "data_vencimento": "2026-10-30",
-            "valor_total": "530.00",
-            "status_pagamento": "Paga"
+            "local": "manifest.webmanifest",
+            "variavel": "short_name",
+            "novo_valor": "Finance",
+            "antigo_valor": "Prumo",
+            "status_validacao": "Passou Teste"
           },
           {
-            "fornecedor": "Wuxian Digital Studio",
-            "numero_folha": "INV-904",
-            "data_emissao": "2026-10-01",
-            "data_vencimento": "2026-11-01",
-            "valor_total": "2850.00",
-            "status_pagamento": "A Pagar"
+            "local": "Bandeja A (Old Domain)",
+            "variavel": "banner_content",
+            "novo_valor": "Novo endereço: finance.kernex.com.br",
+            "antigo_valor": "Nenhum",
+            "status_validacao": "Passou Teste"
           },
           {
-            "fornecedor": "Servidor Cloud (SaaS)",
-            "numero_folha": "SUB-4455",
-            "data_emissao": "2026-10-15",
-            "data_vencimento": "2026-11-15",
-            "valor_total": "389.99",
-            "status_pagamento": "A Pagar"
+            "local": "Scripts/coro-alertas-diario.js",
+            "variavel": "link_base",
+            "novo_valor": "https://finance.kernex.com.br",
+            "antigo_valor": "https://nexia.../prumo/",
+            "status_validacao": "Passou Teste"
           }
         ]
       }
     ],
     "modules": [
-      "Dashboard",
-      "Receitas",
-      "Contas",
-      "Relatórios"
+      "Campos A",
+      "Banners",
+      "Módulo de Validações"
     ]
   },
   "media": {}
