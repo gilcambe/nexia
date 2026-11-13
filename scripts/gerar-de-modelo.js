@@ -46,7 +46,18 @@ function gerar(pastaModelo, valores = {}, destino) {
   return arquivos.map(r => r.split(path.sep).join('/'));
 }
 
-module.exports = { preencher, gerar };
+const PADRAO = { nome: 'Painel Exemplo', titulo: 'Painel Exemplo', cor: '#0a7cff' };
+
+/** Gera o modelo `painel` em `destino` com valores de exemplo. Devolve os arquivos criados. */
+function gerarDeModelo(destino, valores = {}, pastaModelo = path.join(__dirname, '..', 'modelos-projeto', 'painel')) {
+  if (typeof destino !== 'string' || !destino) throw new TypeError('destino deve ser um texto com o caminho da pasta');
+  const modelo = JSON.parse(fs.readFileSync(path.join(pastaModelo, 'modelo.json'), 'utf8'));
+  const completos = { ...valores };
+  for (const v of modelo.variaveis || []) if (completos[v] == null) completos[v] = PADRAO[v] ?? v;
+  return gerar(pastaModelo, completos, destino);
+}
+
+module.exports = Object.assign(gerarDeModelo, { preencher, gerar, gerarDeModelo });
 
 if (require.main === module) {
   const [pasta, valoresArq, destino] = process.argv.slice(2);
