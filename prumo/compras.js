@@ -35,7 +35,7 @@ function carregarCompras() {
 function listarCompras() {
   const listas = carregarCompras();
   return listas.map(l => {
-    return 'Prumo: ' + l.nome;
+    return 'Kernex Finance: ' + l.nome;
   });
 }
 
