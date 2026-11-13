@@ -3,8 +3,8 @@ const motivos = require('./motivos');
 const { estadoTarefas } = require('./estado-tarefas');
 // Central NEXIA: o que a página precisa do GitHub (estado do Cortex, robôs, posts do Divulga).
 // Usa o token da fila (NEXIA_JOBS_TOKEN) só no servidor; nada dele vai para a página.
-// #3125 parte 2/6 (#3128): /api/central?parte=cortex (e /api/github?parte=cortex)
-// responde exatamente o objeto de estadoTarefas(). A contagem vem só de lá; a
+// #3125 parte 2/6 (#3128): /api/central?parte=cortex (GET) responde
+// exatamente o objeto de estadoTarefas(). A contagem vem só de lá; a
 // lista de tarefas passou para a parte "tarefas".
 
 const REPO = 'gilcambe/nexia';
@@ -71,13 +71,11 @@ function criarGithub(env = process.env, fetchFn = fetch) {
   // #2717: cada tarefa leva o motivo (por que está parada ou esperando).
   const tarefa = (i) => ({ numero: i.number, titulo: String(i.title || '').slice(0, 120), link: i.html_url, quando: i.updated_at, motivo: motivos.motivoDe(i).texto });
 
-  // #3125 parte 2/6 (#3128): esta rota responde EXATAMENTE o objeto de estadoTarefas()
-  // (a lógica antiga de contar fila/andamento/travadas foi removida).
+  // #3125 parte 2/6 (#3128): esta rota delega em estadoTarefas(): lê as issues do
+  // repositório (sem PRs) e responde o objeto dela sem reprocessar nada.
   async function cortex() {
-    // Busca as issues do repositório e alimenta estadoTarefas() com elas (sem PRs).
     const issues = await gh('/issues?state=all&per_page=100');
     const lista = Array.isArray(issues) ? issues.filter((i) => !i.pull_request) : [];
-    // Responde EXATAMENTE o objeto que estadoTarefas() produz (mesmas chaves e valores).
     return estadoTarefas(lista);
   }
 
