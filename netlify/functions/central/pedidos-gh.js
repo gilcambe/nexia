@@ -5,7 +5,8 @@
 const REPO = 'gilcambe/nexia';
 const API = 'https://api.github.com';
 
-const { estadoTarefa } = require('./estado-tarefas');
+const { estadoTarefa, ESTADOS } = require('./estado-tarefas');
+const { motivoDe } = require('./motivos');
 
 const nomes = (i) => (i.labels || []).map((l) => l.name || l);
 const tentativas = (i) => Math.max(0, ...nomes(i).map((n) => Number((/^tentativa-(\d+)$/.exec(n) || [])[1] || 0)));

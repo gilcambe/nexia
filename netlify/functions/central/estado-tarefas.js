@@ -1,4 +1,4 @@
-'use strict';
+    'use strict';
 // #3128 (#3125 parte 1/6): Estado único da tarefa (servidor)
 // Central e /cortex leem só este módulo.
 // Limite padrão de inatividade: 30 min.
