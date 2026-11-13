@@ -42,6 +42,7 @@ export default function Vendas() {
   };
   const chamar = (p: Prospect) => { if (p.linkWhats) { window.open(p.linkWhats, "_blank", "noopener"); if (p.etapa === "novo") mover(p, "contatado"); } };
   const c = lista?.contagem || {};
+  const tituloEtapa = (ETAPAS.find(([id]) => id === etapa) || ["", "Lista"])[1];
 
   return (
     <div data-testid="kx-vendas">
@@ -60,7 +61,7 @@ export default function Vendas() {
           <input id="kx-v-cidade" value={busca.cidade} onChange={(e) => setBusca({ ...busca, cidade: e.target.value })} placeholder="Ex.: Recife" style={{ width: "100%", minHeight: 44, margin: "4px 0 8px" }} />
           <button type="button" className="kx-btn" onClick={buscar} disabled={buscando} data-testid="kx-vendas-buscar">{buscando ? "Procurando…" : "Buscar clientes"}</button>
         </Bloco>
-        <Bloco titulo={(ETAPAS.find(([id]) => id === etapa) || ["", "Lista"])[1]} icone="lista" ajuda="QUENTE = sem site e com WhatsApp. O botão abre o WhatsApp com a mensagem pronta (tem a opção 'sair'). Depois mova a etapa." fonte="Funil de vendas" atualizadoEm={null}>
+        <Bloco titulo={tituloEtapa} icone="lista" ajuda="QUENTE = sem site e com WhatsApp. O botão abre o WhatsApp com a mensagem pronta (tem a opção 'sair'). Depois mova a etapa." fonte="Funil de vendas" atualizadoEm={null}>
           {lista && !lista.prospects.length && <p className="kx-mut">Ninguém nesta etapa. Use "Buscar clientes".</p>}
           <ul className="kx-lista">
             {(lista?.prospects || []).map((p) => (
