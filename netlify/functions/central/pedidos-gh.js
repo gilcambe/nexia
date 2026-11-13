@@ -51,13 +51,10 @@ function criarPedidos(env = process.env, fetchFn = fetch) {
     const p = Math.max(1, Math.min(30, Number(pagina) || 1));
     let filtro = 'repo:' + REPO + ' is:issue label:cortex-fila';
     if (estado === 'abertos') filtro += ' is:open -label:cortex-travado';
-    else if (estado === 'travados' || estado === 'travadas') filtro += ' is:open label:cortex-travado';
-    else if (estado === 'feitos' || estado === 'concluidas') filtro += ' is:closed';
+    else if (estado === 'travados' || estado === 'travadas' || estado === 'travada') filtro += ' is:open label:cortex-travado';
+    else if (estado === 'feitos' || estado === 'concluidas' || estado === 'concluida') filtro += ' is:closed';
     else if (estado === 'andamento') filtro += ' is:open label:cortex-rodando';
     else if (estado === 'precisa') filtro += ' is:open';
-    else if (estado === 'travada') filtro += ' is:open label:cortex-travado';
-    else if (estado === 'concluida') filtro += ' is:closed';
-    // Meus pedidos: os que o dono mandou pela Central ("Pedir ao Cortex" grava "Pedido de ..." no texto).
     else if (estado === 'meus') filtro += ' in:body "Pedido de"';
 
     const termo = frase(q);
@@ -68,7 +65,7 @@ function criarPedidos(env = process.env, fetchFn = fetch) {
     if (estado === 'andamento') {
       itens = itens.filter((item) => item.estado === 'andamento');
     } else if (estado === 'travadas' || estado === 'travada') {
-      itens = itens.filter((item) => item.estado === 'travada' && !item.precisaVoce);
+      itens = itens.filter((item) => item.estado === 'travada');
     } else if (estado === 'concluidas' || estado === 'concluida') {
       itens = itens.filter((item) => item.estado === 'concluida');
     } else if (estado === 'precisa') {
