@@ -135,6 +135,8 @@ function avisosPendentes(listas, agoraISO) {
 }
 
 // ---------- Parte 4: ler print com IA grátis ----------
+// #3532: dados vêm da IA (banco, ticker, datas) e passam pelo normalizador antes de virar item da carteira.
+function normalizarLido(b, dataPrint) {
 const LER_PRINT = `Você lê prints de apps de banco, corretora, previdência e FGTS do Brasil. Devolva SOMENTE um JSON, sem texto fora dele:
 {"total_print": número ou null, "data_print": "AAAA-MM-DD ou null", "itens":[{"nome":"","banco":"","banco_escrito":false,"tipo":"","ticker":"","quantidade":null,"preco_medio":null,"cotacao":null,"conta":"","valor":0,"data_valor":"AAAA-MM-DD ou null","vencimento":"AAAA-MM-DD ou null","taxa":""}]}
 Regras:
