@@ -61,13 +61,14 @@ function estadoTarefa(issue, agora = Date.now(), cfg = {}) {
     ia = 'IAs grátis';
   }
 
-  // Determinar se tem label de aguardando-ia
+  // #3128: aguardando IA também quando a reserva tentou e pode voltar (reserva-*), além dos já listados.
   const ehAguardandoIa =
     has('jules-enviado') ||
     has('cortex-jules') ||
     has('reserva-tentou') ||
     has('reserva-volta') ||
-    has('vez-do-claude');
+    has('vez-do-claude') ||
+    ls.some((l) => l.startsWith('reserva-'));
 
   // Determinar o estado (um dos 6: fila, andamento, aguardando-ia, travada, concluida, falhou)
   let estado = 'fila';
