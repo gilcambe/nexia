@@ -24,11 +24,19 @@ export default function Empresa() {
   const [recado, setRecado] = useState({ area: "comercial", texto: "" });
   const [pedido, setPedido] = useState({ ramo: "", precisa: "" });
   const [viab, setViab] = useState<Viab | null>(null);
+  // Pedido do dono (13/11): a Empresa é onde ele controla toda a KERNEX — números de clientes, produtos, plataformas e sites.
+  const [numeros, setNumeros] = useState<{ clientes: number; produtos: number; plataformas: number; noAr: number; total: number } | null>(null);
 
   const carregar = useCallback(() => {
     ler<{ areas: Area[] }>("parte=escritorio-areas").then((x) => setAreas(x?.areas || [])).catch(() => setAreas([]));
     ler<{ recados: Recado[] }>("parte=escritorio-mural&limite=40").then((x) => setMural(x?.recados || [])).catch((e: Error) => setErro(e.message));
     ler<Resumo>("parte=escritorio-resumo").then((x) => setResumo(x ? { ...x, precisaVoce: x.precisaVoce || [], atrasados: x.atrasados || [], porArea: x.porArea || {} } : null)).catch(() => setResumo(null));
+  }, [ler]);
+  useEffect(() => {
+    Promise.all([ler<{ produtos: { tipo?: string; site?: string; pendente?: boolean }[] }>("parte=lista"), ler<{ produtos: { ok?: boolean | null }[] }>("parte=saude").catch(() => null)])
+      .then(([l, sd]) => { const p = l?.produtos || []; const n = (t: string) => p.filter((x) => x.tipo === t).length; const med = (sd?.produtos || []).filter((x) => x.ok != null);
+        setNumeros({ clientes: n("cliente"), produtos: n("produto"), plataformas: n("plataforma"), noAr: med.filter((x) => x.ok).length, total: med.length }); })
+      .catch(() => setNumeros(null));
   }, [ler]);
   useEffect(() => { carregar(); const t = window.setInterval(carregar, 60000); return () => window.clearInterval(t); }, [carregar]);
 
@@ -53,6 +61,12 @@ export default function Empresa() {
         <Kpi cor="vd" icone="check" valor={resumo ? resumo.feitos : null} rotulo="Feito nas últimas 24 h" />
         <Kpi cor="lj" icone="relogio" valor={resumo ? (resumo.atrasados || []).length : null} rotulo="Atrasado (Diretor cobrou)" />
         <Kpi cor="az" icone="ia" valor={areas.length ? areas.reduce((s, a) => s + (a.agentes || []).length, 0) : null} rotulo="Funcionários (IA)" sub={areas.length ? `${areas.length} áreas` : undefined} />
+      </div>
+      <div className="kx-grade kx-kpis" style={{ gridTemplateColumns: "repeat(auto-fit,minmax(160px,1fr))", marginBottom: 12 }} data-testid="kx-empresa-numeros">
+        <Kpi cor="az" icone="grafico" valor={numeros ? numeros.clientes : null} rotulo="Clientes (tenants)" />
+        <Kpi cor="vd" icone="foguete" valor={numeros ? numeros.produtos : null} rotulo="Produtos KERNEX" />
+        <Kpi cor="lj" icone="servidor" valor={numeros ? numeros.plataformas : null} rotulo="Plataformas próprias" />
+        <Kpi cor={numeros && numeros.total && numeros.noAr < numeros.total ? "vm" : "vd"} icone="check" valor={numeros && numeros.total ? numeros.noAr : null} rotulo="Sites no ar" sub={numeros && numeros.total ? "de " + numeros.total + " conferidos" : "sem medição"} />
       </div>
       {erro && <p className="kx-sem">Escritório ainda não ligado: {erro}</p>}
       {msg && <p className="kx-mut">{msg}</p>}

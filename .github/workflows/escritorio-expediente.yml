@@ -1,0 +1,37 @@
+# KERNEX Empresa Autônoma (13/11/2026): EXPEDIENTE das áreas — Suporte confere os sites, T.I. o CI e os robôs, Produção a fila do
+# Cortex, RH a qualidade das entregas e Marketing sugere posts (IA grátis; só ideias, aguardam o dono). Tudo vai para o mural.
+# 7h30 e 16h30 de Brasília (10h30 e 19h30 UTC), antes do resumo do Diretor (8h e 18h). Grátis (Actions). Nada sai para fora.
+name: Escritório - Expediente
+
+on:
+  schedule:
+    - cron: '30 10 * * *'
+    - cron: '30 19 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+  issues: read
+  pull-requests: read
+
+concurrency:
+  group: escritorio-expediente
+  cancel-in-progress: false
+
+jobs:
+  expediente:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '20'
+      - name: Expediente das áreas
+        run: node scripts/escritorio-expediente.js
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          NEXIA_D1_TOKEN: ${{ secrets.NEXIA_D1_TOKEN }}
+          NEXIA_D1_ACCOUNT_ID: ${{ secrets.NEXIA_D1_ACCOUNT_ID }}

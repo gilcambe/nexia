@@ -20,7 +20,7 @@ const PRODUTOS = [
   // Clientes antigos (#1003). EV Supplements não é mais cliente e MyCoach virou o Body Coach: não entram.
   { id: 'ces', logo: '/central/logos/ces.svg', segmento: 'Eventos', nome: 'CES Brasil 2027', icone: '🌐', frase: 'Cliente: missão empresarial (evento)', site: BASE + '/ces', painel: BASE + '/ces', tipo: 'cliente' },
   { id: 'vp', logo: '/central/logos/vp.svg', segmento: 'Viagens', nome: 'Viajante Pro', icone: '✈️', frase: 'Cliente: agência de viagens', site: BASE + '/vp', painel: BASE + '/vp', tipo: 'cliente' },
-  { id: 'splash', logo: '/central/logos/splash.png', segmento: 'Eventos', nome: 'Splash Eventos', icone: '💧', frase: 'Cliente: locação de espaços para eventos', site: BASE + '/splash', painel: BASE + '/splash', tipo: 'cliente' },
+  { id: 'splash', logo: '/central/logos/splash.png', segmento: 'Eventos', nome: 'Splash (modelo de eventos)', icone: '💧', frase: 'Modelo pronto para vender: site + agenda para espaços de eventos (ainda sem cliente de eventos)', site: BASE + '/splash', painel: BASE + '/splash', tipo: 'produto' },
   // O site do Adriano entra quando a landing nova for publicada em https://adrianoblumer.pages.dev.
   { id: 'adriano', logo: '/central/logos/adriano.png', segmento: 'Nutrição', nome: 'Adriano Blumer', icone: '🥗', frase: 'Cliente: nutricionista (landing com WhatsApp e redes)', pendente: true, tipo: 'cliente' },
   // Copiloto e treino para atendentes de call center (nome neutro; nada de material de empresa anterior entra no produto).
