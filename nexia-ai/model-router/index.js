@@ -208,7 +208,7 @@ function createRouter(o = {}) {
       });
     }
 
-    // 1) Consultar cotas antes de escolher provider; 2) Pular sem cota ou disjuntor aberto
+    // 1) Consultar cotas antes de escolher provider; 2) Pular sem cota ou disjuntor aberto; 6) Excluir degrau pago (RESERVA_*) quando tetos não definidos
     const quotasMap = {};
     for (const d of descsDedupped) {
       const id = d.provider;
@@ -234,9 +234,12 @@ function createRouter(o = {}) {
       }
     }
 
-    // Filtro adicional de segurança para garantir cotas e disjuntores
+    // Filtro adicional de segurança para garantir cotas, disjuntores e degraus pagos sem teto
+    const { tetosConfigurados } = require('../../src/config/limits');
+    const comTetos = tetosConfigurados(env);
     selecionados = selecionados.filter(d => {
       const id = d.provider;
+      if (id && String(id).toUpperCase().startsWith('RESERVA_') && !comTetos) return false;
       if (disjuntorAberto && disjuntorAberto(id)) return false;
       const c = obterCotaDisponivel ? obterCotaDisponivel(id) : null;
       if (c !== null && c <= 0) return false;
