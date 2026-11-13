@@ -136,7 +136,6 @@ function avisosPendentes(listas, agoraISO) {
 
 // ---------- Parte 4: ler print com IA grátis ----------
 // #3532: dados vêm da IA (banco, ticker, datas) e passam pelo normalizador antes de virar item da carteira.
-function normalizarLido(b, dataPrint) {
 const LER_PRINT = `Você lê prints de apps de banco, corretora, previdência e FGTS do Brasil. Devolva SOMENTE um JSON, sem texto fora dele:
 {"total_print": número ou null, "data_print": "AAAA-MM-DD ou null", "itens":[{"nome":"","banco":"","banco_escrito":false,"tipo":"","ticker":"","quantidade":null,"preco_medio":null,"cotacao":null,"conta":"","valor":0,"data_valor":"AAAA-MM-DD ou null","vencimento":"AAAA-MM-DD ou null","taxa":""}]}
 Regras:
@@ -301,9 +300,6 @@ let tipo = TIPOS.includes(bruto) ? bruto : ((APELIDO_TIPO.find(([re]) => re.test
   // A data do print vem escrita como "Atualizado em 11/11/2026" (texto livre) e pode chegar no JSON bruto.
   const dataDoPrint = dataDoPrint(dataPrint) || dataDoPrint(b && b.data_print);
   const { banco_escrito, ...resto } = b; // eslint-disable-line no-unused-vars
-  return conferirValor({ ...resto, nome, tipo, valor: Number.isFinite(val) ? Math.abs(val) : b.valor,
-    // #3532: data_valor = data escrita no item, ou "Atualizado em DD/MM/AAAA" do print, ou hoje.
-    data_valor: dataLida(b.data_valor) || dataDoPrint || deps.agora().toISOString().slice(0, 10), vencimento: dataLida(b.vencimento) || null, banco });
 }
 // Modelos grátis com visão, do mais rápido ao mais forte. Vários provedores: se a cota de um acabar
 // (o Gemini grátis vive no limite por causa do Cortex), o próximo lê.
