@@ -1,5 +1,6 @@
 {
   "nome": "painel",
   "versao": "1.0.1",
-  "variaveis": ["nome", "titulo", "cor"]
+  "variaveis": ["nome", "titulo", "cor"],
+  "descricao": "Modelo do site de painel: nome, titulo e cor do cliente."
 }
