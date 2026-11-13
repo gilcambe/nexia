@@ -635,7 +635,16 @@ async function executar(token, acao, dividir) {
     const val = await validarCortexFeito(token, { number: n, body: acao.corpo });
     if (!val.ok) {
       await delLabel(L.rodando); await limparPistas();
-      await comentar(`A rodada terminou, mas a validação de entrega falhou:\n${val.faltas.map(f => `- ${f}`).join('\n')}\nNão marquei como feita; volta para a fila.`);
+      // 13/11/2026: antes voltava para a fila SEM contar e repetia a mesma tarefa para sempre (#3128 rodou 8x num dia;
+      // a fila parecia andar, mas nada saía). Agora conta como rodada sem entrega: na 2ª trava e sobe a escada (Jules).
+      const ls = nomes((await gh(token, 'GET', `/issues/${n}`)).json || {});
+      const { n: k, travar } = depoisSemEntrega(ls);
+      for (let j = 1; j < k; j++) await delLabel(`sem-entrega-${j}`);
+      await addLabel(travar ? L.travado : `sem-entrega-${k}`);
+      await comentar(`A rodada terminou, mas a validação de entrega falhou:\n${val.faltas.map(f => `- ${f}`).join('\n')}\n${travar
+        ? `${k} rodadas sem entrega válida: travei para subir a escada (Jules, depois reserva) em vez de repetir a mesma tarefa.`
+        : `Não marquei como feita; volta para a fila (${k}/${MAX_SEM_ENTREGA}).`}`);
+      if (travar) await avisarDono('travado', n, acao.titulo);
       return;
     }
     const revisao = await revisarParte(token, acao.corpo, acao.desde);
