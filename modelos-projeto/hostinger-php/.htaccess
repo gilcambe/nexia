@@ -1,0 +1,6 @@
+# Não lista pastas e bloqueia arquivos internos do modelo e de configuração.
+Options -Indexes
+DirectoryIndex index.php
+<FilesMatch "^(modelo\.json|LEIA-ME\.md|\.env.*)$">
+  Require all denied
+</FilesMatch>
