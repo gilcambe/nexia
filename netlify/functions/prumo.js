@@ -141,7 +141,7 @@ Regras:
 3. "total_print" é o total que o próprio print mostra ("Total investido", "Patrimônio", "Saldo total", "TOTAL"), ou null se não houver.
 4. "banco" SÓ se o nome da instituição estiver ESCRITO no print (aí "banco_escrito": true). Se não estiver escrito, "banco": "" e "banco_escrito": false. NUNCA adivinhe pelo logo, cor, ticker ou nome do fundo (BTLG11 não é BTG, XPML11 não é XP).
 5. "ticker" é o código da B3 quando houver (PETR4, MXRF11, IVVB11). Fundo imobiliário (grupo "FIIs") é "fiis"; ETF (grupo "ETFs", ex.: IVVB11, BOVA11) é "etf". FII e ETF NUNCA são "renda_fixa".
-5b. "data_print" é a data escrita no print ("Atualizado em 11/11/2026"). "data_valor" só se houver data escrita junto do item; senão null. NUNCA invente data.
+5b. "data_print" é a data escrita no print ("Atualizado em 11/11/2026"). "data_valor" é essa mesma data do print (AAAA-MM-DD) quando ela existir; se não existir, fica null (o servidor usa a data de hoje). NUNCA invente data.
 5c. Se houver Quantidade e Cotação, "valor" tem que ser igual a quantidade × cotação (confira a vírgula).
 6. tipo é um destes: ${TIPOS.join(', ')}.
 7. Mesmo plano/fundo em VÁRIAS linhas (ex.: previdência com conta "Participante" e "Patrocinadora", ou "Básica" e "Adicional") = um item POR LINHA, cada um com seu valor, e o nome da linha em "conta". Nunca devolva só a primeira linha.
