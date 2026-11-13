@@ -214,15 +214,21 @@ function createRouter(o = {}) {
     }
 
     let selecionados = descsDedupped;
+    const placar = (() => { try { return require('./cota').getPlacar(); } catch { return null; } })();
     if (selecionarProvedor) {
       try {
         selecionados = selecionarProvedor(size, {
           providers: descsDedupped,
           quotas: quotasMap,
+          placar,
           env
         });
       } catch {
-        selecionados = selecionarProvedor(dedupe(descs), req, { obterCotaDisponivel, disjuntorAberto, tetosConfigurados });
+        try {
+          selecionados = selecionarProvedor(dedupe(descs), req, { obterCotaDisponivel, disjuntorAberto, tetosConfigurados });
+        } catch {
+          selecionados = descsDedupped;
+        }
       }
     }
 
