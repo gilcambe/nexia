@@ -63,7 +63,6 @@ const EDITING = [
   '- Só termine depois que a ferramenta confirmar a gravação (commit).',
 ].join('\n');
 
-const LICOES_ARRAY = require('./licoes');
 const { TEXTO: LICOES } = require('./licoes');
 const { TEXTO: DECISOES } = require('./decisoes-dono');
 
