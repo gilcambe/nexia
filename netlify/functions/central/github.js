@@ -76,7 +76,6 @@ function criarGithub(env = process.env, fetchFn = fetch) {
   async function cortex() {
     const issues = await gh('/issues?state=all&per_page=100');
     const lista = Array.isArray(issues) ? issues.filter((i) => !i.pull_request) : [];
-    // A resposta é o objeto de estadoTarefas() sem acrescentar nem remover nada.
     const estado = estadoTarefas(lista);
     return estado && typeof estado === 'object' && !Array.isArray(estado) ? estado : {};
   }
