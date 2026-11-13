@@ -221,7 +221,19 @@ test('M13. Roteamento e cotas do Model Router: simula 429, sem cota e troca auto
   assert.ok(duration < 5000, 'Troca automática em menos de 5s');
 });
 
-test('M12. ADR-FREE-04: GitHub Models (token do Actions) e Workers AI (conta grátis) usam o endpoint certo; sem chave, ficam de fora', async () => {
+  test('M13. Seleção de provider: simula 3 providers, um 429, sem cota, troca automática em <5s, Jules nunca primeiro, pago sem teto excluído', async () => {
+    const { selecionarProvider } = require('../../src/utils/providerSelector');
+    const { createRouter } = require('../../nexia-ai/model-router');
+    const t0 = Date.now();
+    const providers = [{ provider: 'jules' }, { provider: 'RESERVA_PAID' }, { provider: 'groq' }, { provider: 'gemini' }];
+    const quotas = { groq: { esgotada: false }, gemini: { esgotada: true } };
+    const sel = selecionarProvider('media', { providers, quotas, env: { NEXIA_TETOS_ATIVOS: '' } });
+    assert.ok(!sel.some(p => p.provider === 'RESERVA_PAID'), 'degrau pago sem teto excluído');
+    assert.strictEqual(sel[0].provider, 'groq', 'Jules não é o primeiro e gemini esgotada é pulado');
+    assert.ok(Date.now() - t0 < 5000, 'troca em menos de 5s');
+  });
+
+  test('M12. ADR-FREE-04: GitHub Models (token do Actions) e Workers AI (conta grátis) usam o endpoint certo; sem chave, ficam de fora', async () => {
   const calls = [];
   const fetchImpl = async (url, init) => { calls.push({ url, auth: init.headers.Authorization }); return { ok: true, status: 200, json: async () => ({ choices: [{ message: { content: 'oi' } }], usage: {} }) }; };
   const env = { GITHUB_MODELS_TOKEN: 'gh-t', CLOUDFLARE_AI_TOKEN: 'cf-t', CLOUDFLARE_AI_ACCOUNT_ID: 'abc123' };
