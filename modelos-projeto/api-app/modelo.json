@@ -1,0 +1,9 @@
+{
+  "nome": "api-app",
+  "versao": "1.0.0",
+  "variaveis": [
+    "nome",
+    "titulo",
+    "slug"
+  ]
+}
