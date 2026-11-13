@@ -277,7 +277,7 @@ function normalizarLido(b, dataPrint) {
   if (conta && !nome.toLowerCase().includes(conta.toLowerCase())) nome = `${nome} — ${conta}`;
   // Banco: se houver nome explícito no texto (b.banco ou b.instituicao), usa ele; caso contrário, "" (vazio). Sem lista de exemplos nem adivinhação.
   const bancoBruto = String(b.banco || b.instituicao || '').trim();
-  const banco = bancoBruto && !/^(banco|instituicao|carteira|extrato)$/i.test(bancoBruto) ? bancoBruto : '';
+  const banco = bancoBruto && !/^(banco|instituicao|carteira|extrato|instituicao financeira|corretora)$/i.test(bancoBruto) ? bancoBruto : '';
   const { banco_escrito: _bancoEscrito, instituicao: _instituicao, ...resto } = b; // eslint-disable-line no-unused-vars
   
   // Atualizar extração de data_valor para usar a data "Atualizado em DD/MM/AAAA" presente no print ou, ausente, a data atual
