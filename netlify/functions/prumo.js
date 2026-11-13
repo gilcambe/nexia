@@ -274,7 +274,9 @@ function normalizarLido(b, dataPrint) {
   if (!b || typeof b !== 'object') return b;
   const bruto = String(b.tipo || '').trim();
   const tk = String(b.ticker || '').toUpperCase();
-  let tipo = TIPOS.includes(bruto) ? bruto : ((APELIDO_TIPO.find(([re]) => re.test(`${bruto} ${b.nome || ''}`)) || [])[1] || 'outro');
+  // Classificação: tipo escrito pela IA (quando válido), apelido no texto, ou "outro".
+// Sem ticker e sem tipo escrito (nem apelido no nome), não inventa classificação.
+let tipo = TIPOS.includes(bruto) ? bruto : ((APELIDO_TIPO.find(([re]) => re.test(`${bruto} ${b.nome || ''}`)) || [])[1] || 'outro');
   // Sem ticker e sem tipo escrito (nem apelido no nome), não inventa classificação.
   if (!tk && !tipo) tipo = 'outro';
   if (/etf/i.test(bruto)) tipo = 'etf';
@@ -283,7 +285,10 @@ function normalizarLido(b, dataPrint) {
   // Ticker manda: ETF conhecido ou terminação 11 do grupo FIIs viram "etf"/"fiis" (nunca "renda_fixa"),
   // mesmo quando a IA devolve outro tipo ou o ticker vem dentro do nome (ex.: "MXRF11".trim()).
   const tickerTexto = tk || (/\b([A-Z]{4}11)\b/i.exec(String(b.nome || '').toUpperCase()) || [])[1] || '';
+  // Ticker manda sempre: FII (XXXX11) e ETF conhecido não podem virar "renda_fixa".
   if (tickerTexto) tipo = tipoPeloTicker(tickerTexto, tipo);
+  // Ação (XXXX3, XXXX4...) com tipo "outro" ou "renda_fixa" é "acoes", nunca renda fixa.
+  if (tk && /^[A-Z]{4}\d{1,2}$/.test(tk) && (tipo === 'outro' || tipo === 'renda_fixa')) tipo = 'acoes';
   const val = valorLido(b.valor);
   // "conta" separa linhas do mesmo plano (Participante x Patrocinadora) para não virar "repetido".
   const conta = String(b.conta || '').trim();
