@@ -7,6 +7,7 @@ import jobs from '../nexia-ai/jobs/index.js';
 import { corpoIa } from './corpoIa.js';
 import lembretes from './lembretes.js';
 import saude from './saude.js';
+import saudeServicos from '../netlify/functions/saude-servicos.js';
 
 
 import julesAuto from './jules-auto.js';
@@ -52,6 +53,11 @@ export default {
     ctx.waitUntil(julesAuto.rodar(at).then(
       r => console.log('[jules-auto]', JSON.stringify(r)),
       e => console.error('[jules-auto]', e && e.message),
+    ));
+    // Saúde dos serviços a cada 5 min via cron existente.
+    ctx.waitUntil(saudeServicos.executarCron(process.env, fetch).then(
+      r => console.log('[saude-servicos]', JSON.stringify(r)),
+      e => console.error('[saude-servicos]', e && e.message),
     ));
 
 
