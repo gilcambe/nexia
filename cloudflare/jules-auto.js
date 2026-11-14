@@ -55,9 +55,9 @@ const mexeEmWorkflow = (i) => {
   const t = (i.title || '').toLowerCase();
   const b = (i.body || '').toLowerCase();
   const lista = (i.arquivos || i.files || []);
-  const mencionaWorkflow = /\.github\/workflows\//.test(`${t}\n${b}`);
-  const mencionaCortexPlano = t.includes('cortex-plano') || b.includes('cortex-plano') || lista.some(f => (typeof f === 'string' ? f : f.filename || '').includes('cortex-plano'));
-  return mencionaWorkflow && mencionaCortexPlano;
+  const mencaoTituloOuBody = t.includes('cortex-plano') || b.includes('cortex-plano');
+  const mencaoLista = lista.some(f => (typeof f === 'string' ? f : f.filename || '').includes('cortex-plano'));
+  return mencaoTituloOuBody || mencaoLista;
 };
 
 // Decide o que fazer com as issues travadas (função pura, testada).
