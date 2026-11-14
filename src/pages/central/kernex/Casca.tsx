@@ -34,6 +34,8 @@ import { montarAcoes } from "./donos";
 // #3219: casca da Central nova, no jeito do "Painel Executivo" que o dono mandou.
 // PC: menu lateral com as 10 telas. Celular: 5 telas embaixo + gaveta (☰) com todas.
 // C2-F1: no celular, 5 itens do menu embaixo; o resto na gaveta (☰).
+// No celular a barra de baixo tem 6 botões: nomes curtos para caber (dono 13/11: "pronta no celular").
+const CURTO: Record<string, string> = { vendas: "Vendas", config: "Ajustes" };
 const NO_CELULAR = ["conversar", "projetos", "vendas", "arquivos", "sistema", "config"];
 export const ICONE_TELA: Record<TelaId, string> = { inicio: "casa", ajuda: "ia", conversar: "enviar", pedir: "enviar", clientes: "troca", fabrica: "foguete", store: "check", vendas: "grafico", empresa: "sino", ferramentas: "engrenagem", projetos: "pasta", maquinas: "servidor", ia: "ia", tarefas: "lista", arquivos: "arquivo", publicacoes: "foguete", homologacao: "check", cofre: "cadeado", relatorios: "grafico", config: "engrenagem", servicos: "servidor", falta: "lista", cortex: "ia", entregas: "check", tenants: "troca", dinheiro: "grafico", divulgar: "foguete", iainfra: "cadeado" };
 const CLASSICAS: TelaId[] = ["falta", "cortex", "entregas", "tenants", "dinheiro", "divulgar", "iainfra"];
@@ -84,6 +86,8 @@ function usePainel(): Painel {
 export default function Casca() {
   const { user } = useAuth();
   const [tela, setTela] = useState<TelaId>(() => telaDaUrl(location.search));
+  // No celular as abas rolam de lado: a aba aberta fica sempre à vista.
+  useEffect(() => { try { document.querySelector('[data-testid="kx-abas"] [aria-selected="true"]')?.scrollIntoView({ inline: "center", block: "nearest" }); } catch { /* navegador antigo */ } }, [tela]);
   const [gaveta, setGaveta] = useState(false);
   const [buscando, setBuscando] = useState(false);
   const painel = usePainel();
@@ -150,7 +154,7 @@ export default function Casca() {
           <button key={g.id} type="button" className={NO_CELULAR.includes(g.id) ? "" : "kx-so-pc"} aria-current={grupo?.id === g.id ? "page" : undefined}
             aria-expanded={g.telas.length > 1 ? aberto === g.id : undefined}
             onClick={() => { if (g.telas.length > 1 && aberto === g.id) { setAberto(null); return; } setAberto(g.id); if (grupo?.id !== g.id) ir(g.telas[0]); }} data-testid={"kx-menu-" + g.id}>
-            <Icone nome={g.icone} />{g.nome}{g.telas.length > 1 && <span className="kx-seta" aria-hidden="true">{aberto === g.id ? "▾" : "▸"}</span>}
+            <Icone nome={g.icone} /><span className="kx-nome-pc">{g.nome}</span><span className="kx-nome-cel">{CURTO[g.id] || g.nome}</span>{g.telas.length > 1 && <span className="kx-seta" aria-hidden="true">{aberto === g.id ? "▾" : "▸"}</span>}
           </button>
         )).flatMap((b, i) => {
           const g = MENU[i]; if (g.telas.length < 2 || aberto !== g.id) return [b];
