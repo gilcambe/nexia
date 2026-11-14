@@ -44,6 +44,15 @@ function validarItemCarteira(o) {
   if (o.corrigido_por_cotacao === true) { item.corrigido_por_cotacao = true; const vl = numero(o.valor_lido); if (Number.isFinite(vl)) item.valor_lido = dinheiro(vl); }
   // Sem nome de banco escrito no texto o campo sai vazio, nunca adivinhado.
   if (!item.banco) item.banco = '';
+  // Regra de tipo: FIIs (terminados em 11 do grupo FIIs) são "fiis", nunca "renda_fixa"; ETFs reconhecidos são "etf".
+  if (item.ticker) {
+    const tk = item.ticker.toUpperCase();
+    if (ETFS.has(tk)) {
+      item.tipo = 'etf';
+    } else if (/^[A-Z]{4}11$/.test(tk)) {
+      item.tipo = 'fiis';
+    }
+  }
   return { ok: true, item };
 }
 
@@ -142,8 +151,8 @@ Regras:
 1. Um item para CADA ativo/aplicação/plano/conta que aparece com valor (não junte vários num só). Se só existir um total, devolva um item com ele.
 2. "valor" é o valor ATUAL da posição: "Saldo bruto", "Valor atual", "Posição", "Saldo", o valor grande em destaque logo abaixo do nome do ativo, ou quantidade × cotação. NUNCA use "Preço médio", "Custo médio", "Valor aplicado", "Valor investido", a variação (seta ↑/↓ ao lado) nem rentabilidade como valor.
 3. "total_print" é o total que o próprio print mostra ("Total investido", "Patrimônio", "Saldo total", "TOTAL"), ou null se não houver.
-4. "banco" SÓ se o nome da instituição estiver ESCRITO no print (aí "banco_escrito": true). Se não estiver escrito, "banco": "" e "banco_escrito": false. NUNCA adivinhe pelo logo, cor, ticker ou nome do fundo (BTLG11 não é BTG, XPML11 não é XP).
-5. "ticker" é o código da B3 quando houver (PETR4, MXRF11, IVVB11). O tipo é conferido pelo código: ticker terminado em 11 do grupo "FIIs" (ex.: MXRF11, HGLG11, KNRI11) é "fiis"; ticker da lista de ETFs conhecida (IVVB11, BOVA11, SMAL11, HASH11, DIVO11, etc.) é "etf". FII e ETF NUNCA são "renda_fixa".
+4. "banco" SÓ se o nome da instituição estiver ESCRITO no print (aí "banco_escrito": true). Se não estiver escrito ou houver dúvida, "banco": "" e "banco_escrito": false. NUNCA adivinhe pelo logo, cor, ticker ou nome do fundo.
+5. "ticker" é o código da B3 quando houver (PETR4, MXRF11, IVVB11). O tipo é conferido pelo código: ticker terminado em 11 do grupo "FIIs" é "fiis"; ticker da lista de ETFs conhecida é "etf". FII e ETF NUNCA são "renda_fixa".
 5b. "data_print" é a data "Atualizado em DD/MM/AAAA" escrita no print. "data_valor" só se houver data escrita JUNTO do item; senão null. NUNCA invente data.
 5c. Se houver Quantidade e Cotação, "valor" tem que ser igual a quantidade × cotação (confira a vírgula).
 6. tipo é um destes: ${TIPOS.join(', ')}.
@@ -297,9 +306,10 @@ let tipo = TIPOS.includes(bruto) ? bruto : ((APELIDO_TIPO.find(([re]) => re.test
   // #3532: sem adivinhação de banco. Só vale o nome escrito no print (banco_escrito true). Sem nome → "".
   // Nunca adivinhe pelo logo, cor, ticker ou nome do fundo (BTLG11 não é BTG, XPML11 não é XP).
   const banco = b.banco_escrito === true ? String(b.banco || '').trim() : '';
-  // A data do print vem escrita como "Atualizado em 11/11/2026" (texto livre) e pode chegar no JSON bruto.
-  const dataDoPrint = dataDoPrint(dataPrint) || dataDoPrint(b && b.data_print);
-  const { banco_escrito, ...resto } = b; // eslint-disable-line no-unused-vars
+  // A data do print vem escrita como "Atualizado em DD/MM/AAAA" presente no print ou, ausente, a data atual.
+  const dataFinal = dataDoPrint(dataPrint) || dataDoPrint(b && b.data_print) || new Date().toISOString().slice(0, 10);
+  const { banco_escrito, ...resto } = b;
+  return { ...resto, banco, tipo, nome, data_valor: dataDoPrint(b.data_valor) || dataFinal };
 }
 // Modelos grátis com visão, do mais rápido ao mais forte. Vários provedores: se a cota de um acabar
 // (o Gemini grátis vive no limite por causa do Cortex), o próximo lê.
