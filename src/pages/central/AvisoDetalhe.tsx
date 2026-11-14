@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import type { Aviso, Aba } from "./avisos";
+import { resolverSozinho } from "./avisos";
 import { useCentral } from "./api";
 import { Icone } from "./icones";
 
@@ -38,7 +39,9 @@ export default function AvisoDetalhe({ avisos, inicial, fechar, ir }: { avisos: 
                 <li key={k}>
                   <button onClick={() => setI(k)} className="w-full flex items-start gap-3 rounded-xl border border-slate-200 p-3 text-left cursor-pointer hover:bg-slate-50" data-testid="aviso-item">
                     <span className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${COR[x.cor]}`}><Icone nome="alerta" className="w-4 h-4" /></span>
-                    <span className="flex-1 text-sm text-slate-700">{x.texto}{x.sozinho && <span className="block text-xs text-emerald-700 mt-0.5">Resolve sozinho</span>}</span>
+                    <span className="flex-1 text-sm text-slate-700">{x.texto}{x.sozinho && (resolverSozinho(x)
+                      ? <span className="block text-xs text-emerald-700 mt-0.5" data-testid="resolve-sozinho">Resolve sozinho</span>
+                      : <span className="block text-xs text-amber-700 mt-0.5" data-testid="nao-resolveu">Não resolveu sozinho, precisa de você</span>)}</span>
                     <span className="text-slate-300">›</span>
                   </button>
                 </li>
@@ -55,12 +58,19 @@ export default function AvisoDetalhe({ avisos, inicial, fechar, ir }: { avisos: 
               <p><b className="text-slate-900">O que aconteceu:</b> <span className="text-slate-700">{a.oque}</span></p>
               <p><b className="text-slate-900">O que isso afeta:</b> <span className="text-slate-700">{a.impacto}</span></p>
             </div>
-            <div className={`rounded-xl p-3 ${a.sozinho ? "bg-emerald-50" : "bg-indigo-50"}`}>
-              <div className="text-sm font-semibold text-slate-900 mb-1">{a.sozinho ? "✅ Resolve sozinho. Se quiser acompanhar:" : "O que fazer, passo a passo:"}</div>
-              <ol className="list-decimal pl-5 space-y-1 text-sm text-slate-700" data-testid="aviso-passos">
-                {a.passos.map((p) => <li key={p}>{p}</li>)}
-              </ol>
-            </div>
+            {(() => {
+              // Mensagem conforme o tempo desde a última checagem (checadoEm): dentro do prazo prometido,
+              // o aviso diz "Resolve sozinho"; depois de 4 h sem resolver, passa a pedir o dono.
+              const sozinho = resolverSozinho(a);
+              return (
+                <div className={`rounded-xl p-3 ${sozinho ? "bg-emerald-50" : "bg-amber-50"}`} data-testid={sozinho ? "aviso-resolve-sozinho" : "aviso-nao-resolveu"}>
+                  <div className={`text-sm font-semibold mb-1 ${sozinho ? "text-slate-900" : "text-amber-800"}`}>{sozinho ? "✅ Resolve sozinho. Se quiser acompanhar:" : "Não resolveu sozinho, precisa de você"}</div>
+                  <ol className="list-decimal pl-5 space-y-1 text-sm text-slate-700" data-testid="aviso-passos">
+                    {a.passos.map((p) => <li key={p}>{p}</li>)}
+                  </ol>
+                </div>
+              );
+            })()}
             <div className="flex flex-wrap gap-2">
               {a.link && <a className={`${BOTAO} border border-slate-200 bg-white text-slate-700`} href={a.link.url} target="_blank" rel="noopener noreferrer">{a.link.rotulo} ↗</a>}
               {a.conserto && <button className={`${BOTAO} bg-indigo-600 text-[#fff]`} onClick={() => pedir(a.conserto!)} disabled={pedindo} data-testid="aviso-consertar">{pedindo ? "Pedindo…" : "🛠️ Pedir conserto ao Cortex"}</button>}
