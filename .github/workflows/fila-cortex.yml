@@ -59,8 +59,8 @@ jobs:
           NVIDIA_API_KEY: ${{ secrets.NVIDIA_API_KEY }}
           ZAI_API_KEY: ${{ secrets.ZAI_API_KEY }}
           KILO_API_KEY: ${{ secrets.KILO_API_KEY }}
-          CLOUDFLARE_AI_TOKEN: ${{ secrets.CLOUDFLARE_AI_TOKEN }}
-          CLOUDFLARE_AI_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_AI_ACCOUNT_ID }}
+          # Sem Workers AI (decisão do dono 14/11/2026): a cota grátis da Cloudflare fica para os clientes (Academy, sites).
+          # O Cortex usa Groq/Gemini/Mistral; se acabarem, espera o dia seguinte. Para voltar: repor CLOUDFLARE_AI_TOKEN/ACCOUNT_ID.
           NEXIA_MODELS_FAST: ${{ secrets.NEXIA_MODELS_FAST }}
           BREVO_API_KEY: ${{ secrets.BREVO_API_KEY1 || secrets.BREVO_API_KEY }}
           LEADS_NOTIFY_EMAIL: ${{ secrets.LEADS_NOTIFY_EMAIL }}
