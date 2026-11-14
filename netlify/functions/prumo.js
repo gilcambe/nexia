@@ -242,7 +242,7 @@ function dataLida(v) {
 }
 const APELIDO_TIPO = [[/tesouro/i, 'tesouro'], [/fgts/i, 'fgts'], [/prev|pgbl|vgbl/i, 'previdencia'], [/poupan/i, 'poupanca'],
   [/cripto|bitcoin|btc|eth/i, 'cripto'], [/a[cç][aã]o|a[cç][oõ]es|fii|bdr|etf|renda vari/i, 'acoes'], [/fundo/i, 'fundos'],
-  [/cdb|lci|lca|cri|cra|deb[eê]nt|renda fixa|lc\b|rdb/i, 'renda_fixa']];
+  [/cdb|lci|lca|cri|cra|deb[eê]nt|renda fixa|lc\b|rdb/i, 'renda_fixa'], [/fiis?|fundo(s)? imobili[aá]rios/i, 'fiis']];
 // #3532: ETFs e units da B3 que terminam em 11 mas NÃO são FII.
 const ETFS = new Set(['IVVB11', 'BOVA11', 'SMAL11', 'HASH11', 'NASD11', 'GOLD11', 'DIVO11', 'SPXI11', 'XINA11', 'BOVV11', 'BBSD11', 'ECOO11', 'FIND11', 'MATB11', 'PIBB11', 'BRAX11', 'ACWI11', 'EURP11', 'WRLD11', 'QBTC11', 'ETHE11', 'BITH11', 'B5P211', 'IMAB11', 'IRFM11', 'FIXA11', 'TECK11', 'GOVE11', 'BOVB11', 'DEFI11', 'META11', 'SPXR11', 'USTK11']);
 const UNITS = new Set(['TAEE11', 'SANB11', 'KLBN11', 'ALUP11', 'BPAC11', 'ENGI11', 'SAPR11', 'IGTI11', 'CPLE11', 'BRBI11', 'TIET11', 'RNEW11', 'AESB11', 'CMIG11', 'ITSA11', 'SULA11', 'PPLA11', 'BIDI11', 'INBR11', 'NEOE11']);
