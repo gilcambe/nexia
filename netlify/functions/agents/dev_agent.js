@@ -15,18 +15,20 @@ Responda sempre em português. Seja preciso e foque em segurança, performance e
 async function run(messages, context = {}) {
   const systemContent = DEV_AGENT.systemPrompt;
 
-  const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${process.env.GROQ_API_KEY}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      model: DEV_AGENT.model,
-      temperature: DEV_AGENT.temperature,
-      max_tokens: DEV_AGENT.max_tokens,
-      messages: [{ role: 'system', content: systemContent }, ...messages]
-    })
+  const response = await comGroq(process.env.GROQ_API_KEY, async (model) => {
+    return fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${process.env.GROQ_API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: model,
+        temperature: DEV_AGENT.temperature,
+        max_tokens: DEV_AGENT.max_tokens,
+        messages: [{ role: 'system', content: systemContent }, ...messages]
+      })
+    });
   });
 
   if (!response.ok) throw new Error(`Groq Error: ${await response.text()}`);
