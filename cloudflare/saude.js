@@ -22,11 +22,13 @@ async function rodar(at) {
 // #2882: o próprio Worker é medido pelo binding SELF (fetch normal para o próprio workers.dev o Cloudflare barra).
 // Nunca lança erro: qualquer problema vira ok:false só daquela rota.
 function criarMedir10(medir, { base, self = globalThis.__NEXIA_SELF__, fetchFn = (...a) => fetch(...a) } = {}) {
-  const BASE = base || require('../central/produtos.js').BASE;
+  const P = require('../central/produtos.js');
+  const BASE = base || P.BASE;
   const host = (u) => { try { return new URL(u).hostname; } catch { return ''; } };
+  const daqui = (u) => host(u) === host(BASE) || P.ehProprio(u); // Body Coach e Finance também são este Worker
   return async (url) => {
     try {
-      const proprio = host(url) === host(BASE);
+      const proprio = daqui(url);
       const f = proprio && self && typeof self.fetch === 'function' ? (...a) => self.fetch(...a) : fetchFn;
       return await medir(url, f, 10000); // tempo limite 10 s
     } catch (e) { return { ok: false, codigo: 0, tempo: 0, lento: false }; }
