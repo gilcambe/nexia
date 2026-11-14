@@ -20,7 +20,7 @@ const ROTULO_ESTADO = 'ia-vagas-estado';
 const PROVEDORES = {
   gemini: { nome: 'Google Gemini', router: 'google', modelo: 'gemini-2.5-flash', env: 'GEMINI_API_KEY', site: 'https://aistudio.google.com/apikey', logo: '/central/logos/gemini.svg',
     passos: ['Abra aistudio.google.com/apikey e entre com sua conta Google.', 'Toque em "Create API key" e copie.'] },
-  groq: { nome: 'Groq', router: 'groq', modelo: 'llama-3.3-70b-versatile', env: 'GROQ_API_KEY', site: 'https://console.groq.com/keys',
+  groq: { nome: 'Groq', router: 'groq', modelo: RESERVA, env: 'GROQ_API_KEY', site: 'https://console.groq.com/keys',
     passos: ['Abra console.groq.com/keys e entre com o Google.', 'Toque em "Create API Key" e copie.'] },
   openrouter: { nome: 'OpenRouter (modelos grátis)', router: 'openrouter', modelo: 'auto:1', env: 'OPENROUTER_API_KEY', site: 'https://openrouter.ai/settings/keys',
     passos: ['Abra openrouter.ai e entre com o Google (não pede cartão).', 'Em Keys, toque em "Create Key" e copie.'] },
