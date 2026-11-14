@@ -9,6 +9,9 @@
 
 const NexiaAgentFactory = (() => {
 
+  // Rótulo padrão do modelo Groq (mesmo valor de RESERVA em lib/groq-modelo.js; arquivo de navegador não usa require).
+  const RESERVA = 'openai/gpt-oss-120b';
+
   // ── Templates de agentes pré-definidos ────────────────────────
   const AGENT_TEMPLATES = {
     business: {
@@ -17,7 +20,7 @@ const NexiaAgentFactory = (() => {
       displayName: 'Estrategista de Negócios',
       description: 'Analisa dados com visão de ROI, cria leads e estratégias',
       type:        'business',
-      model:       'llama-3.3-70b-versatile',
+      model:       RESERVA,
       temperature: 0.8,
       icon:        '📈',
       capabilities: ['create_lead', 'analyze_pipeline', 'roi_analysis']
@@ -28,7 +31,7 @@ const NexiaAgentFactory = (() => {
       displayName: 'Principal Engineer',
       description: 'Arquitetura, código, bugs e tarefas técnicas',
       type:        'dev',
-      model:       'llama-3.3-70b-versatile',
+      model:       RESERVA,
       temperature: 0.4,
       icon:        '⚙️',
       capabilities: ['create_task', 'code_review', 'architecture']
@@ -39,7 +42,7 @@ const NexiaAgentFactory = (() => {
       displayName: 'CISO Virtual',
       description: 'Segurança, vulnerabilidades e compliance',
       type:        'security',
-      model:       'llama-3.3-70b-versatile',
+      model:       RESERVA,
       temperature: 0.2,
       icon:        '🔒',
       capabilities: ['create_security_alert', 'vulnerability_scan', 'compliance']
@@ -78,7 +81,7 @@ const NexiaAgentFactory = (() => {
       displayName: config.displayName || config.name || id,
       description: config.description || '',
       type:        config.type        || 'custom',
-      model:       config.model       || 'llama-3.3-70b-versatile',
+      model:       config.model       || RESERVA,
       temperature: config.temperature ?? 0.7,
       systemPrompt: config.systemPrompt || '',
       icon:        config.icon        || '🤖',
@@ -181,7 +184,7 @@ const NexiaAgentFactory = (() => {
   }
 
   // ── Init: seed agentes padrão ─────────────────────────────────
-  NEXIA.onReady(() => {
+  if (typeof NEXIA !== 'undefined') NEXIA.onReady(() => {
     if (NEXIA.auth) {
       NEXIA.auth.onAuthStateChanged(user => {
         if (user) seedDefaultAgents();
@@ -191,6 +194,7 @@ const NexiaAgentFactory = (() => {
 
   return {
     create,
+    createAgent: (config = {}) => ({ model: config.model || RESERVA, ...config }),
     list,
     watch,
     watchJobs,
@@ -203,4 +207,5 @@ const NexiaAgentFactory = (() => {
   };
 })();
 
-window.NexiaAgentFactory = NexiaAgentFactory;
+if (typeof window !== 'undefined') window.NexiaAgentFactory = NexiaAgentFactory;
+if (typeof module !== 'undefined' && module.exports) module.exports = NexiaAgentFactory;
