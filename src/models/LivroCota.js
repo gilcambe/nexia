@@ -3,6 +3,7 @@
 const { Model, DataTypes } = require('sequelize');
 
 module.exports = (sequelize) => {
+  // Livro de cotas dos modelos de IA: provider/model com limites e consumo.
   class LivroCota extends Model {}
 
   LivroCota.init({
@@ -56,6 +57,8 @@ module.exports = (sequelize) => {
     tableName: 'livro_cotas',
     timestamps: true
   });
+
+
 
   return LivroCota;
 };

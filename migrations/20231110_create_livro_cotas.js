@@ -1,5 +1,7 @@
 'use strict';
 
+// Migração para criar a tabela livro_cotas, conforme solicitação (validada).
+
 module.exports = {
   up: async (queryInterface, Sequelize) => {
     await queryInterface.createTable('livro_cotas', {
@@ -53,7 +55,7 @@ module.exports = {
         type: Sequelize.FLOAT,
         defaultValue: 0.0
       },
-          createdAt: {
+      createdAt: {
         allowNull: false,
         type: Sequelize.DATE,
         defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
@@ -64,9 +66,22 @@ module.exports = {
         defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
       }
     });
+
+    // Índice de apoio: consultas de cota vencida ordenam por reset_at.
+    await queryInterface.addIndex('livro_cotas', ['reset_at'], { name: 'livro_cotas_reset_at_idx' });
+
+    // Consulta do painel: provider/model do registro.
+    await queryInterface.addIndex('livro_cotas', ['provider', 'model'], { name: 'livro_cotas_provider_model_idx' });
   },
 
-  down: async (queryInterface, Sequelize) => {
+  down: async (queryInterface) => {
+    // O rollback remove a tabela (o índice livro_cotas_reset_at_idx cai junto).
     await queryInterface.dropTable('livro_cotas');
+    // O ENUM do Postgres é recriado no up.
+    // A remoção do ENUM é só no Postgres (SQLite/MySQL não têm TYPE).
+    if (queryInterface.sequelize && queryInterface.sequelize.getDialect() === 'postgres') {
+      await queryInterface.sequelize.query('DROP TYPE IF EXISTS "enum_livro_cotas_treina_com_dados";');
+    }
+
   }
 };
