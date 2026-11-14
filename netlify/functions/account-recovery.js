@@ -98,7 +98,12 @@ async function generateRecoveryPlan(plataforma, situacao) {
       const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
         method:'POST', headers:{'Authorization':'Bearer '+groqKey,'Content-Type':'application/json'},
         body: JSON.stringify({
-          model:'llama-3.3-70b-versatile', max_tokens:500, temperature:0.2,
+          const { comGroq } = require('../lib/groq-modelo');
+      const modelo = await comGroq(groqKey, async (m) => {
+        const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+          method:'POST', headers:{'Authorization':'Bearer '+groqKey,'Content-Type':'application/json'},
+          body: JSON.stringify({
+            model: m, max_tokens:500, temperature:0.2,
           messages:[{role:'user',content:'Você é especialista em segurança digital.\nUm usuário teve a conta '+flow.nome+' hackeada. Situação: "'+situacao+'"\nDê 3 recomendações específicas para esta situação. Seja prático e direto. Português, máximo 200 palavras.'}]
         })
       });
