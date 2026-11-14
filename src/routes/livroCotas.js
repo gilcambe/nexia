@@ -18,7 +18,7 @@ module.exports = (models) => {
 // Só falha real na consulta responde 500 { mensagem: 'erro ao consultar livro_cotas' },
 // sem expor detalhes internos.
 
-  // GET /livro_cotas: todas as linhas (ou "sem dados") + /livro_cotas/numero/:id/hora
+  // GET /livro_cotas: todas as linhas ou "sem dados"
   router.get('/livro_cotas', async (req, res) => {
     try {
       let registros = [];
