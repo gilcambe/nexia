@@ -2,6 +2,7 @@
 // Livro de lições do Cortex (melhoria 7 da análise de 2026-10-07): erros reais que as tarefas já cometeram e
 // foram corrigidos pela Claude. Todo agente que escreve código lê isto no começo de cada tarefa.
 // Para acrescentar uma lição: uma linha curta no fim da lista, dizendo o erro e o jeito certo.
+// A última linha da lista é conferida por tests/unit/cortex-licoes.test.js (CL3: a lição do #3567 fica no fim, uma vez só).
 // (Arquivo JS e não .md porque o Worker não lê arquivos em tempo de execução.)
 const LICOES = Object.freeze([
   'Não invente funções nem importações: antes de usar um módulo ou função, abra o arquivo que a define (github.get_file) e confira o nome e os parâmetros. Exemplo real: "router.complete" não existe; o roteador de modelos usa router.chat e listFor.',
@@ -21,7 +22,7 @@ const LICOES = Object.freeze([
   'Mensagens de chat precisam de ordem estável: grave um número crescente (ordem) além da data, porque duas mensagens podem ter o mesmo milissegundo; e para "só as novas" filtre pelo id da última, não use startAfter com id em orderBy de data.',
   'Entregue só o que a tarefa pede, nos arquivos que ela cita. Exemplo real: para #2717 (motivos da fila na Central) o PR #2835 criou um workflow nexia-pipeline.yml que ninguém pediu; isso conta como falha.',
   'Homologação (#3264): nenhuma versão é publicada sem o check "Homologação" verde; todo bug do dono vira caso em homologacao/catalogo com teste que falha no código antigo e passa no novo, no mesmo PR (ex.: #3267 ativos duplicados, tests/unit/prumo-homologacao.test.js).',
-  'Nunca planejar arquivo em pasta que o produto não usa; ler a árvore antes (ex.: workers/healthCheck.js do #3584, pasta que não existe no projeto).',
+  'Nunca planejar arquivo em pasta que o produto não usa; ler a árvore antes (ex.: workers/healthCheck.js do #3584, pasta que não existe no projeto).'
 ]);
 
 const TEXTO = `LIÇÕES APRENDIDAS (erros reais de tarefas anteriores; não repita):\n${LICOES.map(l => `- ${l}`).join('\n')}`;
