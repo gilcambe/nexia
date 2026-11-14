@@ -19,7 +19,7 @@ module.exports = (models) => {
 // sem expor detalhes internos.
 
   // GET /livro_cotas: todas as linhas (ou "sem dados") + /livro_cotas/numero/:id/hora
-  router.get(['/livro_cotas', '/livro_cotas/numero/:id/hora'], async (req, res) => {
+  router.get('/livro_cotas', async (req, res) => {
     try {
       let registros = [];
       if (LivroCota && typeof LivroCota.findAll === 'function') {
