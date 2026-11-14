@@ -46,7 +46,15 @@ function createRouter(o = {}) {
 
   // #2848: todo pedido conta no crédito interno do provedor (pedidos, tokens, 429). Contar nunca quebra a resposta.
   const uso = o.uso || require('./cota').getUso();
-  const contar = (id, inc) => { try { uso.incrementUsage(id, inc); } catch { /* sem conta, segue */ } };
+  const { registrarErro429, obterCotaDisponivel, disjuntorAberto } = require('./cota');
+  const contar = (id, inc) => { 
+    try { 
+      uso.incrementUsage(id, inc); 
+    } catch { /* sem conta, segue */ } 
+  };
+  
+  const { selecionarProvider } = require('../../src/utils/providerSelector');
+  const { tetosConfigurados } = require('../../src/config/limits');
   const tokensDe = out => (out && out.usage && (out.usage.total_tokens || ((out.usage.input_tokens || 0) + (out.usage.output_tokens || 0)))) || (out && out.text ? Math.ceil(out.text.length / 4) : 0);
   const e429 = e => (e && e.details && e.details.status === 429) ? 1 : 0;
   const contados = new Map();
@@ -54,8 +62,18 @@ function createRouter(o = {}) {
     if (contados.has(id)) return contados.get(id);
     const w = Object.create(p);
     w.chat = async (model, req) => {
-      try { const out = await p.chat(model, req); contar(id, { requests: 1, tokens: tokensDe(out) }); return out; }
-      catch (e) { contar(id, { requests: 1, errors: e429(e) }); throw e; }
+      try { 
+        const out = await p.chat(model, req); 
+        contar(id, { requests: 1, tokens: tokensDe(out) }); 
+        return out; 
+      }
+      catch (e) { 
+        if (e429(e)) {
+          try { registrarErro429(id); } catch {}
+        }
+        contar(id, { requests: 1, errors: e429(e) }); 
+        throw e; 
+      }
     };
     if (typeof p.stream === 'function') {
       w.stream = async function* (model, req) {
@@ -67,17 +85,31 @@ function createRouter(o = {}) {
             yield ev;
           }
           contar(id, { requests: 1, tokens: tokensDe({ usage }) || Math.ceil(texto / 4) });
-        } catch (e) { contar(id, { requests: 1, errors: e429(e) }); throw e; }
+        } catch (e) { 
+          if (e429(e)) {
+            try { registrarErro429(id); } catch {}
+          }
+          contar(id, { requests: 1, errors: e429(e) }); 
+          throw e; 
+        }
       };
     }
     contados.set(id, w);
     return w;
   }
   const providerFor = desc => {
-    const p = desc && providers[desc.provider];
+    const id = desc && desc.provider;
+    if (disjuntorAberto && disjuntorAberto(id)) {
+      throw new ModelError(CODES.UPSTREAM, `Disjuntor aberto para o provedor: ${id}`, { provider: id, status: 503 });
+    }
+    const cota = obterCotaDisponivel ? obterCotaDisponivel(id) : null;
+    if (cota !== null && cota <= 0) {
+      throw new ModelError(CODES.UPSTREAM, `Sem cota disponível para o provedor: ${id}`, { provider: id, status: 429 });
+    }
+    const p = desc && providers[id];
     if (!p) throw new ModelError(CODES.UNKNOWN_PROVIDER, `Provedor desconhecido: ${desc && desc.provider}`);
     if (!desc.model || typeof desc.model !== 'string') throw new ModelError(CODES.UNKNOWN_PROVIDER, 'Modelo não informado.');
-    return contado(desc.provider, p);
+    return contado(id, p);
   };
 
   function capabilities(desc) {
@@ -163,11 +195,76 @@ function createRouter(o = {}) {
   /** Tenta cada descritor até um responder. Erros por provedor ficam em `attempts`. */
   async function chatWithFallback(descs, req) {
     const attempts = [];
-    for (const d of dedupe(descs)) {
+    const env = o.env || process.env;
+    const treinaComDados = (req && req.treina_com_dados) || env.TREINA_COM_DADOS;
+    const size = (req && req.tamanho) || (req && req.size) || 'media';
+    
+    let descsDedupped = dedupe(descs);
+    // 5) Respeitar flag treina_com_dados = não para dados sensíveis
+    if (treinaComDados === 'nao' || treinaComDados === false || treinaComDados === 'não') {
+      descsDedupped = descsDedupped.filter(d => {
+        const id = String(d.provider || '').toLowerCase();
+        return !id.includes('public') && !id.includes('treino');
+      });
+    }
+
+    // 1) Consultar cotas antes de escolher provider; 2) Pular sem cota ou disjuntor aberto; 6) Excluir degrau pago (RESERVA_*) quando tetos não definidos
+    const quotasMap = {};
+    for (const d of descsDedupped) {
+      const id = d.provider;
+      const semCota = (obterCotaDisponivel && obterCotaDisponivel(id) !== null && obterCotaDisponivel(id) <= 0);
+      const disjuntor = (disjuntorAberto && disjuntorAberto(id));
+      quotasMap[id] = { esgotada: semCota || disjuntor };
+    }
+
+    let selecionados = descsDedupped;
+    const placar = (() => { try { return require('./cota').getPlacar(); } catch { return null; } })();
+    
+    // 4) Implementar roteamento por tamanho (pequena, média, grande) usando providerSelector.js
+    if (selecionarProvider) {
+      try {
+        selecionados = selecionarProvider(size, {
+          providers: descsDedupped,
+          quotas: quotasMap,
+          placar,
+          env
+        });
+      } catch {
+        selecionados = descsDedupped;
+      }
+    }
+
+    // Filtro adicional de segurança para garantir cotas, disjuntores e degraus pagos sem teto
+    const { tetosConfigurados } = require('../../src/config/limits');
+    const comTetos = tetosConfigurados(env);
+    selecionados = selecionados.filter(d => {
+      const id = d.provider;
+      if (id && String(id).toUpperCase().startsWith('RESERVA_') && !comTetos) return false;
+      if (disjuntorAberto && disjuntorAberto(id)) return false;
+      const c = obterCotaDisponivel ? obterCotaDisponivel(id) : null;
+      if (c !== null && c <= 0) return false;
+      return true;
+    });
+
+    for (const d of selecionados) {
+      const id = d.provider;
+      if (disjuntorAberto && disjuntorAberto(id)) {
+        attempts.push({ provider: id, model: d.model, code: 'CIRCUIT_BREAKER' });
+        continue;
+      }
+      const cota = obterCotaDisponivel ? obterCotaDisponivel(id) : null;
+      if (cota !== null && cota <= 0) {
+        attempts.push({ provider: id, model: d.model, code: 'NO_QUOTA' });
+        continue;
+      }
       try { return { ...(await chat(d, req)), attempts }; }
       catch (e) {
+        // 3) Ao receber 429, marcar provider como indisponível e trocar imediatamente
+        if (e429(e)) {
+          try { registrarErro429(id); } catch {}
+        }
         if (e && e.code === CODES.ABORTED) throw e;
-        attempts.push({ provider: d.provider, model: d.model, code: e.code || 'ERROR' });
+        attempts.push({ provider: id, model: d.model, code: e429(e) ? '429_TOO_MANY_REQUESTS' : (e.code || 'ERROR') });
       }
     }
     throw new ModelError(CODES.ALL_FAILED, 'Nenhum modelo respondeu.', { attempts });
@@ -216,11 +313,19 @@ function createRouter(o = {}) {
       }
     }
 
-    for (let i = 0; i < dedupped.length; i++) {
+    const descsForStream = dedupe(descs).filter(d => {
+      const id = d.provider;
+      if (disjuntorAberto && disjuntorAberto(id)) return false;
+      const cota = obterCotaDisponivel ? obterCotaDisponivel(id) : null;
+      if (cota !== null && cota <= 0) return false;
+      return true;
+    });
+
+    for (let i = 0; i < descsForStream.length; i++) {
       if (Date.now() - startTime >= totalTimeoutMs) {
         break;
       }
-      const d = dedupped[i];
+      const d = descsForStream[i];
 
       const placar = getPlacar();
       if (placar && placar.bloqueado(d) && dedupped.length > 1) {
@@ -301,7 +406,7 @@ function createRouter(o = {}) {
 
       if (currentStreamDone) {
         if (cacheavel(req) && accumulatedText) {
-          const d = dedupped[i] || descs[0];
+          const d = descsForStream[i] || descsForStream[0];
           const k = `${d.provider}|${d.model}|${chave(req)}`;
           const generalK = `gen|${chave(req)}`;
           const cacheVal = { text: accumulatedText, provider: d.provider, model: d.model, usage: { total_tokens: Math.ceil(accumulatedText.length / 4) } };

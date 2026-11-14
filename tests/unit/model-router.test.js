@@ -194,7 +194,46 @@ test('M11. cortex-chat só tenta IAs com chave: só GEMINI_API_KEY → Gemini pr
   }
 });
 
-test('M12. ADR-FREE-04: GitHub Models (token do Actions) e Workers AI (conta grátis) usam o endpoint certo; sem chave, ficam de fora', async () => {
+test('M13. Roteamento e cotas do Model Router: simula 429, sem cota e troca automática em <5s', async () => {
+  const start = Date.now();
+  let calls = 0;
+  const fetchImpl = async (url, init) => {
+    calls++;
+    if (calls === 1) {
+      return { ok: false, status: 429, json: async () => ({ error: { message: 'Too many requests' } }) };
+    }
+    return { ok: true, status: 200, json: async () => ({ choices: [{ message: { content: 'ok' } }], usage: { prompt_tokens: 1, completion_tokens: 1 } }) };
+  };
+  const r = createRouter({
+    env: { GROQ_API_KEY: 'g1', OPENAI_API_KEY: 'o1' },
+    fetchImpl,
+    providers: {
+      groq: { id: 'groq', available: () => true, capabilities: () => ({ chat: true }), chat: async () => { const err = new Error('429'); err.details = { status: 429 }; throw err; } },
+      openai: { id: 'openai', available: () => true, capabilities: () => ({ chat: true }), chat: async () => ({ text: 'sucesso' }) }
+    }
+  });
+  const res = await r.chatWithFallback([
+    { provider: 'groq', model: 'llama-3.3-70b' },
+    { provider: 'openai', model: 'gpt-4o' }
+  ], { messages: [{ role: 'user', content: 'oi' }] });
+  assert.strictEqual(res.text, 'sucesso');
+  const duration = Date.now() - start;
+  assert.ok(duration < 5000, 'Troca automática em menos de 5s');
+});
+
+  test('M13. Seleção de provider: simula 3 providers, um 429, sem cota, troca automática em <5s, Jules nunca primeiro, pago sem teto excluído', async () => {
+    const { selecionarProvider } = require('../../src/utils/providerSelector');
+    const { createRouter } = require('../../nexia-ai/model-router');
+    const t0 = Date.now();
+    const providers = [{ provider: 'jules' }, { provider: 'RESERVA_PAID' }, { provider: 'groq' }, { provider: 'gemini' }];
+    const quotas = { groq: { esgotada: false }, gemini: { esgotada: true } };
+    const sel = selecionarProvider('media', { providers, quotas, env: { NEXIA_TETOS_ATIVOS: '' } });
+    assert.ok(!sel.some(p => p.provider === 'RESERVA_PAID'), 'degrau pago sem teto excluído');
+    assert.strictEqual(sel[0].provider, 'groq', 'Jules não é o primeiro e gemini esgotada é pulado');
+    assert.ok(Date.now() - t0 < 5000, 'troca em menos de 5s');
+  });
+
+  test('M12. ADR-FREE-04: GitHub Models (token do Actions) e Workers AI (conta grátis) usam o endpoint certo; sem chave, ficam de fora', async () => {
   const calls = [];
   const fetchImpl = async (url, init) => { calls.push({ url, auth: init.headers.Authorization }); return { ok: true, status: 200, json: async () => ({ choices: [{ message: { content: 'oi' } }], usage: {} }) }; };
   const env = { GITHUB_MODELS_TOKEN: 'gh-t', CLOUDFLARE_AI_TOKEN: 'cf-t', CLOUDFLARE_AI_ACCOUNT_ID: 'abc123' };
