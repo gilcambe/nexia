@@ -1,4 +1,6 @@
-'use strict';\n\n// Rota validada para /livro_cotas
+'use strict';
+
+// Rota validada para /livro_cotas
 
 const express = require('express');
 const router = express.Router();
