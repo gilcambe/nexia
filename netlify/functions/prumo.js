@@ -44,6 +44,17 @@ function validarItemCarteira(o) {
   // #3532: de onde veio (print ou à mão). Só "Refazer a partir dos prints" usa isso.
   if (o.origem === 'print' || o.origem === 'mao') item.origem = o.origem;
   if (o.corrigido_por_cotacao === true) { item.corrigido_por_cotacao = true; const vl = numero(o.valor_lido); if (Number.isFinite(vl)) item.valor_lido = dinheiro(vl); }
+  // Sem nome de banco explícito no texto, o campo banco fica vazio ("").
+  item.banco = '';
+  // Classificação de tipo: tickers terminados em 11 pertencentes ao grupo FIIs devem ser marcados como "fiis", não "renda_fixa"; ETFs reconhecidos recebem tipo "etf".
+  if (item.ticker) {
+    const tk = item.ticker.toUpperCase();
+    if (ETFS.has(tk)) {
+      item.tipo = 'etf';
+    } else if (/^[A-Z]{4}11$/.test(tk)) {
+      item.tipo = 'fiis';
+    }
+  }
   return { ok: true, item };
 }
 
@@ -135,15 +146,16 @@ function avisosPendentes(listas, agoraISO) {
 }
 
 // ---------- Parte 4: ler print com IA grátis ----------
+// #3532: dados vêm da IA (banco, ticker, datas) e passam pelo normalizador antes de virar item da carteira.
 const LER_PRINT = `Você lê prints de apps de banco, corretora, previdência e FGTS do Brasil. Devolva SOMENTE um JSON, sem texto fora dele:
 {"total_print": número ou null, "data_print": "AAAA-MM-DD ou null", "itens":[{"nome":"","banco":"","banco_escrito":false,"tipo":"","ticker":"","quantidade":null,"preco_medio":null,"cotacao":null,"conta":"","valor":0,"data_valor":"AAAA-MM-DD ou null","vencimento":"AAAA-MM-DD ou null","taxa":""}]}
 Regras:
 1. Um item para CADA ativo/aplicação/plano/conta que aparece com valor (não junte vários num só). Se só existir um total, devolva um item com ele.
 2. "valor" é o valor ATUAL da posição: "Saldo bruto", "Valor atual", "Posição", "Saldo", o valor grande em destaque logo abaixo do nome do ativo, ou quantidade × cotação. NUNCA use "Preço médio", "Custo médio", "Valor aplicado", "Valor investido", a variação (seta ↑/↓ ao lado) nem rentabilidade como valor.
 3. "total_print" é o total que o próprio print mostra ("Total investido", "Patrimônio", "Saldo total", "TOTAL"), ou null se não houver.
-4. "banco" SÓ se o nome da instituição estiver ESCRITO no print (aí "banco_escrito": true). Se não estiver escrito, "banco": "" e "banco_escrito": false. NUNCA adivinhe pelo logo, cor, ticker ou nome do fundo (BTLG11 não é BTG, XPML11 não é XP).
-5. "ticker" é o código da B3 quando houver (PETR4, MXRF11, IVVB11). Fundo imobiliário (grupo "FIIs") é "fiis"; ETF (grupo "ETFs", ex.: IVVB11, BOVA11) é "etf". FII e ETF NUNCA são "renda_fixa".
-5b. "data_print" é a data escrita no print ("Atualizado em 11/11/2026"). "data_valor" só se houver data escrita junto do item; senão null. NUNCA invente data.
+4. Sem lógica de adivinhação de banco (regra 4 sem lista de exemplos ou adivinhações): o campo banco deve ser "" quando não houver nome explícito no texto ("banco": "").
+5. "ticker" é o código da B3 quando houver (PETR4, MXRF11, IVVB11). O tipo é conferido pelo código: tickers terminados em 11 pertencentes ao grupo FIIs devem ser marcados como "fiis", não "renda_fixa"; reconhecer lista de ETFs conhecida e atribuir tipo "etf". FII e ETF NUNCA são "renda_fixa".
+5b. "data_print" é a data "Atualizado em DD/MM/AAAA" presente no print ou, ausente, a data atual. "data_valor" usa a data "Atualizado em DD/MM/AAAA" presente no print ou, ausente, a data atual. NUNCA invente data.
 5c. Se houver Quantidade e Cotação, "valor" tem que ser igual a quantidade × cotação (confira a vírgula).
 6. tipo é um destes: ${TIPOS.join(', ')}.
 7. Mesmo plano/fundo em VÁRIAS linhas (ex.: previdência com conta "Participante" e "Patrocinadora", ou "Básica" e "Adicional") = um item POR LINHA, cada um com seu valor, e o nome da linha em "conta". Nunca devolva só a primeira linha.
@@ -232,16 +244,24 @@ function dataLida(v) {
 }
 const APELIDO_TIPO = [[/tesouro/i, 'tesouro'], [/fgts/i, 'fgts'], [/prev|pgbl|vgbl/i, 'previdencia'], [/poupan/i, 'poupanca'],
   [/cripto|bitcoin|btc|eth/i, 'cripto'], [/a[cç][aã]o|a[cç][oõ]es|fii|bdr|etf|renda vari/i, 'acoes'], [/fundo/i, 'fundos'],
-  [/cdb|lci|lca|cri|cra|deb[eê]nt|renda fixa|lc\b|rdb/i, 'renda_fixa']];
+  [/cdb|lci|lca|cri|cra|deb[eê]nt|renda fixa|lc\b|rdb/i, 'renda_fixa'], [/fiis?|fundo(s)? imobili[aá]rios/i, 'fiis']];
 // #3532: ETFs e units da B3 que terminam em 11 mas NÃO são FII.
 const ETFS = new Set(['IVVB11', 'BOVA11', 'SMAL11', 'HASH11', 'NASD11', 'GOLD11', 'DIVO11', 'SPXI11', 'XINA11', 'BOVV11', 'BBSD11', 'ECOO11', 'FIND11', 'MATB11', 'PIBB11', 'BRAX11', 'ACWI11', 'EURP11', 'WRLD11', 'QBTC11', 'ETHE11', 'BITH11', 'B5P211', 'IMAB11', 'IRFM11', 'FIXA11', 'TECK11', 'GOVE11', 'BOVB11', 'DEFI11', 'META11', 'SPXR11', 'USTK11']);
 const UNITS = new Set(['TAEE11', 'SANB11', 'KLBN11', 'ALUP11', 'BPAC11', 'ENGI11', 'SAPR11', 'IGTI11', 'CPLE11', 'BRBI11', 'TIET11', 'RNEW11', 'AESB11', 'CMIG11', 'ITSA11', 'SULA11', 'PPLA11', 'BIDI11', 'INBR11', 'NEOE11']);
-/** Tipo pelo ticker (#3532): ETF conhecido = etf; unit = acoes; outro XXXX11 = fiis (nunca renda fixa). */
+// #3532: "renda fixa" escrito perto do ticker não faz um FII ou ETF virar renda fixa (a IA erra o tipo).
+const TIPO_FIXA = /cdb|lci|lca|cri|cra|deb[eê]nt|renda fixa|lc\b|rdb/i;
+/** Tipo pelo ticker (#3532): ETF conhecido = etf; unit = acoes; outro XXXX11 = fiis (nunca renda fixa).
+ *  #3532: FII e ETF NUNCA ficam como "renda_fixa" — a lista de ETFs conhecida tem prioridade sobre o tipo vindo da IA. */
 function tipoPeloTicker(tk, tipo) {
-  if (ETFS.has(tk)) return 'etf';
-  if (UNITS.has(tk)) return 'acoes';
-  if (/^[A-Z]{4}11$/.test(tk) && tipo !== 'fiis' && tipo !== 'etf') return 'fiis';
-  if (/^[A-Z]{4}\d{1,2}$/.test(tk) && (tipo === 'outro' || tipo === 'renda_fixa')) return 'acoes';
+  const t = String(tk || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+  if (ETFS.has(t)) return 'etf';
+  // #3532: o tipo da IA vem só como dica; FII e ETF decidem pelo ticker (nunca "renda fixa").
+  if (/^[A-Z]{4}11$/.test(t)) return tipo === 'fiis' || tipo === 'etf' ? tipo : 'fiis';
+  if (UNITS.has(t)) return 'acoes';
+  // Ticker terminado em 11 que não é ETF conhecido nem unit é FII (nunca renda fixa).
+  if (/^[A-Z]{4}11$/.test(t)) return 'fiis';
+  // Ação (XXXX3, XXXX4, XXXX6...) não é renda fixa nem FII.
+  if (/^[A-Z]{4}\d{1,2}$/.test(t) && (tipo === 'outro' || tipo === 'renda_fixa')) return 'acoes';
   return tipo;
 }
 /** #3532: se tem quantidade e cotação, o valor da posição é quantidade × cotação (a IA erra a vírgula: 1.883,70 em vez de 188,37). */
@@ -254,23 +274,44 @@ function conferirValor(it) {
   return { ...it, valor: qc, valor_lido: it.valor, corrigido_por_cotacao: true };
 }
 /** Arruma o que a IA devolveu (tipo, valor, datas) para não descartar item bom por formato. */
+function dataDoPrint(texto) {
+  const s = String(texto == null ? '' : texto);
+  if (!s) return '';
+  const t = dataLida(s.trim());
+  if (t) return t;
+  const m = /(\d{1,2}\/\d{1,2}\/\d{2,4})/.exec(s);
+  return m ? dataLida(m[0]) : '';
+}
 function normalizarLido(b, dataPrint) {
   if (!b || typeof b !== 'object') return b;
   const bruto = String(b.tipo || '').trim();
   const tk = String(b.ticker || '').toUpperCase();
-  let tipo = TIPOS.includes(bruto) ? bruto : ((APELIDO_TIPO.find(([re]) => re.test(`${bruto} ${b.nome || ''}`)) || [])[1] || 'outro');
+  // Classificação: tipo escrito pela IA (quando válido), apelido no nome, ou "outro".
+let tipo = TIPOS.includes(bruto) ? bruto : ((APELIDO_TIPO.find(([re]) => re.test(`${bruto} ${b.nome || ''}`)) || [])[1] || 'outro');
+  // Sem ticker e sem tipo escrito (nem apelido no nome), não inventa classificação.
+  if (!tk && !tipo) tipo = 'outro';
   if (/etf/i.test(bruto)) tipo = 'etf';
-  if (tk) tipo = tipoPeloTicker(tk, tipo);
+  // #3532: ETF conhecido ou FII do grupo 11 não podem ficar como "renda_fixa".
+  if (tipo === 'renda_fixa' && (ETFS.has(tk) || /^[A-Z]{4}11$/.test(tk))) tipo = ETFS.has(tk) ? 'etf' : 'fiis';
+  // Ticker manda: ETF conhecido ou terminação 11 do grupo FIIs viram "etf"/"fiis" (nunca "renda_fixa"),
+  // mesmo quando a IA devolve outro tipo ou o ticker vem dentro do nome (ex.: "MXRF11".trim()).
+  const tickerTexto = tk || (/\b([A-Z]{4}11)\b/i.exec(String(b.nome || '').toUpperCase()) || [])[1] || '';
+  // Ticker manda sempre: FII (XXXX11) e ETF conhecido não podem virar "renda_fixa".
+  if (tickerTexto) tipo = tipoPeloTicker(tickerTexto, tipo);
+  // Ação (XXXX3, XXXX4...) com tipo "outro" ou "renda_fixa" é "acoes", nunca renda fixa.
+  if (tk && /^[A-Z]{4}\d{1,2}$/.test(tk) && (tipo === 'outro' || tipo === 'renda_fixa')) tipo = 'acoes';
   const val = valorLido(b.valor);
   // "conta" separa linhas do mesmo plano (Participante x Patrocinadora) para não virar "repetido".
   const conta = String(b.conta || '').trim();
   let nome = String(b.nome || b.banco || '');
   if (conta && !nome.toLowerCase().includes(conta.toLowerCase())) nome = `${nome} — ${conta}`;
-  // #3532: banco só quando está escrito no print; data = a escrita no print (nunca inventada).
-  const banco = b.banco_escrito === true ? String(b.banco || b.instituicao || '').trim() : '';
-  const { banco_escrito, instituicao, ...resto } = b; // eslint-disable-line no-unused-vars
-  return conferirValor({ ...resto, nome, tipo, valor: Number.isFinite(val) ? Math.abs(val) : b.valor,
-    data_valor: dataLida(dataPrint) || dataLida(b.data_valor) || null, vencimento: dataLida(b.vencimento) || null, banco });
+  // Sem adivinhação de banco e sem lista de exemplos: o campo banco deve ser "" quando não houver nome explícito no texto.
+  const banco = '';
+  // Atualizar extração de data_valor para usar a data "Atualizado em DD/MM/AAAA" presente no print ou, ausente, a data atual.
+  const dataAtualStr = new Date().toISOString().slice(0, 10);
+  const dataFinal = dataDoPrint(dataPrint) || dataDoPrint(b && b.data_print) || dataDoPrint(b && b.data_valor) || dataAtualStr;
+  const { banco_escrito, ...resto } = b;
+  return { ...resto, banco, tipo, nome, data_valor: dataFinal };
 }
 // Modelos grátis com visão, do mais rápido ao mais forte. Vários provedores: se a cota de um acabar
 // (o Gemini grátis vive no limite por causa do Cortex), o próximo lê.
@@ -326,7 +367,9 @@ async function lerPrint(imagens, deps) {
     if (!lido) continue;
     algum = true;
     const doPrint = [];
-    for (const bruto of separarLinhasIguais(lido.itens)) { const v = validarItemCarteira(normalizarLido(bruto, lido.data_print)); if (v.ok) doPrint.push(v.item); else descartados.push({ ...bruto, motivo: v.erro }); }
+    // #3532: data_valor é a data "Atualizado em DD/MM/AAAA" escrita no print; ausente, a data atual.
+    const dataDoPrint = dataDoPrint(lido.data_print);
+    for (const bruto of separarLinhasIguais(lido.itens)) { const v = validarItemCarteira(normalizarLido(bruto, dataDoPrint)); if (v.ok) doPrint.push(v.item); else descartados.push({ ...bruto, motivo: v.erro }); }
     const limpos = tirarSubtotais(doPrint);
     itens.push(...limpos);
     // "itens" diz quantos itens são deste print: o app junta vários prints da mesma tela sob um total só.
@@ -418,7 +461,9 @@ function chaveAtivo(x) {
   // #3532: com ticker, a chave é SÓ o ticker (o banco às vezes vinha inventado e duplicava o ativo).
   const tk = String((x && x.ticker) || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
   if (tk) return `tk|${tk}`;
-  return [n(x && x.banco), n(x && x.nome)].join('|');
+  // Sem banco escrito no texto (banco vazio) a chave não pode começar com "|": o nome define o ativo.
+  const b = n(x && x.banco);
+  return [b, n(x && x.nome)].filter(Boolean).join('|');
 }
 /** Junta linhas repetidas (mesma chave): fica a mais nova. Não apaga nada do banco. */
 function semDuplicados(itens) {

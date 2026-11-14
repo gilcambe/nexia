@@ -95,6 +95,37 @@ test('KF-009 salvar de novo depois de recarregar: mesma lista e mesmo total', ()
   const b = await listar(); assert.deepEqual(b.map((x) => x.id), a.map((x) => x.id)); assert.equal(soma(b), 80);
 }));
 
+test('KF-011 print: banco vazio sem nome escrito, data "Atualizado em" e FII/ETF no tipo (#3532)', () => {
+  const lido = {
+    data_print: 'Atualizado em 11/11/2026',
+    itens: [
+      { nome: 'MXRF11', ticker: 'MXRF11', tipo: 'renda_fixa', valor: 100 },
+      { nome: 'HGLG11', ticker: 'HGLG11', tipo: 'outro', valor: 200 },
+      { nome: 'IVVB11', ticker: 'IVVB11', tipo: 'renda_fixa', valor: 300 },
+      { nome: 'Tesouro Selic 2029', banco: 'BTG Pactual digital', banco_escrito: true, tipo: 'tesouro', valor: 400 },
+    ],
+  };
+  const itens = lido.itens.map((b) => p.normalizarLido(b, lido.data_print));
+  assert.deepEqual(itens.map((x) => x.banco), ['', '', '', 'BTG Pactual digital'], JSON.stringify(itens));
+  assert.deepEqual(itens.map((x) => x.tipo), ['fiis', 'fiis', 'etf', 'tesouro'], JSON.stringify(itens));
+  assert.deepEqual(itens.map((x) => x.data_valor), Array(4).fill('2026-11-11'), JSON.stringify(itens));
+  // Sem data no print, usa a data de hoje.
+  const hoje = new Date().toISOString().slice(0, 10);
+  assert.equal(p.normalizarLido({ nome: 'PETR4', ticker: 'PETR4', tipo: 'acoes', valor: 10 }, null).data_valor, hoje);
+});
+
+test('KF-012 FII e ETF nunca viram "renda_fixa" no tipo', () => {
+  assert.equal(p.tipoPeloTicker('MXRF11', 'renda_fixa'), 'fiis');
+  assert.equal(p.tipoPeloTicker('KNRI11', ''), 'fiis');
+  assert.equal(p.tipoPeloTicker('IVVB11', 'renda_fixa'), 'etf');
+  assert.equal(p.tipoPeloTicker('BOVA11', 'outro'), 'etf');
+  assert.ok(p.ETFS.has('IVVB11') && !p.ETFS.has('MXRF11'));
+  const v = p.validarItemCarteira({ nome: 'MXRF11', ticker: 'MXRF11', tipo: 'fiis', valor: 100, data_valor: '2026-11-11' });
+  assert.equal(v.ok, true);
+  assert.equal(v.item.tipo, 'fiis');
+  assert.equal(v.item.banco, '');
+});
+
 test('KF-010 a chave do app (tela) e a do servidor são iguais', () => {
   const casos = [{ nome: 'CDB Banco X - 120% do CDI', banco: 'Banco Inter S.A.' }, { ticker: 'MXRF11', nome: 'x', banco: 'XP' }, { nome: 'Tesouro IPCA+ 2035', banco: 'Ágora Ltda' }];
   for (const c of casos) assert.equal(chaveAtivo(c), p.chaveAtivo(c));
