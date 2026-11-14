@@ -10,6 +10,10 @@ permissions:
   contents: read
   issues: write
 
+concurrency:
+  group: vigia-cortex
+  cancel-in-progress: false
+
 jobs:
   vigia:
     name: Conferir a fila
