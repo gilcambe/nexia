@@ -47,3 +47,30 @@ test('EX4. rodada a seco não grava nada e não quebra sem token', async () => {
     assert.ok(r.ok); assert.equal(postados.length, 0);
   } finally { global.fetch = fetchOrig; Object.assign(process.env, antes); }
 });
+
+test('EX5. Jurídico: só conta o que deu para conferir; sem privacidade vira alerta + pedido à Produção', () => {
+  assert.deepEqual(ex.juridico([{ nome: 'App', temPrivacidade: null }]), [], 'app montado no navegador: não acusa sem prova');
+  assert.equal(ex.juridico([{ nome: 'A', temPrivacidade: true }, { nome: 'App', temPrivacidade: null }])[0].tipo, 'feito');
+  const r = ex.juridico([{ nome: 'A', temPrivacidade: true }, { nome: 'B', temPrivacidade: false }]);
+  assert.deepEqual(r.map((x) => x.tipo), ['alerta', 'pedido']); assert.match(r[0].texto, /1 de 2.*B/); assert.equal(r[1].para, 'producao');
+});
+
+test('EX6. Prospecção: precisa do OK do dono; sem resultado não posta; teto vira "mais de"', () => {
+  const r = ex.prospeccao({ cidade: 'Tatuapé', total: 52, exemplos: [{ nome: 'Big Bread', ramo: 'padaria' }] });
+  assert.equal(r[0].tipo, 'precisa-ok'); assert.match(r[0].texto, /52 negócios sem site em Tatuapé.*Big Bread \(padaria\)/);
+  assert.match(ex.prospeccao({ cidade: 'X', total: 400, cheio: true })[0].texto, /mais de 400/);
+  assert.deepEqual(ex.prospeccao({ cidade: 'X', total: 0 }), []);
+});
+
+test('EX7. Consultor resume os recados do turno e aponta o primeiro alerta', () => {
+  assert.deepEqual(ex.consultor([]), []);
+  const r = ex.consultor([{ area: 'suporte', tipo: 'feito', texto: 'ok' }, { area: 'ti', tipo: 'alerta', texto: 'CI vermelho' }, { area: 'prospeccao', tipo: 'precisa-ok', texto: '...' }]);
+  assert.equal(r[0].tipo, 'alerta'); assert.match(r[0].texto, /1 trabalho.*1 alerta.*1 decisão.*T\.I\. — CI vermelho/);
+});
+
+test('EX8. região da Prospecção muda por dia e aceita a lista do workflow', () => {
+  const { regiaoDoDia } = require('../../scripts/escritorio-expediente');
+  const lista = 'A|-1,-2,-3,-4;B|-5,-6,-7,-8';
+  const d1 = regiaoDoDia(lista, new Date('2026-11-13T12:00:00Z')).nome, d2 = regiaoDoDia(lista, new Date('2026-11-14T12:00:00Z')).nome;
+  assert.notEqual(d1, d2); assert.ok(['A', 'B'].includes(d1));
+});
