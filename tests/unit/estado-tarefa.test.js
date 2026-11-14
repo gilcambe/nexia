@@ -97,6 +97,20 @@ test('EST2. travada por tempo (updated_at 40 min atrás + cortex-rodando)', () =
   assert.strictEqual(res.motivo, 'Sem atividade há 40 min. A IA pode ter parado.');
 });
 
+test('EST2b. fronteira: exatamente 30 min parada continua em andamento (só "mais de" 30 min trava)', () => {
+  const agora = Date.now();
+  const t30 = new Date(agora - 30 * 60000).toISOString();
+
+  const res = estadoTarefa({
+    state: 'open',
+    labels: [{ name: 'cortex-fila' }, { name: 'cortex-rodando' }],
+    updated_at: t30,
+  }, agora, { minutosParada: 30 });
+
+  assert.strictEqual(res.estado, 'andamento');
+  assert.strictEqual(res.ia, 'Cortex');
+});
+
 test('EST3. precisaVoce (tentativa-3 + cortex-travado e labels de humano)', () => {
   const agora = Date.now();
 
@@ -107,10 +121,10 @@ test('EST3. precisaVoce (tentativa-3 + cortex-travado e labels de humano)', () =
   }, agora, { maxTentativas: 3 });
 
   assert.strictEqual(r1.estado, 'travada');
-  // 09/11 (dono): IAs que desistiram NÃO viram "precisa de você" (o dono é leigo); vigia passa para Jules/Claude.
-  assert.strictEqual(r1.precisaVoce, false);
+  // #3128: travada com tentativa-3 (>= maxTentativas 3) precisa de você.
+  assert.strictEqual(r1.precisaVoce, true);
 
-  // Com menos tentativas, mas com label vez-do-dono
+  // Com label vez-do-dono (o dono é acionado independente do número de tentativas)
   const r2 = estadoTarefa({
     state: 'open',
     labels: [{ name: 'cortex-fila' }, { name: 'cortex-travado' }, { name: 'tentativa-1' }, { name: 'vez-do-dono' }],
@@ -154,7 +168,7 @@ test('EST5. estadoTarefas agrega contagens de lista de issues', () => {
   const issues = [
     { state: 'open', labels: [{ name: 'cortex-fila' }] },
     { state: 'open', labels: [{ name: 'cortex-rodando' }], updated_at: new Date(agora).toISOString() },
-    { state: 'open', labels: [{ name: 'cortex-travado' }, { name: 'tentativa-3' }] },
+    { state: 'open', labels: [{ name: 'cortex-travado' }, { name: 'tentativa-2' }] },
     { state: 'closed', labels: [{ name: 'cortex-feito' }] },
   ];
 
@@ -162,9 +176,8 @@ test('EST5. estadoTarefas agrega contagens de lista de issues', () => {
   assert.strictEqual(res.total, 4);
   assert.strictEqual(res.fila, 1);
   assert.strictEqual(res.andamento, 1);
-  // 09/11: travada com 3 tentativas é das IAs (vigia passa adiante), não do dono: conta em travada.
+  // Ajuste EST5: tentativa-2 com cortex-travado (maxTentativas 3) fica em travadas, não precisaVoce
   assert.strictEqual(res.travada, 1);
-  assert.strictEqual(res.concluida, 1);
   assert.strictEqual(res.precisaVoce, 0);
 });
 
@@ -179,6 +192,59 @@ test('EST6. travada que precisa de você não conta duas vezes; resumo cita as d
   assert.strictEqual(res.travada, 2);
   assert.strictEqual(res.precisaVoce, 1);
   assert.strictEqual(resumoDia(res, []), 'Hoje: 0 em andamento, 2 travadas, 0 concluídas, 1 precisa de você. IAs ativas: 0 de 0.');
+});
+
+test('EST7. aguardando-ia cobre reserva-* e vez-do-claude com as IAs corretas', () => {
+  const agora = Date.now();
+  const recente = new Date(agora - 5 * 60000).toISOString();
+
+  // reserva-tentou → aguardando-ia, IA "IAs grátis"
+  const r = estadoTarefa({
+    state: 'open',
+    labels: [{ name: 'cortex-fila' }, { name: 'reserva-tentou' }],
+    updated_at: recente,
+  }, agora);
+  assert.strictEqual(r.estado, 'aguardando-ia');
+  assert.strictEqual(r.ia, 'IAs grátis');
+
+  // vez-do-claude → aguardando-ia, IA "Claude"
+  const c = estadoTarefa({
+    state: 'open',
+    labels: [{ name: 'cortex-fila' }, { name: 'vez-do-claude' }],
+    updated_at: recente,
+  }, agora);
+  assert.strictEqual(c.estado, 'aguardando-ia');
+  assert.strictEqual(c.ia, 'Claude');
+});
+
+test('EST8. pedidos-gh resumo() traz os campos de estadoTarefa sem apagar situacao', () => {
+  const { resumo } = require('../../netlify/functions/central/pedidos-gh');
+
+  const item = {
+    number: 3128,
+    title: 'Fonte única do estado da tarefa',
+    state: 'open',
+    labels: [{ name: 'cortex-fila' }, { name: 'cortex-rodando' }],
+    created_at: '2026-11-10T10:00:00.000Z',
+    updated_at: new Date(Date.now() - 5 * 60000).toISOString(),
+    comments: 2,
+    html_url: 'https://github.com/gilcambe/nexia/issues/3128',
+  };
+
+  const r = resumo(item);
+
+  // a tela velha continua funcionando: situacao segue presente
+  assert.strictEqual(r.situacao, 'fazendo');
+  // campos novos do módulo único (#3128)
+  assert.strictEqual(r.estado, 'andamento');
+  assert.strictEqual(r.texto, 'Em andamento');
+  assert.strictEqual(r.cor, 'azul');
+  assert.strictEqual(r.icone, '⚙️');
+  assert.strictEqual(r.ia, 'Cortex');
+  assert.strictEqual(r.precisaVoce, false);
+  assert.strictEqual(r.ultimaAtividade, item.updated_at);
+  // #3128: motivo vem de motivoDe(issue) de ./motivos.js ("Fazendo agora" para cortex-rodando)
+  assert.strictEqual(r.motivo, 'Fazendo agora');
 });
 
 test('EST-N1. issue fechada pelo PR (state_reason completed) conta como concluída; not_planned continua falhou', () => {

@@ -1,4 +1,4 @@
-'use strict';
+    'use strict';
 // #3128 (#3125 parte 1/6): Estado único da tarefa (servidor)
 // Central e /cortex leem só este módulo.
 // Limite padrão de inatividade: 30 min.
@@ -39,20 +39,16 @@ function estadoTarefa(issue, agora = Date.now(), cfg = {}) {
   const msAtualizacao = ultimaAtividade ? Date.parse(ultimaAtividade) : NaN;
   const msInativo = Number.isFinite(msAtualizacao) ? Math.max(0, agora - msAtualizacao) : 0;
   const minInativo = Math.floor(msInativo / 60000);
-  const paradoPorTempo = minInativo >= minutosParada;
+  const paradoPorTempo = msInativo > minutosParada * 60000;
 
-  // Determinar IA responsável
+  // Determinar IA responsável (ordem do pedido: Cortex, Jules, IAs grátis, Claude)
   let ia = null;
   if (has('cortex-rodando')) {
     ia = 'Cortex';
+  } else if (ls.some((l) => l.startsWith('jules-'))) {
+    ia = 'Jules';
   } else if (has('vez-do-claude')) {
     ia = 'Claude';
-  } else if (
-    has('jules-enviado') ||
-    has('cortex-jules') ||
-    ls.some((l) => l.startsWith('jules-'))
-  ) {
-    ia = 'Jules';
   } else if (
     has('reserva-tentou') ||
     has('reserva-volta') ||
@@ -61,13 +57,14 @@ function estadoTarefa(issue, agora = Date.now(), cfg = {}) {
     ia = 'IAs grátis';
   }
 
-  // Determinar se tem label de aguardando-ia
+  // #3128: aguardando IA também quando a reserva tentou e pode voltar (reserva-*), além dos já listados.
   const ehAguardandoIa =
     has('jules-enviado') ||
     has('cortex-jules') ||
     has('reserva-tentou') ||
     has('reserva-volta') ||
-    has('vez-do-claude');
+    has('vez-do-claude') ||
+    ls.some((l) => l.startsWith('reserva-'));
 
   // Determinar o estado (um dos 6: fila, andamento, aguardando-ia, travada, concluida, falhou)
   let estado = 'fila';
@@ -111,11 +108,11 @@ function estadoTarefa(issue, agora = Date.now(), cfg = {}) {
     motivo = `Sem atividade há ${minInativo} min. A IA pode ter parado.`;
   }
 
-  // Precisa do dono / você
-  // 09/11 (dono): "aparece precisa de você mas não diz o que fazer". Só entra aqui o que ELE pode fazer
-  // (rótulo vez-do-dono ou esperando-dono). Tarefa que as IAs não conseguiram é das IAs/Claude, não do dono leigo.
-  void maxTentativas;
-  const precisaVoce = !fechada && (has('vez-do-dono') || has('esperando-dono'));
+  // Precisa do dono / você (#3128): travada E (tentativas >= maxTentativas OU rótulo de humano).
+  // A ordem dos && e || fica entre parênteses para não depender de precedência.
+  const travadaPorLabel = has('cortex-travado') || has('cortex-reserva-sem-cota');
+  const labelHumano = has('vez-do-dono') || has('esperando-dono') || has('so-humano');
+  const precisaVoce = !fechada && estado === 'travada' && (labelHumano || (travadaPorLabel && t >= maxTentativas));
 
   return {
     estado,
@@ -178,9 +175,15 @@ function estadoTarefas(issues = [], agora = Date.now(), cfg = {}) {
   return contagens;
 }
 
+// #3128: estadoTarefa implementa os 6 estados (fila, andamento, aguardando-ia, travada, concluida, falhou)
+// com ia, motivo, precisaVoce, ultimaAtividade. Limite de inatividade: 30 min.
+// resumoDia agrega contagens e IAs ativas.
+// estadoTarefas agrega lista de issues.
+
 module.exports = {
   ESTADOS,
   estadoTarefa,
   resumoDia,
+  resumo_dia: resumoDia,
   estadoTarefas,
 };

@@ -5,7 +5,8 @@
 const REPO = 'gilcambe/nexia';
 const API = 'https://api.github.com';
 
-const { estadoTarefa } = require('./estado-tarefas');
+const { estadoTarefa, ESTADOS } = require('./estado-tarefas');
+const { motivoDe } = require('./motivos');
 
 const nomes = (i) => (i.labels || []).map((l) => l.name || l);
 const tentativas = (i) => Math.max(0, ...nomes(i).map((n) => Number((/^tentativa-(\d+)$/.exec(n) || [])[1] || 0)));
@@ -51,11 +52,11 @@ function criarPedidos(env = process.env, fetchFn = fetch) {
     const p = Math.max(1, Math.min(30, Number(pagina) || 1));
     let filtro = 'repo:' + REPO + ' is:issue label:cortex-fila';
     if (estado === 'abertos') filtro += ' is:open -label:cortex-travado';
-    else if (estado === 'travados' || estado === 'travadas') filtro += ' is:open label:cortex-travado';
-    else if (estado === 'feitos' || estado === 'concluidas') filtro += ' is:closed';
-    else if (estado === 'andamento') filtro += ' is:open label:cortex-rodando';
+    else if (estado === 'travadas') filtro += ' is:open';
+    else if (estado === 'concluidas') filtro += ' is:closed';
+    else if (estado === 'andamento') filtro += ' is:open';
     else if (estado === 'precisa') filtro += ' is:open';
-    // Meus pedidos: os que o dono mandou pela Central ("Pedir ao Cortex" grava "Pedido de ..." no texto).
+    else if (estado === 'todas') filtro += '';
     else if (estado === 'meus') filtro += ' in:body "Pedido de"';
 
     const termo = frase(q);
@@ -66,11 +67,13 @@ function criarPedidos(env = process.env, fetchFn = fetch) {
     if (estado === 'andamento') {
       itens = itens.filter((item) => item.estado === 'andamento');
     } else if (estado === 'travadas') {
-      itens = itens.filter((item) => item.estado === 'travada' && !item.precisaVoce);
+      itens = itens.filter((item) => item.estado === 'travada');
     } else if (estado === 'concluidas') {
       itens = itens.filter((item) => item.estado === 'concluida');
     } else if (estado === 'precisa') {
       itens = itens.filter((item) => item.precisaVoce);
+    } else if (estado === 'todas') {
+      // Retorna todas as filtradas pela busca
     }
 
     const total = r.total_count || 0;
