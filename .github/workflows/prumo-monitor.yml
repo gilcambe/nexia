@@ -12,6 +12,10 @@ permissions:
   contents: read
   issues: write
 
+concurrency:
+  group: prumo-monitor
+  cancel-in-progress: false
+
 jobs:
   monitor:
     name: Conferir Kernex Finance
