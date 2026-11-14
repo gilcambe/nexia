@@ -46,6 +46,29 @@ function montar({ abertas = [], fechadas = [], prs = [], agora = Date.now() }) {
         passos: ['Clique em "Abrir".', 'Leia a última mensagem da Kernex no fim da página: ela diz o que falta.', 'Responda ali mesmo, em português, e clique em "Comment".'] })),
   ];
 
+  const seteDiasMs = 7 * 24 * 3600 * 1000;
+  // Filtra issues fechadas nos últimos 7 dias, que não sejam PRs e com state_reason diferente de 'not_planned'
+  const issuesFechadas7dias = fechadas.filter(
+    (i) => !i.pull_request && i.closed_at && agora - Date.parse(i.closed_at) <= seteDiasMs && i.state_reason !== 'not_planned'
+  );
+  // Filtra PRs juntados nos últimos 7 dias
+  const prsJuntados7dias = prs.filter((p) => p.merged_at && agora - Date.parse(p.merged_at) <= seteDiasMs);
+
+  const numIssuesSeteDias = new Set(issuesFechadas7dias.map((i) => i.number));
+  const prsCitadosSeteDias = new Set();
+  for (const p of prsJuntados7dias) {
+    const txt = `${p.title || ''}\\n${p.body || ''}`;
+    // Procura por menções de issues (ex: #123) no título e corpo do PR
+    const matches = txt.matchAll(/#(\\d+)/g);
+    for (const m of matches) {
+      prsCitadosSeteDias.add(Number(m[1]));
+    }
+  }
+
+  // Combina issues fechadas e PRs que citaram issues, removendo duplicatas
+  const todasConcluidasNum = new Set([...numIssuesSeteDias, ...prsCitadosSeteDias]);
+  const totalConcluidas = todasConcluidasNum.size;
+
   const prontos = fechadas
     .filter((i) => i.closed_at && agora - Date.parse(i.closed_at) <= SETENTA_E_DUAS_H && (!i.pull_request || (i.pull_request && i.pull_request.merged_at)) && i.state_reason !== 'not_planned')
     .sort((a, b) => Date.parse(b.closed_at) - Date.parse(a.closed_at))
@@ -61,6 +84,7 @@ function montar({ abertas = [], fechadas = [], prs = [], agora = Date.now() }) {
       travadas: issues.filter((i) => { const e = estadoTarefa(i, agora); return e.estado === 'travada' && !e.precisaVoce; }).length,
       partesNaFila: Object.values(partesAbertas).reduce((s, n) => s + n, 0),
       esperandoVoce: esperandoVoce.length, prontos72h: prontos.length,
+      feitas7dias: totalConcluidas, prsJuntados7dias: prsJuntados7dias.length, itensConcluidos7dias: [...issuesFechadas7dias.map(i => ({ tipo: 'issue', numero: i.number, titulo: String(i.title || '').slice(0, 120), link: i.html_url, quando: i.closed_at })), ...prsJuntados7dias.map(p => ({ tipo: 'pr', numero: p.number, titulo: String(p.title || '').slice(0, 120), link: p.html_url, quando: p.merged_at }))],
       pausada: issues.some((i) => nomes(i).includes('fila-pausada')),
     },
     esperandoVoce, comCortex, prontos, em: new Date(agora).toISOString(),
