@@ -7,6 +7,10 @@
 //   Produção   → fila do Cortex: entregues em 24 h, na fila, travadas
 //   RH e qualidade → mede a qualidade das entregas (PRs juntados x fechados sem juntar em 24 h)
 //   Marketing  → 3 ideias de post para a semana (IA grátis; só ideias, ninguém publica sem o dono)
+//   Jurídico   → confere se cada site no ar tem página de privacidade/LGPD
+//   Prospecção → negócios sem site no mapa aberto (OpenStreetMap, grátis); só lista, ninguém é contatado sem o dono
+//   Consultor  → resumo do dia em linguagem simples, a partir dos recados das outras áreas
+//   Comercial e Financeiro: ainda sem fonte de dado real (sem formulário de orçamento nem cobrança ligados) → não postam.
 
 const HORAS = 24;
 
@@ -58,4 +62,32 @@ function marketing(ideias) {
   return [{ area: 'marketing', agente: 'Redator', tipo: 'precisa-ok', texto: `3 ideias de post para a semana (aprove antes de publicar): 1) ${l[0]}${l[1] ? ` 2) ${l[1]}` : ''}${l[2] ? ` 3) ${l[2]}` : ''}` }];
 }
 
-module.exports = { suporte, ti, producao, rh, marketing, HORAS };
+/** Função pura: Jurídico. resultados = [{ nome, temPrivacidade: true|false|null }] dos sites no ar (null = não deu para conferir). */
+function juridico(todos) {
+  const resultados = (todos || []).filter((r) => r.temPrivacidade !== null && r.temPrivacidade !== undefined);   // só o que deu para conferir
+  if (!resultados.length) return [];
+  const sem = resultados.filter((r) => !r.temPrivacidade);
+  if (!sem.length) return [{ area: 'juridico', agente: 'Advogado', tipo: 'feito', texto: `Conferi os ${resultados.length} sites no ar: todos têm página de privacidade (LGPD).` }];
+  return [{ area: 'juridico', agente: 'Advogado', tipo: 'alerta', texto: `${sem.length} de ${resultados.length} sites sem página de privacidade (LGPD): ${sem.map((s) => s.nome).join(', ')}.` },
+    { area: 'juridico', agente: 'Advogado', tipo: 'pedido', para: 'producao', texto: `Produção, colocar a página de privacidade (modelo KERNEX) em: ${sem.map((s) => s.nome).join(', ')}.` }];
+}
+
+/** Função pura: Prospecção a partir do mapa aberto. dados = { cidade, total, exemplos: [{ nome, ramo }] }. */
+function prospeccao(dados) {
+  if (!dados || !dados.total) return [];
+  const ex = (dados.exemplos || []).slice(0, 3).map((e) => `${e.nome} (${e.ramo})`).join(', ');
+  return [{ area: 'prospeccao', agente: 'Pesquisador', tipo: 'precisa-ok', texto: `Achei ${dados.cheio ? 'mais de ' : ''}${dados.total} negócios sem site em ${dados.cidade} no mapa aberto${ex ? ` — por exemplo: ${ex}` : ''}. Quer que o Comercial prepare uma mensagem? Ninguém é contatado sem o seu OK.` }];
+}
+
+/** Função pura: resumo do Consultor a partir dos recados do dia (só conta o que as áreas postaram). */
+function consultor(recados) {
+  const r = (recados || []).filter((x) => x.area !== 'consultor');
+  if (!r.length) return [];
+  const alertas = r.filter((x) => x.tipo === 'alerta'), ok = r.filter((x) => x.tipo === 'feito').length, decidir = r.filter((x) => x.tipo === 'precisa-ok').length;
+  const nomes = { suporte: 'Suporte', ti: 'T.I.', producao: 'Produção', rh: 'RH', marketing: 'Marketing', juridico: 'Jurídico', prospeccao: 'Prospecção' };
+  const foco = alertas.length ? ` O mais importante agora: ${nomes[alertas[0].area] || alertas[0].area} — ${alertas[0].texto}` : ' Nada urgente.';
+  return [{ area: 'consultor', agente: 'Consultor', tipo: alertas.length ? 'alerta' : 'info',
+    texto: `Resumo do turno: ${ok} trabalho(s) concluído(s), ${alertas.length} alerta(s) e ${decidir} decisão(ões) esperando você.${foco}` }];
+}
+
+module.exports = { suporte, ti, producao, rh, marketing, juridico, prospeccao, consultor, HORAS };
