@@ -1,11 +1,10 @@
 # Kernex Finance (Fase 14): workflow de alerta diário por e-mail.
-# Dispara diariamente às 08:00 BRT (11:00 UTC) e manualmente via workflow_dispatch.
+# Só manual (14/11/2026): o e-mail diário das 08:00 BRT é o kf-alertas-email.yml, que não repete envio no mesmo dia.
+# Os dois rodavam às 11:00 UTC e o usuário recebia o alerta duas vezes.
 # Se a secret de e-mail não estiver configurada, registra "sem segredo, pulei" e finaliza sem erro.
 name: Alerta diário por e-mail
 
 on:
-  schedule:
-    - cron: '0 11 * * *'
   workflow_dispatch:
 
 permissions:
