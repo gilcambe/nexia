@@ -2,27 +2,27 @@
   "spec": {
     "kind": "system",
     "name": "Kernex Finance",
-    "tagline": "Gestão financeira e controle de hosts do ecossistema Kernex",
-    "photo_theme": "financial dashboard technology",
-    "description": "Gestão financeira e controle de hosts do ecossistema Kernex",
+    "tagline": "Controle financeiro corporativo seguro e integrado",
+    "photo_theme": "finance dashboard",
+    "description": "Controle financeiro corporativo seguro e integrado",
     "folder": "sites/kernex-finance",
     "fonts": {
-      "heading": "Outfit",
+      "heading": "Plus Jakarta Sans",
       "body": "Inter"
     },
     "palette": {
-      "primary": "#2563eb",
-      "accent": "#0ea5e9",
+      "primary": "#0f172a",
+      "accent": "#10b981",
       "bg": "#fbfaf7",
       "surface": "#ffffff",
       "text": "#1d2426",
       "muted": "#5d6b6e",
-      "dark": "#0f172a"
+      "dark": "#020617"
     },
     "style": "modern",
     "contact": {
-      "whatsapp": "11998887766",
-      "phone": "",
+      "whatsapp": "",
+      "phone": "(11) 90000-0000",
       "email": "suporte@kernex.com.br",
       "address": "",
       "city": "",
@@ -44,196 +44,6 @@
     "leads_origem": "",
     "entities": [
       {
-        "key": "dominios",
-        "label": "Domínios e Hosts",
-        "singular": "Domínio",
-        "fields": [
-          {
-            "key": "host",
-            "label": "Host / Domínio",
-            "type": "text",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "servico",
-            "label": "Serviço Associado",
-            "type": "select",
-            "options": [
-              "Kernex Finance",
-              "Cortex",
-              "CES",
-              "Central"
-            ],
-            "required": true
-          },
-          {
-            "key": "status",
-            "label": "Status DNS",
-            "type": "select",
-            "options": [
-              "Ativo",
-              "Propagando",
-              "Pendente",
-              "Inativo"
-            ],
-            "required": true
-          },
-          {
-            "key": "ssl",
-            "label": "Certificado SSL",
-            "type": "select",
-            "options": [
-              "Válido",
-              "Renovando",
-              "Erro"
-            ],
-            "required": true
-          },
-          {
-            "key": "atualizado",
-            "label": "Última Atualização",
-            "type": "date",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "responsavel",
-            "label": "Responsável",
-            "type": "text",
-            "options": [],
-            "required": true
-          }
-        ],
-        "sample": [
-          {
-            "host": "finance.kernex.com.br",
-            "servico": "Kernex Finance",
-            "status": "Ativo",
-            "ssl": "Válido",
-            "atualizado": "2026-11-12",
-            "responsavel": "Equipe Infra"
-          },
-          {
-            "host": "ces.kernex.com.br",
-            "servico": "CES",
-            "status": "Ativo",
-            "ssl": "Válido",
-            "atualizado": "2026-11-10",
-            "responsavel": "Equipe Infra"
-          },
-          {
-            "host": "cortex.kernex.com.br",
-            "servico": "Cortex",
-            "status": "Ativo",
-            "ssl": "Válido",
-            "atualizado": "2026-11-08",
-            "responsavel": "Equipe DevOps"
-          },
-          {
-            "host": "nexia.gcbezerra.workers.dev",
-            "servico": "Kernex Finance",
-            "status": "Ativo",
-            "ssl": "Válido",
-            "atualizado": "2026-11-05",
-            "responsavel": "Legado"
-          }
-        ]
-      },
-      {
-        "key": "alertas",
-        "label": "Alertas Diários",
-        "singular": "Alerta",
-        "fields": [
-          {
-            "key": "titulo",
-            "label": "Título do Alerta",
-            "type": "text",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "canal",
-            "label": "Canal de Envio",
-            "type": "select",
-            "options": [
-              "E-mail Diário",
-              "Slack",
-              "Webhook",
-              "SMS"
-            ],
-            "required": true
-          },
-          {
-            "key": "status",
-            "label": "Status de Execução",
-            "type": "select",
-            "options": [
-              "Enviado",
-              "Falhou",
-              "Pendente",
-              "Agendado"
-            ],
-            "required": true
-          },
-          {
-            "key": "data_envio",
-            "label": "Data do Envio",
-            "type": "date",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "destinatarios",
-            "label": "Nº Destinatários",
-            "type": "number",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "detalhes",
-            "label": "Detalhes / Link",
-            "type": "textarea",
-            "options": [],
-            "required": false
-          }
-        ],
-        "sample": [
-          {
-            "titulo": "Resumo Financeiro Diário",
-            "canal": "E-mail Diário",
-            "status": "Enviado",
-            "data_envio": "2026-11-12",
-            "destinatarios": "14",
-            "detalhes": "Link atualizado para finance.kernex.com.br"
-          },
-          {
-            "titulo": "Fechamento de Caixa",
-            "canal": "Slack",
-            "status": "Enviado",
-            "data_envio": "2026-11-12",
-            "destinatarios": "8",
-            "detalhes": "Sem divergências encontradas"
-          },
-          {
-            "titulo": "Alerta de Vencimentos",
-            "canal": "Webhook",
-            "status": "Pendente",
-            "data_envio": "2026-11-13",
-            "destinatarios": "3",
-            "detalhes": "Execução programada para 08:00"
-          },
-          {
-            "titulo": "Relatório Semanal de Custos",
-            "canal": "E-mail Diário",
-            "status": "Enviado",
-            "data_envio": "2026-11-11",
-            "destinatarios": "14",
-            "detalhes": "Enviado com sucesso via script kf-alertas"
-          }
-        ]
-      },
-      {
         "key": "transacoes",
         "label": "Transações",
         "singular": "Transação",
@@ -246,14 +56,10 @@
             "required": true
           },
           {
-            "key": "tipo",
-            "label": "Tipo",
-            "type": "select",
-            "options": [
-              "Receita",
-              "Despesa",
-              "Transferência"
-            ],
+            "key": "data",
+            "label": "Data",
+            "type": "date",
+            "options": [],
             "required": true
           },
           {
@@ -264,68 +70,218 @@
             "required": true
           },
           {
-            "key": "data",
-            "label": "Data",
-            "type": "date",
-            "options": [],
+            "key": "categoria",
+            "label": "Categoria",
+            "type": "select",
+            "options": [
+              "Receita",
+              "Despesa",
+              "Imposto",
+              "Investimento"
+            ],
             "required": true
           },
           {
-            "key": "categoria",
-            "label": "Categoria",
+            "key": "status",
+            "label": "Status",
+            "type": "select",
+            "options": [
+              "Pago",
+              "Pendente",
+              "Atrasado",
+              "Proposto"
+            ],
+            "required": true
+          }
+        ],
+        "sample": [
+          {
+            "descricao": "Venda de Licença SaaS",
+            "data": "2026-11-10",
+            "valor": "4500.00",
+            "categoria": "Receita",
+            "status": "Pago"
+          },
+          {
+            "descricao": "Pagamento Azure Cloud",
+            "data": "2026-11-05",
+            "valor": "1280.50",
+            "categoria": "Despesa",
+            "status": "Pago"
+          },
+          {
+            "descricao": "DAS Simples Nacional",
+            "data": "2026-11-15",
+            "valor": "850.00",
+            "categoria": "Imposto",
+            "status": "Pendente"
+          },
+          {
+            "descricao": "CSOT para Kernel Core",
+            "data": "2026-11-12",
+            "valor": "2000.00",
+            "categoria": "Investimento",
+            "status": "Atrasado"
+          },
+          {
+            "descricao": "Assinatura de Assessoria",
+            "data": "2026-10-28",
+            "valor": "3500.00",
+            "categoria": "Receita",
+            "status": "Proposto"
+          }
+        ]
+      },
+      {
+        "key": "clientes",
+        "label": "Clientes Financeiros",
+        "singular": "Cliente",
+        "fields": [
+          {
+            "key": "empresa",
+            "label": "Empresa",
             "type": "text",
             "options": [],
             "required": true
           },
           {
-            "key": "observacao",
-            "label": "Observações",
-            "type": "textarea",
+            "key": "cnpj",
+            "label": "CNPJ",
+            "type": "text",
             "options": [],
-            "required": false
+            "required": true
+          },
+          {
+            "key": "contato",
+            "label": "E-mail Contato",
+            "type": "email",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "limite_credito",
+            "label": "Limite de Crédito",
+            "type": "money",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "saldo_atual",
+            "label": "Saldo Atual",
+            "type": "money",
+            "options": [],
+            "required": true
           }
         ],
         "sample": [
           {
-            "descricao": "Assinatura Servidor Cloud",
-            "tipo": "Despesa",
-            "valor": "450.00",
-            "data": "2026-11-12",
-            "categoria": "Infraestrutura",
-            "observacao": "AWS e Cloudflare"
+            "empresa": "GBC Engenharia",
+            "cnpj": "12.345.678/0001-90",
+            "contato": "financeiro@gbc.com.br",
+            "limite_credito": "50000.00",
+            "saldo_atual": "12500.00"
           },
           {
-            "descricao": "Cliente Enterprise Alpha",
-            "tipo": "Receita",
-            "valor": "3500.00",
-            "data": "2026-11-11",
-            "categoria": "Licenciamento",
-            "observacao": "Fatura mensal"
+            "empresa": "TechSol Software",
+            "cnpj": "98.765.432/0001-10",
+            "contato": "contas@techsol.com",
+            "limite_credito": "15000.00",
+            "saldo_atual": "0.00"
           },
           {
-            "descricao": "Ferramentas de Desenvolvimento",
-            "tipo": "Despesa",
-            "valor": "190.00",
-            "data": "2026-11-10",
-            "categoria": "Software",
-            "observacao": "Licenças anuais"
+            "empresa": "LogExpress",
+            "cnpj": "45.678.912/0001-33",
+            "contato": "adm@logexpress.com",
+            "limite_credito": "8000.00",
+            "saldo_atual": "2450.50"
           },
           {
-            "descricao": "Consultoria Técnica",
-            "tipo": "Receita",
-            "valor": "1200.00",
-            "data": "2026-11-09",
-            "categoria": "Serviços",
-            "observacao": "Projeto customizado"
+            "empresa": "Farmavita",
+            "cnpj": "11.222.333/0001-77",
+            "contato": "compras@farmavita.com",
+            "limite_credito": "20000.00",
+            "saldo_atual": "500.00"
+          }
+        ]
+      },
+      {
+        "key": "projetos_fin",
+        "label": "Projetos Financeiros",
+        "singular": "Projeto",
+        "fields": [
+          {
+            "key": "nome",
+            "label": "Nome do Projeto",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "orcado",
+            "label": "Orçamento (R$)",
+            "type": "money",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "gasto",
+            "label": "Gasto Realizado",
+            "type": "money",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "residual",
+            "label": "Residual (R$)",
+            "type": "money",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "chefe",
+            "label": "Responsável",
+            "type": "text",
+            "options": [],
+            "required": true
+          }
+        ],
+        "sample": [
+          {
+            "nome": "Migração para Cloud",
+            "orcado": "",
+            "gasto": "42000.00",
+            "residual": "8000.00",
+            "chefe": "Rafael Costa"
+          },
+          {
+            "nome": "Lançamento App Mobile",
+            "orcado": "",
+            "gasto": "95000.00",
+            "residual": "25000.00",
+            "chefe": "Juliana Alves"
+          },
+          {
+            "nome": "Avaliação Kernel Q3",
+            "orcado": "",
+            "gasto": "15000.00",
+            "residual": "0.00",
+            "chefe": "Pedro Santos"
+          },
+          {
+            "nome": "Treinamento Equipe Dev",
+            "orcado": "",
+            "gasto": "4500.00",
+            "residual": "5500.00",
+            "chefe": "Luciana Dias"
           }
         ]
       }
     ],
     "modules": [
-      "Domínios",
-      "Alertas",
+      "Dashboard Financeiro",
       "Transações",
-      "Relatórios"
+      "Clientes",
+      "Projetos"
     ]
   },
   "media": {}
