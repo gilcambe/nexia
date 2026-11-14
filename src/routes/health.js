@@ -1,1 +1,15 @@
-'use strict';\n\nmodule.exports = function health(req, res) {\n  const acao = req.query && req.query.acao;\n  if (acao === 'saude') {\n    return res.json({\n      ok: true,\n      hora: new Date().toISOString()\n    });\n  }\n  return res.status(400).json({\n    ok: false,\n    erro: 'Ação inválida ou não informada'\n  });\n};\n
+'use strict';
+
+module.exports = function health(req, res) {
+  const acao = req.query && req.query.acao;
+  if (acao === 'saude') {
+    return res.json({
+      ok: true,
+      hora: new Date().toISOString()
+    });
+  }
+  return res.status(400).json({
+    ok: false,
+    erro: 'Ação inválida ou não informada'
+  });
+};
