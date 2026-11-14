@@ -2,9 +2,9 @@
   "spec": {
     "kind": "system",
     "name": "Kernex Finance",
-    "tagline": "Controle financeiro corporativo seguro e integrado",
-    "photo_theme": "finance dashboard",
-    "description": "Controle financeiro corporativo seguro e integrado",
+    "tagline": "Gestão financeira corporativa e controle de fluxo de caixa",
+    "photo_theme": "corporate finance dashboard",
+    "description": "Gestão financeira corporativa e controle de fluxo de caixa",
     "folder": "sites/kernex-finance",
     "fonts": {
       "heading": "Plus Jakarta Sans",
@@ -12,7 +12,7 @@
     },
     "palette": {
       "primary": "#0f172a",
-      "accent": "#10b981",
+      "accent": "#0284c7",
       "bg": "#fbfaf7",
       "surface": "#ffffff",
       "text": "#1d2426",
@@ -22,7 +22,7 @@
     "style": "modern",
     "contact": {
       "whatsapp": "",
-      "phone": "(11) 90000-0000",
+      "phone": "(11) 4004-8900",
       "email": "suporte@kernex.com.br",
       "address": "",
       "city": "",
@@ -44,6 +44,82 @@
     "leads_origem": "",
     "entities": [
       {
+        "key": "contas",
+        "label": "Contas Bancárias",
+        "singular": "Conta Bancária",
+        "fields": [
+          {
+            "key": "banco",
+            "label": "Banco",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "agencia",
+            "label": "Agência",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "conta",
+            "label": "Número da Conta",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "tipo",
+            "label": "Tipo",
+            "type": "select",
+            "options": [
+              "Corrente",
+              "Poupança",
+              "Investimento"
+            ],
+            "required": true
+          },
+          {
+            "key": "saldo",
+            "label": "Saldo Inicial",
+            "type": "money",
+            "options": [],
+            "required": true
+          }
+        ],
+        "sample": [
+          {
+            "banco": "Itaú Empresas",
+            "agencia": "0342",
+            "conta": "45890-1",
+            "tipo": "Corrente",
+            "saldo": "145000.00"
+          },
+          {
+            "banco": "Nubank PJ",
+            "agencia": "0001",
+            "conta": "987654-3",
+            "tipo": "Corrente",
+            "saldo": "32450.50"
+          },
+          {
+            "banco": "BTG Pactual",
+            "agencia": "0100",
+            "conta": "12345-9",
+            "tipo": "Investimento",
+            "saldo": "850000.00"
+          },
+          {
+            "banco": "Santander",
+            "agencia": "1204",
+            "conta": "88990-2",
+            "tipo": "Poupança",
+            "saldo": "15200.00"
+          }
+        ]
+      },
+      {
         "key": "transacoes",
         "label": "Transações",
         "singular": "Transação",
@@ -56,29 +132,28 @@
             "required": true
           },
           {
-            "key": "data",
-            "label": "Data",
-            "type": "date",
-            "options": [],
+            "key": "tipo",
+            "label": "Tipo",
+            "type": "select",
+            "options": [
+              "Receita",
+              "Despesa",
+              "Transferência"
+            ],
             "required": true
           },
           {
             "key": "valor",
-            "label": "Valor (R$)",
+            "label": "Valor",
             "type": "money",
             "options": [],
             "required": true
           },
           {
-            "key": "categoria",
-            "label": "Categoria",
-            "type": "select",
-            "options": [
-              "Receita",
-              "Despesa",
-              "Imposto",
-              "Investimento"
-            ],
+            "key": "vencimento",
+            "label": "Vencimento",
+            "type": "date",
+            "options": [],
             "required": true
           },
           {
@@ -88,200 +163,110 @@
             "options": [
               "Pago",
               "Pendente",
-              "Atrasado",
-              "Proposto"
+              "Cancelado"
             ],
             "required": true
           }
         ],
         "sample": [
           {
-            "descricao": "Venda de Licença SaaS",
-            "data": "2026-11-10",
-            "valor": "4500.00",
-            "categoria": "Receita",
+            "descricao": "Assinatura Cloud AWS",
+            "tipo": "Despesa",
+            "valor": "4200.00",
+            "vencimento": "2026-11-15",
             "status": "Pago"
           },
           {
-            "descricao": "Pagamento Azure Cloud",
-            "data": "2026-11-05",
-            "valor": "1280.50",
-            "categoria": "Despesa",
-            "status": "Pago"
-          },
-          {
-            "descricao": "DAS Simples Nacional",
-            "data": "2026-11-15",
-            "valor": "850.00",
-            "categoria": "Imposto",
+            "descricao": "Cliente Enterprise - Licenças",
+            "tipo": "Receita",
+            "valor": "35000.00",
+            "vencimento": "2026-11-20",
             "status": "Pendente"
           },
           {
-            "descricao": "CSOT para Kernel Core",
-            "data": "2026-11-12",
-            "valor": "2000.00",
-            "categoria": "Investimento",
-            "status": "Atrasado"
+            "descricao": "Manutenção Servidor Backup",
+            "tipo": "Despesa",
+            "valor": "1500.00",
+            "vencimento": "2026-11-10",
+            "status": "Pago"
           },
           {
-            "descricao": "Assinatura de Assessoria",
-            "data": "2026-10-28",
-            "valor": "3500.00",
-            "categoria": "Receita",
-            "status": "Proposto"
+            "descricao": "Consultoria Externa",
+            "tipo": "Despesa",
+            "valor": "8000.00",
+            "vencimento": "2026-11-25",
+            "status": "Pendente"
           }
         ]
       },
       {
-        "key": "clientes",
-        "label": "Clientes Financeiros",
-        "singular": "Cliente",
+        "key": "centros_custo",
+        "label": "Centros de Custo",
+        "singular": "Centro de Custo",
         "fields": [
           {
-            "key": "empresa",
-            "label": "Empresa",
+            "key": "codigo",
+            "label": "Código",
             "type": "text",
             "options": [],
             "required": true
           },
-          {
-            "key": "cnpj",
-            "label": "CNPJ",
-            "type": "text",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "contato",
-            "label": "E-mail Contato",
-            "type": "email",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "limite_credito",
-            "label": "Limite de Crédito",
-            "type": "money",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "saldo_atual",
-            "label": "Saldo Atual",
-            "type": "money",
-            "options": [],
-            "required": true
-          }
-        ],
-        "sample": [
-          {
-            "empresa": "GBC Engenharia",
-            "cnpj": "12.345.678/0001-90",
-            "contato": "financeiro@gbc.com.br",
-            "limite_credito": "50000.00",
-            "saldo_atual": "12500.00"
-          },
-          {
-            "empresa": "TechSol Software",
-            "cnpj": "98.765.432/0001-10",
-            "contato": "contas@techsol.com",
-            "limite_credito": "15000.00",
-            "saldo_atual": "0.00"
-          },
-          {
-            "empresa": "LogExpress",
-            "cnpj": "45.678.912/0001-33",
-            "contato": "adm@logexpress.com",
-            "limite_credito": "8000.00",
-            "saldo_atual": "2450.50"
-          },
-          {
-            "empresa": "Farmavita",
-            "cnpj": "11.222.333/0001-77",
-            "contato": "compras@farmavita.com",
-            "limite_credito": "20000.00",
-            "saldo_atual": "500.00"
-          }
-        ]
-      },
-      {
-        "key": "projetos_fin",
-        "label": "Projetos Financeiros",
-        "singular": "Projeto",
-        "fields": [
           {
             "key": "nome",
-            "label": "Nome do Projeto",
+            "label": "Nome do Centro",
             "type": "text",
             "options": [],
             "required": true
           },
           {
-            "key": "orcado",
-            "label": "Orçamento (R$)",
-            "type": "money",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "gasto",
-            "label": "Gasto Realizado",
-            "type": "money",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "residual",
-            "label": "Residual (R$)",
-            "type": "money",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "chefe",
+            "key": "responsavel",
             "label": "Responsável",
             "type": "text",
             "options": [],
             "required": true
+          },
+          {
+            "key": "orcamento",
+            "label": "Orçamento Mensal",
+            "type": "money",
+            "options": [],
+            "required": true
           }
         ],
         "sample": [
           {
-            "nome": "Migração para Cloud",
-            "orcado": "",
-            "gasto": "42000.00",
-            "residual": "8000.00",
-            "chefe": "Rafael Costa"
+            "codigo": "CC-01",
+            "nome": "Engenharia e Produto",
+            "responsavel": "Carlos Silva",
+            "orcamento": "120000.00"
           },
           {
-            "nome": "Lançamento App Mobile",
-            "orcado": "",
-            "gasto": "95000.00",
-            "residual": "25000.00",
-            "chefe": "Juliana Alves"
+            "codigo": "CC-02",
+            "nome": "Marketing e Growth",
+            "responsavel": "Mariana Costa",
+            "orcamento": "60000.00"
           },
           {
-            "nome": "Avaliação Kernel Q3",
-            "orcado": "",
-            "gasto": "15000.00",
-            "residual": "0.00",
-            "chefe": "Pedro Santos"
+            "codigo": "CC-03",
+            "nome": "Operações e Suporte",
+            "responsavel": "Roberto Dias",
+            "orcamento": "45000.00"
           },
           {
-            "nome": "Treinamento Equipe Dev",
-            "orcado": "",
-            "gasto": "4500.00",
-            "residual": "5500.00",
-            "chefe": "Luciana Dias"
+            "codigo": "CC-04",
+            "nome": "Administrativo e Jurídico",
+            "responsavel": "Ana Paula",
+            "orcamento": "30000.00"
           }
         ]
       }
     ],
     "modules": [
-      "Dashboard Financeiro",
+      "Dashboard",
+      "Contas Bancárias",
       "Transações",
-      "Clientes",
-      "Projetos"
+      "Centros de Custo",
+      "Relatórios"
     ]
   },
   "media": {}
