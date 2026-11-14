@@ -1,7 +1,7 @@
 'use strict';
 const DEV_AGENT = {
   name: 'DEV_AGENT',
-  model: 'llama-3.3-70b-versatile',
+  model: require('../lib/groq-modelo').RESERVA,
   temperature: 0.4,
   max_tokens: 2048,
   systemPrompt: `Você é o NEXIA DEV AGENT — um Principal Engineer.
