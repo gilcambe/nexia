@@ -1,5 +1,6 @@
 'use strict';
 // Texto dos posts: pede à IA grátis (Groq, depois Gemini). Sem IA, usa um modelo fixo. Nunca para.
+const { comGroq, extrasGroq } = require('../../lib/groq-modelo');
 const tempo = () => AbortSignal.timeout(30000);
 
 function linkUtm(link, rede) {
@@ -16,11 +17,12 @@ const pedido = (c, assunto) =>
 
 /** IA grátis Groq. `maxTokens` opcional (padrão 200, igual ao de sempre). */
 async function groq(prompt, env, fetchImpl, { maxTokens = 200 } = {}) {
-  const r = await fetchImpl('https://api.groq.com/openai/v1/chat/completions', {
+  // o nome do modelo morre com o tempo: comGroq troca sozinho se o Groq disser que ele não existe mais
+  const r = await comGroq(env.GROQ_API_KEY, (model) => fetchImpl('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST', signal: tempo(),
     headers: { Authorization: `Bearer ${env.GROQ_API_KEY}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ model: 'llama-3.3-70b-versatile', temperature: 0.9, max_tokens: maxTokens, messages: [{ role: 'user', content: prompt }] }),
-  });
+    body: JSON.stringify({ model, temperature: 0.9, max_tokens: maxTokens, ...extrasGroq(model, maxTokens), messages: [{ role: 'user', content: prompt }] }),
+  }), { fetchImpl });
   if (!r.ok) throw new Error(`Groq HTTP ${r.status}`);
   const j = await r.json();
   return j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content;
