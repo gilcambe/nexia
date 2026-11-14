@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { mostrarAbertura } from "@/lib/abertura-nexia";
 import { useCentral, PARTES, haQuanto } from "./api";
 import type { Dados, Parte, Tarefa, TarefaGratis } from "./api"; // Importar TarefaGratis
 import { calcularAvisos } from "./avisos";
@@ -50,6 +51,7 @@ const ACESSO_RAPIDO = [
 ];
 
 export default function CentralPage() {
+  useEffect(() => { mostrarAbertura("CENTRAL"); }, []); // abertura KERNEX (regra do dono: em todos os apps)
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const { buscar } = useCentral();

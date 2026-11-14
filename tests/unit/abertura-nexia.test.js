@@ -42,3 +42,12 @@ test('ABERTURA-KERNEX: vinheta mostra KERNEX, símbolo inline e frase, sem NEXIA
   assert.ok(dur > 0 && dur <= 2000, 'duração <= 2000 ms');
   assert.match(src, /sessionStorage\.getItem\('nexia_splash'\)/);
 });
+
+test('ABERTURA-TODOS: Central e Finance mostram a mesma abertura KERNEX (regra do dono 14/11/2026)', () => {
+  assert.match(R('src/pages/central/page.tsx'), /mostrarAbertura\("CENTRAL"\)/);
+  const { aberturaJs } = require('../../scripts/gerar-abertura-finance.cjs');
+  assert.strictEqual(R('prumo/abertura.js'), aberturaJs(R('src/lib/abertura-nexia.ts'), 'FINANCE'),
+    'prumo/abertura.js desatualizado: rode node scripts/gerar-abertura-finance.cjs');
+  const html = R('prumo/index.html');
+  assert.ok(html.indexOf('/prumo/abertura.js') > 0 && html.indexOf('/prumo/abertura.js') < html.indexOf('/prumo/app.js'));
+});
