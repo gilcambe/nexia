@@ -22,10 +22,10 @@ const PRODUTOS = [
   { id: 'vp', logo: '/central/logos/vp.svg', segmento: 'Viagens', nome: 'Viajante Pro', icone: '✈️', frase: 'Cliente: agência de viagens', site: BASE + '/vp', painel: BASE + '/vp', tipo: 'cliente' },
   { id: 'splash', logo: '/central/logos/splash.png', segmento: 'Eventos', nome: 'Splash (modelo de eventos)', icone: '💧', frase: 'Modelo pronto para vender: site + agenda para espaços de eventos (ainda sem cliente de eventos)', site: BASE + '/splash', painel: BASE + '/splash', tipo: 'produto' },
   // O site do Adriano entra quando a landing nova for publicada em https://adrianoblumer.pages.dev.
-  { id: 'adriano', logo: '/central/logos/adriano.png', segmento: 'Nutrição', nome: 'Adriano Blumer', icone: '🥗', frase: 'Cliente: nutricionista (landing com WhatsApp e redes)', pendente: true, tipo: 'cliente' },
+  { id: 'adriano', logo: '/central/logos/adriano.png', segmento: 'Nutrição', nome: 'Adriano Blumer', icone: '🥗', frase: 'Cliente: nutricionista (landing com WhatsApp e redes)', site: 'https://adrianoblumer.kernex.com.br/', tipo: 'cliente' },
   // Copiloto e treino para atendentes de call center (nome neutro; nada de material de empresa anterior entra no produto).
   { id: 'atende', segmento: 'Atendimento', nome: 'Atende', icone: '🎧', frase: 'Em preparação: copiloto e treino de ligação para atendentes', pendente: true, tipo: 'plataforma' },
-  { id: 'academy', segmento: 'Treinamento', nome: 'KERNEX Academy', icone: '🎓', frase: 'Plataforma de treinamento para qualquer empresa (1º curso: inglês)', pendente: true, endereco: 'https://academy.kernex.com.br/', tipo: 'plataforma' },
+  { id: 'academy', segmento: 'Treinamento', nome: 'KERNEX Academy', icone: '🎓', frase: 'Plataforma de treinamento para qualquer empresa (1º curso: inglês)', site: 'https://kernex-academy.pages.dev/', endereco: 'https://academy.kernex.com.br/ (ainda não ligado)', tipo: 'plataforma' },
   { id: 'arqia', segmento: 'Arquitetura', nome: 'Arqia', icone: '📐', frase: 'Produto futuro: sistema para arquitetos', pendente: true, tipo: 'plataforma' },
   { id: 'kernex', segmento: 'Sites', nome: 'Site da Kernex', icone: '🌐', frase: 'Site institucional da Kernex', site: 'https://kernex.com.br/', tipo: 'interno' },
   { id: 'vault', segmento: 'Dados', nome: 'Vault', icone: '🔐', frase: 'Cofre de segredos e configurações', tipo: 'interno' },
