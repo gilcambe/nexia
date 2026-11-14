@@ -5,6 +5,7 @@
 const { createMural } = require('../nexia-ai/escritorio/mural');
 const ex = require('../nexia-ai/escritorio/expediente');
 const { sitesParaConferir, conferirSite } = require('./sentinel');
+const { comGroq, extrasGroq } = require('../lib/groq-modelo');
 
 const REPO = process.env.GITHUB_REPOSITORY || 'gilcambe/nexia';
 const TOKEN = process.env.GH_TOKEN || process.env.GITHUB_TOKEN || '';
@@ -18,12 +19,13 @@ const busca = async (q) => (await (await fetch(`https://api.github.com/search/is
 async function ideiasIA() {
   const key = process.env.GROQ_API_KEY;
   if (!key) return '';
-  const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+  // o nome do modelo morre com o tempo (13/11: o antigo deu 404): comGroq troca sozinho
+  const r = await comGroq(key, (model) => fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST', headers: { authorization: `Bearer ${key}`, 'content-type': 'application/json' },
-    body: JSON.stringify({ model: 'llama-3.3-70b-versatile', temperature: 0.7, max_tokens: 300, messages: [
+    body: JSON.stringify({ model, temperature: 0.7, max_tokens: 300, ...extrasGroq(model, 300), messages: [
       { role: 'system', content: 'Você é redator de Instagram de uma empresa brasileira de tecnologia (KERNEX: sites, sistemas e IA para pequenos negócios; app Body Coach de treino e dieta). Responda só 3 linhas, uma ideia de post por linha, em português simples, sem hashtags, sem promessas de resultado.' },
       { role: 'user', content: 'Dê 3 ideias de post para esta semana.' }] }),
-  }).catch(() => null);
+  })).catch(() => null);
   if (!r || !r.ok) return '';
   const j = await r.json().catch(() => ({}));
   return (((j.choices || [])[0] || {}).message || {}).content || '';
