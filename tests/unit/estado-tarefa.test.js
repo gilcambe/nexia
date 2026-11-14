@@ -151,13 +151,13 @@ test('EST4. resumoDia frase e agregação', () => {
 test('EST7. reserva-volta-1 até reserva-volta-3 e campo ia', () => {
   const agora = Date.now();
   const t1 = estadoTarefa({ state: 'open', labels: [{ name: 'reserva-volta-1' }], updated_at: new Date(agora).toISOString() }, agora);
-  assert.strictEqual(t1.ia, 'Reserva Volta 1');
+  assert.strictEqual(t1.ia, 'Reserva Volta 1 (Groq)');
 
   const t2 = estadoTarefa({ state: 'open', labels: [{ name: 'reserva-volta-2' }], updated_at: new Date(agora).toISOString() }, agora);
-  assert.strictEqual(t2.ia, 'Reserva Volta 2');
+  assert.strictEqual(t2.ia, 'Reserva Volta 2 (Gemini)');
 
   const t3 = estadoTarefa({ state: 'open', labels: [{ name: 'reserva-volta-3' }], updated_at: new Date(agora).toISOString() }, agora);
-  assert.strictEqual(t3.ia, 'Reserva Volta 3');
+  assert.strictEqual(t3.ia, 'Reserva Volta 3 (Mistral)');
 });
 
 test('EST8. workflow verdadeiro e PR aberto citado com texto e estado', () => {
