@@ -12,7 +12,7 @@ test('CENTRAL-CLIENTES: lista tem CES, Viajante Pro, Splash, Adriano e Arqia sem
   for (const id of ['body-coach', 'cortex', 'achados', 'divulga', 'bezsan', 'studiolima', 'ces', 'vp', 'splash', 'adriano', 'arqia']) assert.ok(ids.includes(id), id);
   assert.equal(new Set(ids).size, ids.length);
   assert.ok(!ids.includes('ev') && !ids.includes('mycoach'));
-  for (const id of ['adriano', 'arqia']) {
+  for (const id of ['arqia']) {   // adriano entrou no ar em 13/11 (adrianoblumer.kernex.com.br)
     const p = PRODUTOS.find((x) => x.id === id);
     assert.equal(p.pendente, true);
     assert.ok(!NO_AR.includes(p), `${id} não é medido`);
