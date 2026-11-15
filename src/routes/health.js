@@ -14,3 +14,4 @@ module.exports = function health(req, res) {
     erro: 'Ação inválida ou não informada'
   });
 };
+// health route

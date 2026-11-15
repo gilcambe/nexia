@@ -15,3 +15,4 @@ module.exports = function (app) {
     }
   }));
 };
+// health route registration
