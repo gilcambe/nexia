@@ -867,6 +867,71 @@ async function corrigirCiDosPrs(token, runs) {
   return null;
 }
 
+// Item 1 do dono (15/11/2026): PR do Cortex em conflito com a develop ficava parado para sempre (6 de 8 PRs
+// abertos em 14/11). Com conflito o CI nem roda e o merge automático só pula. Conflito de verdade não se resolve
+// pela API, então a fila fecha o PR, apaga o ramo velho e manda o Cortex refazer o MESMO pedido: o ramo tem o
+// mesmo nome (hash do pedido) e nasce da develop atual. No máximo MAX_REFAZER_CONFLITO vezes por ramo; depois
+// rotula "revisao-manual" e pede ajuda. Uma por ciclo, nunca com outra correção rodando. CORTEX_REFAZER_CONFLITO=0 desliga.
+const MAX_REFAZER_CONFLITO = 2;
+const MARCA_CONFLITO = '<!-- cortex-conflito -->';
+const MSG_CONFLITO = (n, max) => `${MARCA_CONFLITO}Este PR entrou em conflito com a develop (outra mudança mexeu nos mesmos arquivos). `
+  + `O Cortex vai refazer o mesmo pedido em cima da versão atual, num PR novo (tentativa ${n} de ${max}).`;
+
+/**
+ * @param pr       PR completo (GET /pulls/N: tem mergeable e mergeable_state)
+ * @param refeitos quantos PRs fechados SEM merge já houve com o mesmo ramo e a marca de conflito
+ * @returns {{ tipo: 'refazer', tentativa } | { tipo: 'ajuda' } | null}
+ */
+function decidirConflito({ pr, refeitos = 0, pedido = '' }) {
+  if (!pr || pr.state !== 'open' || !/^nexia\//.test((pr.head || {}).ref || '') || !pedido) return null;
+  if (pr.mergeable !== false || pr.mergeable_state !== 'dirty') return null;   // null = GitHub ainda calculando
+  if (nomes(pr).includes('revisao-manual')) return null;
+  if (refeitos >= MAX_REFAZER_CONFLITO) return { tipo: 'ajuda' };
+  return { tipo: 'refazer', tentativa: refeitos + 1 };
+}
+
+async function refazerConflitos(token, runs, ghFn = gh) {
+  if (process.env.CORTEX_REFAZER_CONFLITO === '0') return null;
+  const cc = require('../nexia-ai/orchestrator/correcao-ci');
+  if ((runs || []).some(r => /^Cortex #PR\d+/.test(r.name || '') && r.status !== 'completed')) return null;
+  let escrita = token;
+  try { escrita = (await tokenDaApp()) || token; } catch { /* sem app: usa a chave do workflow */ }
+  const dono = REPO.split('/')[0];
+  const abertos = ((await ghFn(token, 'GET', '/pulls?state=open&sort=created&direction=asc&per_page=50')).json || [])
+    .filter(pr => /^nexia\//.test((pr.head || {}).ref || '') && cc.pedidoDoPr(pr.body));
+  for (const resumo of abertos.slice(0, 30)) {
+    const pr = (await ghFn(token, 'GET', `/pulls/${resumo.number}`)).json;
+    const pedido = cc.pedidoDoPr((pr || {}).body);
+    if (!pr || pr.mergeable !== false) continue;
+    const ramo = pr.head.ref;
+    const fechados = (await ghFn(token, 'GET', `/pulls?state=closed&head=${encodeURIComponent(`${dono}:${ramo}`)}&per_page=30`)).json || [];
+    let refeitos = 0;
+    for (const f of fechados.filter(f => !f.merged_at)) {
+      const cs = (await ghFn(token, 'GET', `/issues/${f.number}/comments?per_page=50`)).json || [];
+      if (cs.some(c => String(c.body || '').includes(MARCA_CONFLITO))) refeitos++;
+    }
+    const d = decidirConflito({ pr, refeitos, pedido });
+    if (!d) continue;
+    if (d.tipo === 'ajuda') {
+      await ghFn(escrita, 'POST', `/issues/${pr.number}/labels`, { labels: ['revisao-manual'] });
+      await ghFn(escrita, 'POST', `/issues/${pr.number}/comments`, { body: `${MARCA_CONFLITO}Conflito com a develop de novo, depois de ${MAX_REFAZER_CONFLITO} refeitas. Precisa de olhar humano.` });
+      console.log(`conflito do PR #${pr.number}: pediu ajuda.`);
+      continue;
+    }
+    // Sem apagar o ramo velho o Cortex reaproveitaria a base antiga e o conflito voltaria: sem permissão, não mexe em nada.
+    const del = await ghFn(escrita, 'DELETE', `/git/refs/heads/${ramo.split('/').map(encodeURIComponent).join('/')}`);
+    if (del.status !== 204) { console.log(`conflito do PR #${pr.number}: não consegui apagar o ramo (${del.status}); fica para a próxima.`); return null; }
+    await ghFn(escrita, 'POST', `/issues/${pr.number}/comments`, { body: MSG_CONFLITO(d.tentativa, MAX_REFAZER_CONFLITO) });
+    await ghFn(escrita, 'PATCH', `/pulls/${pr.number}`, { state: 'closed' });
+    const r = await ghFn(token, 'POST', '/actions/workflows/smoke-logado.yml/dispatches', {
+      ref: 'develop', inputs: { url: BASE_URL, task: pedido, autonomia: '3', pista: '', modo: 'economico', tarefa_id: `PR${pr.number}` },
+    });
+    console.log(`conflito do PR #${pr.number}: fechado e refeito do zero (${d.tentativa}/${MAX_REFAZER_CONFLITO}, ${r.status}).`);
+    return pr.number;   // um por ciclo
+  }
+  return null;
+}
+
 // Dados extras que o planejador precisa, buscados só quando há partes com plano ou pedidos novos:
 // tamanho dos arquivos citados (pela listagem da pasta, sem baixar o arquivo), arquivos dos PRs nexia/* abertos
 // e partes enviadas ao Jules cujo PR já entrou na develop.
@@ -996,6 +1061,7 @@ async function main() {
   placar(issues, acoes);
   try { await fecharRascunhosParados(token); } catch (e) { console.log(`rascunhos parados: ${e.message}`); }
   try { await corrigirCiDosPrs(token, runs); } catch (e) { console.log(`correção de CI: ${e.message}`); }
+  try { await refazerConflitos(token, runs); } catch (e) { console.log(`conflito: ${e.message}`); }
   await resumoDiario(token, issues);
   const ignoradas = issues.filter(i => !i.pull_request && !confiavel(i));
   if (ignoradas.length) console.log(`ignoradas (autor sem acesso): ${ignoradas.map(i => `#${i.number}`).join(', ')}`);
@@ -1009,5 +1075,5 @@ async function main() {
   }
 }
 
-module.exports = { caminhosRecusados, bibliotecaDoPedido, comFecha, juntarTravadas, tentaContrato, FORA_DO_CONTRATO, vaiParaContrato, ultimoRotuloEm, travadasPeloCofre, entregaComprovada, MAX_RECUPERAR_POR_CICLO, FORA_DA_RECUPERACAO, soPipelineModelo, assinaturaDoSmoke, errosDeAmbiente, mexeEmWorkflow, planejarComIA, revisarParte, dadosDoPlanejador, corrigirCiDosPrs, reservaVolta, reservasQueVoltam, travouAntesDoConserto, devePedirReserva, entregouAlgo, depoisSemEntrega, MAX_SEM_ENTREGA, rascunhosParados, candidatosRascunho, MSG_RASCUNHO_PARADO, tokenDaApp, TENTATIVAS_ATE_DIVIDIR, caminhosDoPedido, sondarCota, decidir, precisaTesteFinal, precisaDividir, paisConcluidos, dividirComIA, MAX_TENTATIVAS, validarCortexFeito, reabrirFeitosInvalidos };
+module.exports = { decidirConflito, refazerConflitos, MAX_REFAZER_CONFLITO, MARCA_CONFLITO, caminhosRecusados, bibliotecaDoPedido, comFecha, juntarTravadas, tentaContrato, FORA_DO_CONTRATO, vaiParaContrato, ultimoRotuloEm, travadasPeloCofre, entregaComprovada, MAX_RECUPERAR_POR_CICLO, FORA_DA_RECUPERACAO, soPipelineModelo, assinaturaDoSmoke, errosDeAmbiente, mexeEmWorkflow, planejarComIA, revisarParte, dadosDoPlanejador, corrigirCiDosPrs, reservaVolta, reservasQueVoltam, travouAntesDoConserto, devePedirReserva, entregouAlgo, depoisSemEntrega, MAX_SEM_ENTREGA, rascunhosParados, candidatosRascunho, MSG_RASCUNHO_PARADO, tokenDaApp, TENTATIVAS_ATE_DIVIDIR, caminhosDoPedido, sondarCota, decidir, precisaTesteFinal, precisaDividir, paisConcluidos, dividirComIA, MAX_TENTATIVAS, validarCortexFeito, reabrirFeitosInvalidos };
 if (require.main === module) main().catch(e => { console.error(e.message); process.exit(1); });
