@@ -8,6 +8,10 @@
 // Produto novo: acrescente uma linha aqui. "pendente: true" = ainda sem site no ar (a tela mostra "em breve"). Links grátis do dia a dia ficam em LINKS.
 
 const BASE = 'https://nexia.gcbezerra.workers.dev';
+// Endereços servidos por ESTE mesmo Worker. O Worker não consegue abrir o próprio endereço por fetch normal
+// (o Cloudflare barra o laço e devolve 522): a Central dava "fora do ar" falso para Body Coach e Finance (14/11/2026).
+const HOSTS_PROPRIOS = [new URL(BASE).host, 'cortex.kernex.com.br', 'bodycoach.kernex.com.br', 'finance.kernex.com.br'];
+const ehProprio = (u) => { try { return HOSTS_PROPRIOS.includes(new URL(u).host); } catch { return false; } };
 
 const PRODUTOS = [
   { id: 'body-coach', logo: '/central/logos/body-coach.svg', segmento: 'Fitness', nome: 'Body Coach', icone: '💪', frase: 'App de treino e dieta (vende assinatura)', site: 'https://bodycoach.kernex.com.br/', painel: 'https://bodycoach.kernex.com.br/body-coach/admin/acessos', tipo: 'plataforma' },
@@ -25,7 +29,7 @@ const PRODUTOS = [
   { id: 'adriano', logo: '/central/logos/adriano.png', segmento: 'Nutrição', nome: 'Adriano Blumer', icone: '🥗', frase: 'Cliente: nutricionista (landing com WhatsApp e redes)', site: 'https://adrianoblumer.kernex.com.br/', tipo: 'cliente' },
   // Copiloto e treino para atendentes de call center (nome neutro; nada de material de empresa anterior entra no produto).
   { id: 'atende', segmento: 'Atendimento', nome: 'Atende', icone: '🎧', frase: 'Em preparação: copiloto e treino de ligação para atendentes', pendente: true, tipo: 'plataforma' },
-  { id: 'academy', segmento: 'Treinamento', nome: 'KERNEX Academy', icone: '🎓', frase: 'Plataforma de treinamento para qualquer empresa (1º curso: inglês)', site: 'https://kernex-academy.pages.dev/', endereco: 'https://academy.kernex.com.br/ (ainda não ligado)', tipo: 'plataforma' },
+  { id: 'academy', segmento: 'Treinamento', nome: 'KERNEX Academy', icone: '🎓', frase: 'Plataforma de treinamento para qualquer empresa (1º curso: inglês)', site: 'https://academy.kernex.com.br/', tipo: 'plataforma' },
   { id: 'arqia', segmento: 'Arquitetura', nome: 'Arqia', icone: '📐', frase: 'Produto futuro: sistema para arquitetos', pendente: true, tipo: 'plataforma' },
   { id: 'kernex', segmento: 'Sites', nome: 'Site da Kernex', icone: '🌐', frase: 'Site institucional da Kernex', site: 'https://kernex.com.br/', tipo: 'interno' },
   { id: 'vault', segmento: 'Dados', nome: 'Vault', icone: '🔐', frase: 'Cofre de segredos e configurações', tipo: 'interno' },
@@ -64,4 +68,4 @@ const ROBOS = [
   { arquivo: 'ci.yml', nome: 'Conferência do código', inputs: null },
 ];
 
-module.exports = { PRODUTOS, NO_AR, LINKS, ROBOS, BASE };
+module.exports = { PRODUTOS, NO_AR, LINKS, ROBOS, BASE, HOSTS_PROPRIOS, ehProprio };

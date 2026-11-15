@@ -31,7 +31,9 @@ test('CENT3. saúde mede cada site (fora do ar = ok false)', async () => {
   const fetch = async (u) => { if (u.includes('bezsan')) throw new Error('fora'); return { status: 200 }; };
   const b = JSON.parse((await createHandler({ esperaMs: 0, getMw: () => master, fetch })(ev({ queryStringParameters: { parte: 'saude' } }))).body);
   assert.strictEqual(b.produtos.find((p) => p.id === 'bezsan').ok, false);
-  assert.strictEqual(b.produtos.find((p) => p.id === 'body-coach').ok, true);
+  assert.strictEqual(b.produtos.find((p) => p.id === 'studiolima').ok, true);
+  // Body Coach é servido por este mesmo Worker: nunca fetch direto (dava 522 falso); sem amostra do cron = sem medição (null)
+  assert.strictEqual(b.produtos.find((p) => p.id === 'body-coach').ok, null);
 });
 
 test('CENT4. rodar só robôs da lista; ensaio do Divulga', async () => {

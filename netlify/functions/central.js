@@ -4,7 +4,7 @@
 //   POST /api/central {acao:'rodar', arquivo, ensaio?} | {acao:'pedir', texto} | {acao:'testar-ias'} | {acao:'vaga-salvar'|'vaga-apagar'|'vaga-testar'}
 // Cada parte é um pedido separado: a página mostra o que já chegou sem esperar o resto.
 
-const { PRODUTOS, NO_AR, LINKS, ROBOS, BASE } = require('../../central/produtos');
+const { PRODUTOS, NO_AR, LINKS, ROBOS, BASE, ehProprio } = require('../../central/produtos');
 const { FORNECEDORES } = require('../../central/fornecedores');
 const empresa = require('./central/empresa');
 const vagas = require('./central/ia-vagas');
@@ -158,7 +158,7 @@ function createHandler(deps = {}) {
         // O Worker não consegue abrir o próprio endereço dentro de um pedido (o Cloudflare barra o laço) e dava
         // "fora do ar" falso para Cortex, CES, Viajante Pro e Splash. Esses usam a medição de hora em hora do cron.
         // #2882: "fora do ar" só com prova = 2 checagens seguidas falhando. Sem prova: ok:null (sem medição, cinza).
-        const proprio = (u) => { try { return new URL(u).host === new URL(BASE).host; } catch { return false; } };
+        const proprio = ehProprio; // Cortex, Body Coach e Finance são servidos por este mesmo Worker
         let amostras = [];
         if (NO_AR.some((p) => proprio(p.site))) {
           try { const h = getHistorico(); amostras = await h.ultimasAmostras(deps.getHistoricoDb ? deps.getHistoricoDb() : h.abrirBanco(env)); } catch { amostras = []; }
