@@ -1,4 +1,5 @@
 'use strict';
+// Handler de saúde para ação=saude
 
 module.exports = function health(req, res) {
   const acao = req.query && req.query.acao;
@@ -13,3 +14,4 @@ module.exports = function health(req, res) {
     erro: 'Ação inválida ou não informada'
   });
 };
+// health route
