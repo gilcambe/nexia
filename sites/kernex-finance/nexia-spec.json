@@ -2,29 +2,29 @@
   "spec": {
     "kind": "system",
     "name": "Kernex Finance",
-    "tagline": "Gestão financeira corporativa e central de alertas",
-    "photo_theme": "financial dashboard analytics",
-    "description": "Gestão financeira corporativa e central de alertas",
+    "tagline": "Gestão financeira simplificada para sua empresa",
+    "photo_theme": "business finance",
+    "description": "Gestão financeira simplificada para sua empresa",
     "folder": "sites/kernex-finance",
     "fonts": {
-      "heading": "Outfit",
+      "heading": "Montserrat",
       "body": "Inter"
     },
     "palette": {
-      "primary": "#0f172a",
-      "accent": "#2563eb",
+      "primary": "#003366",
+      "accent": "#0066cc",
       "bg": "#fbfaf7",
       "surface": "#ffffff",
       "text": "#1d2426",
       "muted": "#5d6b6e",
-      "dark": "#020617"
+      "dark": "#111827"
     },
     "style": "modern",
     "contact": {
-      "whatsapp": "11999999999",
-      "phone": "(11) 3000-0000",
+      "whatsapp": "",
+      "phone": "(11) 91234-5678",
       "email": "suporte@kernex.com.br",
-      "address": "",
+      "address": "Av. Paulista, 1000 – São Paulo – SP",
       "city": "",
       "hours": "",
       "instagram": "",
@@ -44,135 +44,81 @@
     "leads_origem": "",
     "entities": [
       {
-        "key": "rotas",
-        "label": "Rotas e Domínios",
-        "singular": "Rota",
+        "key": "contas",
+        "label": "Contas",
+        "singular": "Conta",
         "fields": [
           {
-            "key": "host",
-            "label": "Domínio / Host",
+            "key": "nome",
+            "label": "Nome",
             "type": "text",
             "options": [],
             "required": true
           },
           {
-            "key": "destino",
-            "label": "Caminho Interno",
-            "type": "text",
+            "key": "tipo",
+            "label": "Tipo",
+            "type": "select",
+            "options": [
+              "Receita",
+              "Despesa",
+              "Investimento"
+            ],
+            "required": true
+          },
+          {
+            "key": "saldo",
+            "label": "Saldo",
+            "type": "money",
             "options": [],
             "required": true
           },
           {
             "key": "status",
-            "label": "Status DNS",
+            "label": "Status",
             "type": "select",
             "options": [
-              "Ativo",
-              "Pendente",
-              "Redirecionando"
+              "Ativa",
+              "Inativa"
             ],
             "required": true
           },
           {
-            "key": "atualizado",
-            "label": "Última Atualização",
-            "type": "date",
+            "key": "descricao",
+            "label": "Descrição",
+            "type": "textarea",
             "options": [],
-            "required": true
+            "required": false
           }
         ],
         "sample": [
           {
-            "host": "finance.kernex.com.br",
-            "destino": "/prumo/",
-            "status": "Ativo",
-            "atualizado": "2026-11-12"
+            "nome": "Conta Corrente Banco ABC",
+            "tipo": "Receita",
+            "saldo": "12000.50",
+            "status": "Ativa",
+            "descricao": "Conta de caixa principal"
           },
           {
-            "host": "ces.kernex.com.br",
-            "destino": "/ces/",
-            "status": "Ativo",
-            "atualizado": "2026-11-01"
+            "nome": "Conta Poupança Banco XYZ",
+            "tipo": "Investimento",
+            "saldo": "35000.00",
+            "status": "Ativa",
+            "descricao": "Poupança de longo prazo"
           },
           {
-            "host": "cortex.kernex.com.br",
-            "destino": "/cortex/",
-            "status": "Ativo",
-            "atualizado": "2026-10-15"
+            "nome": "Conta de Despesa Operacional",
+            "tipo": "Despesa",
+            "saldo": "-5000.00",
+            "status": "Inativa",
+            "descricao": "Conta usada para despesas operacionais"
           },
           {
-            "host": "kernex-finance.workers.dev",
-            "destino": "/prumo/",
-            "status": "Redirecionando",
-            "atualizado": "2026-11-12"
-          }
-        ]
-      },
-      {
-        "key": "alertas",
-        "label": "Alertas Diários",
-        "singular": "Alerta",
-        "fields": [
-          {
-            "key": "titulo",
-            "label": "Título do Alerta",
-            "type": "text",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "canal",
-            "label": "Canal de Envio",
-            "type": "select",
-            "options": [
-              "E-mail",
-              "WhatsApp",
-              "Webhook"
-            ],
-            "required": true
-          },
-          {
-            "key": "hora",
-            "label": "Horário Disparo",
-            "type": "text",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "ativo",
-            "label": "Ativo",
-            "type": "select",
-            "options": [
-              "Sim",
-              "Não"
-            ],
-            "required": true
-          }
-        ],
-        "sample": [
-          {
-            "titulo": "Fechamento Caixa Diário",
-            "canal": "E-mail",
-            "hora": "08:00",
-            "ativo": "Sim"
-          },
-          {
-            "titulo": "Resumo de Inadimplência",
-            "canal": "WhatsApp",
-            "hora": "09:30",
-            "ativo": "Sim"
-          },
-          {
-            "titulo": "Conciliação Bancária",
-            "canal": "Webhook",
-            "hora": "18:00",
-            "ativo": "Sim"
-          },
-          {
-            "titulo": "Alerta de Orçamento Estourado",
-            "canal": "E-mail",
-            "hora": "12:00",
-            "ativo": "Não"
+            "nome": "Conta de Receita de Vendas",
+            "tipo": "Receita",
+            "saldo": "75000.25",
+            "status": "Ativa",
+            "descricao": "Receita das vendas de produtos"
           }
         ]
       },
@@ -182,9 +128,20 @@
         "singular": "Transação",
         "fields": [
           {
-            "key": "descricao",
-            "label": "Descrição",
-            "type": "text",
+            "key": "conta",
+            "label": "Conta",
+            "type": "select",
+            "options": [
+              "Conta Corrente Banco ABC",
+              "Conta Poupança Banco XYZ",
+              "Conta de Despesa Operacional"
+            ],
+            "required": true
+          },
+          {
+            "key": "data",
+            "label": "Data",
+            "type": "date",
             "options": [],
             "required": true
           },
@@ -196,58 +153,61 @@
             "required": true
           },
           {
-            "key": "vencimento",
-            "label": "Vencimento",
-            "type": "date",
-            "options": [],
+            "key": "tipo",
+            "label": "Tipo",
+            "type": "select",
+            "options": [
+              "Receita",
+              "Despesa"
+            ],
             "required": true
           },
           {
-            "key": "categoria",
-            "label": "Categoria",
-            "type": "select",
-            "options": [
-              "Receita Operacional",
-              "Infraestrutura",
-              "Pessoal",
-              "Marketing"
-            ],
-            "required": true
+            "key": "descricao",
+            "label": "Descrição",
+            "type": "textarea",
+            "options": [],
+            "required": false
           }
         ],
         "sample": [
           {
-            "descricao": "Assinatura Cloudflare Workers",
-            "valor": "150.00",
-            "vencimento": "2026-11-20",
-            "categoria": "Infraestrutura"
+            "conta": "Conta Corrente Banco ABC",
+            "data": "2026-10-01",
+            "valor": "2000.00",
+            "tipo": "Receita",
+            "descricao": "Pagamento de cliente X"
           },
           {
-            "descricao": "Mensalidade Cliente Enterprise",
-            "valor": "4500.00",
-            "vencimento": "2026-11-15",
-            "categoria": "Receita Operacional"
+            "conta": "Conta de Despesa Operacional",
+            "data": "2026-10-02",
+            "valor": "-1500.00",
+            "tipo": "Despesa",
+            "descricao": "Compra de materiais"
           },
           {
-            "descricao": "Folha de Pagamento",
-            "valor": "12500.00",
-            "vencimento": "2026-11-30",
-            "categoria": "Pessoal"
+            "conta": "Conta Poupança Banco XYZ",
+            "data": "2026-10-03",
+            "valor": "500.00",
+            "tipo": "Receita",
+            "descricao": "Rendimento de investimento"
           },
           {
-            "descricao": "Campanha Google Ads",
-            "valor": "800.00",
-            "vencimento": "2026-11-25",
-            "categoria": "Marketing"
+            "conta": "Conta Corrente Banco ABC",
+            "data": "2026-10-04",
+            "valor": "-750.00",
+            "tipo": "Despesa",
+            "descricao": "Pagamento de fornecedor Y"
           }
         ]
       }
     ],
     "modules": [
-      "Domínios e Rotas",
-      "Alertas e E-mails",
+      "Dashboard",
+      "Contas",
       "Transações",
-      "Central de Configurações"
+      "Relatórios",
+      "Configurações"
     ]
   },
   "media": {}
