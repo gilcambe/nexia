@@ -1,0 +1,12 @@
+{
+  "numero": "3481",
+  "data": "2026-11-16",
+  "modelo": "PR #3482",
+  "tentativas": null,
+  "pedido": "Contrato de prova: lib/brl.js (formatar e ler reais)\n\nCriar `lib/brl.js` com duas funções exportadas:\n- `brl(valor)`: formata número em reais no padrão brasileiro (ex.: 1490 → \"R$ 1.490,00\"; negativo → \"-R$ 12,50\"; arredonda para 2 casas).\n- `centavos(texto)`: lê o que a pessoa digita (\"1.490,00\", \"59,9\", \"R$ 10\") e devolve inteiro em centavos; texto inválido ou vazio → null.\nSem dependências. CommonJS (module.exports = { brl, centavos }).",
+  "arquivos": [
+    "lib/brl.js"
+  ],
+  "teste": "node --test tests/contrato/brl.test.js",
+  "diff": "diff --git a/lib/brl.js b/lib/brl.js\nnew file mode 100644\nindex 000000000..69fabac69\n--- /dev/null\n+++ b/lib/brl.js\n@@ -0,0 +1,42 @@\n+// lib/brl.js\n+// Funções de formatação e leitura de valores monetários em reais (BRL)\n+\n+function brl(valor) {\n+  if (typeof valor !== 'number' || !Number.isFinite(valor)) {\n+    throw new TypeError('Valor deve ser um número finite');\n+  }\n+\n+  const sinal = valor < 0 ? '-' : '';\n+  const absValor = Math.abs(valor);\n+  const arredondado = Math.round(absValor * 100) / 100;\n+  const [inteiro, decimal] = arredondado.toFixed(2).split('.');\n+\n+  // Formatação brasileira de milhar usando ponto como separador\n+  const inteiroFormatado = Number(inteiro).toLocaleString('pt-BR');\n+\n+  return `${sinal}R$ ${inteiroFormatado},${decimal}`;\n+}\n+\n+function centavos(texto) {\n+  if (typeof texto !== 'string') return null;\n+\n+  const limpo = texto.trim();\n+  if (limpo === '') return null;\n+\n+  // Remove o símbolo de moeda e espaços\n+  const semSimbolo = limpo.replace(/^R\\$\\s*/i, '');\n+\n+  // Remove pontos de separação de milhar e troca vírgula decimal por ponto\n+  const normalizado = semSimbolo.replace(/\\./g, '').replace(',', '.');\n+\n+  // Verifica se o restante contém apenas números e, opcionalmente, um ponto decimal\n+  if (!/^[+-]?\\d+(\\.\\d+)?$/.test(normalizado)) return null;\n+\n+  const numero = parseFloat(normalizado);\n+  if (!Number.isFinite(numero)) return null;\n+\n+  // Converte para centavos, arredondando para o inteiro mais próximo\n+  return Math.round(numero * 100);\n+}\n+\n+module.exports = { brl, centavos };\n"
+}

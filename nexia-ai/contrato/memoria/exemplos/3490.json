@@ -1,0 +1,12 @@
+{
+  "numero": "3490",
+  "data": "2026-11-16",
+  "modelo": "PR #3496",
+  "tentativas": null,
+  "pedido": "Contrato: lib/brl.js (parcelas)\n\nAcrescentar em `lib/brl.js` a função `parcelas(totalCentavos, n)` e exportá-la junto com brl e centavos (sem mudar brl e centavos): divide o total em n parcelas inteiras de centavos cuja soma é exatamente o total; a sobra vai 1 centavo para cada uma das primeiras parcelas; n menor que 1 ou não inteiro → lança erro.\nSem dependências. CommonJS.",
+  "arquivos": [
+    "lib/brl.js"
+  ],
+  "teste": "node --test tests/contrato/parcelas.test.js",
+  "diff": "diff --git a/lib/brl.js b/lib/brl.js\nindex 69fabac69..e392f8ed2 100644\n--- a/lib/brl.js\n+++ b/lib/brl.js\n@@ -39,4 +39,20 @@ function centavos(texto) {\n   return Math.round(numero * 100);\n }\n \n-module.exports = { brl, centavos };\n+function parcelas(totalCentavos, n) {\n+  if (!Number.isInteger(n) || n < 1) {\n+    throw new RangeError('n deve ser um inteiro >= 1');\n+  }\n+\n+  const base = Math.floor(totalCentavos / n);\n+  const sobra = totalCentavos % n;\n+\n+  const result = [];\n+  for (let i = 0; i < n; i++) {\n+    result.push(base + (i < sobra ? 1 : 0));\n+  }\n+\n+  return result;\n+}\n+\n+module.exports = { brl, centavos, parcelas };\n"
+}

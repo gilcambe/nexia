@@ -1,0 +1,12 @@
+{
+  "numero": "3802",
+  "data": "2026-11-16",
+  "modelo": "PR #3807",
+  "tentativas": null,
+  "pedido": "[Parte 4/7 de #3797] Arquivos business_agent.js\n\n<!-- cortex-plano {\"pai\":3797,\"k\":4,\"n\":7,\"depende\":[],\"arquivos\":[\"agents/business_agent.js\"],\"antes\":[],\"pronto\":\"agents/business_agent.js com a mudança pedida e os testes do projeto passando\",\"limite\":400} -->\nO Groq aposentou `llama-3.3-70b-versatile` (404 desde 13/11/2026). O PR #3796 criou `lib/groq-modelo.js` (função `comGroq(chave, fazer)`, que troca sozinho de modelo) e já corrigiu o Marketing do Escritório e o Divulga.\n\n**Fazer:** nos arquivos abaixo, trocar o nome fixo pelo uso de `comGroq` (ou, onde o modelo é só um rótulo padrão de configuração, pela constante `RESERVA` de `lib/groq-modelo.js`). Não mudar mais nada.\n\n- core/agent-factory.js (linhas 20, 31, 42, 81)\n- netlify/functions/account-recovery.js, ads-engine.js, agents.js, agents/business_agent.js, agents/dev_agent.js, agents/security_agent.js, ai-financial.js, ai-sales-agent.js, churn-predictor.js, cortex-agent.js, internal-agents.js, multi-model-engine.js, sentinel.js, strike-engine.js, swarm.js\n- netlify/functions/central/ia-vagas.js linha 23 (só o rótulo `modelo` do Groq)\n\n**Pronto quando:** `git grep -n \"llama-3.3-70b-versatile\" -- . ':!*.md' ':!lib/groq-modelo.js' ':!.github'` não acha nada em código, e `npm test` passa.\n\nNESTA PARTE faça só o que o pedido acima pede para `agents/business_agent.js`. Outras partes cuidam dos outros arquivos ao mesmo tempo.\n\nArquivos desta parte (mexa SÓ neles): `agents/business_agent.js`.\nPronto quando: agents/business_",
+  "arquivos": [
+    "agents/business_agent.js"
+  ],
+  "teste": "node --test tests/unit/contrato-business-agent.test.js",
+  "diff": "diff --git a/agents/business_agent.js b/agents/business_agent.js\nnew file mode 100644\nindex 000000000..8167f9b77\n--- /dev/null\n+++ b/agents/business_agent.js\n@@ -0,0 +1,16 @@\n+const { RESERVA } = require('../lib/groq-modelo');\n+\n+function createBusinessAgent(options = {}) {\n+  if (options === null || typeof options !== 'object' || Array.isArray(options)) {\n+    throw new Error('Options must be an object');\n+  }\n+\n+  return {\n+    ...options,\n+    modelo: RESERVA\n+  };\n+}\n+\n+module.exports = {\n+  createBusinessAgent\n+};\n"
+}

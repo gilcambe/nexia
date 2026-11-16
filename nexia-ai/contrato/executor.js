@@ -10,6 +10,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const { parseEditBlocks, safePath, FORMAT_HELP } = require('../orchestrator/edit-blocks');
+const memoria = require('./memoria');
 
 // Opções aceitas (lista fechada): --test-force-exit, --test-timeout=N, --test-concurrency=N. Nada de shell livre vindo de issue.
 const OPCAO_TESTE = /^--test-(?:force-exit|timeout=\d{1,6}|concurrency=\d{1,2})$/;
@@ -66,8 +67,9 @@ function referencias(c, raiz) {
   return saida;
 }
 
-function montarPedido(c, raiz, anterior) {
+function montarPedido(c, raiz, anterior, exemplos = '') {
   const partes = [`PEDIDO:\n${c.pedido}`, `ARQUIVOS PERMITIDOS: ${c.arquivos.join(', ')}`, `TESTE DE ACEITAÇÃO: ${c.teste}`];
+  if (exemplos) partes.push(exemplos);
   for (const f of c.testes) { const p = path.join(raiz, f); if (fs.existsSync(p)) partes.push(`--- TESTE (só leitura) ${f} ---\n${fs.readFileSync(p, 'utf8').slice(0, 12000)}`); }
   partes.push(...referencias(c, raiz));
   for (const f of c.arquivos) {
@@ -189,6 +191,13 @@ async function executar(o) {
   const base = await o.rodarTeste(c.teste);
   if (base.ok) return { ok: false, motivo: 'o teste já passa antes da mudança: não prova nada (escreva um teste que falhe sem a mudança)', tentativas: 0, historico };
   const original = guardar(c, raiz);
+  // Memória (melhoria 15): caderno de lições no sistema + exemplos aprovados parecidos no pedido. memoria:false desliga.
+  const mem = o.memoria === false ? null : (o.memoria || {});
+  const lic = mem ? memoria.licoes(mem) : '';
+  const sistema = lic ? `${SISTEMA}\n\nLIÇÕES DO CORTEX (aprendidas em tarefas anteriores; siga sempre):\n${lic}` : SISTEMA;
+  const exemplosUsados = mem ? memoria.buscarExemplos(c, { ...mem, excluir: o.numero }) : [];
+  const exemplos = memoria.textoExemplos(exemplosUsados);
+  if (lic || exemplosUsados.length) log(`memória: ${lic ? 'lições' : 'sem lições'}; exemplos ${exemplosUsados.map(e => '#' + e.numero).join(', ') || 'nenhum'}`);
   // Regressão (melhoria 14): nomes dos testes da suíte que já falham antes da mudança.
   const regBase = o.regressao ? await o.regressao() : null;
   const jaFalhavam = new Set(regBase && !regBase.ok ? nomesDosTestes(regBase.completo || regBase.saida).falham : []);
@@ -203,12 +212,12 @@ async function executar(o) {
     if (melhor) restaurar(melhor.estado, raiz); else restaurar(original, raiz);
     let anterior = melhor ? `${foco(melhor.completo || melhor.saida)}${melhor.saida}` : base.saida;
     if (melhor) log(`${m.provider}/${m.model}: parte da melhor tentativa até agora (${textoNota(melhor.nota)})`);
-    let limite = o.porModelo || 2, extras = 0;
+    let limite = o.porModelo || 2, extras = 0, ultimaAssinatura = '';
     for (let k = 0; k < limite; k++) {
       tentativas++;
       let texto = '', parada = '';
       try {
-        const out = await o.router.chat(m, { system: SISTEMA, messages: [{ role: 'user', content: montarPedido(c, raiz, anterior) }], maxTokens: 16000, raciocinioMax: 2500 });
+        const out = await o.router.chat(m, { system: sistema, messages: [{ role: 'user', content: montarPedido(c, raiz, anterior, exemplos) }], maxTokens: 16000, raciocinioMax: 2500 });
         texto = (out && out.text) || '';
         parada = (out && out.stop_reason) || '';
         if (placar) placar.sucesso(m);
@@ -258,6 +267,11 @@ async function executar(o) {
       log(`${m.provider}/${m.model}: aplicou ${ap.aplicados.join(', ')}; teste ${t.ok ? 'PASSOU' : `falhou (${textoNota(n)}${falhamNomes.length ? `; ex.: ${falhamNomes.slice(0, 2).join(' | ').slice(0, 160)}` : ''})`}`);
       if (t.ok) return { ok: true, modelo: `${m.provider}/${m.model}`, tentativas, arquivos: Object.keys(original).filter(f => { const p = path.join(raiz, f); const v = fs.existsSync(p) ? fs.readFileSync(p, 'utf8') : null; return v !== original[f]; }), historico };
       anterior = `${foco(t.completo || t.saida)}${ap.recusas.length ? `Recusas: ${ap.recusas.join(' | ')}\n` : ''}${t.saida}`;
+      // Melhoria 15: a mesma IA errou IGUAL duas vezes seguidas (mesma nota e mesmos testes falhando): está presa.
+      // Passa para o próximo degrau em vez de gastar mais cota com ela.
+      const assinatura = `${n.valor}|${falhamNomes.join('|')}`;
+      if (assinatura === ultimaAssinatura && !melhorou) { log(`${m.provider}/${m.model}: mesmo erro 2x seguidas; próximo degrau`); break; }
+      ultimaAssinatura = assinatura;
     }
   }
   restaurar(original, raiz);

@@ -181,7 +181,7 @@ const cota = require('../nexia-ai/model-router/cota');
   const reg = String(process.env.CORTEX_REGRESSAO || '').trim();
   const regressao = /^node --test(?: --test-(?:force-exit|timeout=\d{1,6}|concurrency=\d{1,2}))*(?: [\w@./*-]+\.test\.(?:js|cjs|mjs))+$/.test(reg) ? () => rodarTeste(reg) : null;
   if (reg && !regressao) console.log('  CORTEX_REGRESSAO ignorada (formato não aceito)');
-  let r = await executar({ contrato: c, raiz: process.cwd(), router, modelos: lista, rodarTeste, regressao, porModelo: 3, placar: cota.getPlacar(), log: s => console.log('  ' + s) });
+  let r = await executar({ contrato: c, raiz: process.cwd(), router, modelos: lista, rodarTeste, regressao, numero: N, porModelo: 3, placar: cota.getPlacar(), log: s => console.log('  ' + s) });
   // 12/11: problema do PRÓPRIO contrato (teste não existe, teste já passa): nenhuma IA foi tentada. Antes isso ia
   // direto para o Claude Pro sem dizer o motivo (gastava a cota dele e escondia o erro). Agora explica e para.
   if (!r.ok && r.tentativas === 0) {
@@ -215,7 +215,16 @@ Corrija o contrato (Arquivos/Teste) ou tire a linha "Arquivos:" para o Cortex ge
   const ramo = ramoDoContrato(N);
   git('config', 'user.name', 'Cortex KERNEX'); git('config', 'user.email', 'cortex@kernex.com.br');
   git('checkout', '-b', ramo);
-  git('add', '--', ...r.arquivos, ...(gerado ? [gerado.testeArquivo] : []));   // teste gerado fica no CI para sempre
+  // Melhoria 15: o contrato que passou vira EXEMPLO na memória do Cortex (vai no PR; PR rejeitado = não entra).
+  let exemplo = null;
+  try {
+    const fs = require('node:fs');
+    const novos = r.arquivos.filter(f => !String(git('ls-files', '--', f) || '').trim());
+    const diff = String(git('diff', '--', ...r.arquivos) || '') + novos.map(f => `+++ ${f} (arquivo novo)\n${fs.readFileSync(f, 'utf8')}`).join('\n');
+    const f = require('../nexia-ai/contrato/memoria').gravarExemplo({ numero: N, contrato: c, modelo: r.modelo, tentativas: r.tentativas, diff });
+    if (f) exemplo = require('node:path').relative(process.cwd(), f).split(require('node:path').sep).join('/');
+  } catch (e) { console.log(`  memória: exemplo não gravado (${e.message})`); }
+  git('add', '--', ...r.arquivos, ...(gerado ? [gerado.testeArquivo] : []), ...(exemplo ? [exemplo] : []));   // teste gerado fica no CI para sempre
   git('commit', '-m', `Contrato #${N}: ${String(issue.title).slice(0, 60)}\n\nTeste de aceitação: ${c.teste}\nIA: ${r.modelo} (${r.tentativas} tentativa(s))`);
   git('push', 'origin', ramo);
   const dadosPr = { title: `Contrato #${N}: ${String(issue.title).slice(0, 70)}`, head: ramo, base: 'develop',

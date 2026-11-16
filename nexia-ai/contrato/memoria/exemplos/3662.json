@@ -1,0 +1,12 @@
+{
+  "numero": "3662",
+  "data": "2026-11-16",
+  "modelo": "PR #3685",
+  "tentativas": null,
+  "pedido": "[Parte 4/6 de #3648] Criar index.html\n\n<!-- cortex-plano {\"pai\":3648,\"k\":4,\"n\":6,\"depende\":[],\"arquivos\":[\"modelos-projeto/crud/index.html\"],\"antes\":[],\"pronto\":\"index.html existe, contém lang=\\\"pt-BR\\\", meta viewport e referências a estilo.css e crud.js.\",\"limite\":400} -->\nCriar o arquivo modelos-projeto/crud/index.html. Deve ter lang=\"pt-BR\", meta viewport, incluir o estilo.css e o script crud.js. Utilizar os placeholders {{nome}}, {{titulo}}, {{campos}} e {{cor}} que serão substituídos pelo script gerar-de-modelo.js. Estrutura: cabeçalho com título, tabela/lista de registros, formulário de criação/edição com campos listados em {{campos}}.\n\nArquivos desta parte (mexa SÓ neles): `modelos-projeto/crud/index.html`.\nPronto quando: index.html existe, contém lang=\"pt-BR\", meta viewport e referências a estilo.css e crud.js..\nLimite: até 400 linhas mudadas. Arquivo grande: leia por trechos (start_line/end_line ou find) e mude só o trecho.\nEsta parte roda ao mesmo tempo que outras; não mexa em arquivos fora da lista.",
+  "arquivos": [
+    "modelos-projeto/crud/index.html"
+  ],
+  "teste": "node --test tests/unit/contrato-index.test.js",
+  "diff": "diff --git a/modelos-projeto/crud/index.html b/modelos-projeto/crud/index.html\nnew file mode 100644\nindex 000000000..414366cc4\n--- /dev/null\n+++ b/modelos-projeto/crud/index.html\n@@ -0,0 +1,35 @@\n+<!DOCTYPE html>\n+<html lang=\"pt-BR\">\n+<head>\n+    <meta charset=\"UTF-8\">\n+    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n+    <title>{{titulo}}</title>\n+    <link rel=\"stylesheet\" href=\"estilo.css\">\n+    <script src=\"crud.js\"></script>\n+</head>\n+<body>\n+    <h1>{{titulo}}</h1>\n+    <table>\n+        <thead>\n+            <tr>\n+                <th>Id</th>\n+                <th>{{nome}}</th>\n+                <th>AÃ§Ãµes</th>\n+            </tr>\n+        </thead>\n+        <tbody>\n+            <!-- Registros serÃ£o inseridos aqui -->\n+        </tbody>\n+    </table>\n+    <form id=\"formCadastro\">\n+        <input type=\"hidden\" id=\"id\" name=\"id\">\n+        <label>{{nome}}:</label>\n+        <input type=\"text\" id=\"nome\" name=\"nome\" required>\n+        <button type=\"submit\">{{cor}}</button>\n+    </form>\n+    <div id=\"mensagem\"></div>\n+    <script>\n+        // Placeholder para {{campos}} serÃ¡ substituÃ­do pelo script\n+    </script>\n+</body>\n+</html>\n"
+}

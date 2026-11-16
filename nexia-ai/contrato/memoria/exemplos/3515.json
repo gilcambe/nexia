@@ -1,0 +1,12 @@
+{
+  "numero": "3515",
+  "data": "2026-11-16",
+  "modelo": "PR #3520",
+  "tentativas": null,
+  "pedido": "Contrato de prova do Claude Pro: lib/telefone.js\n\nCriar `lib/telefone.js` exportando `formatar(texto)`: telefone brasileiro para exibir. Aceita com ou sem +55, parênteses, espaços e hífen. 11 dígitos → \"(DD) 9XXXX-XXXX\"; 10 dígitos → \"(DD) XXXX-XXXX\"; qualquer outro → null. CommonJS, sem dependências.",
+  "arquivos": [
+    "lib/telefone.js"
+  ],
+  "teste": "node --test tests/contrato/telefone.test.js",
+  "diff": "diff --git a/lib/telefone.js b/lib/telefone.js\nnew file mode 100644\nindex 000000000..8fccc374c\n--- /dev/null\n+++ b/lib/telefone.js\n@@ -0,0 +1,11 @@\n+'use strict';\n+\n+function formatar(texto) {\n+  let d = String(texto == null ? '' : texto).replace(/\\D/g, '');\n+  if ((d.length === 12 || d.length === 13) && d.startsWith('55')) d = d.slice(2);\n+  if (d.length === 11) return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;\n+  if (d.length === 10) return `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}`;\n+  return null;\n+}\n+\n+module.exports = { formatar };\n"
+}

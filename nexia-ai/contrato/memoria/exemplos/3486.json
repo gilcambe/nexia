@@ -1,0 +1,12 @@
+{
+  "numero": "3486",
+  "data": "2026-11-16",
+  "modelo": "PR #3495",
+  "tentativas": null,
+  "pedido": "Contrato: lib/whats.js\n\nCriar `lib/whats.js` exportando `normalizar(texto)` (WhatsApp brasileiro → \"55\"+DDD+número, só dígitos; aceita com ou sem 55; 10 ou 11 dígitos sem o 55; inválido/vazio/null → null) e `link(texto, mensagem?)` → \"https://wa.me/<numero>\" com \"?text=\" + encodeURIComponent(mensagem) se houver mensagem; número inválido → null.\nSem dependências. CommonJS.",
+  "arquivos": [
+    "lib/whats.js"
+  ],
+  "teste": "node --test tests/contrato/whats.test.js",
+  "diff": "diff --git a/lib/whats.js b/lib/whats.js\nnew file mode 100644\nindex 000000000..90ebd9056\n--- /dev/null\n+++ b/lib/whats.js\n@@ -0,0 +1,54 @@\n+'use strict';\n+\n+/**\n+ * Normaliza um número de telefone para o formato internacional brasileiro\n+ * esperado pelo wa.me: \"55\" + DDD + número (apenas dígitos).\n+ *\n+ * @param {string|null|undefined} texto - Texto contendo o número.\n+ * @returns {string|null} Número normalizado ou null se inválido.\n+ */\n+function normalizar(texto) {\n+  if (texto == null) return null;\n+\n+  // Remove tudo que não seja dígito.\n+  const digits = String(texto).replace(/\\D/g, '');\n+\n+  if (!digits) return null;\n+\n+  // Caso já contenha o código do país.\n+  if (digits.startsWith('55')) {\n+    const rest = digits.slice(2);\n+    if (rest.length === 10 || rest.length === 11) {\n+      return digits;\n+    }\n+  }\n+\n+  // Caso não contenha o código do país, aceita DDD + número (10 ou 11 dígitos).\n+  if (digits.length === 10 || digits.length === 11) {\n+    return '55' + digits;\n+  }\n+\n+  return null;\n+}\n+\n+/**\n+ * Gera o link wa.me a partir de um número de telefone e mensagem opcional.\n+ *\n+ * @param {string|null|undefined} texto - Texto contendo o número.\n+ * @param {string} [mensagem] - Mensagem a ser incluída no link.\n+ * @returns {string|null} URL completa ou null se o número for inválido.\n+ */\n+function link(texto, mensagem) {\n+  const numero = normalizar(texto);\n+  if (!numero) return null;\n+\n+  let url = `https://wa.me/${numero}`;\n+\n+  if (mensagem != null && mensagem !== '') {\n+    url += `?text=${encodeURIComponent(mensagem)}`;\n+  }\n+\n+  return url;\n+}\n+\n+module.exports = { normalizar, link };\n"
+}
