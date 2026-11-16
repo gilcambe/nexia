@@ -146,6 +146,12 @@ const cota = require('../nexia-ai/model-router/cota');
   // sem isto toda parte de pedido grande era ignorada e o pedido nunca andava (12/11/2026, #3532).
   const doBot = issue.user && issue.user.login === 'github-actions[bot]';
   if (!CONFIAVEIS.has(issue.author_association) && !doBot) { console.log(`#${N}: autor sem permissão (${issue.author_association}); ignorado`); return; }
+  // Melhoria 20 (16/11/2026): disparo direto (numero=N) e cron podiam pegar a MESMA tarefa e abrir PRs duplicados
+  // (#102 do ZeloMe gerou 3 PRs). Se já há PR aberto desta tarefa, não refaz. CONTRATO_REFAZER=1 força.
+  if (process.env.CONTRATO_REFAZER !== '1') {
+    const ja = require('../nexia-ai/contrato/pr').prAbertoDoContrato((await gh('GET', '/pulls?state=open&per_page=100')).json, N);
+    if (ja) { console.log(`#${N}: já tem PR aberto (#${ja.number}); não refaço`); return; }
+  }
   const texto = `${issue.title}\n\n${issue.body || ''}`;
   let c = lerContrato(texto);
   const { router, lista } = modelos();
@@ -169,7 +175,7 @@ const cota = require('../nexia-ai/model-router/cota');
     // Portão 8: outra IA grátis (não a que escreveu o teste) confere se o teste cobre o pedido. Sem cota, segue sem ele.
     const gratis = lista.filter(d => d.provider !== 'maquinas');
     const revisar = ({ pedido, codigo, modelo }) => revisarCobertura(router, gratis.filter(d => !(d.provider === modelo.provider && d.model === modelo.model)).slice(0, 3), pedido, codigo);
-    gerado = await gerar({ pedido: texto, raiz: process.cwd(), router, modelos: lista, rodarTeste, checarSintaxe, revisar, log: s => console.log('  gerador: ' + s) });
+    gerado = await gerar({ pedido: texto, raiz: process.cwd(), router, modelos: lista, rodarTeste, checarSintaxe, revisar, referencia: process.env.CONTRATO_REFERENCIA !== '0', log: s => console.log('  gerador: ' + s) });
     if (!gerado.ok && gerado.sem_cota) return aguardarCota('ao gerar o teste');
     if (!gerado.ok) return voltarParaFila(gerado.nao_testavel ? `Não dá para provar com teste automático (${gerado.motivo}).` : `Não consegui gerar um teste válido: ${gerado.motivo}.`, 'contrato-nao-testavel');
     c = gerado.contrato;
@@ -181,7 +187,40 @@ const cota = require('../nexia-ai/model-router/cota');
   const reg = String(process.env.CORTEX_REGRESSAO || '').trim();
   const regressao = /^node --test(?: --test-(?:force-exit|timeout=\d{1,6}|concurrency=\d{1,2}))*(?: [\w@./*-]+\.test\.(?:js|cjs|mjs))+$/.test(reg) ? () => rodarTeste(reg) : null;
   if (reg && !regressao) console.log('  CORTEX_REGRESSAO ignorada (formato não aceito)');
-  let r = await executar({ contrato: c, raiz: process.cwd(), router, modelos: lista, rodarTeste, regressao, numero: N, revisor: process.env.CORTEX_REVISOR !== '0', porModelo: 3, placar: cota.getPlacar(), log: s => console.log('  ' + s) });
+  // Melhoria 21: melhor resultado de rodada anterior (ramo nexia/melhor-<n>): esta rodada continua dele.
+  const ramoMelhor = `nexia/melhor-${N}`;
+  const gitBruto = (...a) => execFileSync('git', a, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
+  let inicio = null;
+  if (!gerado) {
+    try {
+      git('fetch', '-q', 'origin', `+refs/heads/${ramoMelhor}:refs/remotes/origin/${ramoMelhor}`);
+      inicio = {};
+      for (const f of c.arquivos) { try { inicio[f] = gitBruto('show', `origin/${ramoMelhor}:${f}`); } catch { /* arquivo ainda não existia */ } }
+      console.log(`  ramo ${ramoMelhor} achado (${Object.keys(inicio).length} arquivo(s))`);
+    } catch { inicio = null; }
+  }
+  const guardarMelhor = m => {
+    try {
+      const fs = require('node:fs'), pth = require('node:path');
+      git('config', 'user.name', 'Cortex KERNEX'); git('config', 'user.email', 'cortex@kernex.com.br');
+      const atual = git('rev-parse', 'HEAD');
+      git('checkout', '-q', '-B', ramoMelhor);
+      for (const [f, v] of Object.entries(m.estado)) { const p = pth.join(process.cwd(), f); if (v === null) { if (fs.existsSync(p)) fs.unlinkSync(p); } else { fs.mkdirSync(pth.dirname(p), { recursive: true }); fs.writeFileSync(p, v); } }
+      git('add', '-A', '--', ...Object.keys(m.estado));
+      git('commit', '-q', '--allow-empty', '-m', `Cortex #${N}: melhor resultado até agora (${m.texto})`);
+      git('push', '-q', '-f', 'origin', ramoMelhor);
+      git('checkout', '-q', '-f', atual);
+      console.log(`  melhor resultado guardado em ${ramoMelhor} (${m.texto})`);
+      return true;
+    } catch (e) { console.log(`  melhor resultado NÃO guardado (${String(e.message).slice(0, 160)})`); return false; }
+  };
+  // Esperas de cota SEGUIDAS (comentários "⏳" desde o último comentário de outro tipo). Teto: 6 (3 h).
+  const esperasSeguidas = async () => {
+    const cs = (await gh('GET', `/issues/${N}/comments?per_page=100`)).json;
+    let n = 0; for (const x of Array.isArray(cs) ? cs : []) n = String(x.body || '').startsWith('⏳') ? n + 1 : 0;
+    return n;
+  };
+  let r = await executar({ contrato: c, raiz: process.cwd(), router, modelos: lista, rodarTeste, regressao, numero: N, inicio, revisor: process.env.CORTEX_REVISOR !== '0', porModelo: 3, placar: cota.getPlacar(), log: s => console.log('  ' + s) });
   // 12/11: problema do PRÓPRIO contrato (teste não existe, teste já passa): nenhuma IA foi tentada. Antes isso ia
   // direto para o Claude Pro sem dizer o motivo (gastava a cota dele e escondia o erro). Agora explica e para.
   if (!r.ok && r.tentativas === 0) {
@@ -200,14 +239,31 @@ Corrija o contrato (Arquivos/Teste) ou tire a linha "Arquivos:" para o Cortex ge
   }
   const seg = Math.round((Date.now() - t0) / 1000);
   const hist = r.historico.map((h, i) => `${i + 1}. ${h.modelo}: ${h.erro ? 'sem resposta' : h.aplicados.length ? `aplicou ${h.aplicados.join(', ')}; teste ${h.teste ? 'passou' : 'falhou'}` : 'nada aplicado'}${h.recusas && h.recusas.length ? ` (recusas: ${h.recusas.slice(0, 2).join('; ')})` : ''}`).join('\n');
-  if (!r.ok && r.sem_cota) return aguardarCota(r.historico.map(h => h.erro).filter(Boolean).slice(0, 3).join('; ').slice(0, 200));
+  const melhorTxt = !r.ok && r.melhor && !gerado && guardarMelhor(r.melhor) ? `\nMelhor resultado até agora: ${r.melhor.texto} (guardado no ramo \`${ramoMelhor}\`; a próxima rodada continua dele).` : '';
+  if (!r.ok && r.sem_cota) {
+    const esperas = await esperasSeguidas().catch(() => 0);
+    if (esperas < 6) return aguardarCota(`${r.motivo}; ${r.historico.map(h => h.erro).filter(Boolean).slice(0, 2).join('; ')}`.slice(0, 220) + melhorTxt);
+    r.motivo = `esperei a cota ${esperas} vezes seguidas e nenhuma IA resolveu`;
+  }
   if (!r.ok && gerado) {
     try { require('node:fs').unlinkSync(gerado.testeArquivo); } catch { /* já saiu */ }
     return voltarParaFila(`Nenhuma IA fez o teste gerado passar (${r.tentativas} tentativa(s) em ${seg} s).\n${hist}`, 'contrato-falhou');
   }
+  // Melhoria 23: não passou, mas MELHOROU (ou é o 1º resultado guardado): volta sozinha para a fila e a próxima rodada
+  // continua do melhor resultado. Até 4 voltas; depois disso (ou sem melhora) é falha de verdade.
+  if (!r.ok && !gerado && melhorTxt && r.melhor && r.melhor.nota) {
+    const progrediu = r.notaInicio == null || r.melhor.nota.valor > r.notaInicio;
+    const cs = (await gh('GET', `/issues/${N}/comments?per_page=100`).catch(() => ({ json: [] }))).json;
+    const voltas = (Array.isArray(cs) ? cs : []).filter(x => String(x.body || '').startsWith('↻')).length;
+    if (progrediu && voltas < 4) {
+      await comentar(`↻ Ainda não passou, mas MELHOROU${r.notaInicio == null ? '' : ' em relação à rodada anterior'}. Volta sozinha para a fila e a próxima rodada continua do melhor resultado (volta ${voltas + 1} de 4). ${r.tentativas} tentativa(s) em ${seg} s.${melhorTxt}\n${hist}`);
+      for (const l of ['contrato-falhou', 'contrato-aguardando-cota']) await gh('DELETE', `/issues/${N}/labels/${l}`).catch(() => null);
+      return;
+    }
+  }
   if (!r.ok) {
     const suspeito = r.testeSuspeito ? `\n\n⚠️ ${r.testeSuspeito.ias} IAs diferentes pararam no MESMO teste: "${r.testeSuspeito.nome}". Pode ser o teste que se contradiz ou pede algo impossível: confira o teste antes de reenviar (o Cortex não pode mudar o teste).` : '';
-    await comentar(`❌ Não entreguei: ${r.motivo}. ${r.tentativas} tentativa(s) em ${seg} s.\n${hist}${suspeito}`);
+    await comentar(`❌ Não entreguei: ${r.motivo}. ${r.tentativas} tentativa(s) em ${seg} s.${melhorTxt}\n${hist}${suspeito}`);
     await rotular('contrato-falhou');
     process.exitCode = 1;
     return;
@@ -251,6 +307,7 @@ Corrija o contrato (Arquivos/Teste) ou tire a linha "Arquivos:" para o Cortex ge
   }
   await comentar(`✅ Teste de aceitação passou com ${r.modelo} em ${seg} s. PR: #${pr.json.number}${semCi ? ' (aberto pela chave do Actions: o CI NÃO roda sozinho neste PR; precisa de nova execução)' : ''}`);
   if (semCi) await rotular('contrato-sem-ci');
+  try { git('push', '-q', 'origin', '--delete', ramoMelhor); } catch { /* não havia ramo de melhor resultado */ }
   await rotular('contrato-pr');
   console.log(`PR #${pr.json.number}`);
 })().catch(e => { console.error(e); process.exitCode = 1; })
