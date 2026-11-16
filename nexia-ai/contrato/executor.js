@@ -240,6 +240,18 @@ async function executar(o) {
   const semCotaErro = e => { const s = (e && e.details && e.details.status) || 0; return s === 429 || s === 402 || /\b(429|402)\b|rate.?limit|quota|cota/i.test(String((e && e.message) || e)); };
   // 16/11/2026: o próximo degrau parte da MELHOR tentativa até agora (não do zero) e recebe o erro dela.
   let melhor = null;
+  // Melhoria 21: continua do MELHOR resultado da rodada anterior (ramo nexia/melhor-<n>), não do zero.
+  if (o.inicio && typeof o.inicio === 'object') {
+    const ini = Object.fromEntries(c.arquivos.filter(f => typeof o.inicio[f] === 'string').map(f => [f, o.inicio[f]]));
+    if (Object.keys(ini).length) {
+      restaurar({ ...original, ...ini }, raiz);
+      const t0 = await o.rodarTeste(c.teste);
+      const n0 = nota(t0.completo || t0.saida), nb = nota(base.completo || base.saida);
+      if (!t0.ok && n0.valor > nb.valor) { melhor = { estado: guardar(c, raiz), saida: t0.saida, completo: t0.completo, nota: n0 }; log(`continua do melhor resultado anterior (${textoNota(n0)})`); }
+      else log(`resultado anterior não serve (${t0.ok ? 'já passa sem revisão' : 'não é melhor que o original'}); começa do original`);
+      restaurar(original, raiz);
+    }
+  }
   // Melhoria 16: versão que já passou no teste, guardada enquanto a revisão pede ajustes.
   let aprovado = null;
   const entregue = mod => ({ ok: true, modelo: `${mod.provider}/${mod.model}`, tentativas, revisado: !!aprovado, arquivos: Object.keys(original).filter(f => { const p = path.join(raiz, f); const v = fs.existsSync(p) ? fs.readFileSync(p, 'utf8') : null; return v !== original[f]; }), historico });
@@ -333,8 +345,13 @@ async function executar(o) {
   // 16/11/2026: se a maioria das IAs parou por COTA (dia, minuto, limite de saída), é espera, não fracasso.
   const porCota = h => h.erro && /\b(429|402)\b|quota|cota|rate.?limit|TPD|OTPM|tokens per day|Daily/i.test(h.erro);
   const comErro = historico.filter(h => h.erro);
-  const semCota = historico.length > 0 && (historico.every(h => h.erro) || (comErro.length && comErro.filter(porCota).length * 2 >= new Set(historico.map(h => h.modelo)).size));
-  return { ok: false, motivo: semCota ? 'nenhuma IA respondeu (sem cota agora)' : 'nenhuma IA fez o teste passar', sem_cota: semCota, tentativas, historico, testeSuspeito: testeSuspeito(historico) };
+  // Melhoria 21: uma das 3 IAs mais fortes não pôde nem tentar (cota, fora do ar, sem resposta): é ESPERA, não
+  // fracasso (o #99 do ZeloMe chegou a 37/41 só com as fracas e foi marcado "falhou").
+  const temporario = h => !!h.erro && (porCota(h) || /\b5\d\d\b|timeout|timed out|fetch failed|ECONNRESET|ECONNREFUSED|ETIMEDOUT|overloaded|unavailable|indispon/i.test(h.erro));
+  const fortesSemVez = [...new Set(escada.slice(0, 3).map(m => `${m.provider}/${m.model}`))].filter(id => { const hs = historico.filter(h => h.modelo === id); return hs.length > 0 && hs.every(temporario); });
+  const semCota = historico.length > 0 && (historico.every(h => h.erro) || (comErro.length && comErro.filter(porCota).length * 2 >= new Set(historico.map(h => h.modelo)).size) || fortesSemVez.length > 0);
+  return { ok: false, motivo: semCota ? (fortesSemVez.length && !historico.every(h => h.erro) ? `IA(s) forte(s) sem vez agora (${fortesSemVez.join(', ')})` : 'nenhuma IA respondeu (sem cota agora)') : 'nenhuma IA fez o teste passar', sem_cota: semCota, fortesSemVez, tentativas, historico, testeSuspeito: testeSuspeito(historico),
+    melhor: melhor ? { estado: melhor.estado, nota: melhor.nota, texto: textoNota(melhor.nota) } : null };
 }
 
 module.exports = { testeSuspeito, lerContrato, executar, aplicar, montarPedido, resgatarFormato, nota, nomesDosTestes, foco, referencias, SISTEMA, TESTE_OK };

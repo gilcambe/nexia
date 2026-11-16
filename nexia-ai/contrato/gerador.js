@@ -9,7 +9,9 @@
 //   5. sintaxe válida;
 //   6. o teste FALHA no código atual (senão não prova nada);
 //   7. a solução mexe em pelo menos 1 arquivo que o produto já tem, ou o pedido nomeia o arquivo novo (entrega não fica solta);
-//   8. uma 2ª IA confere se o teste cobre o que o pedido exige (opcional; sem resposta, não trava o fluxo).
+//   8. uma 2ª IA confere se o teste cobre o que o pedido exige (opcional; sem resposta, não trava o fluxo);
+//   9. (melhoria 22, opção referencia) a solução de REFERÊNCIA da própria IA passa no teste: o teste é possível.
+//      Ela só prova isso e é descartada; outra IA implementa sem vê-la.
 // Pedido que não dá para testar assim (tela, texto, configuração) volta "nao_testavel" e segue o caminho antigo.
 const fs = require('node:fs');
 const path = require('node:path');
@@ -32,6 +34,7 @@ const SISTEMA = [
   '- lógica em arquivo existente: importe a função exportada e verifique o comportamento novo;',
   '- endpoint/rota: importe o handler e chame com um pedido falso (objeto com method, body, headers) e dependências falsas; verifique status e corpo;',
   '- texto, título, link ou configuração em .tsx/.html/.json/.md: leia o arquivo com fs.readFileSync(path.join(__dirname, "../../<arquivo>"), "utf8") e verifique o conteúdo novo e a ausência do antigo.',
+  'Com "referencia" pedida: mande também "solucao": {"<arquivo da solução>": "conteúdo COMPLETO do arquivo depois da mudança"}: uma solução simples que PASSA no seu teste. Ela só prova que o teste é possível e é descartada (outra IA implementa sem vê-la).',
   'Só responda {"testavel": false, "motivo": "..."} se a mudança depender de serviço externo (painel da Cloudflare, Firebase, Play Store, DNS), de deploy ou de olhar humano (cor, layout).',
 ].join('\n');
 
@@ -110,7 +113,7 @@ async function gerar(o) {
       tentativas++;
       let out;
       try {
-        out = await o.router.chat(m, { system: SISTEMA, messages: [{ role: 'user', content: `PEDIDO:\n${String(o.pedido).slice(0, 6000)}${ultimo ? `\n\nA TENTATIVA ANTERIOR FOI RECUSADA: ${ultimo}` : ''}` }], maxTokens: 4000 });
+        out = await o.router.chat(m, { system: SISTEMA, messages: [{ role: 'user', content: `PEDIDO:\n${String(o.pedido).slice(0, 6000)}${o.referencia ? '\n\n(referencia pedida: inclua "solucao")' : ''}${ultimo ? `\n\nA TENTATIVA ANTERIOR FOI RECUSADA: ${ultimo}` : ''}` }], maxTokens: o.referencia ? 12000 : 4000 });
       } catch (e) { log(`${m.provider}/${m.model}: sem resposta (${motivoCurto(e)})`); break; }
       responderam++;
       const p = ajustarTeste(extrairJson(out && out.text));
@@ -133,6 +136,27 @@ async function gerar(o) {
       const cmd = `node --test ${c.teste}`;
       const r = await o.rodarTeste(cmd);
       if (r.ok) { fs.unlinkSync(abs); ultimo = 'o teste já passa no código atual: ele precisa falhar até a solução existir'; continue; }
+      // Portão 9 (melhoria 22): o teste tem que ser POSSÍVEL. No ZeloMe, 5 testes escritos à mão eram impossíveis ou
+      // contraditórios (ex.: exigir 3 letras e testar com 1); um deles gastou 16 tentativas. A referência pega isso antes.
+      if (o.referencia) {
+        const sol = p.solucao && typeof p.solucao === 'object' ? Object.entries(p.solucao).map(([a, v]) => [safePath(a), v]).filter(([a, v]) => a && c.arquivos.includes(a) && typeof v === 'string') : [];
+        if (!sol.length) { fs.unlinkSync(abs); ultimo = 'faltou "solucao": mande a solução de referência (conteúdo completo dos arquivos da solução) que passa no seu teste'; log(`${m.provider}/${m.model}: recusado (sem solução de referência)`); continue; }
+        const antes = sol.map(([a]) => { const p2 = path.join(o.raiz, a); return [p2, fs.existsSync(p2) ? fs.readFileSync(p2, 'utf8') : null]; });
+        let rr;
+        try {
+          for (const [a, v] of sol) { const p2 = path.join(o.raiz, a); fs.mkdirSync(path.dirname(p2), { recursive: true }); fs.writeFileSync(p2, v); }
+          rr = await o.rodarTeste(cmd);
+        } finally {
+          for (const [p2, v] of antes) { if (v === null) { if (fs.existsSync(p2)) fs.unlinkSync(p2); } else fs.writeFileSync(p2, v); }
+        }
+        if (!rr || !rr.ok) {
+          fs.unlinkSync(abs);
+          ultimo = `a sua solução de referência NÃO passou no seu próprio teste: o teste se contradiz ou pede algo impossível (ou a solução está errada). Corrija. Saída: ${String((rr && rr.saida) || '').slice(-1500)}`;
+          log(`${m.provider}/${m.model}: recusado (referência não passa no teste)`);
+          continue;
+        }
+        log(`${m.provider}/${m.model}: solução de referência passou no teste (teste possível)`);
+      }
       if (o.revisar) {
         const rev = await o.revisar({ pedido, codigo: c.codigo, modelo: m }).catch(() => null);
         if (rev && rev.cobre === false) {
