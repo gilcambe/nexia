@@ -235,8 +235,9 @@ function createHandler(deps = {}) {
         return res(200, resultado);
       }
 
-      // 4. Teste de restauração
+      // 4. Teste de restauração (apenas master)
       if (acao === 'restaurar') {
+        if (!isMaster) return res(403, { error: 'Apenas master pode executar restauração.' });
         if (!body.backup) return res(400, { error: 'Dados de backup não informados.' });
         const resultado = await restaurarDadosUsuario(db, targetUid, body.backup);
         return res(200, { ok: true, acao: 'restaurar', resultado });
