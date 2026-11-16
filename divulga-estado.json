@@ -1,5 +1,5 @@
 {
-  "rodizio": 65,
+  "rodizio": 66,
   "feitos": [
     "body-coach-01",
     "body-coach-02",
@@ -9,23 +9,6 @@
     "body-coach-06"
   ],
   "historico": [
-    {
-      "quando": "2026-10-17T17:52:07.336Z",
-      "id": null,
-      "cliente": "body-coach",
-      "resultados": [
-        {
-          "canal": "facebook",
-          "ok": true,
-          "ref": "1380111745183159_122096640303518156"
-        },
-        {
-          "canal": "instagram",
-          "ok": true,
-          "ref": "17969684654964669"
-        }
-      ]
-    },
     {
       "quando": "2026-10-18T00:03:10.514Z",
       "id": null,
@@ -1109,6 +1092,25 @@
         }
       ],
       "formato": "foto",
+      "serie": "pergunta-enquete"
+    },
+    {
+      "quando": "2026-11-16T02:02:46.932Z",
+      "id": null,
+      "cliente": "body-coach",
+      "resultados": [
+        {
+          "canal": "facebook",
+          "ok": true,
+          "ref": "1380111745183159_122112312663518156"
+        },
+        {
+          "canal": "instagram",
+          "ok": true,
+          "ref": "17994297690099602"
+        }
+      ],
+      "formato": "reel",
       "serie": "pergunta-enquete"
     }
   ],
