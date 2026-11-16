@@ -67,11 +67,11 @@ function referencias(c, raiz) {
   return saida;
 }
 
-function montarPedido(c, raiz, anterior, exemplos = '') {
+function montarPedido(c, raiz, anterior, exemplos = '', enxuto = false) {
   const partes = [`PEDIDO:\n${c.pedido}`, `ARQUIVOS PERMITIDOS: ${c.arquivos.join(', ')}`, `TESTE DE ACEITAÇÃO: ${c.teste}`];
   if (exemplos) partes.push(exemplos);
   for (const f of c.testes) { const p = path.join(raiz, f); if (fs.existsSync(p)) partes.push(`--- TESTE (só leitura) ${f} ---\n${fs.readFileSync(p, 'utf8').slice(0, 12000)}`); }
-  partes.push(...referencias(c, raiz));
+  if (!enxuto) partes.push(...referencias(c, raiz));
   for (const f of c.arquivos) {
     const p = path.join(raiz, f);
     const pequeno = fs.existsSync(p) && fs.statSync(p).size <= ARQUIVO_PEQUENO;
@@ -107,6 +107,16 @@ function resgatarFormato(texto, c) {
     i = j - 1;
   }
   return files;
+}
+
+// Melhoria 17: o teste em que 3 ou mais IAs DIFERENTES pararam na última tentativa delas (provável teste que se contradiz).
+function testeSuspeito(historico, minimo = 3) {
+  const ultima = new Map();
+  for (const h of historico) if (h.falham && h.aplicados && h.aplicados.length) ultima.set(h.modelo, h.falham);
+  const conta = new Map();
+  for (const falham of ultima.values()) for (const n of new Set(falham)) conta.set(n, (conta.get(n) || 0) + 1);
+  const [nome, vezes] = [...conta.entries()].sort((a, b) => b[1] - a[1])[0] || [];
+  return vezes >= minimo ? { nome, ias: vezes } : null;
 }
 
 /** Aplica os blocos só nos arquivos permitidos. Devolve { aplicados[], recusas[] }. */
@@ -179,6 +189,26 @@ function restaurar(copia, raiz) {
   for (const [f, v] of Object.entries(copia)) { const p = path.join(raiz, f); if (v === null) { if (fs.existsSync(p)) fs.unlinkSync(p); } else fs.writeFileSync(p, v); }
 }
 
+// Melhoria 16: revisor item a item. Devolve até 5 itens do PEDIDO que o código não atende ([] = tudo certo ou sem resposta).
+const REVISOR = [
+  'Você é o REVISOR de código do Cortex KERNEX. Leia o PEDIDO e o CÓDIGO entregue (que já passa no teste de aceitação).',
+  'Confira o pedido ITEM POR ITEM: cada regra, cada caso citado, entrada inválida, variações de escrita (acento, maiúsculas), limites.',
+  'Liste SÓ o que o pedido exige e o código NÃO faz ou faz errado. Não invente requisito que não está no pedido. Não comente estilo.',
+  'Responda SÓ em JSON: {"faltando": ["item curto e concreto", ...]} — lista vazia se o código atende o pedido inteiro.',
+].join('\n');
+async function revisarItens(o, c, raiz, autor, escada, log) {
+  const outro = escada.find(x => x.provider !== autor.provider) || escada.find(x => x !== autor) || autor;
+  const codigo = c.arquivos.map(f => { const p = path.join(raiz, f); return `--- ${f} ---\n${fs.existsSync(p) ? fs.readFileSync(p, 'utf8').slice(0, 12000) : '(não existe)'}`; }).join('\n\n');
+  try {
+    const out = await o.router.chat(outro, { system: REVISOR, messages: [{ role: 'user', content: `PEDIDO:\n${c.pedido}\n\nCÓDIGO ENTREGUE:\n${codigo}` }], maxTokens: 3000, raciocinioMax: 1500 });
+    const txt = String((out && out.text) || '');
+    const j = JSON.parse((txt.match(/\{[\s\S]*\}/) || ['{}'])[0]);
+    const itens = (Array.isArray(j.faltando) ? j.faltando : []).filter(x => typeof x === 'string' && x.trim()).map(x => x.trim().slice(0, 200)).slice(0, 5);
+    log(`revisor ${outro.provider}/${outro.model}: ${itens.length ? itens.length + ' item(ns) faltando: ' + itens.join(' | ').slice(0, 200) : 'nada faltando'}`);
+    return itens;
+  } catch (e) { log(`revisor ${outro.provider}/${outro.model}: sem revisão (${String(e.message || e).slice(0, 100)})`); return []; }
+}
+
 /**
  * @param {object} o { contrato, raiz, router, modelos: [{provider,model}], rodarTeste: (cmd) => Promise<{ok, saida}>, porModelo=2, log }
  * @returns {Promise<{ ok, motivo?, modelo?, tentativas, arquivos?, historico }>}
@@ -201,6 +231,8 @@ async function executar(o) {
   // Regressão (melhoria 14): nomes dos testes da suíte que já falham antes da mudança.
   const regBase = o.regressao ? await o.regressao() : null;
   const jaFalhavam = new Set(regBase && !regBase.ok ? nomesDosTestes(regBase.completo || regBase.saida).falham : []);
+  // 14b: os que PASSAVAM antes. Só eles contam como "quebrados" (teste de tarefa futura que nunca passou não conta).
+  const passavam = new Set(regBase ? nomesDosTestes(regBase.completo || regBase.saida || '').passam : []);
   let tentativas = 0;
   // Frente A (#3377): com placar de cota, quem está sem cota vai para o fim (ou sai, se houver livres).
   const placar = o.placar || null;
@@ -208,7 +240,11 @@ async function executar(o) {
   const semCotaErro = e => { const s = (e && e.details && e.details.status) || 0; return s === 429 || s === 402 || /\b(429|402)\b|rate.?limit|quota|cota/i.test(String((e && e.message) || e)); };
   // 16/11/2026: o próximo degrau parte da MELHOR tentativa até agora (não do zero) e recebe o erro dela.
   let melhor = null;
+  // Melhoria 16: versão que já passou no teste, guardada enquanto a revisão pede ajustes.
+  let aprovado = null;
+  const entregue = mod => ({ ok: true, modelo: `${mod.provider}/${mod.model}`, tentativas, revisado: !!aprovado, arquivos: Object.keys(original).filter(f => { const p = path.join(raiz, f); const v = fs.existsSync(p) ? fs.readFileSync(p, 'utf8') : null; return v !== original[f]; }), historico });
   for (const m of escada) {
+    if (aprovado) break;
     if (melhor) restaurar(melhor.estado, raiz); else restaurar(original, raiz);
     let anterior = melhor ? `${foco(melhor.completo || melhor.saida)}${melhor.saida}` : base.saida;
     if (melhor) log(`${m.provider}/${m.model}: parte da melhor tentativa até agora (${textoNota(melhor.nota)})`);
@@ -217,13 +253,19 @@ async function executar(o) {
       tentativas++;
       let texto = '', parada = '';
       try {
-        const out = await o.router.chat(m, { system: sistema, messages: [{ role: 'user', content: montarPedido(c, raiz, anterior, exemplos) }], maxTokens: 16000, raciocinioMax: 2500 });
+        const out = await o.router.chat(m, { system: sistema, messages: [{ role: 'user', content: montarPedido(c, raiz, anterior, m._enxuto ? '' : exemplos, !!m._enxuto) }], maxTokens: 16000, raciocinioMax: 2500 });
         texto = (out && out.text) || '';
         parada = (out && out.stop_reason) || '';
         if (placar) placar.sucesso(m);
       } catch (e) {
         const detalhe = `${String(e.message || e)}${e && e.details && e.details.upstream ? ` — ${String(e.details.upstream).replace(/\s+/g, ' ')}` : ''}`.slice(0, 400);
         // 16/11/2026: limite por minuto (Groq) não é falha: espera e repete uma vez, sem contar tentativa.
+        // Melhoria 18: pedido grande demais para esta IA (413 / contexto): repete uma vez ENXUTO (sem exemplos e referências).
+        if (!m._enxuto && /\b413\b|too large|context.length|maximum context|reduce (?:your|the) (?:message|prompt)|prompt is too long/i.test(detalhe)) {
+          m._enxuto = true; tentativas--; k--;
+          log(`${m.provider}/${m.model}: pedido grande demais para ela; repetindo enxuto (sem exemplos e referências)`);
+          continue;
+        }
         if (semCotaErro(e) && !m._esperou && (o.esperar429Ms ?? 45000) > 0) {
           m._esperou = true; tentativas--; k--;
           log(`${m.provider}/${m.model}: limite por minuto (${detalhe.slice(0, 120)}); esperando ${Math.round((o.esperar429Ms ?? 45000) / 1000)} s`);
@@ -250,14 +292,14 @@ async function executar(o) {
       let t = await o.rodarTeste(c.teste);
       if (t.ok && o.regressao) {
         const rg = await o.regressao();
-        const novas = rg.ok ? [] : nomesDosTestes(rg.completo || rg.saida).falham.filter(x => !jaFalhavam.has(x));
+        const novas = rg.ok ? [] : nomesDosTestes(rg.completo || rg.saida).falham.filter(x => passavam.size ? passavam.has(x) : !jaFalhavam.has(x));
         const quebrouCarga = !rg.ok && !novas.length && nota(rg.completo || rg.saida).valor === -Infinity && !(regBase && !regBase.ok);
         if (novas.length || quebrouCarga) {
           log(`${m.provider}/${m.model}: passou no teste do contrato mas QUEBROU ${novas.length || 'a carga de'} outro(s) teste(s): ${novas.slice(0, 2).join(' | ').slice(0, 160)}`);
           t = { ok: false, regressao: true, saida: `O TESTE DO CONTRATO PASSOU, mas a sua mudança QUEBROU outros testes do projeto que passavam antes: ${novas.map(x => '"' + x + '"').join(', ') || '(arquivo de teste não carrega)'}. Mantenha o teste do contrato passando e conserte sem quebrar estes. Exemplo do erro:\n${(rg.saida || '').slice(-3000)}`, completo: t.completo };
         }
       }
-      historico.push({ modelo: `${m.provider}/${m.model}`, aplicados: ap.aplicados, recusas: ap.recusas, teste: t.ok });
+      historico.push({ modelo: `${m.provider}/${m.model}`, aplicados: ap.aplicados, recusas: ap.recusas, teste: t.ok, falham: t.ok || t.regressao ? [] : nomesDosTestes(t.completo || t.saida).falham });
       const n = t.regressao ? { falhas: 1, pontos: 0, total: 0, valor: -0.5 } : nota(t.completo || t.saida);
       const melhorou = !t.ok && (!melhor || n.valor > melhor.nota.valor);
       if (melhorou) melhor = { estado: guardar(c, raiz), saida: t.saida, completo: t.completo, nota: n };
@@ -265,7 +307,18 @@ async function executar(o) {
       if (melhorou && k === limite - 1 && extras < (o.extrasMax ?? 3)) { limite++; extras++; log(`${m.provider}/${m.model}: melhorou a nota; rodada extra ${extras}`); }
       const falhamNomes = t.ok ? [] : nomesDosTestes(t.completo || t.saida).falham;
       log(`${m.provider}/${m.model}: aplicou ${ap.aplicados.join(', ')}; teste ${t.ok ? 'PASSOU' : `falhou (${textoNota(n)}${falhamNomes.length ? `; ex.: ${falhamNomes.slice(0, 2).join(' | ').slice(0, 160)}` : ''})`}`);
-      if (t.ok) return { ok: true, modelo: `${m.provider}/${m.model}`, tentativas, arquivos: Object.keys(original).filter(f => { const p = path.join(raiz, f); const v = fs.existsSync(p) ? fs.readFileSync(p, 'utf8') : null; return v !== original[f]; }), historico };
+      if (t.ok && o.revisor && !aprovado) {
+        const faltando = await revisarItens(o, c, raiz, m, escada, log);
+        if (faltando.length) {
+          aprovado = { estado: guardar(c, raiz), modelo: m };
+          anterior = `O TESTE PASSOU, mas o REVISOR conferiu o pedido item por item e achou o que falta: ${faltando.map((x, i) => `${i + 1}) ${x}`).join(' ')}. Corrija ESTES pontos mantendo o teste passando. Se algum ponto não estiver no pedido, ignore-o.`;
+          if (k === limite - 1) limite++;
+          log(`${m.provider}/${m.model}: revisor achou ${faltando.length} item(ns) faltando; mais uma rodada para corrigir`);
+          continue;
+        }
+      }
+      if (t.ok) return entregue(m);
+      if (aprovado) { restaurar(aprovado.estado, raiz); log(`${m.provider}/${m.model}: a correção da revisão não passou no teste; fica a versão que já tinha passado`); return entregue(aprovado.modelo); }
       anterior = `${foco(t.completo || t.saida)}${ap.recusas.length ? `Recusas: ${ap.recusas.join(' | ')}\n` : ''}${t.saida}`;
       // Melhoria 15: a mesma IA errou IGUAL duas vezes seguidas (mesma nota e mesmos testes falhando): está presa.
       // Passa para o próximo degrau em vez de gastar mais cota com ela.
@@ -274,13 +327,14 @@ async function executar(o) {
       ultimaAssinatura = assinatura;
     }
   }
+  if (aprovado) { restaurar(aprovado.estado, raiz); return entregue(aprovado.modelo); }
   restaurar(original, raiz);
   // Nenhuma IA respondeu (cota/limite/fora do ar): não é falha da tarefa, é espera (o vigia redispara).
   // 16/11/2026: se a maioria das IAs parou por COTA (dia, minuto, limite de saída), é espera, não fracasso.
   const porCota = h => h.erro && /\b(429|402)\b|quota|cota|rate.?limit|TPD|OTPM|tokens per day|Daily/i.test(h.erro);
   const comErro = historico.filter(h => h.erro);
   const semCota = historico.length > 0 && (historico.every(h => h.erro) || (comErro.length && comErro.filter(porCota).length * 2 >= new Set(historico.map(h => h.modelo)).size));
-  return { ok: false, motivo: semCota ? 'nenhuma IA respondeu (sem cota agora)' : 'nenhuma IA fez o teste passar', sem_cota: semCota, tentativas, historico };
+  return { ok: false, motivo: semCota ? 'nenhuma IA respondeu (sem cota agora)' : 'nenhuma IA fez o teste passar', sem_cota: semCota, tentativas, historico, testeSuspeito: testeSuspeito(historico) };
 }
 
-module.exports = { lerContrato, executar, aplicar, montarPedido, resgatarFormato, nota, nomesDosTestes, foco, referencias, SISTEMA, TESTE_OK };
+module.exports = { testeSuspeito, lerContrato, executar, aplicar, montarPedido, resgatarFormato, nota, nomesDosTestes, foco, referencias, SISTEMA, TESTE_OK };
