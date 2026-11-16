@@ -16,3 +16,4 @@
 11. Se o erro do teste se repetir, mude a abordagem em vez de repetir a mesma ideia.
 12. Antes de responder, releia o pedido item por item e confira que CADA item está no código, não só os casos do teste.
 13. Função que cria algo (criarX, novoX, fábrica) guarda o estado DENTRO dela (Map, lista, contador), nunca em variável solta no módulo: cada chamada cria um estado novo e separado.
+14. CSS: regra com #id vence regra só com classe ou elemento. Para mudar algo num modo especial (ex.: .senior), repita o MESMO #id da regra original no seletor ("body.senior #lista-mural li", não só "body.senior li"); senão a regra nova não vale no navegador.
