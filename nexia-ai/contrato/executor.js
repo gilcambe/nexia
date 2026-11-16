@@ -67,11 +67,11 @@ function referencias(c, raiz) {
   return saida;
 }
 
-function montarPedido(c, raiz, anterior, exemplos = '') {
+function montarPedido(c, raiz, anterior, exemplos = '', enxuto = false) {
   const partes = [`PEDIDO:\n${c.pedido}`, `ARQUIVOS PERMITIDOS: ${c.arquivos.join(', ')}`, `TESTE DE ACEITAÇÃO: ${c.teste}`];
   if (exemplos) partes.push(exemplos);
   for (const f of c.testes) { const p = path.join(raiz, f); if (fs.existsSync(p)) partes.push(`--- TESTE (só leitura) ${f} ---\n${fs.readFileSync(p, 'utf8').slice(0, 12000)}`); }
-  partes.push(...referencias(c, raiz));
+  if (!enxuto) partes.push(...referencias(c, raiz));
   for (const f of c.arquivos) {
     const p = path.join(raiz, f);
     const pequeno = fs.existsSync(p) && fs.statSync(p).size <= ARQUIVO_PEQUENO;
@@ -253,13 +253,19 @@ async function executar(o) {
       tentativas++;
       let texto = '', parada = '';
       try {
-        const out = await o.router.chat(m, { system: sistema, messages: [{ role: 'user', content: montarPedido(c, raiz, anterior, exemplos) }], maxTokens: 16000, raciocinioMax: 2500 });
+        const out = await o.router.chat(m, { system: sistema, messages: [{ role: 'user', content: montarPedido(c, raiz, anterior, m._enxuto ? '' : exemplos, !!m._enxuto) }], maxTokens: 16000, raciocinioMax: 2500 });
         texto = (out && out.text) || '';
         parada = (out && out.stop_reason) || '';
         if (placar) placar.sucesso(m);
       } catch (e) {
         const detalhe = `${String(e.message || e)}${e && e.details && e.details.upstream ? ` — ${String(e.details.upstream).replace(/\s+/g, ' ')}` : ''}`.slice(0, 400);
         // 16/11/2026: limite por minuto (Groq) não é falha: espera e repete uma vez, sem contar tentativa.
+        // Melhoria 18: pedido grande demais para esta IA (413 / contexto): repete uma vez ENXUTO (sem exemplos e referências).
+        if (!m._enxuto && /\b413\b|too large|context.length|maximum context|reduce (?:your|the) (?:message|prompt)|prompt is too long/i.test(detalhe)) {
+          m._enxuto = true; tentativas--; k--;
+          log(`${m.provider}/${m.model}: pedido grande demais para ela; repetindo enxuto (sem exemplos e referências)`);
+          continue;
+        }
         if (semCotaErro(e) && !m._esperou && (o.esperar429Ms ?? 45000) > 0) {
           m._esperou = true; tentativas--; k--;
           log(`${m.provider}/${m.model}: limite por minuto (${detalhe.slice(0, 120)}); esperando ${Math.round((o.esperar429Ms ?? 45000) / 1000)} s`);

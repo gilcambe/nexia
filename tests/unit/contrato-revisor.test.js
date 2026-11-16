@@ -114,3 +114,18 @@ test('regressão: teste futuro que passa a rodar e falhar NÃO reprova; teste qu
     assert.strictEqual(r.ok, esperado, quebraVelho ? 'quebrou o que passava' : 'só testes futuros falhando');
   }
 });
+
+// Melhoria 18: IA recusa por tamanho (413) → repete uma vez com o pedido enxuto (sem exemplos e sem referências).
+test('413 por tamanho: repete enxuto na mesma IA, sem gastar tentativa', async () => {
+  const raiz = cenario();
+  fs.writeFileSync(path.join(raiz, 'src/ref.js'), '// REFERENCIA-GRANDE\n');
+  const pedidos = [];
+  const contrato = lerContrato('Faça usando `src/ref.js`\nArquivos: `src/a.js`\nTeste: `node --test tests/a.test.js`');
+  const r = await executar({ contrato, raiz, memoria: false, porModelo: 1, modelos: [{ provider: 'groq', model: 'q' }],
+    router: { chat: async (m, p) => { pedidos.push(p.messages[0].content); if (pedidos.length === 1) { const e = new Error('groq 413 — Request too large for model'); throw e; } return { text: ARQ(1), stop_reason: 'stop' }; } },
+    rodarTeste: rodarTeste(raiz) });
+  assert.strictEqual(r.ok, true);
+  assert.strictEqual(r.tentativas, 1);
+  assert.match(pedidos[0], /REFERENCIA-GRANDE/);
+  assert.doesNotMatch(pedidos[1], /REFERENCIA-GRANDE/);
+});
