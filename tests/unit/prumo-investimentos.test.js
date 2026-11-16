@@ -47,8 +47,9 @@ function bancoFalso() {
   return { collection: col, dados };
 }
 async function comBanco(fn) {
-  const banco = bancoFalso(); const antes = { db: p.deps.db, agora: p.deps.agora };
-  p.deps.db = () => banco; p.deps.agora = () => new Date('2026-11-05T12:00:00Z');
+  const banco = bancoFalso(); const antes = { db: p.deps.db, agora: p.deps.agora, fetch: p.deps.fetch };
+  // Teste sem internet: a cotação ao vivo (Yahoo/Banco Central) falha e vale a cotação registrada à mão.
+  p.deps.db = () => banco; p.deps.agora = () => new Date('2026-11-05T12:00:00Z'); p.deps.fetch = async () => { throw new Error('sem rede no teste'); };
   try { await fn(banco); } finally { Object.assign(p.deps, antes); }
 }
 
