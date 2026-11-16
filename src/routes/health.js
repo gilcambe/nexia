@@ -13,5 +13,5 @@ module.exports = function health(req, res) {
     ok: false,
     erro: 'Ação inválida ou não informada'
   });
-};
+};;
 
