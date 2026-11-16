@@ -185,10 +185,11 @@ function createHandler(deps = {}) {
           gravacao = { ok: false, erro: String((eGrav && eGrav.message) || eGrav).slice(0, 160) };
         }
         console.log(`[saude-servicos] salvamento em ${COLECAO}/${DOC}: ${gravacao && gravacao.ok ? 'ok' : JSON.stringify(gravacao)}`);
-      } else {
-        console.log('[saude-servicos] salvamento ignorado: nenhum banco configurado');
-      }
-      return res(200, {
+        } else {
+      // Log de salvamento mesmo quando não há banco: mantém rastreabilidade no Worker.
+      console.log('[saude-servicos] salvamento em ' + COLECAO + '/' + DOC + ': ignorado (nenhum banco configurado)');
+    }
+    return res(200, {
         ok: itens.every((i) => i.ok),
         itens,
         gravado: !!(gravacao && gravacao.ok),
