@@ -76,7 +76,7 @@ async function medir() {
     const { tmp, c } = preparar(id);
     const t0 = Date.now();
     const r = await executar({ contrato: c, raiz: tmp, router, modelos: lista.map(m => ({ ...m })), porModelo: Number(arg('por-modelo', 2)), esperar429Ms: 20000,
-      memoria: comMemoria ? {} : false, rodarTeste: cmd => Promise.resolve(rodar(cmd, tmp)), log: s => console.log(`  [${id}] ${s}`) });
+      memoria: comMemoria ? {} : false, revisor: !!arg('revisor', false), rodarTeste: cmd => Promise.resolve(rodar(cmd, tmp)), log: s => console.log(`  [${id}] ${s}`) });
     const oc = r.ok ? oculto(id, tmp) : null;
     const l = { tarefa: id, contrato: r.ok, oculto: oc ? resumo(oc.completo) : '-', ocultoOk: !!(oc && oc.ok), notaOculto: oc ? nota(oc.completo).falhas : null,
       modelo: r.modelo || '-', tentativas: r.tentativas, segundos: Math.round((Date.now() - t0) / 1000), motivo: r.ok ? '' : r.motivo };

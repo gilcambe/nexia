@@ -181,7 +181,7 @@ const cota = require('../nexia-ai/model-router/cota');
   const reg = String(process.env.CORTEX_REGRESSAO || '').trim();
   const regressao = /^node --test(?: --test-(?:force-exit|timeout=\d{1,6}|concurrency=\d{1,2}))*(?: [\w@./*-]+\.test\.(?:js|cjs|mjs))+$/.test(reg) ? () => rodarTeste(reg) : null;
   if (reg && !regressao) console.log('  CORTEX_REGRESSAO ignorada (formato não aceito)');
-  let r = await executar({ contrato: c, raiz: process.cwd(), router, modelos: lista, rodarTeste, regressao, numero: N, porModelo: 3, placar: cota.getPlacar(), log: s => console.log('  ' + s) });
+  let r = await executar({ contrato: c, raiz: process.cwd(), router, modelos: lista, rodarTeste, regressao, numero: N, revisor: process.env.CORTEX_REVISOR !== '0', porModelo: 3, placar: cota.getPlacar(), log: s => console.log('  ' + s) });
   // 12/11: problema do PRÓPRIO contrato (teste não existe, teste já passa): nenhuma IA foi tentada. Antes isso ia
   // direto para o Claude Pro sem dizer o motivo (gastava a cota dele e escondia o erro). Agora explica e para.
   if (!r.ok && r.tentativas === 0) {
@@ -206,7 +206,8 @@ Corrija o contrato (Arquivos/Teste) ou tire a linha "Arquivos:" para o Cortex ge
     return voltarParaFila(`Nenhuma IA fez o teste gerado passar (${r.tentativas} tentativa(s) em ${seg} s).\n${hist}`, 'contrato-falhou');
   }
   if (!r.ok) {
-    await comentar(`❌ Não entreguei: ${r.motivo}. ${r.tentativas} tentativa(s) em ${seg} s.\n${hist}`);
+    const suspeito = r.testeSuspeito ? `\n\n⚠️ ${r.testeSuspeito.ias} IAs diferentes pararam no MESMO teste: "${r.testeSuspeito.nome}". Pode ser o teste que se contradiz ou pede algo impossível: confira o teste antes de reenviar (o Cortex não pode mudar o teste).` : '';
+    await comentar(`❌ Não entreguei: ${r.motivo}. ${r.tentativas} tentativa(s) em ${seg} s.\n${hist}${suspeito}`);
     await rotular('contrato-falhou');
     process.exitCode = 1;
     return;
