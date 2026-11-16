@@ -120,8 +120,31 @@ function nota(saida) {
   for (const m of s.matchAll(/PONTUACAO: (\d+)\/(\d+)/g)) { pontos += Number(m[1]); total += Number(m[2]); }
   // Sem resumo = o teste nem rodou direito (erro de sintaxe, travou): é a PIOR tentativa, nunca a melhor.
   if (!/(?:ℹ|#) (?:pass|fail) \d/.test(s)) return { falhas: Infinity, pontos: 0, total: 0, valor: -Infinity };
+  // O ARQUIVO de teste inteiro falhou ao carregar (erro de sintaxe, módulo faltando): o node --test conta "1 falha",
+  // mas é a pior situação possível.
+  if (/(?:✖|not ok \d+ -) [^\n]*\.test\.[cm]?js(?: \(|\s*$)/m.test(s) || /^(SyntaxError|ReferenceError|TypeError): /m.test(s) && /\.test\.[cm]?js/.test(s) && !/(?:ℹ|#) pass [1-9]/.test(s)) return { falhas: Infinity, pontos: 0, total: 0, valor: -Infinity };
   return { falhas, pontos, total, valor: pontos - falhas * 1000 };
 }
+function nomesDosTestes(saida) {
+  const s = String(saida || '').split('\n✖ failing tests:')[0];
+  const passam = new Set(), falham = new Set();
+  for (const l of s.split('\n')) {
+    let m = /^\s*✔ (.+?) \(\d[\d.]*ms\)\s*$/.exec(l); if (m) { passam.add(m[1]); continue; }
+    m = /^\s*✖ (.+?) \(\d[\d.]*ms\)\s*$/.exec(l); if (m && !/\.test\.[cm]?js$/.test(m[1])) { falham.add(m[1]); continue; }
+    m = /^\s*ok \d+ - (.+?)\s*$/.exec(l); if (m) { passam.add(m[1]); continue; }
+    m = /^\s*not ok \d+ - (.+?)\s*$/.exec(l); if (m && !/\.test\.[cm]?js$/.test(m[1])) falham.add(m[1]);
+  }
+  for (const f of falham) passam.delete(f);
+  return { passam: [...passam], falham: [...falham] };
+}
+// FOCO: com vários testes falhando, a IA conserta 2 de cada vez sem quebrar os que já passam.
+function foco(saida) {
+  const { passam, falham } = nomesDosTestes(saida);
+  if (falham.length <= 2) return '';
+  return `FOCO DESTA RODADA (um passo de cada vez): faça passar primeiro estes testes: ${falham.slice(0, 2).map(x => '"' + x + '"').join(' e ')}.` +
+    (passam.length ? ` NÃO quebre os que já passam: ${passam.map(x => '"' + x + '"').join(', ')}.` : '') + '\n\n';
+}
+
 const textoNota = n => n.falhas === Infinity ? 'teste quebrado: nem rodou (erro de sintaxe ou travou)' : n.total ? `${n.pontos}/${n.total} pontos, ${n.falhas} teste(s) falhando` : `${n.falhas} teste(s) falhando`;
 
 function guardar(c, raiz) { return Object.fromEntries(c.arquivos.map(f => { const p = path.join(raiz, f); return [f, fs.existsSync(p) ? fs.readFileSync(p, 'utf8') : null]; })); }
@@ -150,7 +173,7 @@ async function executar(o) {
   let melhor = null;
   for (const m of escada) {
     if (melhor) restaurar(melhor.estado, raiz); else restaurar(original, raiz);
-    let anterior = melhor ? melhor.saida : base.saida;
+    let anterior = melhor ? `${foco(melhor.completo || melhor.saida)}${melhor.saida}` : base.saida;
     if (melhor) log(`${m.provider}/${m.model}: parte da melhor tentativa até agora (${textoNota(melhor.nota)})`);
     let limite = o.porModelo || 2, extras = 0;
     for (let k = 0; k < limite; k++) {
@@ -173,6 +196,13 @@ async function executar(o) {
         if (placar && semCotaErro(e)) placar.marcar(m, 'rate'); historico.push({ modelo: `${m.provider}/${m.model}`, erro: detalhe }); log(`${m.provider}/${m.model}: sem resposta (${detalhe})`); break;
       }
       if (!texto.trim()) { historico.push({ modelo: `${m.provider}/${m.model}`, erro: `resposta vazia (${parada || 'sem motivo'})` }); log(`${m.provider}/${m.model}: resposta vazia, parada=${parada || '?'} (próximo degrau)`); break; }
+      // Resposta cortada pelo limite de tamanho: aplicar quebraria o arquivo. Pede de novo, mais enxuto.
+      if (/^(length|max_tokens|MAX_TOKENS)$/.test(parada)) {
+        anterior = 'Sua resposta anterior foi CORTADA por tamanho e não foi aplicada. Mande o arquivo inteiro de novo, mais enxuto (sem comentários longos e sem explicação fora do código).';
+        historico.push({ modelo: `${m.provider}/${m.model}`, aplicados: [], recusas: ['resposta cortada'] });
+        log(`${m.provider}/${m.model}: resposta cortada (parada=${parada}, ${texto.length} caracteres); pedindo de novo mais enxuta`);
+        continue;
+      }
       const ap = aplicar(texto, c, raiz);
       if (!ap.aplicados.length) {
         anterior = `Nenhuma mudança aplicada. ${ap.recusas.join(' | ') || 'Responda só com blocos de edição no formato pedido.'}`;
@@ -184,18 +214,22 @@ async function executar(o) {
       historico.push({ modelo: `${m.provider}/${m.model}`, aplicados: ap.aplicados, recusas: ap.recusas, teste: t.ok });
       const n = nota(t.completo || t.saida);
       const melhorou = !t.ok && (!melhor || n.valor > melhor.nota.valor);
-      if (melhorou) melhor = { estado: guardar(c, raiz), saida: t.saida, nota: n };
+      if (melhorou) melhor = { estado: guardar(c, raiz), saida: t.saida, completo: t.completo, nota: n };
       // Está melhorando na última rodada dela: ganha mais uma (até 3 extras por IA).
       if (melhorou && k === limite - 1 && extras < (o.extrasMax ?? 3)) { limite++; extras++; log(`${m.provider}/${m.model}: melhorou a nota; rodada extra ${extras}`); }
-      log(`${m.provider}/${m.model}: aplicou ${ap.aplicados.join(', ')}; teste ${t.ok ? 'PASSOU' : `falhou (${textoNota(n)})`}`);
+      const falhamNomes = t.ok ? [] : nomesDosTestes(t.completo || t.saida).falham;
+      log(`${m.provider}/${m.model}: aplicou ${ap.aplicados.join(', ')}; teste ${t.ok ? 'PASSOU' : `falhou (${textoNota(n)}${falhamNomes.length ? `; ex.: ${falhamNomes.slice(0, 2).join(' | ').slice(0, 160)}` : ''})`}`);
       if (t.ok) return { ok: true, modelo: `${m.provider}/${m.model}`, tentativas, arquivos: Object.keys(original).filter(f => { const p = path.join(raiz, f); const v = fs.existsSync(p) ? fs.readFileSync(p, 'utf8') : null; return v !== original[f]; }), historico };
-      anterior = `${ap.recusas.length ? `Recusas: ${ap.recusas.join(' | ')}\n` : ''}${t.saida}`;
+      anterior = `${foco(t.completo || t.saida)}${ap.recusas.length ? `Recusas: ${ap.recusas.join(' | ')}\n` : ''}${t.saida}`;
     }
   }
   restaurar(original, raiz);
   // Nenhuma IA respondeu (cota/limite/fora do ar): não é falha da tarefa, é espera (o vigia redispara).
-  const semCota = historico.length > 0 && historico.every(h => h.erro);
+  // 16/11/2026: se a maioria das IAs parou por COTA (dia, minuto, limite de saída), é espera, não fracasso.
+  const porCota = h => h.erro && /\b(429|402)\b|quota|cota|rate.?limit|TPD|OTPM|tokens per day|Daily/i.test(h.erro);
+  const comErro = historico.filter(h => h.erro);
+  const semCota = historico.length > 0 && (historico.every(h => h.erro) || (comErro.length && comErro.filter(porCota).length * 2 >= new Set(historico.map(h => h.modelo)).size));
   return { ok: false, motivo: semCota ? 'nenhuma IA respondeu (sem cota agora)' : 'nenhuma IA fez o teste passar', sem_cota: semCota, tentativas, historico };
 }
 
-module.exports = { lerContrato, executar, aplicar, montarPedido, resgatarFormato, nota, SISTEMA, TESTE_OK };
+module.exports = { lerContrato, executar, aplicar, montarPedido, resgatarFormato, nota, nomesDosTestes, foco, SISTEMA, TESTE_OK };

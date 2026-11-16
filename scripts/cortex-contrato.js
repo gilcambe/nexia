@@ -116,7 +116,7 @@ function modelos() {
   // CONTRATO_DEGRAUS=0 pula as grátis (teste do último degrau, plano Claude Pro); vazio = 6.
   const n = String(process.env.CONTRATO_DEGRAUS || '').trim();
   // CONTRATO_DEGRAUS=pc: só o PC2 (prova do degrau local).
-  const lista = n === 'pc' ? [] : intercalar(todos.filter(d => d.provider !== 'maquinas')).slice(0, n === '' ? 6 : Math.max(0, Math.min(12, Number(n) || 0)));
+  const lista = n === 'pc' ? [] : intercalar(todos.filter(d => d.provider !== 'maquinas')).slice(0, n === '' ? 10 : Math.max(0, Math.min(14, Number(n) || 0)));   // 16/11/2026: 10 (cota é por modelo)
   // Último degrau GRÁTIS (11/11/2026): o PC2 do dono (Ollama, sem limite de cota), pela fila "maquinas" — o PC busca
   // a tarefa, nada fica aberto. Lento (CPU), por isso só depois das IAs da internet e antes do plano Claude Pro.
   // CONTRATO_PC=0 desliga; CONTRATO_PC_MODELO troca o modelo (padrão qwen3:8b). No teste "só Claude" (degraus=0) não entra.
