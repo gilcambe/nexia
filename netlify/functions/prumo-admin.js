@@ -18,9 +18,9 @@ function createHandler(deps = {}) {
     const res = (statusCode, body) => ({ statusCode, headers: cors, body: JSON.stringify(body) });
     if (method === 'OPTIONS') return { statusCode: 204, headers: cors, body: '' };
     if (method !== 'GET' && method !== 'POST') return res(405, { error: 'Method Not Allowed' });
+    // Padrão de agenda.js: pega o token, confere o login e exige role "master".
     const auth = (headers.authorization || headers.Authorization) ? await getMw().verifyBearerToken(event).catch(() => ({ ok: false })) : { ok: false };
-    if (!auth.ok) return res(401, { error: 'Entre com sua conta.' });
-    if (auth.role !== 'master') return res(403, { error: 'Só o administrador da KERNEX entra aqui.' });
+    if (!auth.ok || auth.role !== 'master') return res(403, { error: 'Só o administrador da KERNEX entra aqui.' });
 
     // Estrutura inspirada em agenda.js: handler padronizado, resposta JSON consistente
     // e validação de parâmetros seguindo o padrão do projeto.
