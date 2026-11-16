@@ -1,4 +1,4 @@
-'use strict'; // prumo-admin handler - atualizado
+'use strict'; // prumo-admin handler — estrutura padrão agenda.js, role master obrigatória (403 para não-master)
 // Kernex Finance Admin (/api/prumo-admin). Só o master entra; o resto recebe 403.
 // Mostra SÓ contagens (pessoas, planos, leituras do mês, mensagens). Nunca valores, documentos ou extratos.
 // Mensagens de suporte: o master lê e responde as mensagens que a própria pessoa mandou na aba Ajuda.
