@@ -48,7 +48,7 @@ const PROVIDERS = Object.freeze({
   // ADR-FREE-05: Kilo Gateway. Sem chave, só modelos grátis (":free"; 200 pedidos/hora por IP). KILO_API_KEY é opcional.
   // O modelo "auto:N" é o N-ésimo grátis do catálogo vivo do gateway (kilo-catalog.js); nunca chama modelo pago.
   // raciocinio: aceita reasoning.max_tokens (16/11/2026: sem isto 3 de 4 grátis pensavam até o limite e devolviam vazio).
-  kilo:        { url: 'https://api.kilo.ai/api/gateway/chat/completions', env: 'KILO_API_KEY', keyless: true, free_only: true, catalog: true, max_output: 16384, tools: true, raciocinio: true },
+  kilo:        { url: 'https://api.kilo.ai/api/gateway/chat/completions', env: 'KILO_API_KEY', keyless: true, free_only: true, catalog: true, max_output: 16384, tools: true, raciocinio: true, timeoutMs: 240000 },
 });
 
 const DEFAULT_TIMEOUT = 120000;
@@ -121,7 +121,7 @@ function createOpenAICompatibleProvider(id, { env = process.env, fetchImpl = (..
       const est = estimateInputTokens(b);
       if (est > cfg.max_input) throw new ModelError(CODES.TOO_LARGE, `${id}: pedido de ~${est} tokens passa do teto de ${cfg.max_input} por pedido`, { provider: id, model, status: 413, estimated: est, limit: cfg.max_input });
     }
-    const t = withTimeout(req.signal, req.timeoutMs || DEFAULT_TIMEOUT);
+    const t = withTimeout(req.signal, req.timeoutMs || cfg.timeoutMs || DEFAULT_TIMEOUT);
     let res;
     try {
       res = await fetchImpl(urlFor(model), {
