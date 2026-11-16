@@ -73,7 +73,8 @@ test('M4. OpenAI-compatível (Groq): streaming com uso, chat, teto de max_tokens
   const ev = await collect(router.stream(GROQ, { system: 'S', maxTokens: 100000, messages: [{ role: 'user', content: 'oi' }] }));
   assert.deepStrictEqual(ev.filter(e => e.type === 'text').map(e => e.text), ['Olá', ', mundo', '!']);
   assert.deepStrictEqual(ev.at(-1).usage, { input_tokens: 3, output_tokens: 2 });
-  assert.strictEqual(last().body.max_tokens, 32768);
+  // 16/11/2026: Groq grátis tem limite de 8.000 tokens por minuto (entrada + saída pedida): o teto cabe nele.
+  assert.ok(last().body.max_tokens <= 8000 && last().body.max_tokens >= 1024, String(last().body.max_tokens));
   assert.deepStrictEqual(last().body.messages[0], { role: 'system', content: 'S' });
   assert.strictEqual(last().headers.authorization, `Bearer ${ENV.GROQ_API_KEY}`);
   fake.state.toolInput = { cidade: 'Recife' };

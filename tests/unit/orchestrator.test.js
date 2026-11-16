@@ -101,7 +101,7 @@ test('U4. agentes: os 10 da spec, só leitura onde deve, modelos por classe', ()
   const free = { capabilities: d => ({ available: ['google', 'groq'].includes(d.provider), tool_call: true }) };
   assert.deepStrictEqual(candidates(free, 'coding', {}).map(d => `${d.provider}:${d.model}`), ['groq:openai/gpt-oss-120b', 'groq:qwen/qwen3.8-27b',
     'groq:moonshotai/kimi-k2-instruct-0905', 'groq:llama-3.3-70b-versatile', 'groq:openai/gpt-oss-20b', 'groq:meta-llama/llama-4-scout-17b-16e-instruct',
-    'google:gemini-flash-latest', 'google:gemini-2.5-flash', 'google:gemini-flash-lite-latest', 'google:gemini-2.5-flash-lite'], 'Groq primeiro (cota grátis por modelo); Gemini de reserva (cota por modelo)');
+    'google:gemini-3.5-flash', 'google:gemini-3.1-flash-lite', 'google:gemini-flash-latest', 'google:gemma-4-31b-it'], 'Groq primeiro (cota grátis por modelo); Gemini de reserva (cota por modelo)');
   // ADR-FREE-04: a lista grátis só tem provedores grátis e vários deles (cotas separadas).
   const { FREE } = require('../../nexia-ai/orchestrator/models');
   for (const cls of Object.keys(FREE)) {
