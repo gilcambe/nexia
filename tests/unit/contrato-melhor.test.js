@@ -82,3 +82,14 @@ test('melhor anterior pior que o original (ou de outro arquivo) é ignorado', as
   assert.match(rt.chamadas[0].conteudo, /module\.exports = 4;/);
   assert.ok(!fs.existsSync(path.join(raiz, 'src/outro.js')), 'arquivo fora do contrato não é escrito');
 });
+
+test('melhoria 23: devolve a nota de partida para saber se a rodada MELHOROU', async () => {
+  const raiz = cenario();
+  const rt = router({ forte: [ARQ(8)], fraca: [ARQ(5)] });
+  const r = await executar({ ...base, contrato: c(), raiz, router: rt, modelos: [{ provider: 'g', model: 'forte' }, { provider: 'k', model: 'fraca' }], rodarTeste: rodarTeste(raiz), inicio: { 'src/a.js': 'module.exports = 7;\n' } });
+  assert.strictEqual(r.ok, false);
+  assert.strictEqual(r.notaInicio, 7 - 1000, 'nota do melhor anterior (7 pontos, 1 teste falhando)');
+  assert.ok(r.melhor.nota.valor > r.notaInicio, 'melhorou: 8 > 7');
+  const sem = await executar({ ...base, contrato: c(), raiz: cenario(), router: router({ forte: [ARQ(3)], fraca: [ARQ(2)] }), modelos: [{ provider: 'g', model: 'forte' }, { provider: 'k', model: 'fraca' }], rodarTeste: rodarTeste(cenario()) });
+  assert.strictEqual(sem.notaInicio, null, 'sem resultado anterior');
+});

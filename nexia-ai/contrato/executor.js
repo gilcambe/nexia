@@ -239,7 +239,7 @@ async function executar(o) {
   const escada = placar ? placar.ordenar(o.modelos) : o.modelos;
   const semCotaErro = e => { const s = (e && e.details && e.details.status) || 0; return s === 429 || s === 402 || /\b(429|402)\b|rate.?limit|quota|cota/i.test(String((e && e.message) || e)); };
   // 16/11/2026: o próximo degrau parte da MELHOR tentativa até agora (não do zero) e recebe o erro dela.
-  let melhor = null;
+  let melhor = null, notaInicio = null;
   // Melhoria 21: continua do MELHOR resultado da rodada anterior (ramo nexia/melhor-<n>), não do zero.
   if (o.inicio && typeof o.inicio === 'object') {
     const ini = Object.fromEntries(c.arquivos.filter(f => typeof o.inicio[f] === 'string').map(f => [f, o.inicio[f]]));
@@ -247,7 +247,7 @@ async function executar(o) {
       restaurar({ ...original, ...ini }, raiz);
       const t0 = await o.rodarTeste(c.teste);
       const n0 = nota(t0.completo || t0.saida), nb = nota(base.completo || base.saida);
-      if (!t0.ok && n0.valor > nb.valor) { melhor = { estado: guardar(c, raiz), saida: t0.saida, completo: t0.completo, nota: n0 }; log(`continua do melhor resultado anterior (${textoNota(n0)})`); }
+      if (!t0.ok && n0.valor > nb.valor) { melhor = { estado: guardar(c, raiz), saida: t0.saida, completo: t0.completo, nota: n0 }; notaInicio = n0.valor; log(`continua do melhor resultado anterior (${textoNota(n0)})`); }
       else log(`resultado anterior não serve (${t0.ok ? 'já passa sem revisão' : 'não é melhor que o original'}); começa do original`);
       restaurar(original, raiz);
     }
@@ -351,7 +351,7 @@ async function executar(o) {
   const fortesSemVez = [...new Set(escada.slice(0, 3).map(m => `${m.provider}/${m.model}`))].filter(id => { const hs = historico.filter(h => h.modelo === id); return hs.length > 0 && hs.every(temporario); });
   const semCota = historico.length > 0 && (historico.every(h => h.erro) || (comErro.length && comErro.filter(porCota).length * 2 >= new Set(historico.map(h => h.modelo)).size) || fortesSemVez.length > 0);
   return { ok: false, motivo: semCota ? (fortesSemVez.length && !historico.every(h => h.erro) ? `IA(s) forte(s) sem vez agora (${fortesSemVez.join(', ')})` : 'nenhuma IA respondeu (sem cota agora)') : 'nenhuma IA fez o teste passar', sem_cota: semCota, fortesSemVez, tentativas, historico, testeSuspeito: testeSuspeito(historico),
-    melhor: melhor ? { estado: melhor.estado, nota: melhor.nota, texto: textoNota(melhor.nota) } : null };
+    melhor: melhor ? { estado: melhor.estado, nota: melhor.nota, texto: textoNota(melhor.nota) } : null, notaInicio };
 }
 
 module.exports = { testeSuspeito, lerContrato, executar, aplicar, montarPedido, resgatarFormato, nota, nomesDosTestes, foco, referencias, SISTEMA, TESTE_OK };

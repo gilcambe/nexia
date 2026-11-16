@@ -249,6 +249,18 @@ Corrija o contrato (Arquivos/Teste) ou tire a linha "Arquivos:" para o Cortex ge
     try { require('node:fs').unlinkSync(gerado.testeArquivo); } catch { /* já saiu */ }
     return voltarParaFila(`Nenhuma IA fez o teste gerado passar (${r.tentativas} tentativa(s) em ${seg} s).\n${hist}`, 'contrato-falhou');
   }
+  // Melhoria 23: não passou, mas MELHOROU (ou é o 1º resultado guardado): volta sozinha para a fila e a próxima rodada
+  // continua do melhor resultado. Até 4 voltas; depois disso (ou sem melhora) é falha de verdade.
+  if (!r.ok && !gerado && melhorTxt && r.melhor && r.melhor.nota) {
+    const progrediu = r.notaInicio == null || r.melhor.nota.valor > r.notaInicio;
+    const cs = (await gh('GET', `/issues/${N}/comments?per_page=100`).catch(() => ({ json: [] }))).json;
+    const voltas = (Array.isArray(cs) ? cs : []).filter(x => String(x.body || '').startsWith('↻')).length;
+    if (progrediu && voltas < 4) {
+      await comentar(`↻ Ainda não passou, mas MELHOROU${r.notaInicio == null ? '' : ' em relação à rodada anterior'}. Volta sozinha para a fila e a próxima rodada continua do melhor resultado (volta ${voltas + 1} de 4). ${r.tentativas} tentativa(s) em ${seg} s.${melhorTxt}\n${hist}`);
+      for (const l of ['contrato-falhou', 'contrato-aguardando-cota']) await gh('DELETE', `/issues/${N}/labels/${l}`).catch(() => null);
+      return;
+    }
+  }
   if (!r.ok) {
     const suspeito = r.testeSuspeito ? `\n\n⚠️ ${r.testeSuspeito.ias} IAs diferentes pararam no MESMO teste: "${r.testeSuspeito.nome}". Pode ser o teste que se contradiz ou pede algo impossível: confira o teste antes de reenviar (o Cortex não pode mudar o teste).` : '';
     await comentar(`❌ Não entreguei: ${r.motivo}. ${r.tentativas} tentativa(s) em ${seg} s.${melhorTxt}\n${hist}${suspeito}`);
