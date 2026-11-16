@@ -100,3 +100,17 @@ test('executar: falha com 3 IAs presas no mesmo teste devolve testeSuspeito', as
   assert.strictEqual(r.ok, false);
   assert.deepStrictEqual(r.testeSuspeito, { nome: 'impossivel', ias: 3 });
 });
+
+// Melhoria 14b: regressão só reprova teste que PASSAVA antes (teste de tarefa futura que passa a carregar não conta).
+test('regressão: teste futuro que passa a rodar e falhar NÃO reprova; teste que passava e quebrou reprova', async () => {
+  const saida = (passam, falham, carga) => ({ ok: !falham.length && !carga, saida: 'x', completo: [...passam.map(n => `✔ ${n} (1ms)`), ...falham.map(n => `✖ ${n} (1ms)`), ...(carga ? [`✖ ${carga} (1ms)`] : [])].join('\n') + `\nℹ pass ${passam.length}\nℹ fail ${falham.length + (carga ? 1 : 0)}` });
+  for (const [quebraVelho, esperado] of [[false, true], [true, false]]) {
+    const raiz = cenario();
+    let chamadas = 0;
+    const r = await executar({ contrato: c(), raiz, memoria: false, porModelo: 1, modelos: [{ provider: 'a', model: '1' }],
+      router: { chat: async () => ({ text: ARQ(1), stop_reason: 'stop' }) },
+      rodarTeste: rodarTeste(raiz),
+      regressao: async () => (chamadas++ === 0 ? saida(['velho'], [], 'tests/futuro.test.js') : saida(quebraVelho ? [] : ['velho'], quebraVelho ? ['velho', 'futuro 1'] : ['futuro 1', 'futuro 2'])) });
+    assert.strictEqual(r.ok, esperado, quebraVelho ? 'quebrou o que passava' : 'só testes futuros falhando');
+  }
+});

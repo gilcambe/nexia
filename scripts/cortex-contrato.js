@@ -86,7 +86,7 @@ async function degrauClaudePro(c, issue) {
 function rodarTeste(cmd) {
   const env = { ...process.env }; delete env.NODE_TEST_CONTEXT;
   for (const k of Object.keys(env)) if (/KEY|TOKEN|SECRET|VAGA_/.test(k)) delete env[k];   // o teste não vê chave nenhuma
-  try { execFileSync(process.execPath, cmd.split(' ').slice(1), { stdio: 'pipe', timeout: 180000, env }); return Promise.resolve({ ok: true, saida: '' }); }
+  try { const out = execFileSync(process.execPath, cmd.split(' ').slice(1), { stdio: 'pipe', timeout: 180000, env }); return Promise.resolve({ ok: true, saida: '', completo: String(out || '') }); }
   catch (e) {
     const completo = String(e.stdout || '') + String(e.stderr || '');
     // 16/11/2026: resumo e pontuação primeiro (antes eram cortados), depois o fim da saída com os erros.

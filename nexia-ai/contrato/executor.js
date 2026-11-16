@@ -231,6 +231,8 @@ async function executar(o) {
   // Regressão (melhoria 14): nomes dos testes da suíte que já falham antes da mudança.
   const regBase = o.regressao ? await o.regressao() : null;
   const jaFalhavam = new Set(regBase && !regBase.ok ? nomesDosTestes(regBase.completo || regBase.saida).falham : []);
+  // 14b: os que PASSAVAM antes. Só eles contam como "quebrados" (teste de tarefa futura que nunca passou não conta).
+  const passavam = new Set(regBase ? nomesDosTestes(regBase.completo || regBase.saida || '').passam : []);
   let tentativas = 0;
   // Frente A (#3377): com placar de cota, quem está sem cota vai para o fim (ou sai, se houver livres).
   const placar = o.placar || null;
@@ -284,7 +286,7 @@ async function executar(o) {
       let t = await o.rodarTeste(c.teste);
       if (t.ok && o.regressao) {
         const rg = await o.regressao();
-        const novas = rg.ok ? [] : nomesDosTestes(rg.completo || rg.saida).falham.filter(x => !jaFalhavam.has(x));
+        const novas = rg.ok ? [] : nomesDosTestes(rg.completo || rg.saida).falham.filter(x => passavam.size ? passavam.has(x) : !jaFalhavam.has(x));
         const quebrouCarga = !rg.ok && !novas.length && nota(rg.completo || rg.saida).valor === -Infinity && !(regBase && !regBase.ok);
         if (novas.length || quebrouCarga) {
           log(`${m.provider}/${m.model}: passou no teste do contrato mas QUEBROU ${novas.length || 'a carga de'} outro(s) teste(s): ${novas.slice(0, 2).join(' | ').slice(0, 160)}`);
