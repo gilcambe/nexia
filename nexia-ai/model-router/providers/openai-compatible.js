@@ -46,7 +46,8 @@ const PROVIDERS = Object.freeze({
   codestral:   { url: 'https://codestral.mistral.ai/v1/chat/completions', env: 'CODESTRAL_API_KEY', max_output: 32768, tools: true },
   // ADR-FREE-05: Kilo Gateway. Sem chave, só modelos grátis (":free"; 200 pedidos/hora por IP). KILO_API_KEY é opcional.
   // O modelo "auto:N" é o N-ésimo grátis do catálogo vivo do gateway (kilo-catalog.js); nunca chama modelo pago.
-  kilo:        { url: 'https://api.kilo.ai/api/gateway/chat/completions', env: 'KILO_API_KEY', keyless: true, free_only: true, catalog: true, max_output: 16384, tools: true },
+  // raciocinio: aceita reasoning.max_tokens (16/11/2026: sem isto 3 de 4 grátis pensavam até o limite e devolviam vazio).
+  kilo:        { url: 'https://api.kilo.ai/api/gateway/chat/completions', env: 'KILO_API_KEY', keyless: true, free_only: true, catalog: true, max_output: 16384, tools: true, raciocinio: true },
 });
 
 const DEFAULT_TIMEOUT = 120000;
@@ -97,6 +98,8 @@ function createOpenAICompatibleProvider(id, { env = process.env, fetchImpl = (..
       messages: [...(req.system ? [{ role: 'system', content: req.system }] : []), ...withImages(req.messages, req.images, model)],
     };
     if (req.temperature !== undefined) b.temperature = req.temperature;
+    // Teto do "pensamento" dos modelos de raciocínio (padrão 2.500 tokens), só onde o gateway aceita.
+    if (cfg.raciocinio && req.raciocinioMax !== 0) b.reasoning = { max_tokens: req.raciocinioMax || 2500 };
     if (stream) { b.stream = true; if (cfg.usage_option) b.stream_options = { include_usage: true }; }
     if (req.tools && req.tools.length) {
       if (!cfg.tools) throw new ModelError(CODES.UNSUPPORTED, `${id} não suporta tool_call neste adapter.`, { provider: id });

@@ -37,12 +37,17 @@ const SISTEMA = [
   'Arquivo inteiro: linha "ARQUIVO: caminho" seguida do conteúdo completo entre ``` ```. Nunca use "..." no lugar de código.',
 ].join('\n');
 
+// Até este tamanho a IA manda o arquivo inteiro (mais curto e sem erro de cópia exata do SEARCH).
+const ARQUIVO_PEQUENO = 8000;
+
 function montarPedido(c, raiz, anterior) {
   const partes = [`PEDIDO:\n${c.pedido}`, `ARQUIVOS PERMITIDOS: ${c.arquivos.join(', ')}`, `TESTE DE ACEITAÇÃO: ${c.teste}`];
   for (const f of c.testes) { const p = path.join(raiz, f); if (fs.existsSync(p)) partes.push(`--- TESTE (só leitura) ${f} ---\n${fs.readFileSync(p, 'utf8').slice(0, 12000)}`); }
   for (const f of c.arquivos) {
     const p = path.join(raiz, f);
-    partes.push(fs.existsSync(p) ? `--- ARQUIVO ${f} ---\n${fs.readFileSync(p, 'utf8').slice(0, 20000)}` : `--- ARQUIVO ${f} --- (não existe: crie o arquivo inteiro)`);
+    const pequeno = fs.existsSync(p) && fs.statSync(p).size <= ARQUIVO_PEQUENO;
+    partes.push(!fs.existsSync(p) ? `--- ARQUIVO ${f} --- (não existe: crie o arquivo inteiro)`
+      : `--- ARQUIVO ${f} ---${pequeno ? ' (arquivo pequeno: responda com o ARQUIVO INTEIRO novo, sem SEARCH/REPLACE)' : ''}\n${fs.readFileSync(p, 'utf8').slice(0, 20000)}`);
   }
   if (anterior) partes.push(`A TENTATIVA ANTERIOR NÃO PASSOU. Corrija a partir do estado atual dos arquivos acima.\nMOTIVO:\n${anterior.slice(-4000)}`);
   return partes.join('\n\n');
@@ -105,10 +110,11 @@ async function executar(o) {
       tentativas++;
       let texto = '';
       try {
-        const out = await o.router.chat(m, { system: SISTEMA, messages: [{ role: 'user', content: montarPedido(c, raiz, anterior) }], maxTokens: 8000 });
+        const out = await o.router.chat(m, { system: SISTEMA, messages: [{ role: 'user', content: montarPedido(c, raiz, anterior) }], maxTokens: 16000, raciocinioMax: 2500 });
         texto = (out && out.text) || '';
         if (placar) placar.sucesso(m);
       } catch (e) { if (placar && semCotaErro(e)) placar.marcar(m, 'rate'); historico.push({ modelo: `${m.provider}/${m.model}`, erro: String(e.message || e).slice(0, 200) }); log(`${m.provider}/${m.model}: sem resposta (${String(e.message || e).slice(0, 80)})`); break; }
+      if (!texto.trim()) { historico.push({ modelo: `${m.provider}/${m.model}`, erro: 'resposta vazia' }); log(`${m.provider}/${m.model}: resposta vazia (próximo degrau)`); break; }
       const ap = aplicar(texto, c, raiz);
       if (!ap.aplicados.length) {
         anterior = `Nenhuma mudança aplicada. ${ap.recusas.join(' | ') || 'Responda só com blocos de edição no formato pedido.'}`;
