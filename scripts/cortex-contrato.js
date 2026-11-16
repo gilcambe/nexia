@@ -146,6 +146,12 @@ const cota = require('../nexia-ai/model-router/cota');
   // sem isto toda parte de pedido grande era ignorada e o pedido nunca andava (12/11/2026, #3532).
   const doBot = issue.user && issue.user.login === 'github-actions[bot]';
   if (!CONFIAVEIS.has(issue.author_association) && !doBot) { console.log(`#${N}: autor sem permissão (${issue.author_association}); ignorado`); return; }
+  // Melhoria 20 (16/11/2026): disparo direto (numero=N) e cron podiam pegar a MESMA tarefa e abrir PRs duplicados
+  // (#102 do ZeloMe gerou 3 PRs). Se já há PR aberto desta tarefa, não refaz. CONTRATO_REFAZER=1 força.
+  if (process.env.CONTRATO_REFAZER !== '1') {
+    const ja = require('../nexia-ai/contrato/pr').prAbertoDoContrato((await gh('GET', '/pulls?state=open&per_page=100')).json, N);
+    if (ja) { console.log(`#${N}: já tem PR aberto (#${ja.number}); não refaço`); return; }
+  }
   const texto = `${issue.title}\n\n${issue.body || ''}`;
   let c = lerContrato(texto);
   const { router, lista } = modelos();

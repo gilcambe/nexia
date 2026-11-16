@@ -9,6 +9,13 @@ function ramoDoContrato(numero, agora = Date.now()) {
   return `nexia/contrato-${n}-${Number(agora).toString(36)}`;
 }
 
+// Melhoria 20: PR aberto desta tarefa (ramo nexia/contrato-<n>-...), ou null. Evita refazer e abrir PR duplicado.
+function prAbertoDoContrato(pulls, numero) {
+  const n = Number(numero);
+  if (!Array.isArray(pulls)) return null;
+  return pulls.find(pr => pr && pr.head && typeof pr.head.ref === 'string' && pr.head.ref.startsWith(`nexia/contrato-${n}-`)) || null;
+}
+
 function corpoDoPr({ numero, teste, modelo, tentativas, seg, arquivos, hist = '' }) {
   return [
     `Fecha #${numero}`,
@@ -22,4 +29,4 @@ function corpoDoPr({ numero, teste, modelo, tentativas, seg, arquivos, hist = ''
   ].join('\n');
 }
 
-module.exports = { ramoDoContrato, corpoDoPr };
+module.exports = { ramoDoContrato, corpoDoPr, prAbertoDoContrato };
