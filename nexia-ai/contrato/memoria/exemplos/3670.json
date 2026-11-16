@@ -1,0 +1,12 @@
+{
+  "numero": "3670",
+  "data": "2026-11-16",
+  "modelo": "PR #3712",
+  "tentativas": null,
+  "pedido": "[Parte 1/7 de #3650] Criar modelo.json\n\n<!-- cortex-plano {\"pai\":3650,\"k\":1,\"n\":7,\"depende\":[],\"arquivos\":[\"modelos-projeto/hostinger-php/modelo.json\"],\"antes\":[],\"pronto\":\"arquivo presente, JSON parseable e contém as chaves requeridas\",\"limite\":400} -->\nCriar o arquivo modelos-projeto/hostinger-php/modelo.json contendo um JSON válido com as chaves: nome (string), versao (string), variaveis (array) listando exatamente: nome, titulo, whatsapp, cor.\n\nArquivos desta parte (mexa SÓ neles): `modelos-projeto/hostinger-php/modelo.json`.\nPronto quando: arquivo presente, JSON parseable e contém as chaves requeridas.\nLimite: até 400 linhas mudadas. Arquivo grande: leia por trechos (start_line/end_line ou find) e mude só o trecho.\nEsta parte roda ao mesmo tempo que outras; não mexa em arquivos fora da lista.",
+  "arquivos": [
+    "modelos-projeto/hostinger-php/modelo.json"
+  ],
+  "teste": "node --test tests/unit/contrato-modelo-hostinger-php.test.js",
+  "diff": "diff --git a/modelos-projeto/hostinger-php/modelo.json b/modelos-projeto/hostinger-php/modelo.json\nnew file mode 100644\nindex 000000000..af2c82c6c\n--- /dev/null\n+++ b/modelos-projeto/hostinger-php/modelo.json\n@@ -0,0 +1,10 @@\n+{\n+  \"nome\": \"modelo_hostinger_php\",\n+  \"versao\": \"1.0.0\",\n+  \"variaveis\": [\n+    \"nome\",\n+    \"titulo\",\n+    \"whatsapp\",\n+    \"cor\"\n+  ]\n+}\n"
+}

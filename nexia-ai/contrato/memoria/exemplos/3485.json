@@ -1,0 +1,12 @@
+{
+  "numero": "3485",
+  "data": "2026-11-16",
+  "modelo": "PR #3494",
+  "tentativas": null,
+  "pedido": "Contrato: lib/slug.js\n\nCriar `lib/slug.js` exportando `slug(texto)`: endereço do cliente para <slug>.kernex.com.br. Minúsculas, sem acento, só a-z/0-9 separados por um hífen, sem hífen nas pontas, no máximo 40 caracteres (sem hífen no fim depois de cortar). Texto sem letra/número → \"\".\nSem dependências. CommonJS.",
+  "arquivos": [
+    "lib/slug.js"
+  ],
+  "teste": "node --test tests/contrato/slug.test.js",
+  "diff": "diff --git a/lib/slug.js b/lib/slug.js\nnew file mode 100644\nindex 000000000..ac8866ddd\n--- /dev/null\n+++ b/lib/slug.js\n@@ -0,0 +1,37 @@\n+'use strict';\n+\n+/**\n+ * Converte um texto em slug para uso em URLs.\n+ * - Remove acentos e diacríticos.\n+ * - Converte para minúsculas.\n+ * - Substitui caracteres não alfanuméricos por hífens.\n+ * - Remove hífens duplicados e nas pontas.\n+ * - Limita a 40 caracteres, garantindo que não haja hífen no final.\n+ * @param {string} texto\n+ * @returns {string}\n+ */\n+function slug(texto) {\n+  if (typeof texto !== 'string') {\n+    return '';\n+  }\n+\n+  // Normaliza e remove diacríticos (acentos)\n+  let s = texto.normalize('NFD').replace(/[\\u0300-\\u036f]/g, '');\n+\n+  // Converte para minúsculas e substitui caracteres não alfanuméricos por hífen\n+  s = s.toLowerCase().replace(/[^a-z0-9]+/g, '-');\n+\n+  // Remove hífens das pontas\n+  s = s.replace(/^[-]+|[-]+$/g, '');\n+\n+  // Limita a 40 caracteres\n+  if (s.length > 40) {\n+    s = s.slice(0, 40);\n+    // Caso o corte termine em hífen, remove-o\n+    s = s.replace(/[-]+$/g, '');\n+  }\n+\n+  return s;\n+}\n+\n+module.exports = { slug };\n"
+}

@@ -1,0 +1,12 @@
+{
+  "numero": "3503",
+  "data": "2026-11-16",
+  "modelo": "PR #3598",
+  "tentativas": null,
+  "pedido": "Horário de atendimento\n\nCriar em lib/expediente.js uma função que diga se a loja está aberta: recebe o dia da semana (0 = domingo ... 6 = sábado) e a hora \"HH:MM\". Segunda a sexta abre 08:00 e fecha 18:00; sábado 08:00 às 12:00; domingo fechado. Às 18:00 em ponto já está fechado.",
+  "arquivos": [
+    "lib/expediente.js"
+  ],
+  "teste": "node --test tests/unit/contrato-expediente.test.js",
+  "diff": "diff --git a/lib/expediente.js b/lib/expediente.js\nnew file mode 100644\nindex 000000000..fc7155b92\n--- /dev/null\n+++ b/lib/expediente.js\n@@ -0,0 +1,48 @@\n+/**\n+ * Verifica se a loja está aberta em determinado dia e horário.\n+ *\n+ * @param {number} day  Dia da semana (0 = domingo … 6 = sábado)\n+ * @param {string} time Horário no formato \"HH:MM\"\n+ * @returns {boolean} true se estiver aberta, false caso contrário\n+ */\n+function isOpen(day, time) {\n+  // Validação do dia\n+  if (!Number.isInteger(day) || day < 0 || day > 6) {\n+    return false;\n+  }\n+\n+  // Validação e parsing do horário\n+  const match = /^([01]\\d|2[0-3]):([0-5]\\d)$/.exec(time);\n+  if (!match) {\n+    return false;\n+  }\n+  const hour = Number(match[1]);\n+  const minute = Number(match[2]);\n+  const totalMinutes = hour * 60 + minute;\n+\n+  // Definir intervalos de funcionamento (em minutos desde 00:00)\n+  const OPEN_MORNING = 8 * 60; // 08:00\n+  const CLOSE_FRIDAY_EVENING = 18 * 60; // 18:00\n+  const CLOSE_SATURDAY_NOON = 12 * 60; // 12:00\n+\n+  switch (day) {\n+    case 0: // domingo\n+      return false;\n+\n+    case 1: // segunda\n+    case 2: // terça\n+    case 3: // quarta\n+    case 4: // quinta\n+    case 5: // sexta\n+      return totalMinutes >= OPEN_MORNING && totalMinutes < CLOSE_FRIDAY_EVENING;\n+\n+    case 6: // sábado\n+      return totalMinutes >= OPEN_MORNING && totalMinutes < CLOSE_SATURDAY_NOON;\n+\n+    default:\n+      return false;\n+  }\n+}\n+\n+// Exporta a função (pode ser como exportação direta ou como propriedade)\n+module.exports = isOpen;\n"
+}

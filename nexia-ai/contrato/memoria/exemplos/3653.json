@@ -1,0 +1,12 @@
+{
+  "numero": "3653",
+  "data": "2026-11-16",
+  "modelo": "PR #3677",
+  "tentativas": null,
+  "pedido": "[Parte 3/8 de #3647] Estilizar página\n\n<!-- cortex-plano {\"pai\":3647,\"k\":3,\"n\":8,\"depende\":[],\"arquivos\":[\"modelos-projeto/painel/estilo.css\"],\"antes\":[],\"pronto\":\"arquivo carregado no navegador sem erros e aplica estilos visíveis (por exemplo, .grafico { max‑width: 100%; }).\",\"limite\":400} -->\nCriar/ajustar estilos em modelos-projeto/painel/estilo.css para layout básico da barra de gráficos e responsividade.\n\nArquivos desta parte (mexa SÓ neles): `modelos-projeto/painel/estilo.css`.\nPronto quando: arquivo carregado no navegador sem erros e aplica estilos visíveis (por exemplo, .grafico { max‑width: 100%; })..\nLimite: até 400 linhas mudadas. Arquivo grande: leia por trechos (start_line/end_line ou find) e mude só o trecho.\nEsta parte roda ao mesmo tempo que outras; não mexa em arquivos fora da lista.",
+  "arquivos": [
+    "modelos-projeto/painel/estilo.css"
+  ],
+  "teste": "node --test tests/unit/contrato-estilo.test.js",
+  "diff": "diff --git a/modelos-projeto/painel/estilo.css b/modelos-projeto/painel/estilo.css\nnew file mode 100644\nindex 000000000..37550c2e8\n--- /dev/null\n+++ b/modelos-projeto/painel/estilo.css\n@@ -0,0 +1,19 @@\n+.grafico {\n+  max-width: 100%;\n+  height: auto;\n+  margin: 0 auto;\n+}\n+\n+.barra {\n+  display: flex;\n+  align-items: flex-end;\n+  gap: 8px;\n+  flex-wrap: wrap;\n+}\n+\n+@media (max-width: 600px) {\n+  .barra {\n+    flex-direction: column;\n+    align-items: stretch;\n+  }\n+}\n"
+}

@@ -1,0 +1,12 @@
+{
+  "numero": "3623",
+  "data": "2026-11-16",
+  "modelo": "PR #3624",
+  "tentativas": null,
+  "pedido": "[Parte 2/2 de #3621] Criar arquivo LEIA-ME.md do modelo site\n\n<!-- cortex-plano {\"pai\":3621,\"k\":2,\"n\":2,\"depende\":[],\"arquivos\":[\"modelos-projeto/site/LEIA-ME.md\"],\"antes\":[],\"pronto\":\"o arquivo LEIA-ME.md foi criado com no máximo 5 linhas e sem palavras proibidas\",\"limite\":400} -->\nCriar o arquivo `LEIA-ME.md` na pasta `modelos-projeto/site/` contendo no máximo 5 linhas, descrevendo o modelo, a versão e as variáveis usadas.\n\nArquivos desta parte (mexa SÓ neles): `modelos-projeto/site/LEIA-ME.md`.\nPronto quando: o arquivo LEIA-ME.md foi criado com no máximo 5 linhas e sem palavras proibidas.\nLimite: até 400 linhas mudadas. Arquivo grande: leia por trechos (start_line/end_line ou find) e mude só o trecho.\nEsta parte roda ao mesmo tempo que outras; não mexa em arquivos fora da lista.",
+  "arquivos": [
+    "modelos-projeto/site/LEIA-ME.md"
+  ],
+  "teste": "node --test tests/unit/contrato-3621.test.js",
+  "diff": "diff --git a/modelos-projeto/site/LEIA-ME.md b/modelos-projeto/site/LEIA-ME.md\nnew file mode 100644\nindex 000000000..05d716805\n--- /dev/null\n+++ b/modelos-projeto/site/LEIA-ME.md\n@@ -0,0 +1,3 @@\n+Modelo de site - versão 1.0\n+Este modelo inclui variáveis configuráveis.\n+Use este modelo para iniciar projetos.\n"
+}

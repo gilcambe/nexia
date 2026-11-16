@@ -1,0 +1,12 @@
+{
+  "numero": "3597",
+  "data": "2026-11-16",
+  "modelo": "PR #3605",
+  "tentativas": null,
+  "pedido": "[Parte 2/2 de #3593] Renomear aplicativo no twa-manifest.json\n\n<!-- cortex-plano {\"pai\":3593,\"k\":2,\"n\":2,\"depende\":[],\"arquivos\":[\"apps/body-coach/android/twa-manifest.json\"],\"antes\":[],\"pronto\":\"O arquivo `apps/body-coach/android/twa-manifest.json` deve conter `\\\"name\\\": \\\"Body Coach\\\"` e o `packageId` deve continuar sendo `\\\"app.nexia.bodycoach\\\"`.\",\"limite\":400} -->\nNo arquivo `apps/body-coach/android/twa-manifest.json`, alterar o valor da chave `\"name\"` de `\"NEXIA Body Coach\"` para `\"Body Coach\"`. **Não modificar** a chave `packageId` (`app.nexia.bodycoach`), ela deve permanecer com o valor original.\n\nArquivos desta parte (mexa SÓ neles): `apps/body-coach/android/twa-manifest.json`.\nPronto quando: O arquivo `apps/body-coach/android/twa-manifest.json` deve conter `\"name\": \"Body Coach\"` e o `packageId` deve continuar sendo `\"app.nexia.bodycoach\"`..\nLimite: até 400 linhas mudadas. Arquivo grande: leia por trechos (start_line/end_line ou find) e mude só o trecho.\nEsta parte roda ao mesmo tempo que outras; não mexa em arquivos fora da lista.",
+  "arquivos": [
+    "apps/body-coach/android/twa-manifest.json"
+  ],
+  "teste": "node --test tests/unit/contrato-body-coach.test.js",
+  "diff": "diff --git a/apps/body-coach/android/twa-manifest.json b/apps/body-coach/android/twa-manifest.json\nindex 47845eea7..a0d2e1eb1 100644\n--- a/apps/body-coach/android/twa-manifest.json\n+++ b/apps/body-coach/android/twa-manifest.json\n@@ -1,7 +1,7 @@\n {\n   \"packageId\": \"app.nexia.bodycoach\",\n   \"host\": \"bodycoach.kernex.com.br\",\n-  \"name\": \"NEXIA Body Coach\",\n+  \"name\": \"Body Coach\",\n   \"launcherName\": \"Body Coach\",\n   \"display\": \"standalone\",\n   \"orientation\": \"portrait\",\n"
+}

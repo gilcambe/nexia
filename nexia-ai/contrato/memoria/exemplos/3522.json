@@ -1,0 +1,12 @@
+{
+  "numero": "3522",
+  "data": "2026-11-16",
+  "modelo": "PR #3577",
+  "tentativas": null,
+  "pedido": "Contrato de prova do PC2: lib/iniciais.js\n\nCriar `lib/iniciais.js` exportando `iniciais(nome)`: as iniciais em maiusculas das 2 primeiras palavras do nome, ignorando \"da\", \"de\", \"do\", \"das\", \"dos\" e \"e\" (menos na primeira palavra) e espacos extras. Texto vazio devolve \"\". CommonJS, sem dependencias.",
+  "arquivos": [
+    "lib/iniciais.js"
+  ],
+  "teste": "node --test tests/contrato/iniciais.test.js",
+  "diff": "diff --git a/lib/iniciais.js b/lib/iniciais.js\nnew file mode 100644\nindex 000000000..7d4364b15\n--- /dev/null\n+++ b/lib/iniciais.js\n@@ -0,0 +1,35 @@\n+'use strict';\n+\n+/**\n+ * Retorna as iniciais em maiúsculas das duas primeiras palavras de um nome,\n+ * ignorando palavras de conexão (da, de, do, das, dos, e) que não sejam a primeira.\n+ *\n+ * @param {string} nome - O nome completo.\n+ * @returns {string} As iniciais ou string vazia.\n+ */\n+function iniciais(nome) {\n+  if (!nome) return '';\n+  // Normaliza espaços\n+  const palavras = nome\n+    .trim()\n+    .replace(/\\s+/g, ' ')\n+    .split(' ');\n+  if (palavras.length === 0) return '';\n+\n+  const ignorar = new Set(['da', 'de', 'do', 'das', 'dos', 'e']);\n+\n+  // Remove palavras ignoradas (exceto a primeira)\n+  const filtrado = palavras.filter((p, i) => i === 0 || !ignorar.has(p.toLowerCase()));\n+\n+  // Pega até duas palavras\n+  const selecionadas = filtrado.slice(0, 2);\n+\n+  // Constrói as iniciais\n+  const inic = selecionadas\n+    .map(p => p[0].toUpperCase())\n+    .join('');\n+\n+  return inic;\n+}\n+\n+module.exports = { iniciais };\n"
+}

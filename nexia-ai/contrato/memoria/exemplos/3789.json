@@ -1,0 +1,12 @@
+{
+  "numero": "3789",
+  "data": "2026-11-16",
+  "modelo": "PR #3791",
+  "tentativas": null,
+  "pedido": "[Parte 5/5 de #3782] Cadastrar módulo no catálogo da Fabrica\n\n<!-- cortex-plano {\"pai\":3782,\"k\":5,\"n\":5,\"depende\":[],\"arquivos\":[\"nexia-ai/fabrica/catalogo.json\"],\"antes\":[],\"pronto\":\"catalogo.json contém o objeto novo e a Fabrica reconhece o módulo ao listar os disponíveis.\",\"limite\":400} -->\nAdicionar ao arquivo nexia-ai/fabrica/catalogo.json a entrada para o novo módulo \"Cota das IAs\" (id, nome, faz, apelidos, nichos, nivel, pronto, origem, onde) seguindo o formato existente.\n\nArquivos desta parte (mexa SÓ neles): `nexia-ai/fabrica/catalogo.json`.\nPronto quando: catalogo.json contém o objeto novo e a Fabrica reconhece o módulo ao listar os disponíveis..\nLimite: até 400 linhas mudadas. Arquivo grande: leia por trechos (start_line/end_line ou find) e mude só o trecho.\nEsta parte roda ao mesmo tempo que outras; não mexa em arquivos fora da lista.",
+  "arquivos": [
+    "nexia-ai/fabrica/catalogo.json"
+  ],
+  "teste": "node --test tests/unit/contrato-catalogo.test.js",
+  "diff": "diff --git a/nexia-ai/fabrica/catalogo.json b/nexia-ai/fabrica/catalogo.json\nindex 8a2ffebef..1cd9d006e 100644\n--- a/nexia-ai/fabrica/catalogo.json\n+++ b/nexia-ai/fabrica/catalogo.json\n@@ -614,8 +614,42 @@\n       \"pronto\": true,\n       \"origem\": \"Kernex Store\",\n       \"onde\": \"kernex-clientes/modulos/orcamento (instalar: Central › Kernex Store)\"\n+    },\n+    {\n+      \"id\": \"cota-das-ias\",\n+      \"nome\": \"Cota das IAs\",\n+      \"faz\": \"mostra o uso e a cota restante de cada IA grátis e avisa quando uma esgota\",\n+      \"apelidos\": [\n+        \"cota\",\n+        \"uso das ias\",\n+        \"placar de cota\"\n+      ],\n+      \"nichos\": [\n+        \"*\"\n+      ],\n+      \"nivel\": 1,\n+      \"pronto\": true,\n+      \"origem\": \"nexia-ai\",\n+      \"onde\": \"fabrica\"\n     }\n   ],\n+  \"cota-das-ias\": {\n+    \"id\": \"cota-das-ias\",\n+    \"nome\": \"Cota das IAs\",\n+    \"faz\": \"mostra o uso e a cota restante de cada IA grátis e avisa quando uma esgota\",\n+    \"apelidos\": [\n+      \"cota\",\n+      \"uso das ias\",\n+      \"placar de cota\"\n+    ],\n+    \"nichos\": [\n+      \"*\"\n+    ],\n+    \"nivel\": 1,\n+    \"pronto\": true,\n+    \"origem\": \"nexia-ai\",\n+    \"onde\": \"fabrica\"\n+  },\n   \"modelos\": [\n     {\n       \"id\": \"demo-viagens\",\n"
+}

@@ -1,0 +1,12 @@
+{
+  "numero": "3671",
+  "data": "2026-11-16",
+  "modelo": "PR #3713",
+  "tentativas": null,
+  "pedido": "[Parte 2/7 de #3650] Criar LEIA-ME.md\n\n<!-- cortex-plano {\"pai\":3650,\"k\":2,\"n\":7,\"depende\":[],\"arquivos\":[\"modelos-projeto/hostinger-php/LEIA-ME.md\"],\"antes\":[],\"pronto\":\"arquivo presente com ≤5 linhas de texto\",\"limite\":400} -->\nCriar modelos-projeto/hostinger-php/LEIA-ME.md com no máximo 5 linhas explicando brevemente o modelo e como usar.\n\nArquivos desta parte (mexa SÓ neles): `modelos-projeto/hostinger-php/LEIA-ME.md`.\nPronto quando: arquivo presente com ≤5 linhas de texto.\nLimite: até 400 linhas mudadas. Arquivo grande: leia por trechos (start_line/end_line ou find) e mude só o trecho.\nEsta parte roda ao mesmo tempo que outras; não mexa em arquivos fora da lista.",
+  "arquivos": [
+    "modelos-projeto/hostinger-php/LEIA-ME.md"
+  ],
+  "teste": "node --test tests/unit/contrato-leia-me-2.test.js",
+  "diff": "diff --git a/modelos-projeto/hostinger-php/LEIA-ME.md b/modelos-projeto/hostinger-php/LEIA-ME.md\nnew file mode 100644\nindex 000000000..9c89f5108\n--- /dev/null\n+++ b/modelos-projeto/hostinger-php/LEIA-ME.md\n@@ -0,0 +1,4 @@\n+Modelo de projeto Hostinger PHP\n+Use PHP 8.1 ou superior\n+Configure o banco de dados MySQL\n+Faça deploy no servidor\n"
+}
