@@ -18,7 +18,8 @@ const PROVIDERS = Object.freeze({
   google:      { url: 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions', env: 'GEMINI_API_KEY', max_output: 65536, tools: true, vision: true },
   openai:      { url: 'https://api.openai.com/v1/chat/completions', env: 'OPENAI_API_KEY', max_output: 16384, usage_option: true, tools: true },
   // visionModels: só estes modelos do provedor aceitam imagem (o resto do provedor continua sem visão).
-  groq:        { url: 'https://api.groq.com/openai/v1/chat/completions', env: 'GROQ_API_KEY', max_output: 32768, tools: true, visionModels: /llama-4/i },
+  // tpm: limite grátis por minuto (entrada + saída pedida); acima dele o Groq responde 413 (16/11/2026).
+  groq:        { url: 'https://api.groq.com/openai/v1/chat/completions', env: 'GROQ_API_KEY', max_output: 32768, tools: true, visionModels: /llama-4/i, tpm: 8000, esforco: /gpt-oss/i },
   deepseek:    { url: 'https://api.deepseek.com/v1/chat/completions', env: 'DEEPSEEK_API_KEY', max_output: 8192, tools: true },
   xai:         { url: 'https://api.x.ai/v1/chat/completions', env: 'XAI_API_KEY', max_output: 32768, tools: true },
   perplexity:  { url: 'https://api.perplexity.ai/chat/completions', env: 'PERPLEXITY_API_KEY', max_output: 8192, tools: false },
@@ -100,6 +101,8 @@ function createOpenAICompatibleProvider(id, { env = process.env, fetchImpl = (..
     if (req.temperature !== undefined) b.temperature = req.temperature;
     // Teto do "pensamento" dos modelos de raciocínio (padrão 2.500 tokens), só onde o gateway aceita.
     if (cfg.raciocinio && req.raciocinioMax !== 0) b.reasoning = { max_tokens: req.raciocinioMax || 2500 };
+    if (cfg.esforco && cfg.esforco.test(model) && req.raciocinioMax !== 0) b.reasoning_effort = 'low';
+    if (cfg.tpm) { const cabe = cfg.tpm - estimateInputTokens(b) - 300; if (cabe > 0) b.max_tokens = Math.max(1024, Math.min(b.max_tokens, cabe)); }
     if (stream) { b.stream = true; if (cfg.usage_option) b.stream_options = { include_usage: true }; }
     if (req.tools && req.tools.length) {
       if (!cfg.tools) throw new ModelError(CODES.UNSUPPORTED, `${id} não suporta tool_call neste adapter.`, { provider: id });

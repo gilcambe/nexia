@@ -87,7 +87,12 @@ function rodarTeste(cmd) {
   const env = { ...process.env }; delete env.NODE_TEST_CONTEXT;
   for (const k of Object.keys(env)) if (/KEY|TOKEN|SECRET|VAGA_/.test(k)) delete env[k];   // o teste não vê chave nenhuma
   try { execFileSync(process.execPath, cmd.split(' ').slice(1), { stdio: 'pipe', timeout: 180000, env }); return Promise.resolve({ ok: true, saida: '' }); }
-  catch (e) { return Promise.resolve({ ok: false, saida: (String(e.stdout || '') + String(e.stderr || '')).slice(-6000) }); }
+  catch (e) {
+    const completo = String(e.stdout || '') + String(e.stderr || '');
+    // 16/11/2026: resumo e pontuação primeiro (antes eram cortados), depois o fim da saída com os erros.
+    const resumo = completo.split('\n').filter(l => /^\s*(?:ℹ|#) (?:tests|pass|fail) \d|PONTUACAO: \d/.test(l)).join('\n');
+    return Promise.resolve({ ok: false, completo, saida: `${resumo ? `RESUMO DO TESTE:\n${resumo}\n\n` : ''}${completo.slice(-(6000 - resumo.length))}` });
+  }
 }
 
 // Redundância (11/11, lote em linguagem natural): os 4 degraus eram todos do Groq e, com 5 tarefas juntas, o limite
@@ -173,7 +178,7 @@ const cota = require('../nexia-ai/model-router/cota');
   if (!c.ok) { await comentar(`Contrato inválido: ${c.erros.join('; ')}.\nModelo:\n\`\`\`\nO que fazer...\nArquivos: \`caminho/arquivo.js\`\nTeste: \`node --test tests/unit/x.test.js\`\n\`\`\``); await rotular('contrato-invalido'); return; }
   console.log(`#${N}: ${c.arquivos.join(', ')} | ${c.teste} | degraus: ${lista.map(d => `${d.provider}/${d.model}`).join(' > ')}`);
   const t0 = Date.now();
-  let r = await executar({ contrato: c, raiz: process.cwd(), router, modelos: lista, rodarTeste, porModelo: 2, placar: cota.getPlacar(), log: s => console.log('  ' + s) });
+  let r = await executar({ contrato: c, raiz: process.cwd(), router, modelos: lista, rodarTeste, porModelo: 3, placar: cota.getPlacar(), log: s => console.log('  ' + s) });
   // 12/11: problema do PRÓPRIO contrato (teste não existe, teste já passa): nenhuma IA foi tentada. Antes isso ia
   // direto para o Claude Pro sem dizer o motivo (gastava a cota dele e escondia o erro). Agora explica e para.
   if (!r.ok && r.tentativas === 0) {

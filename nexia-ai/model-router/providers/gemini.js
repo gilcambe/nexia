@@ -7,7 +7,8 @@ const { withTimeout, sseData } = require('../messages');
 const ENV_KEY = 'GEMINI_API_KEY';
 const BASE = 'https://generativelanguage.googleapis.com/v1beta/models';
 const DEFAULT_TIMEOUT = 120000;
-const maxOutput = model => (/^gemini-2\.5/.test(model) ? 65536 : 8192);
+// 16/11/2026: Gemini 3.x e os "-latest" também aceitam 65.536 (com 8.192 o pensamento comia a resposta: parada=length).
+const maxOutput = model => (/^gemini-(2\.5|3)|-latest$/.test(model) ? 65536 : 8192);
 
 function createGeminiProvider({ env = process.env, fetchImpl = (...a) => fetch(...a), baseUrl = BASE } = {}) {
   const capabilities = model => ({ chat: true, streaming: true, tool_call: false, structured_output: true, max_output_tokens: maxOutput(model) });
@@ -19,6 +20,8 @@ function createGeminiProvider({ env = process.env, fetchImpl = (...a) => fetch(.
       generationConfig: { maxOutputTokens: Math.min(req.maxTokens || 4096, maxOutput(model)) },
     };
     if (req.temperature !== undefined) b.generationConfig.temperature = req.temperature;
+    // Teto do pensamento (16/11/2026): sem ele o Gemini pensava minutos e o pedido expirava. Gemma não aceita.
+    if (req.raciocinioMax !== 0 && !/gemma/i.test(model)) b.generationConfig.thinkingConfig = { thinkingBudget: req.raciocinioMax || 2500 };
     if (req.system) b.systemInstruction = { parts: [{ text: req.system }] };
     return b;
   }

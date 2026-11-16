@@ -34,8 +34,9 @@ const { contasExtra } = require('../model-router/providers/openai-compatible');
 const g = model => ({ provider: 'groq', model });
 const KILO = [1, 2, 3, 4, 5].map(n => ({ provider: 'kilo', model: `auto:${n}` }));
 const TAIL = [
-  { provider: 'google', model: 'gemini-flash-latest' }, { provider: 'google', model: 'gemini-2.5-flash' },
-  { provider: 'google', model: 'gemini-flash-lite-latest' }, { provider: 'google', model: 'gemini-2.5-flash-lite' },
+  // 16/11/2026: gemini-2.5-* dá 404 para chave nova; medidos com teto de pensamento: 3.5-flash 6 s, 3.1-flash-lite 3 s, flash-latest 76 s.
+  { provider: 'google', model: 'gemini-3.5-flash' }, { provider: 'google', model: 'gemini-3.1-flash-lite' },
+  { provider: 'google', model: 'gemini-flash-latest' }, { provider: 'google', model: 'gemma-4-31b-it' },
   { provider: 'codestral', model: 'codestral-latest' },
   { provider: 'nvidia', model: 'openai/gpt-oss-120b' }, // qwen3-coder-480b saiu da NVIDIA (410 em 12/11)
   { provider: 'cloudflare', model: '@cf/openai/gpt-oss-120b' },
