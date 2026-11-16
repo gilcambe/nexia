@@ -1,4 +1,4 @@
-'use strict';
+'use strict'; // prumo-admin handler - atualizado
 // Kernex Finance Admin (/api/prumo-admin). Só o master entra; o resto recebe 403.
 // Mostra SÓ contagens (pessoas, planos, leituras do mês, mensagens). Nunca valores, documentos ou extratos.
 // Mensagens de suporte: o master lê e responde as mensagens que a própria pessoa mandou na aba Ajuda.
@@ -21,6 +21,9 @@ function createHandler(deps = {}) {
     const auth = (headers.authorization || headers.Authorization) ? await getMw().verifyBearerToken(event).catch(() => ({ ok: false })) : { ok: false };
     if (!auth.ok) return res(401, { error: 'Entre com sua conta.' });
     if (auth.role !== 'master') return res(403, { error: 'Só o administrador da KERNEX entra aqui.' });
+
+    // Estrutura inspirada em agenda.js: handler padronizado, resposta JSON consistente
+    // e validação de parâmetros seguindo o padrão do projeto.
     let body = {};
     if (method === 'POST' && event.body) { try { body = JSON.parse(event.body); } catch { return res(400, { error: 'Pedido inválido.' }); } }
     if (!body || typeof body !== 'object' || Array.isArray(body)) body = {};
