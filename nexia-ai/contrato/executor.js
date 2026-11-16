@@ -11,7 +11,9 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { parseEditBlocks, safePath, FORMAT_HELP } = require('../orchestrator/edit-blocks');
 
-const TESTE_OK = /^node --test( [\w@./-]+\.test\.(?:js|cjs|mjs))+$/;   // nada de shell livre vindo de issue
+// Opções aceitas (lista fechada): --test-force-exit, --test-timeout=N, --test-concurrency=N. Nada de shell livre vindo de issue.
+const OPCAO_TESTE = /^--test-(?:force-exit|timeout=\d{1,6}|concurrency=\d{1,2})$/;
+const TESTE_OK = /^node --test(?: --test-(?:force-exit|timeout=\d{1,6}|concurrency=\d{1,2}))*( [\w@./-]+\.test\.(?:js|cjs|mjs))+$/;
 
 /** Lê o contrato do corpo da issue: "Arquivos: `a`, `b`" e "Teste: `node --test x.test.js`". */
 function lerContrato(corpo) {
@@ -23,7 +25,7 @@ function lerContrato(corpo) {
   if (!arquivos.length) erros.push('faltam os arquivos permitidos (linha "Arquivos: `caminho`")');
   if (arquivos.length > 6) erros.push('no máximo 6 arquivos por contrato (divida a tarefa)');
   if (!TESTE_OK.test(teste)) erros.push('falta o teste de aceitação (linha "Teste: `node --test tests/unit/x.test.js`")');
-  const testes = teste.split(' ').slice(2);
+  const testes = teste.split(' ').slice(2).filter(x => !OPCAO_TESTE.test(x));
   if (testes.some(f => arquivos.includes(f))) erros.push('o arquivo de teste não pode estar entre os arquivos que a IA muda');
   const pedido = t.replace(/^.*\b(?:Arquivos|Teste)\b\s*:.*$/gim, '').trim().slice(0, 6000);
   return { ok: !erros.length, erros, arquivos, teste, testes, pedido };
@@ -42,9 +44,32 @@ const SISTEMA = [
 // Até este tamanho a IA manda o arquivo inteiro (mais curto e sem erro de cópia exata do SEARCH).
 const ARQUIVO_PEQUENO = 8000;
 
+// Referências: arquivos do repo citados no pedido entre crases (ex.: `api/src/app.js`), só leitura.
+// Limites para caber nas IAs grátis: até 6 arquivos, 6000 caracteres cada, 16000 no total.
+const REF_MAX_ARQ = 6, REF_MAX_CADA = 6000, REF_MAX_TOTAL = 16000;
+function referencias(c, raiz) {
+  const vistos = new Set([...c.arquivos, ...c.testes]), saida = [];
+  let total = 0;
+  for (const m of String(c.pedido || '').matchAll(/`([\w@./-]+\.(?:js|cjs|mjs|ts|json|sql|html|css))`/g)) {
+    const f = m[1].replace(/^\.\//, '');
+    if (vistos.has(f) || f.includes('..') || path.isAbsolute(f) || /(^|\/)\.env|node_modules\//.test(f)) continue;
+    vistos.add(f);
+    const p = path.join(raiz, f);
+    if (!fs.existsSync(p) || !fs.statSync(p).isFile()) continue;
+    let txt = fs.readFileSync(p, 'utf8');
+    if (txt.length > REF_MAX_CADA) txt = txt.slice(0, REF_MAX_CADA) + '\n/* ... (cortado) */';
+    if (total + txt.length > REF_MAX_TOTAL) break;
+    total += txt.length;
+    saida.push(`--- REFERÊNCIA (só leitura, NÃO altere; use as funções como estão) ${f} ---\n${txt}`);
+    if (saida.length >= REF_MAX_ARQ) break;
+  }
+  return saida;
+}
+
 function montarPedido(c, raiz, anterior) {
   const partes = [`PEDIDO:\n${c.pedido}`, `ARQUIVOS PERMITIDOS: ${c.arquivos.join(', ')}`, `TESTE DE ACEITAÇÃO: ${c.teste}`];
   for (const f of c.testes) { const p = path.join(raiz, f); if (fs.existsSync(p)) partes.push(`--- TESTE (só leitura) ${f} ---\n${fs.readFileSync(p, 'utf8').slice(0, 12000)}`); }
+  partes.push(...referencias(c, raiz));
   for (const f of c.arquivos) {
     const p = path.join(raiz, f);
     const pequeno = fs.existsSync(p) && fs.statSync(p).size <= ARQUIVO_PEQUENO;
@@ -232,4 +257,4 @@ async function executar(o) {
   return { ok: false, motivo: semCota ? 'nenhuma IA respondeu (sem cota agora)' : 'nenhuma IA fez o teste passar', sem_cota: semCota, tentativas, historico };
 }
 
-module.exports = { lerContrato, executar, aplicar, montarPedido, resgatarFormato, nota, nomesDosTestes, foco, SISTEMA, TESTE_OK };
+module.exports = { lerContrato, executar, aplicar, montarPedido, resgatarFormato, nota, nomesDosTestes, foco, referencias, SISTEMA, TESTE_OK };
