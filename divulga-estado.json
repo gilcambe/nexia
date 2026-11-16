@@ -1,5 +1,5 @@
 {
-  "rodizio": 66,
+  "rodizio": 67,
   "feitos": [
     "body-coach-01",
     "body-coach-02",
@@ -9,23 +9,6 @@
     "body-coach-06"
   ],
   "historico": [
-    {
-      "quando": "2026-10-18T00:03:10.514Z",
-      "id": null,
-      "cliente": "body-coach",
-      "resultados": [
-        {
-          "canal": "facebook",
-          "ok": true,
-          "ref": "1380111745183159_122096790213518156"
-        },
-        {
-          "canal": "instagram",
-          "ok": false,
-          "erro": "Instagram publicar: Media ID is not available"
-        }
-      ]
-    },
     {
       "quando": "2026-10-18T14:02:01.804Z",
       "id": null,
@@ -1112,6 +1095,25 @@
       ],
       "formato": "reel",
       "serie": "pergunta-enquete"
+    },
+    {
+      "quando": "2026-11-16T20:27:56.010Z",
+      "id": null,
+      "cliente": "body-coach",
+      "resultados": [
+        {
+          "canal": "facebook",
+          "ok": true,
+          "ref": "1380111745183159_122112539487518156"
+        },
+        {
+          "canal": "instagram",
+          "ok": true,
+          "ref": "18144649111619697"
+        }
+      ],
+      "formato": "reel",
+      "serie": "3-erros"
     }
   ],
   "seguidores": [
@@ -1213,6 +1215,10 @@
     },
     {
       "dia": "2026-11-15",
+      "total": 3
+    },
+    {
+      "dia": "2026-11-16",
       "total": 3
     }
   ]
