@@ -194,6 +194,7 @@ function createHandler(deps = {}) {
 
     // Autenticação
     const authHeader = headers.authorization || headers.Authorization;
+    // Papel vem exclusivamente do middleware (fonte confiável). Sem token válido, não há papel.
     const auth = authHeader ? await getMw().verifyBearerToken(event).catch(() => ({ ok: false })) : { ok: false };
     if (!auth.ok) return res(401, { error: 'Entre com sua conta.' });
 
