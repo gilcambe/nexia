@@ -83,5 +83,7 @@ function createHandler(deps = {}) {
     }
   };
 }
-exports.handler = createHandler();
+// Exportação do handler para uso nas rotas
+const handler = createHandler();
+exports.handler = handler;
 exports.createHandler = createHandler;
