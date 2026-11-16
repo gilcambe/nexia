@@ -178,7 +178,10 @@ const cota = require('../nexia-ai/model-router/cota');
   if (!c.ok) { await comentar(`Contrato inválido: ${c.erros.join('; ')}.\nModelo:\n\`\`\`\nO que fazer...\nArquivos: \`caminho/arquivo.js\`\nTeste: \`node --test tests/unit/x.test.js\`\n\`\`\``); await rotular('contrato-invalido'); return; }
   console.log(`#${N}: ${c.arquivos.join(', ')} | ${c.teste} | degraus: ${lista.map(d => `${d.provider}/${d.model}`).join(' > ')}`);
   const t0 = Date.now();
-  let r = await executar({ contrato: c, raiz: process.cwd(), router, modelos: lista, rodarTeste, porModelo: 3, placar: cota.getPlacar(), log: s => console.log('  ' + s) });
+  const reg = String(process.env.CORTEX_REGRESSAO || '').trim();
+  const regressao = /^node --test(?: --test-(?:force-exit|timeout=\d{1,6}|concurrency=\d{1,2}))*(?: [\w@./*-]+\.test\.(?:js|cjs|mjs))+$/.test(reg) ? () => rodarTeste(reg) : null;
+  if (reg && !regressao) console.log('  CORTEX_REGRESSAO ignorada (formato não aceito)');
+  let r = await executar({ contrato: c, raiz: process.cwd(), router, modelos: lista, rodarTeste, regressao, porModelo: 3, placar: cota.getPlacar(), log: s => console.log('  ' + s) });
   // 12/11: problema do PRÓPRIO contrato (teste não existe, teste já passa): nenhuma IA foi tentada. Antes isso ia
   // direto para o Claude Pro sem dizer o motivo (gastava a cota dele e escondia o erro). Agora explica e para.
   if (!r.ok && r.tentativas === 0) {

@@ -189,6 +189,9 @@ async function executar(o) {
   const base = await o.rodarTeste(c.teste);
   if (base.ok) return { ok: false, motivo: 'o teste já passa antes da mudança: não prova nada (escreva um teste que falhe sem a mudança)', tentativas: 0, historico };
   const original = guardar(c, raiz);
+  // Regressão (melhoria 14): nomes dos testes da suíte que já falham antes da mudança.
+  const regBase = o.regressao ? await o.regressao() : null;
+  const jaFalhavam = new Set(regBase && !regBase.ok ? nomesDosTestes(regBase.completo || regBase.saida).falham : []);
   let tentativas = 0;
   // Frente A (#3377): com placar de cota, quem está sem cota vai para o fim (ou sai, se houver livres).
   const placar = o.placar || null;
@@ -235,9 +238,18 @@ async function executar(o) {
         log(`${m.provider}/${m.model}: nada aplicado (parada=${parada || '?'}, ${texto.length} caracteres; recusas: ${ap.recusas.join(' | ').slice(0, 200) || 'nenhum bloco reconhecido'}; início: ${JSON.stringify(texto.slice(0, 160))})`);
         continue;
       }
-      const t = await o.rodarTeste(c.teste);
+      let t = await o.rodarTeste(c.teste);
+      if (t.ok && o.regressao) {
+        const rg = await o.regressao();
+        const novas = rg.ok ? [] : nomesDosTestes(rg.completo || rg.saida).falham.filter(x => !jaFalhavam.has(x));
+        const quebrouCarga = !rg.ok && !novas.length && nota(rg.completo || rg.saida).valor === -Infinity && !(regBase && !regBase.ok);
+        if (novas.length || quebrouCarga) {
+          log(`${m.provider}/${m.model}: passou no teste do contrato mas QUEBROU ${novas.length || 'a carga de'} outro(s) teste(s): ${novas.slice(0, 2).join(' | ').slice(0, 160)}`);
+          t = { ok: false, regressao: true, saida: `O TESTE DO CONTRATO PASSOU, mas a sua mudança QUEBROU outros testes do projeto que passavam antes: ${novas.map(x => '"' + x + '"').join(', ') || '(arquivo de teste não carrega)'}. Mantenha o teste do contrato passando e conserte sem quebrar estes. Exemplo do erro:\n${(rg.saida || '').slice(-3000)}`, completo: t.completo };
+        }
+      }
       historico.push({ modelo: `${m.provider}/${m.model}`, aplicados: ap.aplicados, recusas: ap.recusas, teste: t.ok });
-      const n = nota(t.completo || t.saida);
+      const n = t.regressao ? { falhas: 1, pontos: 0, total: 0, valor: -0.5 } : nota(t.completo || t.saida);
       const melhorou = !t.ok && (!melhor || n.valor > melhor.nota.valor);
       if (melhorou) melhor = { estado: guardar(c, raiz), saida: t.saida, completo: t.completo, nota: n };
       // Está melhorando na última rodada dela: ganha mais uma (até 3 extras por IA).
