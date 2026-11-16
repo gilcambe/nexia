@@ -65,6 +65,8 @@ function searchBlocks(lines, path, out) {
       (mid ? repl : find).push(lines[j]);
     }
     if (closed && path && find.join('\n').trim()) out.edits.push({ path, find: find.join('\n'), replace: repl.join('\n') });
+    // Melhoria 19: SEARCH vazio = o REPLACE é o arquivo inteiro (jeito comum de IA grátis criar arquivo).
+    else if (closed && path && repl.join('\n').trim()) { out.files = out.files.filter(x => x.path !== path); out.files.push({ path, content: `${repl.join('\n')}\n` }); }
     else if (!closed || !path) out.problems.push(!path ? 'bloco SEARCH sem "ARQUIVO: caminho" antes' : 'bloco SEARCH sem ">>>>>>> REPLACE"');
     i = j;
   }

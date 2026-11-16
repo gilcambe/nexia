@@ -129,3 +129,17 @@ test('413 por tamanho: repete enxuto na mesma IA, sem gastar tentativa', async (
   assert.match(pedidos[0], /REFERENCIA-GRANDE/);
   assert.doesNotMatch(pedidos[1], /REFERENCIA-GRANDE/);
 });
+
+// Melhoria 19: SEARCH vazio = arquivo inteiro (visto na #82 do ZeloMe).
+test('SEARCH vazio com arquivo inteiro no REPLACE cria o arquivo (antes era descartado em silêncio)', async () => {
+  const raiz = cenario();
+  const resposta = 'ARQUIVO: src/a.js\n<<<<<<< SEARCH\n\n=======\nmodule.exports = 1;\n>>>>>>> REPLACE\n';
+  const r = await executar({ contrato: c(), raiz, memoria: false, porModelo: 1, modelos: [{ provider: 'a', model: '1' }],
+    router: { chat: async () => ({ text: resposta, stop_reason: 'stop' }) }, rodarTeste: rodarTeste(raiz) });
+  assert.strictEqual(r.ok, true);
+  assert.match(ler(raiz), /module.exports = 1;/);
+  const { parseEditBlocks } = require('../../nexia-ai/orchestrator/edit-blocks');
+  const b = parseEditBlocks('ARQUIVO: web/x.html\n<<<<<<< SEARCH\n=======\n<p>oi</p>\n>>>>>>> REPLACE\nARQUIVO: web/y.js\n<<<<<<< SEARCH\nvelho\n=======\nnovo\n>>>>>>> REPLACE');
+  assert.deepStrictEqual(b.files, [{ path: 'web/x.html', content: '<p>oi</p>\n' }]);
+  assert.deepStrictEqual(b.edits.map(e => e.path), ['web/y.js']);
+});
