@@ -4,7 +4,7 @@
 (function () {
   'use strict';
   const $ = (id) => document.getElementById(id);
-  const ABAS = ['inicio', 'documentos', 'contas', 'cartoes', 'dividas', 'investimentos', 'economizar', 'metas', 'familia', 'impostos', 'alertas', 'conexoes', 'assistente', 'carteira', 'gastos', 'compras', 'objetivos', 'orcamento', 'consultor', 'pontos', 'viagens', 'ajuda', 'mercado', 'robos'];
+  const ABAS = ['inicio', 'documentos', 'contas', 'cartoes', 'dividas', 'investimentos', 'economizar', 'metas', 'familia', 'impostos', 'alertas', 'conexoes', 'assistente', 'carteira', 'gastos', 'compras', 'objetivos', 'orcamento', 'consultor', 'pontos', 'viagens', 'ajuda', 'mercado', 'robos', 'aposentadoria', 'fluxo', 'carreira'];
   const btnMenu = $('btn-menu');
   const navAbas = $('abas');
   const fundoMenu = $('fundo-menu');

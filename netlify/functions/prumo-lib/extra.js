@@ -161,6 +161,8 @@ async function agirExtra(acao, body, c) {
   if (cot) return cot;
   const sal = await require('./salario').agirSalario(acao, body, c);
   if (sal) return sal;
+  const apo = await require('./aposentadoria').agirAposentadoria(acao, body, c);
+  if (apo) return apo;
   const robo = await require('./robos').agirRobos(acao, body, c);
   if (robo) return robo;
   const doc = await require('./documentos').agirDoc(acao, body, c);
@@ -193,6 +195,8 @@ async function agirExtra(acao, body, c) {
   if (aju) return aju;
   const opf = await require('./openfinance').agirOpenFinance(acao, body, c);
   if (opf) return opf;
+  const flx = await require('./fluxo').agirFluxo(acao, body, c);
+  if (flx) return flx;
   const { base, listar, salvar, apagar, deps, agoraIso } = c;
   const lerOrcamento = async () => { const s = await base.collection('orcamento').doc('atual').get(); return s && s.exists ? s.data() : null; };
   const holerites = async () => (await listar(base.collection('holerites'))).sort((a, b) => String(b.mes).localeCompare(String(a.mes)));
