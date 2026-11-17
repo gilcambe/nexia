@@ -26,6 +26,18 @@
 //      os lidos com ok:false aparecem numa mensagem dizendo quantos não deu para ler;
 //    - não usa mais holerite_ler nem holerite_salvar.
 // 3) prumo/sw.js: '/prumo/salario.js' na lista CASCA.
+// 4) (17/11, revisão do PR #3945, que lia só 1 arquivo e salvava o objeto errado) O FLUXO é testado rodando a tela:
+//    - MB.salario.camposRecebimento(p, mesSel) -> campos do formulário (MB.ui.formulario) com nome: 'tipo' (opcoes =
+//      <option> de cada tipo, o de p.tipo com selected), 'data_pagamento' (tipo 'date'), 'mes' (tipo 'month'),
+//      'bruto', 'liquido' (tipo 'number') e 'empresa'; valores vindos de p (mes padrão = mesSel).
+//    - MB.salario.corpoPagamento(p, d) -> { ...p, ...d, bruto: Number, liquido: Number } (sem os campos ok/erro/lido).
+//    - Holerite: TODOS os arquivos escolhidos (até 5) vão juntos em `const { imagens } = await MB.pdf.paraImagens(arquivos,
+//      reduzir)` (fotos e PDF juntos; é assim que pdf.js funciona) e depois em salario_ler { tipo, imagens }.
+//    - Para cada lido ok de holerite: formulario('Confira o recebimento', MB.salario.camposRecebimento(lido.pagamento,
+//      mesSel), (d) => MB.api('pagamento_salvar', MB.salario.corpoPagamento(lido.pagamento, d))).
+//    - Para cada lido ok de ponto: MB.api('ponto_salvar', lido.ponto).
+//    - 'Lançar à mão' usa o mesmo formulário com p = {}.
+//    - Falhas: MB.ui.ok com a quantidade que não deu para ler. O <input type="file"> tem id="sal-arq".
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
@@ -100,4 +112,94 @@ test('aba Salário usa a API nova, aceita PDF e lê holerite e folha de ponto', 
   assert.match(o, /data-acao="salario-base"|\[data-acao="salario-base"\]|'salario-base'/);
   assert.doesNotMatch(o, /holerite_ler|holerite_salvar/, 'não usa mais a leitura antiga');
   assert.match(ler('sw.js'), /'\/prumo\/salario\.js'/);
+});
+
+// ---------- Fluxo (item 4): roda prumo/orcamento.js com elementos falsos ----------
+function montarTela(respostaLer) {
+  const chamadas = []; const forms = []; const avisos = []; const pdfs = [];
+  const stubs = {};
+  const stub = (sel) => (stubs[sel] = stubs[sel] || { sel, onclick: null, onchange: null, dataset: {}, files: [], value: '', click() {}, closest() { return null; }, addEventListener() {} });
+  const el = { innerHTML: '', querySelector: stub, querySelectorAll: () => [], addEventListener() {}, appendChild() {} };
+  const window = { MB: { telas: {} } };
+  const MB = window.MB;
+  MB.api = async (acao, dados) => {
+    chamadas.push({ acao, dados });
+    if (acao === 'orcamento_resumo') return { orcamento: { fixas: [], guardar: [], limites: {} }, alertas: [], renda: 0, fixas: 0, guardar: 0, cartao: 0, sobra: 0, holerite_mes: null };
+    if (acao === 'objetivo_listar') return { objetivos: [] };
+    if (acao === 'salario_previsao') return { mes: '2026-11', recebidos: [], total_recebido: 0, previsao: null, motivo: 'Informe seu salário base para eu prever o fechamento.' };
+    if (acao === 'salario_ler') return { lidos: respostaLer };
+    return { ok: true };
+  };
+  const reduzir = async (f) => `R:${f.name}`;
+  MB.ui = { aba() {}, brl: (v) => `R$ ${v}`, esc: (s) => String(s == null ? '' : s), TIPOS: {}, CATS: {}, hoje: () => '2026-11-20', opcoes: () => '', barra: () => '',
+    formulario: (titulo, campos, aoSalvar) => { forms.push({ titulo, campos, aoSalvar }); }, reduzir, recarregar() {}, ok: (m) => { avisos.push(m); }, aviso: (m) => { avisos.push(m); } };
+  MB.pdf = { ehPdf: (a) => /\.pdf$/.test(a.name), MAX: 5, paraImagens: async (arqs, red) => { pdfs.push({ arqs, red }); const imagens = []; for (const a of arqs) { if (/\.pdf$/.test(a.name)) imagens.push(`P1:${a.name}`, `P2:${a.name}`); else imagens.push(await red(a)); } return { imagens: imagens.slice(0, 5), cortou: false }; } };
+  const document = { createElement: () => ({}), body: { appendChild: (s) => { if (s.onload) setTimeout(s.onload, 0); } }, querySelector: () => null };
+  const ctx = { window, document, console, setTimeout, clearTimeout, Promise };
+  vm.runInNewContext(ler('salario.js'), ctx);
+  vm.runInNewContext(ler('orcamento.js'), ctx);
+  return { MB, el, stub, chamadas, forms, avisos, pdfs };
+}
+const espera = () => new Promise((r) => setTimeout(r, 30));
+const campo = (campos, nome) => campos.find((c) => c.nome === nome);
+
+test('funções puras do formulário de recebimento', () => {
+  const s = carregar();
+  const c = s.camposRecebimento({ tipo: 'decimo_terceiro_1', data_pagamento: '2026-11-19', mes: '2026-11', bruto: 5883.37, liquido: 5883.37, empresa: 'X' }, '2026-10');
+  assert.match(campo(c, 'tipo').opcoes, /value="decimo_terceiro_1"[^>]*selected/);
+  assert.match(campo(c, 'tipo').opcoes, /value="adiantamento"/);
+  assert.equal(campo(c, 'data_pagamento').tipo, 'date');
+  assert.equal(campo(c, 'data_pagamento').valor, '2026-11-19');
+  assert.equal(campo(c, 'mes').valor, '2026-11');
+  assert.equal(campo(c, 'liquido').tipo, 'number');
+  assert.equal(campo(s.camposRecebimento({}, '2026-10'), 'mes').valor, '2026-10', 'mês padrão = mês da tela');
+  const corpo = s.corpoPagamento({ tipo: 'adiantamento', mes: '2026-11', ok: true }, { data_pagamento: '2026-11-13', bruto: '4434.35', liquido: '4434.35' });
+  assert.equal(corpo.liquido, 4434.35); assert.equal(corpo.bruto, 4434.35);
+  assert.equal(corpo.tipo, 'adiantamento'); assert.equal(corpo.data_pagamento, '2026-11-13');
+  assert.equal('ok' in corpo, false);
+});
+
+test('fluxo holerite: lê TODOS os arquivos (foto + PDF), confere cada um e salva o pagamento certo', async () => {
+  const t = montarTela([{ ok: true, pagamento: { tipo: 'adiantamento', mes: '2026-11', data_pagamento: '2026-11-13', bruto: 4434.35, liquido: 4434.35 } },
+    { ok: true, pagamento: { tipo: 'decimo_terceiro_1', mes: '2026-11', data_pagamento: '2026-11-19', bruto: 5883.37, liquido: 5883.37 } },
+    { ok: false, erro: 'Não consegui ler esta imagem.' }]);
+  await t.MB.telas.orcamento(t.el);
+  assert.equal(typeof t.stub('#sal-holerite').onclick, 'function', 'botão #sal-holerite ligado');
+  t.stub('#sal-holerite').onclick();
+  const arq = t.stub('#sal-arq');
+  assert.equal(typeof arq.onchange, 'function', '<input type=file id="sal-arq"> com onchange');
+  arq.files = [{ name: 'adiant.png', type: 'image/png' }, { name: 'decimo.pdf', type: 'application/pdf' }];
+  await arq.onchange(); await espera();
+  assert.equal(t.pdfs.length, 1, 'uma chamada a MB.pdf.paraImagens com todos os arquivos');
+  assert.equal(t.pdfs[0].arqs.length, 2, 'os 2 arquivos (não só 1)');
+  const ler1 = t.chamadas.find((c) => c.acao === 'salario_ler');
+  assert.ok(ler1, 'chamou salario_ler');
+  assert.equal(ler1.dados.tipo, 'holerite');
+  assert.deepEqual([...ler1.dados.imagens], ['R:adiant.png', 'P1:decimo.pdf', 'P2:decimo.pdf']);
+  assert.equal(t.forms.length, 2, 'um formulário de conferência por recebimento lido');
+  assert.match(campo(t.forms[0].campos, 'tipo').opcoes, /value="adiantamento"[^>]*selected/);
+  assert.equal(campo(t.forms[1].campos, 'data_pagamento').valor, '2026-11-19');
+  await t.forms[0].aoSalvar({ tipo: 'adiantamento', data_pagamento: '2026-11-13', mes: '2026-11', bruto: '4434.35', liquido: '4434.35', empresa: '' });
+  const salvo = t.chamadas.find((c) => c.acao === 'pagamento_salvar');
+  assert.ok(salvo, 'salvou com pagamento_salvar');
+  assert.equal(salvo.dados.tipo, 'adiantamento'); assert.equal(salvo.dados.data_pagamento, '2026-11-13'); assert.equal(salvo.dados.liquido, 4434.35);
+  assert.equal('ok' in salvo.dados, false, 'não manda o envelope { ok, pagamento }');
+  assert.ok(t.avisos.some((m) => /1/.test(String(m))), 'avisa que 1 não deu para ler');
+});
+
+test('fluxo folha de ponto: salva o ponto lido; lançar à mão abre o formulário completo', async () => {
+  const ponto = { mes: '2026-11', he50: 10, he100: 0, noturnas: 0, faltas: 0 };
+  const t = montarTela([{ ok: true, ponto }]);
+  await t.MB.telas.orcamento(t.el);
+  t.stub('#sal-ponto').onclick();
+  const arq = t.stub('#sal-arq');
+  arq.files = [{ name: 'ponto.jpg', type: 'image/jpeg' }];
+  await arq.onchange(); await espera();
+  assert.equal(t.chamadas.find((c) => c.acao === 'salario_ler').dados.tipo, 'ponto');
+  const ps = t.chamadas.find((c) => c.acao === 'ponto_salvar');
+  assert.ok(ps, 'salvou com ponto_salvar');
+  assert.deepEqual({ ...ps.dados }, ponto, 'manda o ponto lido (não { ok, ponto })');
+  t.stub('#sal-manual').onclick();
+  const f = t.forms[t.forms.length - 1];
+  assert.ok(f && campo(f.campos, 'tipo') && campo(f.campos, 'data_pagamento'), 'formulário à mão tem tipo e data do pagamento');
 });
