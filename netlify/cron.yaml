@@ -2,5 +2,5 @@
 # Executa todo dia às 03:00 UTC (meia-noite BRT)
 
 [[functions]]
-  path = "/api/prumo-backup"
+  function = "prumo-backup"
   schedule = "0 3 * * *"
