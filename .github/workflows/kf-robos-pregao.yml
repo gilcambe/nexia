@@ -1,0 +1,26 @@
+# Objetivo: Kernex Finance: robôs de investimento conferem a carteira de hora em hora no pregão e avisam por e-mail.
+name: Kernex Finance - robôs no pregão
+on:
+  schedule:
+    - cron: '15 13-20 * * 1-5'  # 10h15 às 17h15 de Brasília, seg a sex
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  conferir:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Conferir os robôs
+        env:
+          FIREBASE_SERVICE_ACCOUNT_BASE64: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_BASE64 }}
+          BREVO_API_KEY: ${{ secrets.BREVO_API_KEY1 || secrets.BREVO_API_KEY }}
+          BREVO_SENDER: ${{ secrets.BREVO_SENDER || vars.BREVO_SENDER }}
+          BRAPI_TOKEN: ${{ secrets.BRAPI_TOKEN }}
+        run: node scripts/kf-robos-pregao.js
