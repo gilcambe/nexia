@@ -16,10 +16,10 @@ test('PA1. manifest: name Prumo, start_url /prumo/, ícone próprio', () => {
   assert.ok(m.icons.some((i) => i.src.endsWith('icone.svg')));
 });
 
-test('PA2. ícone é azul com K e sem NEXIA', () => {
+test('PA2. ícone sem NEXIA', () => {
+  // 17/11/2026: o dono pediu ícone estiloso; o resto do ícone (degradê, desenho sem <text>) está no contrato
+  // tests/contrato/finance-icone.test.js.
   const svg = ler('icone.svg');
-  assert.match(svg, />K</);
-  assert.match(svg, /#2f6bff/);
   assert.doesNotMatch(svg, /nexia/i);
 });
 
