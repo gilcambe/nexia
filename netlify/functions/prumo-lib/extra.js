@@ -161,6 +161,8 @@ async function agirExtra(acao, body, c) {
   if (cot) return cot;
   const sal = await require('./salario').agirSalario(acao, body, c);
   if (sal) return sal;
+  const apo = await require('./aposentadoria').agirAposentadoria(acao, body, c);
+  if (apo) return apo;
   const robo = await require('./robos').agirRobos(acao, body, c);
   if (robo) return robo;
   const doc = await require('./documentos').agirDoc(acao, body, c);
