@@ -261,6 +261,7 @@ function createHandler(deps = {}) {
 // Netlify schedule function handler para backup diário
 exports.handler = async (event, context) => {
   // Ajuste para garantir que o trigger do Netlify Schedule seja reconhecido
+  // Endpoint de suporte para chamadas via API: /api/prumo-backup?acao=backup_diario
   if (event.schedule === '0 3 * * *') {
     const db = require('./firebase-init').db;
     return await executarBackupDiario(db);
