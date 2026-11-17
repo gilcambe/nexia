@@ -275,13 +275,14 @@ function normalizarLido(b, dataPrint) {
 // Modelos grátis com visão, do mais rápido ao mais forte. Vários provedores: se a cota de um acabar
 // (o Gemini grátis vive no limite por causa do Cortex), o próximo lê.
 const VISAO = [
+  // Gemini atual primeiro (os gemini-2.5-* dão 404 com chave nova desde 16/11; ver nexia-ai/orchestrator/models.js).
+  { provider: 'google', model: 'gemini-3.5-flash' }, { provider: 'google', model: 'gemini-3.1-flash-lite' },
   // Testado ao vivo em 04/11/2026 (scripts/prumo-ler-print-ao-vivo.js): NVIDIA 90B leu banco e valores certos.
   { provider: 'nvidia', model: 'meta/llama-3.2-90b-vision-instruct' },
   // NVIDIA 11B, llama-4, gemma-3, phi-4 e nemotron-vl saíram do ar (404/410) em 04/11/2026.
   // Workers AI entra pela pista do binding (viaWorkersAi), sem chave.
   { provider: 'mistral', model: 'mistral-small-latest' },
-  { provider: 'google', model: 'gemini-2.5-flash-lite' }, { provider: 'google', model: 'gemini-flash-lite-latest' },
-  { provider: 'google', model: 'gemini-2.5-flash' }, { provider: 'google', model: 'gemini-flash-latest' },
+  { provider: 'google', model: 'gemini-flash-lite-latest' }, { provider: 'google', model: 'gemini-flash-latest' },
   { provider: 'openrouter', model: 'google/gemma-3-27b-it:free' },
   { provider: 'openrouter', model: 'qwen/qwen2.5-vl-72b-instruct:free' },
 ];
@@ -294,16 +295,27 @@ async function lerPrint(imagens, deps) {
   // Os prints são lidos ao mesmo tempo (até 5), cada um tentando os modelos em ordem.
   const inicio = Date.now();
   const ai = deps.ai !== undefined ? deps.ai : globalThis.__NEXIA_AI__;
-  // Cada print corre em duas pistas ao mesmo tempo: a lista de IAs grátis e o Workers AI do próprio
-  // Cloudflare (sem chave). Vale a primeira que devolver o JSON certo.
-  const ler = (img) => {
-    const pistas = [viaLista(img)];
-    if (ai && typeof ai.run === 'function') pistas.push(viaWorkersAi(ai, img, falhas));
-    return Promise.any(pistas.map((x) => x.then((j) => j || Promise.reject(new Error('nada'))))).catch(() => null);
+  // Qualidade antes de velocidade: a lista de IAs é tentada antes e só vale a leitura cuja soma bate com o
+  // total do print. O Workers AI (sem chave) só entra se a lista não trouxer leitura que bata.
+  const bate = (j) => {
+    const t = valorLido(j.total_print);
+    if (!(Number.isFinite(t) && t > 0)) return true;
+    const soma = j.itens.reduce((a, x) => { const v = valorLido(x && x.valor); return a + (Number.isFinite(v) ? Math.abs(v) : 0); }, 0);
+    return Math.abs(t - soma) <= t * 0.01;
+  };
+  const ler = async (img) => {
+    const daLista = await viaLista(img);
+    if (daLista && daLista.bateu) return daLista.j;
+    if (ai && typeof ai.run === 'function') {
+      const w = await viaWorkersAi(ai, img, falhas);
+      if (w && bate(w)) return w;
+      return (daLista && daLista.j) || w || null;
+    }
+    return daLista ? daLista.j : null;
   };
   const lidos = await Promise.all(imagens.map(ler));
   async function viaLista(img) {
-    let tentou = 0;
+    let tentou = 0; let melhor = null;
     for (const d of lista) {
       try {
         const cap = router.capabilities(d);
@@ -315,11 +327,14 @@ async function lerPrint(imagens, deps) {
         const ms = Math.min(tentou++ === 0 ? 100000 : 30000, resta);
         const out = await Promise.race([router.chat(d, { system: LER_PRINT, messages: [{ role: 'user', content: 'Leia este print e devolva o JSON.' }], images: [img], maxTokens: 8192, temperature: 0, timeoutMs: ms }), new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), ms + 3000))]);
         const j = extrairJson(out && out.text);
-        if (j && Array.isArray(j.itens)) return j;
-        falhas.push(`${d.model}: resposta sem JSON`);
+        if (j && Array.isArray(j.itens)) {
+          if (bate(j)) return { j, bateu: true };
+          if (!melhor) melhor = j;
+          falhas.push(`${d.model}: soma não bate com o total`);
+        } else falhas.push(`${d.model}: resposta sem JSON`);
       } catch (e) { falhas.push(`${d.model}: ${String((e && (e.code || e.message)) || 'erro').slice(0, 60)}`); }
     }
-    return null;
+    return melhor ? { j: melhor, bateu: false } : null;
   }
   const conferencia = [];
   for (const lido of lidos) {
