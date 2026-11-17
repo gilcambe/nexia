@@ -219,14 +219,14 @@ function createHandler(deps = {}) {
     }
 
     try {
-          // 1. Exportação (LGPD) - suporta /prumo-admin/export
-    if (acao === 'export' || acao === 'exportar' || path.includes('/export')) {
+      // 1. Exportação (LGPD) - suporta /prumo-admin/export
+      if (acao === 'export' || acao === 'exportar' || path.includes('/export') || path.includes('/prumo-admin/export')) {
         const dados = await exportarDadosUsuario(db, targetUid);
         return res(200, { ok: true, acao: 'export', dados });
       }
 
       // 2. Exclusão / Direito ao esquecimento (LGPD) - suporta /prumo-admin/delete
-      if (acao === 'delete' || acao === 'apagar' || path.includes('/delete')) {
+      if (acao === 'delete' || acao === 'apagar' || path.includes('/delete') || path.includes('/prumo-admin/delete')) {
         if (body.confirmacao !== 'EXCLUIR_DADOS_DEFINITIVAMENTE') {
           return res(400, {
             error: 'Confirmação necessária. Envie { confirmacao: "EXCLUIR_DADOS_DEFINITIVAMENTE" } para confirmar o apagamento conforme LGPD.',
