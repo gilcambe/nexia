@@ -209,8 +209,6 @@ function createHandler(deps = {}) {
     const isMaster = auth.role === 'master';
     const targetUid = body.uid || q.uid || auth.uid;
 
-    // Apenas master pode aceder a dados de outros para exportação/deleção administrativa
-    const isMaster = auth.role === 'master';
     if (targetUid !== auth.uid && !isMaster) {
       return res(403, { error: 'Acesso não autorizado aos dados de outro usuário.' });
     }
