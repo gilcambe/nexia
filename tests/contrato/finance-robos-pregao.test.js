@@ -55,7 +55,13 @@ function cenario() {
 }
 function stub() {
   const chamadas = [];
-  cot.carteiraAoVivo = async (itens, op) => { chamadas.push(itens.length); if (!op || typeof op.fetch !== 'function') throw new Error('sem deps.fetch, passe o fetch global ((...a) => fetch(...a))'); return { itens: [{ id: 'c1', ticker: 'PETR4', vivo: { preco: 30, variacao_dia_pct: -5, valor: 300 }, proventos: null }], total: 300, por_tipo: { acoes: 300 }, assessor: {} }; };
+  cot.carteiraAoVivo = async (itens, op) => { chamadas.push(itens.length); if (!op || typeof op.fetch !== 'function') throw new Error('sem deps.fetch, passe o fetch global ((...a) => fetch(...a))');
+    // 2ª entrega (#3895): "const fetch = (deps && deps.fetch) || ((...a) => fetch(...a))" chama a SI MESMA (o fetch de
+    // dentro é a constante nova), e no servidor trava. Aqui o fetch passado é CHAMADO e tem que chegar ao fetch global.
+    const antes = globalThis.fetch; let chegou = false;
+    globalThis.fetch = async () => { chegou = true; return { ok: true, json: async () => ({}) }; };
+    try { await Promise.race([op.fetch('https://exemplo.invalid/'), new Promise((_, n) => setTimeout(() => n(new Error('fetch não respondeu')), 500))]); } catch (e) { throw new Error('o fetch passado falhou: ' + e.message + ' (não dê o nome "fetch" à constante; use globalThis.fetch)'); } finally { globalThis.fetch = antes; }
+    if (!chegou) throw new Error('o fetch passado não chamou o fetch global'); return { itens: [{ id: 'c1', ticker: 'PETR4', vivo: { preco: 30, variacao_dia_pct: -5, valor: 300 }, proventos: null }], total: 300, por_tipo: { acoes: 300 }, assessor: {} }; };
   return chamadas;
 }
 

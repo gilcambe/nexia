@@ -68,7 +68,7 @@ test('AJ5. aba Ajuda aparece no app e fica guardada para uso sem internet', () =
   const fs = require('fs'); const path = require('path');
   const ler = (f) => fs.readFileSync(path.join(__dirname, '../../prumo', f), 'utf8');
   assert.match(ler('index.html'), /data-aba="ajuda"/);
-  assert.match(ler('app.js'), /'ajuda'\]/);
+  assert.match(ler('app.js'), /'ajuda'[,\]]/); // 17/11: aceita abas novas depois de 'ajuda' (Mercado, Robôs)
   assert.match(ler('sw.js'), /\/prumo\/ajuda\.js/);
   assert.match(ler('ajuda.js'), /api\/prumo-admin/);
 });
