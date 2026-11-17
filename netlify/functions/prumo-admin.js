@@ -21,17 +21,13 @@ function createHandler(deps = {}) {
   return async (event) => {
     const method = String(event.httpMethod || '').toUpperCase();
     const headers = event.headers || {};
-    const cors = { 'Content-Type': 'application/json', 'Cache-Control': 'no-store', 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'GET, POST, OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type, Authorization' };
-    const res = (statusCode, body) => ({ statusCode, headers: cors, body: JSON.stringify(body) });
-    if (method === 'OPTIONS') return { statusCode: 204, headers: cors, body: '' };
+    const mw = getMw();
+    const res = (statusCode, body, headers = {}) => ({ statusCode, headers: { ...mw.makeHeaders(event), 'Content-Type': 'application/json', 'Cache-Control': 'no-store', ...headers }, body: JSON.stringify(body) });
+    if (method === 'OPTIONS') return { statusCode: 204, headers: mw.makeHeaders(event), body: '' };
     if (method !== 'GET' && method !== 'POST') return res(405, { error: 'Method Not Allowed' });
-    const authErr = await getMw().requireBearerAuth(event, 'master');
-    if (authErr) return authErr;
-    const auth = await getMw().verifyBearerToken(event);
-    if (!auth || !auth.ok || auth.role !== 'master') {
-      console.warn('[prumo-admin] acesso negado:', (auth && auth.role) || 'sem role', (auth && auth.uid) || 'sem uid');
-      return res(403, { error: 'Só o administrador da KERNEX' });
-    }
+    const authRes = await mw.requireBearerAuth(event, 'master');
+    if (authRes.error) return res(authRes.statusCode, { error: authRes.error });
+    const auth = authRes.user;
 
     // Estrutura inspirada em agenda.js: handler padronizado, resposta JSON consistente
     // e validação de parâmetros seguindo o padrão do projeto.
