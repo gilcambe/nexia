@@ -1,0 +1,12 @@
+{
+  "numero": 3852,
+  "data": "2026-11-17",
+  "modelo": "kilo/auto:1",
+  "tentativas": 7,
+  "pedido": "Finance: versão para PC (menu lateral, 2 colunas)\n\n## Pedido do dono (16/11)\n\"Deve ter uma versão web, caso queira ficar com ele aberto no PC.\"\n\n## Hoje\nO finance.kernex.com.br já abre no PC, mas é a tela do celular esticada: uma coluna de 720px no meio e o menu de abas (`nav.abas`) preso embaixo.\n\n## O que fazer (só CSS no `<style>` de `prumo/index.html`)\nCrie `@media (min-width: 1024px) { ... }` com:\n- **`nav.abas`** vira uma barra lateral à esquerda:\n  - `top: 0`, `bottom: 0`, `left: 0`, `right: auto`;\n  - `width` fixa (ex.: `220px`);\n  - `flex-direction: column`;\n  - os botões com ícone e texto lado a lado.\n- **`main`** com `max-width` de 1100px ou mais e `margin-left` do tamanho da barra lateral.\n- **Cartões** em 2 colunas: `display: grid` com `grid-template-columns: repeat(2, 1fr)` num contêiner das telas.\n\n**No celular nada muda.** As regras base continuam iguais: `nav.abas` embaixo e `main` com 720px.\n\nNão mude o teste.",
+  "arquivos": [
+    "prumo/index.html"
+  ],
+  "teste": "node --test tests/contrato/finance-versao-pc.test.js",
+  "diff": "diff --git a/prumo/index.html b/prumo/index.html\nindex 4618f04..330e6aa 100644\n--- a/prumo/index.html\n+++ b/prumo/index.html\n@@ -40,6 +40,40 @@\n   .dica h3 { margin:0 0 8px; } .dica ol { margin:0 0 16px; padding-left:20px; color:var(--texto); }\n   .valor { transition:filter .15s; } body.privado .valor { filter:blur(7px); user-select:none; }\n   [hidden] { display:none !important; }\n+\n+  @media (min-width: 1024px) {\n+    nav.abas {\n+      position: fixed;\n+      top: 0;\n+      bottom: 0;\n+      left: 0;\n+      right: auto;\n+      width: 220px;\n+      overflow-x: hidden;\n+      flex-direction: column;\n+      align-items: stretch;\n+    }\n+    nav.abas button {\n+      flex-direction: row;\n+      justify-content: flex-start;\n+      padding: 12px 16px;\n+      text-align: left;\n+      min-width: auto;\n+      flex: 0 0 auto;\n+    }\n+    nav.abas button span {\n+      margin-right: 8px;\n+    }\n+    main {\n+      max-width: 1100px;\n+      margin-left: 220px;\n+    }\n+    #conteudo {\n+      display: grid;\n+      grid-template-columns: repeat(2, 1fr);\n+      gap: 16px;\n+    }\n+  }\n </style>\n </head>\n <body>"
+}
