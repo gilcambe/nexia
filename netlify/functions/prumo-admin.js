@@ -4,6 +4,7 @@
 // Mostra SÓ contagens (pessoas, planos, leituras do mês, mensagens). Nunca valores, documentos ou extratos.
 // Mensagens de suporte: o master lê e responde as mensagens que a própria pessoa mandou na aba Ajuda.
 const { PLANOS } = require('./prumo-lib/ajuda');
+// Arquivo pronto e exportado para uso nas rotas do painel.
 
 function createHandler(deps = {}) {
   const getDb = deps.getDb || (() => require('./firebase-init').db);
