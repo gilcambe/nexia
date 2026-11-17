@@ -19,6 +19,7 @@ async function _fetchTimeout(url, opts = {}, ms = 30000) {
 const { admin, db } = require('./firebase-init');
 
 const { requireBearerAuth, makeHeaders } = require('./middleware');
+const { modeloGroq } = require('../../lib/groq-modelo');
 
 async function generateAdCreative(produto, publico, objetivo, tom) {
   const key = process.env.GROQ_API_KEY;
@@ -26,7 +27,7 @@ async function generateAdCreative(produto, publico, objetivo, tom) {
   const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method:'POST', headers:{'Authorization':'Bearer '+key,'Content-Type':'application/json'},
     body: JSON.stringify({
-      model:'llama-3.3-70b-versatile', max_tokens:1500, temperature:0.7,
+      model: await modeloGroq(key), max_tokens:1500, temperature:0.7,
       messages:[{role:'user',content:
         'Você é um copywriter especialista em tráfego pago.\n\n'+
         'Produto/Serviço: '+produto+'\nPúblico-alvo: '+publico+'\nObjetivo: '+objetivo+'\nTom: '+(tom||'profissional')+'\n\n'+
