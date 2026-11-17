@@ -16,8 +16,11 @@
   body { min-height:100vh; padding-bottom:env(safe-area-inset-bottom); }
   header { display:flex; align-items:center; gap:10px; padding:14px 16px; border-bottom:1px solid var(--borda); position:sticky; top:0; background:var(--fundo); z-index:5; }
   header img { width:32px; height:32px; }
-  header h1 { font-size:20px; margin:0; flex:1; }
+  header h1 { font-size:20px; margin:0; flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   header button { background:none; border:1px solid var(--borda); color:var(--fraco); border-radius:10px; padding:8px 12px; font-size:14px; }
+  #btn-menu { width:40px; height:40px; display:grid; place-items:center; padding:0; }
+  #btn-menu svg { width:24px; height:24px; }
+  .card.kf-hero { background:linear-gradient(135deg,#1e3f9e 0%,#0f1a33 70%); }
   main { padding:16px; max-width:720px; margin:0 auto; }
   .btn { display:block; width:100%; min-height:52px; border:0; border-radius:14px; background:var(--verde); color:#fff; font-size:18px; font-weight:600; cursor:pointer; }
   .btn:active { background:var(--verde2); }
@@ -79,7 +82,7 @@
     cursor: pointer;
   }
   button.titulo-grupo[aria-expanded="true"] { color: var(--texto); }
-  footer { position:fixed; left:0; right:0; bottom:0; padding:6px 12px calc(6px + env(safe-area-inset-bottom)); text-align:center; font-size:12px; color:var(--fraco); background:var(--fundo); }
+  footer { padding:6px 12px calc(6px + env(safe-area-inset-bottom)); text-align:center; font-size:12px; color:var(--fraco); background:var(--fundo); }
   header .instalar { background:var(--verde); border-color:var(--verde); color:#fff; font-weight:600; }
   .btn.sec { margin-top:12px; background:none; border:1px solid var(--verde); color:var(--verde2); }
   .dica { position:fixed; inset:0; background:rgba(0,0,0,.7); display:flex; align-items:flex-end; z-index:20; }
@@ -88,6 +91,11 @@
   .valor { transition:filter .15s; } body.privado .valor { filter:blur(7px); user-select:none; }
   [hidden] { display:none !important; }
 
+  @media (max-width: 599px) {
+    header h1 { display:none; }
+    #titulo-aba { flex:1; font-weight:600; font-size:18px; }
+    #instalar .rotulo { display:none; }
+  }
   @media (min-width: 1024px) {
     nav.abas {
       transform: none;
@@ -122,7 +130,7 @@
   <img src="/prumo/icone.svg" alt="">
   <h1>Kernex Finance</h1>
   <span id="titulo-aba">Início</span>
-  <button id="instalar" class="instalar" type="button" hidden>📲 Instalar app</button>
+  <button id="instalar" class="instalar" type="button" hidden>📲<span class="rotulo">Instalar app</span></button>
   <button id="olho" type="button" aria-pressed="false" title="Esconder valores">👁</button>
   <button id="sair" type="button" hidden>Sair</button>
 </header>
