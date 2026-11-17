@@ -8,21 +8,27 @@
 
   function cartao(r) {
     const biros = Object.values((r && r.por_biro) || {});
-    let h = '<div class="card" id="score-cartao"><div class="fraco">Seu score de crédito</div>';
+    const botoes = '<div class="linha" style="margin-top:10px"><button type="button" class="btn sec" id="score-atualizar">📷 Atualizar score</button><button type="button" class="btn sec" id="score-digitar">✍️ Digitar</button></div>'
+      + '<input type="file" id="score-arq" accept="image/*,application/pdf,.pdf" multiple hidden><div id="score-res"></div>';
     if (!biros.length) {
-      h += '<p class="fraco">Ainda não tenho seu score. Mande o print do app do Serasa, SPC ou Boa Vista (ou digite o valor). Não existe consulta grátis automática e eu nunca peço sua senha.</p>';
-    } else {
-      h += biros.map((b) => {
-        const v = b.variacao;
-        const variacao = v === null || v === undefined ? 'primeiro registro' : v === 0 ? 'igual ao anterior' : `${v > 0 ? '▲ +' : '▼ '}${v} desde o anterior`;
-        return `<div class="item" data-biro="${esc(b.biro)}"><div><div class="n">${esc(b.nome)}</div><div class="fraco">${esc(dmy(b.data))} · ${esc(variacao)}</div></div>`
-          + `<div style="text-align:right"><div class="grande" style="font-size:26px">${esc(b.score)}<span class="fraco" style="font-size:12px">/1000</span></div>`
-          + `<div style="color:${COR[b.faixa] || 'inherit'}">${esc(b.faixa)}${b.faixa_suposicao ? ' <span class="fraco">(faixa estimada)</span>' : ''}</div></div></div>`;
-      }).join('');
-      h += '<div class="fraco" style="margin-top:8px">Como subir:</div>' + (r.dicas || []).slice(0, 3).map((d) => `<div class="fraco">• ${esc(d)}</div>`).join('');
+      return '<div class="card" id="score-cartao"><div class="fraco">Seu score de crédito</div>'
+        + '<p class="fraco">Ainda não tenho seu score. Mande o print do app do Serasa, SPC ou Boa Vista (ou digite o valor). Não existe consulta grátis automática e eu nunca peço sua senha.</p>'
+        + botoes + '</div>';
     }
-    return h + '<div class="linha" style="margin-top:8px"><button type="button" class="btn sec" id="score-atualizar">📷 Atualizar score</button><button type="button" class="btn sec" id="score-digitar">✍️ Digitar</button></div>'
-      + '<input type="file" id="score-arq" accept="image/*,application/pdf,.pdf" multiple hidden><div id="score-res"></div></div>';
+    // Compacto: só o número aparece; data, variação, dicas e botões abrem ao tocar.
+    const topo = biros.map((b) => `<span class="kf-chip-score" data-biro="${esc(b.biro)}"><span class="fraco">${esc(b.nome)}</span> <b class="kf-num">${esc(b.score)}</b>`
+      + ` <span style="color:${COR[b.faixa] || 'inherit'};font-size:12px">${esc(b.faixa)}</span></span>`).join('');
+    const detalhes = biros.map((b) => {
+      const v = b.variacao;
+      const variacao = v === null || v === undefined ? 'primeiro registro' : v === 0 ? 'igual ao anterior' : `${v > 0 ? '▲ +' : '▼ '}${v} desde o anterior`;
+      return `<div class="item"><div><div class="n">${esc(b.nome)}</div><div class="fraco">${esc(dmy(b.data))} · ${esc(variacao)}</div></div>`
+        + `<div style="text-align:right"><div class="n">${esc(b.score)}<span class="fraco" style="font-size:11px">/1000</span></div>`
+        + `<div class="fraco" style="font-size:12px">${esc(b.faixa)}${b.faixa_suposicao ? ' (faixa estimada)' : ''}</div></div></div>`;
+    }).join('');
+    return '<details class="card kf-dobra" id="score-cartao"><summary><span class="fraco">Score de crédito</span><span class="kf-scores">' + topo + '</span></summary>'
+      + '<div class="kf-dobra-corpo">' + detalhes
+      + '<div class="fraco" style="margin-top:8px">Como subir:</div>' + (r.dicas || []).slice(0, 3).map((d) => `<div class="fraco">• ${esc(d)}</div>`).join('')
+      + botoes + '</div></details>';
   }
 
   function campos(s) {

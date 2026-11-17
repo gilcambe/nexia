@@ -12,17 +12,17 @@
 <style>
   :root { --fundo:#070d1c; --cartao:#0f1a33; --borda:#1c2b4d; --texto:#e8eefc; --fraco:#8ea3cc; --verde:#2f6bff; --verde2:#5b8dff; --ganho:#22c55e; --perda:#ef4444; --aviso:#f59e0b; }
   * { box-sizing:border-box; }
-  html,body { margin:0; background:var(--fundo); color:var(--texto); font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; }
+  html,body { margin:0; background:var(--fundo); color:var(--texto); font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; }
   body { min-height:100vh; padding-bottom:env(safe-area-inset-bottom); }
-  header { display:flex; align-items:center; gap:10px; padding:14px 16px; border-bottom:1px solid var(--borda); position:sticky; top:0; background:var(--fundo); z-index:5; }
-  header img { width:32px; height:32px; }
+  header { display:flex; align-items:center; gap:10px; padding:10px 16px; border-bottom:1px solid var(--borda); position:sticky; top:0; background:var(--fundo); z-index:5; }
+  header img { width:28px; height:28px; }
   header h1 { font-size:20px; margin:0; flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  header button { background:none; border:1px solid var(--borda); color:var(--fraco); border-radius:10px; padding:8px 12px; font-size:14px; }
+  header button { background:none; border:1px solid var(--borda); color:var(--fraco); border-radius:10px; padding:6px 10px; font-size:13px; }
   #btn-menu { width:40px; height:40px; display:grid; place-items:center; padding:0; }
   #btn-menu svg { width:24px; height:24px; }
   .card.kf-hero { background:linear-gradient(135deg,#1e3f9e 0%,#0f1a33 70%); }
   main { padding:16px; max-width:720px; margin:0 auto; }
-  .btn { display:block; width:100%; min-height:52px; border:0; border-radius:14px; background:var(--verde); color:#fff; font-size:18px; font-weight:600; cursor:pointer; }
+  .btn { display:block; width:100%; min-height:44px; border:0; border-radius:12px; background:var(--verde); color:#fff; font-size:15px; font-weight:500; letter-spacing:.01em; cursor:pointer; }
   .btn:active { background:var(--verde2); }
   .entrar { text-align:center; padding-top:12vh; }
   .entrar img { width:96px; height:96px; }
@@ -84,7 +84,7 @@
   button.titulo-grupo[aria-expanded="true"] { color: var(--texto); }
   footer { padding:6px 12px calc(6px + env(safe-area-inset-bottom)); text-align:center; font-size:12px; color:var(--fraco); background:var(--fundo); }
   header .instalar { background:var(--verde); border-color:var(--verde); color:#fff; font-weight:600; }
-  .btn.sec { margin-top:12px; background:none; border:1px solid var(--verde); color:var(--verde2); }
+  .btn.sec { margin-top:10px; background:none; border:1px solid var(--borda); color:var(--verde2); }
   .dica { position:fixed; inset:0; background:rgba(0,0,0,.7); display:flex; align-items:flex-end; z-index:20; }
   .dica div { background:var(--cartao); border-top:1px solid var(--borda); border-radius:18px 18px 0 0; padding:20px 18px calc(20px + env(safe-area-inset-bottom)); width:100%; }
   .dica h3 { margin:0 0 8px; } .dica ol { margin:0 0 16px; padding-left:20px; color:var(--texto); }
@@ -93,7 +93,7 @@
 
   @media (max-width: 599px) {
     header h1 { display:none; }
-    #titulo-aba { flex:1; font-weight:600; font-size:18px; }
+    #titulo-aba { flex:1; font-weight:600; font-size:16px; }
     #instalar .rotulo { display:none; }
   }
   @media (min-width: 1024px) {
