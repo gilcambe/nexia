@@ -187,7 +187,7 @@ test('fluxo previdência e quanto guardar: o pedido vai com o corpo certo e a ab
 });
 
 test('aba registrada: app.js, menu e cache do app', () => {
-  assert.match(ler('app.js'), /'aposentadoria'\]/);
+  assert.match(ler('app.js'), /'aposentadoria'[,\]]/);
   assert.match(ler('index.html'), /data-aba="aposentadoria"[^>]*>[\s\S]*?Aposentadoria e FGTS<\/button>/);
   const sw = ler('sw.js');
   assert.match(sw, /'\/prumo\/aposentadoria\.js'/); assert.match(sw, /'\/prumo\/apos\.js'/);
