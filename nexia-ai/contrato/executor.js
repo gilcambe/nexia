@@ -236,7 +236,26 @@ async function executar(o) {
   let tentativas = 0;
   // Frente A (#3377): com placar de cota, quem está sem cota vai para o fim (ou sai, se houver livres).
   const placar = o.placar || null;
-  const escada = placar ? placar.ordenar(o.modelos) : o.modelos;
+  // Melhoria 24 (17/11/2026): o placar é COMPARTILHADO (D1) com outros robôs; um 429 deles tirava o Gemini da escada
+  // inteira sem aviso (#3850). Agora quem está marcado vai para o FIM (ainda é tentado) e o log diz por quê.
+  let escada = o.modelos;
+  if (placar) {
+    const livres = placar.ordenar(o.modelos);
+    const fora = o.modelos.filter(m => !livres.includes(m));
+    escada = [...livres, ...fora];
+    if (fora.length) log(`placar: ${fora.map(m => `${m.provider}/${m.model}`).join(', ')} marcado(s) sem cota (por esta ou outra rodada); vai(vão) para o FIM da escada, não some(m)`);
+  }
+  // Melhoria 24: tipo do erro. 'morto' (404/410 fim de vida) e 'verba'/'dia' (402, cota do dia) não voltam em 45 s:
+  // pulam na hora e marcam o placar; só o limite por minuto espera.
+  const tipoErro = e => {
+    const s = (e && e.details && e.details.status) || 0;
+    const t = `${String((e && e.message) || e)} ${String((e && e.details && e.details.upstream) || '')}`;
+    if (s === 410 || /410|end of life|decommission|no longer (?:available|supported)/i.test(t) || ((s === 404 || /404/.test(t)) && /model|not.?found/i.test(t))) return 'morto';
+    if (s === 402 || /402|budget|billing|payment required|insufficient.?(?:funds|balance|credits)/i.test(t)) return 'verba';
+    const ra = /retry.?after\D{0,3}(\d+)/i.exec(t);
+    if (/daily|per.?day|tokens per day|requests per day|RPD|TPD/i.test(t) || (ra && Number(ra[1]) > 120)) return 'dia';
+    return null;
+  };
   const semCotaErro = e => { const s = (e && e.details && e.details.status) || 0; return s === 429 || s === 402 || /\b(429|402)\b|rate.?limit|quota|cota/i.test(String((e && e.message) || e)); };
   // 16/11/2026: o próximo degrau parte da MELHOR tentativa até agora (não do zero) e recebe o erro dela.
   let melhor = null, notaInicio = null;
@@ -277,6 +296,13 @@ async function executar(o) {
           m._enxuto = true; tentativas--; k--;
           log(`${m.provider}/${m.model}: pedido grande demais para ela; repetindo enxuto (sem exemplos e referências)`);
           continue;
+        }
+        const tipo = tipoErro(e);
+        if (tipo) {
+          if (placar) placar.marcar(m, tipo === 'morto' ? 'morto' : 'daily');
+          historico.push({ modelo: `${m.provider}/${m.model}`, erro: detalhe });
+          log(`${m.provider}/${m.model}: ${tipo === 'morto' ? 'modelo fora do ar de vez (fica 7 dias fora da escada)' : tipo === 'verba' ? 'sem verba/crédito (pula, sem esperar)' : 'cota do dia esgotada (pula, sem esperar)'} — ${detalhe.slice(0, 160)}`);
+          break;
         }
         if (semCotaErro(e) && !m._esperou && (o.esperar429Ms ?? 45000) > 0) {
           m._esperou = true; tentativas--; k--;

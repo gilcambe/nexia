@@ -92,7 +92,8 @@ test('K3. sem chave nenhuma o Cortex ainda tem candidatos (o Kilo) em toda class
   // NVIDIA NIM e Codestral entram quando a chave existe (tool_call ligado).
   const k = createRouter({ env: { NVIDIA_API_KEY: 'n', CODESTRAL_API_KEY: 'c' }, fetchImpl: async () => json({}) });
   const provs = new Set(candidates(k, 'coding', {}).map(d => d.provider));
-  assert.ok(provs.has('nvidia') && provs.has('codestral'));
+  // 17/11/2026 (melhoria 24): o único modelo NVIDIA da lista (openai/gpt-oss-120b) morreu (410 end of life); saiu.
+  assert.ok(provs.has('codestral'));
 });
 
 test('K4. GitHub Models: pedido acima do teto por pedido (~8 mil tokens) é recusado sem chamar (TOO_LARGE); pedido pequeno passa', async () => {
