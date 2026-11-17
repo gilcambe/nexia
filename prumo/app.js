@@ -11,6 +11,15 @@
   const tituloAba = $('titulo-aba');
   let usuario = null;
 
+  function toggleGrupo(btn) {
+    const id = btn.dataset.grupo;
+    if (!id) return;
+    const grupo = $(`grupo-${id}`);
+    const aberto = !grupo.hidden;
+    grupo.hidden = aberto;
+    btn.setAttribute('aria-expanded', String(!aberto));
+  }
+
   function mostrarErro(msg) {
     const el = $('erro');
     el.textContent = msg;
@@ -68,6 +77,13 @@
     const btn = document.querySelector(`#abas button[data-aba="${nome}"]`);
     if (btn && btn.textContent) tituloAba.textContent = btn.textContent.trim();
     try { localStorage.setItem('prumo-aba', nome); } catch { /* sem armazenamento */ }
+    const btn = document.querySelector(`#abas button[data-aba="${nome}"]`);
+    const grupo = btn && btn.closest('.grupo');
+    if (grupo) {
+      grupo.hidden = false;
+      const t = grupo.previousElementSibling;
+      if (t && t.classList.contains('titulo-grupo')) t.setAttribute('aria-expanded', 'true');
+    }
     fecharMenu();
     const el = $('conteudo');
     const vez = ++abrindo;
@@ -167,9 +183,11 @@
     auth.getRedirectResult().catch((e) => mostrarErro(msgLogin(e)));
     $('sair').onclick = () => auth.signOut();
     document.querySelectorAll('#abas button').forEach((b) => { b.onclick = () => abrirAba(b.dataset.aba); });
+    document.querySelectorAll('.titulo-grupo').forEach((b) => { b.onclick = () => toggleGrupo(b); });
     if (btnMenu) btnMenu.onclick = () => { if (navAbas.classList.contains('aberto')) fecharMenu(); else abrirMenu(); };
     if (fundoMenu) fundoMenu.onclick = fecharMenu;
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape') fecharMenu(); });
+    document.getElementById('fechar-menu').onclick = fecharMenu;
     auth.onAuthStateChanged((u) => {
       usuario = u;
       mostrar(!!u);
