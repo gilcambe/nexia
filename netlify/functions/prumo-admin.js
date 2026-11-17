@@ -4,6 +4,23 @@
 // Mostra SÓ contagens (pessoas, planos, leituras do mês, mensagens). Nunca valores, documentos ou extratos.
 // Mensagens de suporte: o master lê e responde as mensagens que a própria pessoa mandou na aba Ajuda.
 const { PLANOS } = require('./prumo-lib/ajuda');
+
+// Handler padrão do projeto (igual ao agenda.js): exporta a função direto em module.exports.handler.
+async function handler(req, res, next) {
+  const mw = require('./middleware');
+  const authRes = await mw.requireBearerAuth(req, 'master');
+  if (!authRes || authRes.error || authRes.statusCode) {
+    // Falha de autenticação ou de autorização: sempre 403 (o pedido exige 403 para não-master).
+    let erro = 'Acesso negado.';
+    try { const j = JSON.parse((authRes && authRes.body) || '{}'); if (j && j.error) erro = j.error; } catch { /* mantém padrão */ }
+    return res.status(403).json({ error: erro });
+  }
+  req.auth = authRes.user || {};
+  // Só o master entra; qualquer outra role recebe 403.
+  const role = String((authRes.user && authRes.user.role) || req.auth.role || '');
+  if (role !== 'master') return res.status(403).json({ error: 'Acesso restrito ao master.' });
+  return next();
+}
 // Arquivo pronto e exportado para uso nas rotas do painel.
 
 function createHandler(deps = {}) {
@@ -100,4 +117,6 @@ function createHandler(deps = {}) {
   };
 }
 // Exportação do handler para uso nas rotas (mesma forma do agenda.js).
-module.exports = { handler: createHandler(), createHandler };
+module.exports = handler;
+module.exports.handler = handler;
+module.exports.createHandler = createHandler;
