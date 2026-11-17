@@ -151,4 +151,4 @@ async function enviarDiario(db, agoraIso, deps = {}) {
   return r;
 }
 
-module.exports = { enviarDiario, agirAlertas, gerar, mesclar, validarConfig, TIPOS };
+module.exports = { enviarDiario, agirAlertas, gerar, mesclar, validarConfig, TIPOS, enviarEmail };

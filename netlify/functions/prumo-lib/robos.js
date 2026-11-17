@@ -214,6 +214,8 @@ module.exports = {
   avaliarRegras,
   dataBrasilia,
   agirRobos,
+  checarPessoa,
+  checarTodos,
 };
 
 async function agirRobos(acao, body, c) {
@@ -234,36 +236,84 @@ async function agirRobos(acao, body, c) {
   }
   if (acao === 'robos_checar') {
     const agora = c.agoraIso;
-    const hoje = dataBrasilia(agora);
-    const itens = await c.listarCarteira();
-    const viva = await require('./cotacoes').carteiraAoVivo(itens, {
-      fetch: c.deps && c.deps.fetch,
-      agora: (c.deps && typeof c.deps.agora === 'function') ? c.deps.agora() : new Date(agora),
-      env: (c.deps && c.deps.env) || process.env,
-    });
-    let alvo = null;
-    try {
-      const cfg = await c.base.collection('config').doc('alocacao').get();
-      if (cfg && cfg.exists && cfg.data()) {
-        alvo = cfg.data().alvo !== undefined ? cfg.data().alvo : null;
-      }
-    } catch { /* sem config */ }
-    if (viva) {
-      if (!viva.assessor) viva.assessor = {};
-      viva.assessor.alocacao_alvo = alvo;
-    }
-    const robos = await c.listar(c.base.collection('robos'));
-    const resultado = avaliarRegras(robos, viva, agora);
-    for (const d of resultado.disparos) {
-      const rob = robos.find((r) => r.id === d.regra_id);
-      if (rob) {
-        rob.ultimo_disparo = hoje;
-        await c.base.collection('robos').doc(rob.id).set(rob);
-      }
-      const dispId = (c.deps && c.deps.uuid ? c.deps.uuid() : null) || `${Date.now()}_${Math.random().toString(36).slice(2)}`;
-      await c.base.collection('robos_disparos').doc(dispId).set({ ...d, em: agora });
-    }
+    const resultado = await checarPessoa(c.base, c.deps, agora);
     return [200, { disparos: resultado.disparos, lacunas: resultado.lacunas }];
   }
   return null;
+}
+
+async function checarPessoa(base, deps, agoraIso) {
+  const hoje = dataBrasilia(agoraIso);
+  const fetch = (deps && deps.fetch) || ((...a) => fetch(...a));
+  const agora = (deps && typeof deps.agora === 'function') ? deps.agora() : new Date(agoraIso);
+  const env = (deps && deps.env) || process.env;
+  const snap = await base.collection('carteira').get();
+  const itens = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+  const viva = await require('./cotacoes').carteiraAoVivo(itens, { fetch, agora, env });
+  let alvo = null;
+  try {
+    const cfg = await base.collection('config').doc('alocacao').get();
+    if (cfg && cfg.exists && cfg.data()) {
+      alvo = cfg.data().alvo !== undefined ? cfg.data().alvo : null;
+    }
+  } catch { /* sem config */ }
+  if (viva) {
+    if (!viva.assessor) viva.assessor = {};
+    viva.assessor.alocacao_alvo = alvo;
+  }
+  const snapRobos = await base.collection('robos').get();
+  const robos = snapRobos.docs.map((d) => ({ id: d.id, ...d.data() }));
+  const resultado = avaliarRegras(robos, viva, agora);
+  const disparos = [];
+  for (const d of resultado.disparos) {
+    const rob = robos.find((r) => r.id === d.regra_id);
+    if (rob) {
+      rob.ultimo_disparo = hoje;
+      await base.collection('robos').doc(rob.id).set(rob);
+    }
+    const dispId = (deps && deps.uuid ? deps.uuid() : null) || `${Date.now()}_${Math.random().toString(36).slice(2)}`;
+    await base.collection('robos_disparos').doc(dispId).set({ ...d, em: agoraIso });
+    disparos.push(d);
+  }
+  return { disparos, lacunas: resultado.lacunas };
+}
+
+async function checarTodos(db, agoraIso, deps = {}) {
+  const emPregao = require('./cotacoes').emPregao;
+  if (!emPregao(new Date(agoraIso))) {
+    return { pulou: 'fora do pregão' };
+  }
+  const enviarEmail = require('./alertas').enviarEmail;
+  const usuarios = await db.collection('prumo_users').get();
+  let pessoas = 0;
+  let disparos = 0;
+  let enviados = 0;
+  let falhas = 0;
+  for (const u of usuarios.docs) {
+    const base = db.collection('prumo_users').doc(u.id);
+    const snapRobos = await base.collection('robos').get();
+    if (!snapRobos.docs || snapRobos.docs.length === 0) continue;
+    pessoas++;
+    let dispPessoa = [];
+    try {
+      const res = await checarPessoa(base, deps, agoraIso);
+      dispPessoa = res.disparos;
+    } catch { falhas++; continue; }
+    disparos += dispPessoa.length;
+    if (!dispPessoa.length) continue;
+    let cfg;
+    try {
+      const snap = await base.collection('config').doc('alertas').get();
+      cfg = snap && snap.exists ? snap.data() : null;
+    } catch { cfg = null; }
+    const podeEmail = cfg && cfg.canais && cfg.canais.email === true && cfg.email_para;
+    if (!podeEmail) continue;
+    try {
+      const assunto = `Kernex Finance: ${dispPessoa.length} robô(s) dispararam`;
+      const texto = dispPessoa.map((d) => '• ' + d.texto).join('\n') + '\n\nQuem compra ou vende é você. Você controla os robôs no app, aba Robôs.';
+      const e = await enviarEmail(deps, { to: cfg.email_para, assunto, texto });
+      if (e.ok) enviados++; else { falhas++; }
+    } catch { falhas++; }
+  }
+  return { pessoas, disparos, enviados, falhas };
 }
