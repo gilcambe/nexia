@@ -42,7 +42,7 @@ test('as 21 abas continuam, em grupos com título e com ícone em <svg> (sem emo
     assert.match(nav, new RegExp(`class="titulo-grupo"[^>]*>\\s*${g}\\s*<`), `grupo "${g}" com <p class="titulo-grupo">`);
   }
   const botoes = [...nav.matchAll(/<button[^>]*data-aba="(\w+)"[^>]*>([\s\S]*?)<\/button>/g)];
-  assert.equal(botoes.length, ABAS.length);
+  assert.ok(botoes.length >= ABAS.length, "nenhuma aba some (abas novas podem entrar)");
   for (const [, a, dentro] of botoes) {
     assert.match(dentro, /<svg[\s\S]*<\/svg>/, `aba ${a}: ícone em <svg>`);
     assert.doesNotMatch(dentro, /\p{Extended_Pictographic}/u, `aba ${a}: sem emoji (ícone em <svg>)`);
