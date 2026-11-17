@@ -403,20 +403,9 @@ const LER_CNIS = `Você lê UM extrato CNIS (INSS) em imagem. Responda SÓ com J
 Copie só o que está escrito. Não copie CPF, NIT, nome da pessoa nem endereço. Valores em número (R$ 1.234,56 vira 1234.56). Pendência = indicadores como PEXT, PREM-EXT, PADM, AEXT-VT... com a descrição curta.`;
 const LER_FGTS = `Você lê UM print do app FGTS. Responda SÓ com JSON: {"saldo":0,"modalidade":"rescisao|aniversario|"}. saldo = saldo total em número (R$ 1.234,56 vira 1234.56). Não copie CPF nem nome.`;
 
-async function perguntarVisaoGratis(deps, img, sistema) {
-  const router = deps.getRouter();
-  for (const d of deps.listFor('fast').filter((x) => x.provider !== 'anthropic')) {
-    try {
-      const cap = router.capabilities(d);
-      if (!cap.available || !cap.vision) continue;
-      const out = await Promise.race([
-        router.chat(d, { system: sistema, messages: [{ role: 'user', content: 'Leia a imagem e devolva o JSON.' }], images: [img], maxTokens: 2500 }),
-        new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 20000)),
-      ]);
-      if (out && out.text) return out.text;
-    } catch { /* tenta o próximo modelo grátis */ }
-  }
-  return null;
+// 17/11/2026: usa o leitor único (corrida escalonada + NVIDIA + Cloudflare). O antigo tentava só a lista 'fast', uma por vez.
+function perguntarVisaoGratis(deps, img, sistema) {
+  return require('./visao').perguntarVisao(deps, img, sistema);
 }
 
 function limparVinculos(lista) {

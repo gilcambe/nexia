@@ -59,20 +59,9 @@ function validarPonto(o) {
   return { ok: true, item: ponto };
 }
 
-async function perguntarVisaoGratis(deps, img, sistema) {
-  const router = deps.getRouter();
-  for (const d of deps.listFor('fast').filter((x) => x.provider !== 'anthropic')) {
-    try {
-      const cap = router.capabilities(d);
-      if (!cap.available || !cap.vision) continue;
-      const out = await Promise.race([
-        router.chat(d, { system: sistema, messages: [{ role: 'user', content: 'Leia a imagem e devolva o JSON.' }], images: [img], maxTokens: 1500 }),
-        new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 15000)),
-      ]);
-      if (out && out.text) return out.text;
-    } catch { /* tenta o próximo modelo grátis */ }
-  }
-  return null;
+// 17/11/2026: usa o leitor único (corrida escalonada + NVIDIA + Cloudflare). O antigo tentava só a lista 'fast', uma por vez.
+function perguntarVisaoGratis(deps, img, sistema) {
+  return require('./visao').perguntarVisao(deps, img, sistema);
 }
 
 async function agirSalario(acao, body, c) {
