@@ -184,9 +184,11 @@ const cota = require('../nexia-ai/model-router/cota');
   if (!c.ok) { await comentar(`Contrato inválido: ${c.erros.join('; ')}.\nModelo:\n\`\`\`\nO que fazer...\nArquivos: \`caminho/arquivo.js\`\nTeste: \`node --test tests/unit/x.test.js\`\n\`\`\``); await rotular('contrato-invalido'); return; }
   console.log(`#${N}: ${c.arquivos.join(', ')} | ${c.teste} | degraus: ${lista.map(d => `${d.provider}/${d.model}`).join(' > ')}`);
   const t0 = Date.now();
-  const reg = String(process.env.CORTEX_REGRESSAO || '').trim();
+  // Melhoria 29: sem CORTEX_REGRESSAO, roda os testes vizinhos dos arquivos mexidos (nexia-ai/contrato/regressao.js).
+  const reg = String(process.env.CORTEX_REGRESSAO || '').trim() || require('../nexia-ai/contrato/regressao').regressaoPadrao(c.arquivos, process.cwd(), c.testes);
   const regressao = /^node --test(?: --test-(?:force-exit|timeout=\d{1,6}|concurrency=\d{1,2}))*(?: [\w@./*-]+\.test\.(?:js|cjs|mjs))+$/.test(reg) ? () => rodarTeste(reg) : null;
   if (reg && !regressao) console.log('  CORTEX_REGRESSAO ignorada (formato não aceito)');
+  if (regressao) console.log(`  regressão: ${reg.split(' ').length - 2} teste(s) vizinhos`);
   // Melhoria 21: melhor resultado de rodada anterior (ramo nexia/melhor-<n>): esta rodada continua dele.
   const ramoMelhor = `nexia/melhor-${N}`;
   const gitBruto = (...a) => execFileSync('git', a, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
