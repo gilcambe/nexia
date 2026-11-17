@@ -119,6 +119,13 @@ function testeSuspeito(historico, minimo = 3) {
   return vezes >= minimo ? { nome, ias: vezes } : null;
 }
 
+// Melhoria 25 (17/11/2026): a pista do PC (Antigravity) devolveu o texto lido na codificação antiga do Windows e os
+// acentos viraram "Voc├¬", "ÔÇö" (#3867/#3868). O teste não via isso. Agora qualquer mudança que AUMENTE o número
+// desses restos de codificação quebrada é recusada, venha de qual IA vier.
+const QUEBRADO = /├|┬|ÔÇ|Ã[ -¿]|�/g;
+const quebrados = (s) => (String(s || '').match(QUEBRADO) || []).length;
+const quebrouAcento = (antes, depois) => quebrados(depois) > quebrados(antes);
+
 /** Aplica os blocos só nos arquivos permitidos. Devolve { aplicados[], recusas[] }. */
 function aplicar(texto, c, raiz) {
   const b = parseEditBlocks(texto);
@@ -131,6 +138,8 @@ function aplicar(texto, c, raiz) {
     const atualP = path.join(raiz, f.path);
     const antes = fs.existsSync(atualP) ? fs.statSync(atualP).size : 0;
     if (antes > 2000 && Buffer.byteLength(f.content) < antes / 2) { recusas.push(`${f.path}: arquivo inteiro com menos da metade do atual (provável corte); use blocos SEARCH/REPLACE`); continue; }
+    const velho = fs.existsSync(atualP) ? fs.readFileSync(atualP, 'utf8') : '';
+    if (quebrouAcento(velho, f.content)) { recusas.push(`${f.path}: acentos com codificação quebrada (ex.: "├", "ÔÇ", "Ã©"); mande o texto em UTF-8, com os acentos normais`); continue; }
     fs.mkdirSync(path.dirname(path.join(raiz, f.path)), { recursive: true });
     fs.writeFileSync(path.join(raiz, f.path), f.content);
     aplicados.push(f.path);
@@ -142,7 +151,9 @@ function aplicar(texto, c, raiz) {
     const atual = fs.readFileSync(p, 'utf8');
     const n = atual.split(e.find).length - 1;
     if (n !== 1) { recusas.push(`${e.path}: o trecho SEARCH aparece ${n} vez(es); copie um trecho exato e único`); continue; }
-    fs.writeFileSync(p, atual.replace(e.find, () => e.replace));
+    const novo = atual.replace(e.find, () => e.replace);
+    if (quebrouAcento(atual, novo)) { recusas.push(`${e.path}: acentos com codificação quebrada (ex.: "├", "ÔÇ", "Ã©"); mande o texto em UTF-8, com os acentos normais`); continue; }
+    fs.writeFileSync(p, novo);
     aplicados.push(e.path);
   }
   return { aplicados: [...new Set(aplicados)], recusas };

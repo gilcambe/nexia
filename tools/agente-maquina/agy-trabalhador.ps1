@@ -35,6 +35,9 @@ function Trabalhar {
     $texto = ($t.mensagens | ForEach-Object { "### $($_.role)`n$($_.content)" }) -join "`n`n"
     [IO.File]::WriteAllText((Join-Path $pasta 'pedido.txt'), $texto, (New-Object Text.UTF8Encoding $false))
     Push-Location $pasta
+    # Melhoria 25: o agy escreve UTF-8; sem isto o PowerShell lia na página antiga do Windows e os acentos quebravam.
+    [Console]::OutputEncoding = New-Object Text.UTF8Encoding $false
+    $OutputEncoding = New-Object Text.UTF8Encoding $false
     $saida = & $agy -p 'Leia o arquivo pedido.txt desta pasta: ele tem instruções (system) e o pedido (user). Faça exatamente o que ele pede. Não rode comandos, não crie nem altere arquivos. Responda só com o resultado final, no formato pedido.' --print-timeout 600s 2>&1 | Out-String
     Pop-Location
     $saida = $saida.Trim()
