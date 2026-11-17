@@ -22,7 +22,7 @@ function fornecedores(lista, env, robos = [], testesVagas = []) {
       if (!testeRecente) {
         situacao = 'nao testado';
       } else {
-        situacao = testeRecente.situacao || 'ok';
+        situacao = testeRecente.situacao === 'ok' ? 'ok' : testeRecente.situacao || 'ok';
       }
     } else if (robo) {
       situacao = robo.situacao === 'erro' ? 'erro' : robo.situacao === 'nunca' ? 'desligado' : 'ok';
