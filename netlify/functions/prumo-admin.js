@@ -24,7 +24,6 @@ async function handler(event, context) {
   const fullHandler = createHandler();
   return await fullHandler(event, context);
 }
-// Arquivo pronto e exportado para uso nas rotas do painel.
 
 function createHandler(deps = {}) {
   const getDb = deps.getDb || (() => require('./firebase-init').db);
