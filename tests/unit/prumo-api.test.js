@@ -77,7 +77,7 @@ test('PR6. ler print usa só IA grátis com visão e descarta item inválido', a
     }),
   };
   const r = await p.lerPrint([{ mime: 'image/png', data: 'AAAA' }], deps);
-  assert.equal(usados.length, 1); // a 1ª leitura boa basta (a ordem da lista de visão é conferida em tests/contrato/finance-ler-print)
+  assert.ok(usados.length >= 1 && usados.length <= 3, 'corrida escalonada: até 3 IAs'); // 17/11: corrida (tests/contrato/finance-print-rapido)
   assert.ok(!usados.includes('anthropic'), 'nunca anthropic nem modelo sem visão');
   assert.equal(r.itens.length, 1);
   assert.equal(r.descartados.length, 1);
