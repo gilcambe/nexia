@@ -12,6 +12,7 @@ const texto = (v, max) => (typeof v === 'string' ? v.trim().slice(0, max) : '');
 const numero = (v) => (typeof v === 'number' ? v : typeof v === 'string' && v.trim() !== '' ? Number(v.replace(/\./g, '').replace(',', '.')) : NaN);
 const dinheiro = (n) => Math.round(n * 100) / 100;
 const erro = (m) => ({ ok: false, erro: m });
+const { lerPontos } = require('./pontos-ler.js');
 // P1.5: folha (base, rubricas) e banco de horas. Só adicionado (nada removido).
 
 // ---------- Fase 2: holerite ----------
@@ -261,9 +262,38 @@ async function agirExtra(acao, body, c) {
   }
 }
 
+const handlers = {
+    '/api/pontos-ler': async function(req, res) {
+        try {
+            if (req.method !== 'POST') {
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ error: 'Método não permitido. Use POST.' }));
+                return;
+            }
+            const caminho = req.body?.caminho;
+            if (!caminho) {
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ error: 'Caminho não fornecido.' }));
+                return;
+            }
+            const dados = await lerPontos(caminho);
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify(dados));
+        } catch (e) {
+            if (e.code === 'ENOENT') {
+                res.writeHead(404, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ error: 'Arquivo não encontrado.' }));
+            } else {
+                res.writeHead(500, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ error: 'Erro interno.' }));
+            }
+        }
+    }
+};
+
 /** Avisos extras (pontos vencendo em até 30 dias) somados aos da lista de compras. */
 async function avisosExtra(c) {
   try { return pontosVencendo(await c.listar(c.base.collection('pontos')), c.agoraIso); } catch { return []; }
 }
 
-module.exports = { agirExtra, avisosExtra, validarHolerite, validarOrcamento, montarOrcamento, avaliarCarteira, contextoConsultor, validarPontos, pontosVencendo, AVISO_LEGAL };
+module.exports = { agirExtra, avisosExtra, validarHolerite, validarOrcamento, montarOrcamento, avaliarCarteira, contextoConsultor, validarPontos, pontosVencendo, AVISO_LEGAL, handlers };
