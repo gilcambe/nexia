@@ -1,9 +1,10 @@
 'use strict';
 
 const { guard, HEADERS, makeHeaders } = require('./middleware');
+const { RESERVA } = require('../../lib/groq-modelo');
 
 const MODELS = {
-  groq_llama3:       { id: 'llama-3.3-70b-versatile',             provider: 'groq' },
+  groq_llama3:       { id: RESERVA,             provider: 'groq' },
   groq_mixtral:      { id: 'mixtral-8x7b-32768',          provider: 'groq' },
   groq_llama3_fast:  { id: 'llama-3.1-8b-instant',        provider: 'groq' },
   deepseek_chat:     { id: 'deepseek-chat',                provider: 'deepseek' },

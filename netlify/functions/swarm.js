@@ -9,6 +9,7 @@
 
 const { admin, db } = require('./firebase-init');
 const { guard, assertTenantAccess, sanitizePrompt, HEADERS, makeHeaders } = require('./middleware');
+const { modeloGroq } = require('../../lib/groq-modelo');
 
 
 const AGENT_TIMEOUT_MS = 15000;
@@ -85,7 +86,7 @@ async function planAgents(task, availableAgents) {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${process.env.GROQ_API_KEY}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'llama-3.1-8b-instant',
+        model: await modeloGroq(process.env.GROQ_API_KEY),
         temperature: 0,
         max_tokens: 80,
         messages: [
@@ -125,12 +126,13 @@ async function runAgent(agentKey, agent, messages, attempt = 1) {
 
 
   try {
+    const modelo = await modeloGroq(process.env.GROQ_API_KEY);
     const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       signal: controller.signal,
       headers: { 'Authorization': `Bearer ${process.env.GROQ_API_KEY}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model:       'llama-3.3-70b-versatile',
+        model:       modelo,
         temperature: agent.temperature ?? 0.5,
         max_tokens:  1500,
         messages:    [{ role: 'system', content: agent.system }, ...messages]
@@ -210,11 +212,12 @@ async function synthesize(results, task) {
 
 
   try {
-    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    const modelo = await modeloGroq(process.env.GROQ_API_KEY);
+  const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${process.env.GROQ_API_KEY}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'llama-3.3-70b-versatile',
+        model: modelo,
         temperature: 0.4,
         max_tokens: 1200,
         messages: [
