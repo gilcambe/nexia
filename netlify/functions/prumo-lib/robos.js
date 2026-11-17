@@ -244,7 +244,7 @@ async function agirRobos(acao, body, c) {
 
 async function checarPessoa(base, deps, agoraIso) {
   const hoje = dataBrasilia(agoraIso);
-  const fetch = (deps && deps.fetch) || ((...a) => fetch(...a));
+  const fetch = (deps && deps.fetch) || ((...a) => globalThis.fetch(...a));
   const agora = (deps && typeof deps.agora === 'function') ? deps.agora() : new Date(agoraIso);
   const env = (deps && deps.env) || process.env;
   const snap = await base.collection('carteira').get();

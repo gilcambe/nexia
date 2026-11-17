@@ -1,0 +1,12 @@
+{
+  "numero": 3906,
+  "data": "2026-11-17",
+  "modelo": "kilo/auto:1",
+  "tentativas": 1,
+  "pedido": "Finance robôs: o fetch chama a si mesmo (corrigir)\n\nCorreção nos robôs do Kernex Finance: o fetch chama a si mesmo.\n\nEm `netlify/functions/prumo-lib/robos.js`, dentro de `checarPessoa`, está assim:\n`const fetch = (deps && deps.fetch) || ((...a) => fetch(...a));`\n\nO `fetch` de dentro é a própria constante. No servidor, onde `deps` não traz fetch, a função chama a si mesma e nenhuma cotação chega. Troque por:\n`const fetch = (deps && deps.fetch) || ((...a) => globalThis.fetch(...a));`\n\nSó isso. Veja a lição 22 em nexia-ai/contrato/memoria/licoes.md.",
+  "arquivos": [
+    "netlify/functions/prumo-lib/robos.js"
+  ],
+  "teste": "node --test tests/contrato/finance-robos-pregao.test.js tests/contrato/finance-robos-api.test.js tests/contrato/finance-robos.test.js",
+  "diff": "diff --git a/netlify/functions/prumo-lib/robos.js b/netlify/functions/prumo-lib/robos.js\nindex 222cf55..40cc709 100644\n--- a/netlify/functions/prumo-lib/robos.js\n+++ b/netlify/functions/prumo-lib/robos.js\n@@ -244,7 +244,7 @@ async function agirRobos(acao, body, c) {\n \n async function checarPessoa(base, deps, agoraIso) {\n   const hoje = dataBrasilia(agoraIso);\n-  const fetch = (deps && deps.fetch) || ((...a) => fetch(...a));\n+  const fetch = (deps && deps.fetch) || ((...a) => globalThis.fetch(...a));\n   const agora = (deps && typeof deps.agora === 'function') ? deps.agora() : new Date(agoraIso);\n   const env = (deps && deps.env) || process.env;\n   const snap = await base.collection('carteira').get();"
+}
