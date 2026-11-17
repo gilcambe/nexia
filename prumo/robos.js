@@ -4,6 +4,26 @@
   const MB = window.MB;
   const carregarUi = () => MB.ui ? Promise.resolve(MB.ui) : new Promise((ok, falha) => { const s = document.createElement('script'); s.src = '/prumo/ui.js'; s.onload = () => ok(MB.ui); s.onerror = falha; document.body.appendChild(s); });
 
+  function escHtml(texto) {
+    if (texto == null) return '';
+    return String(texto)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+
+  function brDiaHora(iso) {
+    if (!iso) return '--/-- --:--';
+    const d = new Date(Date.parse(iso) - 3 * 3600 * 1000);
+    const dd = String(d.getUTCDate()).padStart(2, '0');
+    const mm = String(d.getUTCMonth() + 1).padStart(2, '0');
+    const hh = String(d.getUTCHours()).padStart(2, '0');
+    const mi = String(d.getUTCMinutes()).padStart(2, '0');
+    return `${dd}/${mm} ${hh}:${mi}`;
+  }
+
   const TIPOS = {
     preco_abaixo: 'Preço caiu abaixo de',
     preco_acima: 'Preço subiu acima de',
@@ -39,7 +59,29 @@
     }
   }
 
-  MB.robos = { TIPOS, descrever };
+  function resultado({ disparos = [], lacunas = [] } = {}) {
+    if (!disparos || !Array.isArray(disparos)) disparos = [];
+    if (!lacunas || !Array.isArray(lacunas)) lacunas = [];
+    if (disparos.length === 0 && lacunas.length === 0) return 'Nenhum robô disparou agora.';
+    const partes = [];
+    if (disparos.length > 0) {
+      partes.push(`<b>${disparos.length === 1 ? '1 robô disparou' : `${disparos.length} robôs dispararam`}</b>`);
+      for (const d of disparos) {
+        partes.push(`<div class="rb-disparo">\u{1F514} ${escHtml(d && d.texto)}</div>`);
+      }
+    }
+    for (const l of lacunas) {
+      partes.push(`<div class="rb-lacuna fraco">\u{2139}\uFE0F ${escHtml(l)}</div>`);
+    }
+    return partes.join('');
+  }
+
+  function historico(disparos = []) {
+    if (!disparos || !Array.isArray(disparos) || disparos.length === 0) return '<p class="fraco">Nenhum aviso ainda.</p>';
+    return disparos.map((d) => `<div class="rb-hist"><span class="fraco">${brDiaHora(d && d.em)}</span> ${escHtml(d && d.texto)}</div>`).join('');
+  }
+
+  MB.robos = { TIPOS, descrever, resultado, historico };
 
   MB.telas.robos = async (el) => {
     const { esc, aba } = await carregarUi();
@@ -71,7 +113,7 @@
         </form>
       </div>
       <div class="card"><button class="btn sec" type="button" id="rb-checar" style="padding:10px">Conferir agora</button><div id="rb-checar-msg" style="margin-top:8px;color:var(--fraco);font-size:14px"></div></div>
-      <div class="card"><h3 style="margin:0 0 8px">Últimos avisos</h3><div id="rb-disparos">${disparos.length ? disparos.map((d) => `<div class="fraco" style="padding:4px 0">${esc(d.tipo || '')} ${esc(d.texto || '')}</div>`).join('') : '<p style="color:var(--fraco);margin:0">Sem avisos ainda.</p>'}</div></div>`;
+      <div class="card"><h3 style="margin:0 0 8px">Últimos avisos</h3><div id="rb-disparos">${MB.robos.historico(disparos)}</div></div>`;
 
     const tipoSel = el.querySelector('#rb-tipo');
     const tickerInp = el.querySelector('#rb-ticker');
@@ -132,8 +174,8 @@
         const r = await MB.api('robos_checar');
         const d = (r && r.disparos) || [];
         const l = (r && r.lacunas) || [];
-        msg.textContent = `Disparos: ${d.length}. Lacunas: ${l.length}.`;
-      } catch (e) { msg.textContent = e.message || 'Não consegui conferir agora.'; }
+        msg.innerHTML = MB.robos.resultado(r);
+      } catch (e) { msg.innerHTML = MB.robos.resultado({ disparos: [], lacunas: [] }) + '<div style="color:var(--perca)">' + escHtml(e.message || 'Não consegui conferir agora.') + '</div>'; }
     };
 
     function mostrarErro(m) {
