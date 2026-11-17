@@ -13,5 +13,10 @@
 1. **Rollback do Deployment**: No painel do provedor de hospedagem (Cloudflare Pages/Workers), faça o rollback imediato para o último deployment estável.
 2. **Reverter Commit**: Execute `git revert <sha>` do commit problemático ou abra um PR de reversão para atualizar a versão em produção com segurança.
 
+## Comandos úteis
+- Listar issues: `gh issue list --state open`
+- Verificar saúde: `curl -sS -o /dev/null -w "%{http_code}\n" https://nexia.cba.studio/api/prumo`
+- Reverter commit: `git revert <sha>` ou abrir PR de reversão.
+
 <!-- fim -->
 
