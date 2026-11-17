@@ -8,7 +8,14 @@ function createHandler(deps = {}) {
   const getDb = deps.getDb || (() => require('./firebase-init').db);
   const getMw = deps.getMw || (() => require('./middleware'));
   const now = deps.now || (() => Date.now());
-  const listar = async (col) => { const s = await col.get(); return s.docs.map((d) => ({ id: d.id, ...d.data() })); };
+  // Só devolve os campos que o painel usa (nunca o documento inteiro).
+  const listar = async (col) => {
+    const s = await col.get();
+    return s.docs.map((d) => {
+      const data = d.data() || {};
+      return { id: d.id, plano: data.plano, criado_em: data.criado_em };
+    });
+  };
   const novoId = () => now().toString(36) + Math.random().toString(36).slice(2, 8);
 
   return async (event) => {
@@ -18,10 +25,12 @@ function createHandler(deps = {}) {
     const res = (statusCode, body) => ({ statusCode, headers: cors, body: JSON.stringify(body) });
     if (method === 'OPTIONS') return { statusCode: 204, headers: cors, body: '' };
     if (method !== 'GET' && method !== 'POST') return res(405, { error: 'Method Not Allowed' });
-    const auth = await getMw().requireBearerAuth(event, 'master').catch(() => ({ ok: false }));
-    if (!auth.ok || auth.role !== 'master') {
-      console.warn('[prumo-admin] acesso negado:', auth.role || 'sem role', auth.uid || 'sem uid');
-      return res(403, { error: 'Acesso negado: apenas administradores (master) têm acesso a este painel.' });
+    const authErr = await getMw().requireBearerAuth(event, 'master');
+    if (authErr) return authErr;
+    const auth = await getMw().verifyBearerToken(event);
+    if (!auth || !auth.ok || auth.role !== 'master') {
+      console.warn('[prumo-admin] acesso negado:', (auth && auth.role) || 'sem role', (auth && auth.uid) || 'sem uid');
+      return res(403, { error: 'Só o administrador da KERNEX' });
     }
 
     // Estrutura inspirada em agenda.js: handler padronizado, resposta JSON consistente
