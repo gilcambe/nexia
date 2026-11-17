@@ -144,7 +144,8 @@
     if (!logado) fecharMenu();
   }
 
-  window.MB = { api, usuario: () => usuario, telas: window.MB && window.MB.telas ? window.MB.telas : {}, abrirAba, mostrarErro };
+  // Junta no MB que já existe (cache-api.js e outros scripts carregados antes guardam funções nele).
+  window.MB = Object.assign(window.MB || {}, { api, usuario: () => usuario, telas: window.MB && window.MB.telas ? window.MB.telas : {}, abrirAba, mostrarErro });
 
   // Mostra o motivo real do erro de login (código do Firebase) para ficar fácil de corrigir.
   function msgLogin(e) {
