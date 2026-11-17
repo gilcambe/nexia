@@ -74,6 +74,7 @@ function validarRegra(o) {
   if (o.id) item.id = o.id;
   if (o.ultimo_disparo) item.ultimo_disparo = o.ultimo_disparo;
 
+  item.tipo = tipo;
   return { ok: true, item };
 }
 
@@ -89,10 +90,7 @@ function fmtPct(num) {
 
 // Converte ISO string para data no fuso de Brasília (yyyy-mm-dd)
 function dataBrasilia(iso) {
-  const d = new Date(iso);
-  const utc = d.getTime() + d.getTimezoneOffset() * 60000;
-  const brt = new Date(utc +  -3 * 3600000); // Brasília UTC-3 (sem DST)
-  return brt.toISOString().slice(0, 10);
+  return new Date(Date.parse(iso) - 3 * 3600 * 1000).toISOString().slice(0, 10);
 }
 
 // Checa se já disparou hoje (comparando data string)
@@ -214,4 +212,58 @@ function avaliarRegras(regras, viva, agoraIso) {
 module.exports = {
   validarRegra,
   avaliarRegras,
+  dataBrasilia,
+  agirRobos,
 };
+
+async function agirRobos(acao, body, c) {
+  if (acao === 'robos_salvar') {
+    const v = validarRegra(body);
+    if (!v.ok) return [400, { error: v.erro }];
+    return await c.salvar('robos', v);
+  }
+  if (acao === 'robos_listar') {
+    const robos = await c.listar(c.base.collection('robos'));
+    const disparos = (await c.listar(c.base.collection('robos_disparos')))
+      .sort((a, b) => String(b.em || '').localeCompare(String(a.em || '')))
+      .slice(0, 20);
+    return [200, { robos, disparos }];
+  }
+  if (acao === 'robos_apagar') {
+    return await c.apagar('robos');
+  }
+  if (acao === 'robos_checar') {
+    const agora = c.agoraIso;
+    const hoje = dataBrasilia(agora);
+    const itens = await c.listarCarteira();
+    const viva = await require('./cotacoes').carteiraAoVivo(itens, {
+      fetch: c.deps && c.deps.fetch,
+      agora: (c.deps && typeof c.deps.agora === 'function') ? c.deps.agora() : new Date(agora),
+      env: (c.deps && c.deps.env) || process.env,
+    });
+    let alvo = null;
+    try {
+      const cfg = await c.base.collection('config').doc('alocacao').get();
+      if (cfg && cfg.exists && cfg.data()) {
+        alvo = cfg.data().alvo !== undefined ? cfg.data().alvo : null;
+      }
+    } catch { /* sem config */ }
+    if (viva) {
+      if (!viva.assessor) viva.assessor = {};
+      viva.assessor.alocacao_alvo = alvo;
+    }
+    const robos = await c.listar(c.base.collection('robos'));
+    const resultado = avaliarRegras(robos, viva, agora);
+    for (const d of resultado.disparos) {
+      const rob = robos.find((r) => r.id === d.regra_id);
+      if (rob) {
+        rob.ultimo_disparo = hoje;
+        await c.base.collection('robos').doc(rob.id).set(rob);
+      }
+      const dispId = (c.deps && c.deps.uuid ? c.deps.uuid() : null) || `${Date.now()}_${Math.random().toString(36).slice(2)}`;
+      await c.base.collection('robos_disparos').doc(dispId).set({ ...d, em: agora });
+    }
+    return [200, { disparos: resultado.disparos, lacunas: resultado.lacunas }];
+  }
+  return null;
+}
