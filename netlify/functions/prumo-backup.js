@@ -75,21 +75,27 @@ async function apagarDadosUsuario(db, uid) {
   if (!uid || typeof uid !== 'string') throw new Error('Identificador de usuário (uid) inválido.');
 
   const userDocRef = db.collection('prumo_users').doc(uid);
-  let totalApagados = 0;
+      let totalApagados = 0;
 
-  for (const col of COLECOES_PRUMO) {
-    const itens = await listarColecao(userDocRef.collection(col));
-    for (const item of itens) {
-      if (item && item.id) {
-        await userDocRef.collection(col).doc(item.id).delete();
-        totalApagados++;
+    for (const col of COLECOES_PRUMO) {
+      const itens = await listarColecao(userDocRef.collection(col));
+      for (const item of itens) {
+        if (item && item.id) {
+          await userDocRef.collection(col).doc(item.id).delete();
+          totalApagados++;
+        }
       }
     }
-  }
 
-  if (typeof userDocRef.delete === 'function') {
-    await userDocRef.delete();
-  }
+    // Remove o documento do usuário se existir
+    try {
+      const snap = await userDocRef.get();
+      if (snap && snap.exists) {
+        await userDocRef.delete();
+      }
+    } catch (err) {
+      console.warn('[prumo-backup] Falha ao remover doc do usuário:', err && err.message);
+    }
 
   return { ok: true, uid, totalApagados, apagado_em: new Date().toISOString() };
 }
@@ -273,6 +279,7 @@ exports.handler = async (event, context) => {
   return await createHandler()(event, context);
 };
 
+exports.handler = handler;
 exports.createHandler = createHandler;
 exports.exportarDadosUsuario = exportarDadosUsuario;
 exports.apagarDadosUsuario = apagarDadosUsuario;

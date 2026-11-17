@@ -1,6 +1,16 @@
 # Netlify Scheduled Functions - Backup Diário Prumo
-# Executa todo dia às 03:00 UTC (meia-noite BRT)
+# Executa todo dia às 03:00 UTC
+# Para testar o backup diário manualmente:
+#   POST https://SEU-SITE.netlify.app/.netlify/functions/prumo-backup
+#   Body: { "acao": "backup_diario" }
+# Para testar exportação de dados (LGPD):
+#   POST https://SEU-SITE.netlify.app/.netlify/functions/prumo-backup
+#   Body: { "acao": "export" }
+# Para testar restauração (requer master):
+#   POST https://SEU-SITE.netlify.app/.netlify/functions/prumo-backup
+#   Body: { "acao": "restaurar", "uid": "user-id", "backup": {...} }
 
 [[functions]]
   function = "prumo-backup"
   schedule = "0 3 * * *"
+  path = "/prumo-backup"
