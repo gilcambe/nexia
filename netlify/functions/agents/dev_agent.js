@@ -1,7 +1,8 @@
 'use strict';
+const { RESERVA } = require('../../../lib/groq-modelo');
 const DEV_AGENT = {
   name: 'DEV_AGENT',
-  model: 'llama-3.3-70b-versatile',
+  model: RESERVA,
   temperature: 0.4,
   max_tokens: 2048,
   systemPrompt: `Você é o NEXIA DEV AGENT — um Principal Engineer.

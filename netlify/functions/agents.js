@@ -10,6 +10,7 @@ const firebaseInit = require('./firebase-init');
 const now = () => firebaseInit.admin ? firebaseInit.admin.firestore.FieldValue.serverTimestamp() : new Date();
 const { guard, makeHeaders, checkPermission } = require('./middleware');
 const modelRouter = require('../../nexia-ai/model-router');
+const { RESERVA } = require('../../lib/groq-modelo');
 
 // Agentes built-in que ninguém pode deletar
 const PROTECTED_GLOBAL = ['business', 'dev', 'security'];
@@ -412,7 +413,7 @@ exports.handler = async (event) => {
         description: (description || '').slice(0, 500),
         systemPrompt: systemPrompt.slice(0, 5000),
         agentType: agentType || 'custom',
-        model: model || 'llama-3.3-70b-versatile',
+        model: model || RESERVA,
         temperature: Math.min(2, Math.max(0, temperature ?? 0.7)),
         icon: (icon || '🤖').slice(0, 100),
         capabilities: (capabilities || []).slice(0, 20),

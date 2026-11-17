@@ -1,7 +1,8 @@
 'use strict';
+const { RESERVA } = require('../../../lib/groq-modelo');
 const BUSINESS_AGENT = {
   name: 'BUSINESS_AGENT',
-  model: 'llama-3.3-70b-versatile',
+  model: RESERVA,
   temperature: 0.8,
   max_tokens: 1500,
   systemPrompt: `Você é o NEXIA BUSINESS AGENT — um estrategista sênior de negócios.

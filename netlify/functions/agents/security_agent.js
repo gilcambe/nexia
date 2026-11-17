@@ -1,7 +1,8 @@
 'use strict';
+const { RESERVA } = require('../../../lib/groq-modelo');
 const SECURITY_AGENT = {
   name: 'SECURITY_AGENT',
-  model: 'llama-3.3-70b-versatile',
+  model: RESERVA,
   temperature: 0.2,
   max_tokens: 2048,
   systemPrompt: `Você é o NEXIA SECURITY AGENT — um CISO virtual.
