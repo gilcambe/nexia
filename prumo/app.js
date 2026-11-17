@@ -77,7 +77,6 @@
     const btn = document.querySelector(`#abas button[data-aba="${nome}"]`);
     if (btn && btn.textContent) tituloAba.textContent = btn.textContent.trim();
     try { localStorage.setItem('prumo-aba', nome); } catch { /* sem armazenamento */ }
-    const btn = document.querySelector(`#abas button[data-aba="${nome}"]`);
     const grupo = btn && btn.closest('.grupo');
     if (grupo) {
       grupo.hidden = false;
