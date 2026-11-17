@@ -12,8 +12,6 @@ function fornecedores(lista, env, robos = [], testesVagas = []) {
   return lista.map((f) => {
     const robo = f.robo ? robos.find((r) => r.arquivo === f.robo) : null;
     let situacao = 'ok';
-    
-    // Verificação do último teste real da vaga usando o módulo ia-vagas
     const testeRecente = f.id ? testesVagas.find((t) => t.vagaId === f.id && (agora - (t.quando || t.timestamp || 0)) <= LIMITE_24H) : null;
     
     if (f.chave && !temChave(env, f.chave)) {
