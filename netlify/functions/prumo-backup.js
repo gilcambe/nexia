@@ -2,15 +2,16 @@
 
 /**
  * Kernex Finance (Prumo Backup & LGPD) — netlify/functions/prumo-backup.js
- * Rotina de exportação, exclusão (LGPD - direito ao esquecimento) e backup/restauração.
+ * Rotina de exportação, exclusão (LGPD - direito ao esquecimento) e varredura de integridade (backup).
  * Implementado conforme cron diário (Netlify Schedule).
  *
  * Regras:
  * - Nunca grava em disco (sem fs.writeFileSync / require dinâmico).
+ * - 'Backup' aqui refere-se à varredura de integridade (contagem de itens) diária.
  * - Usuário comum só exporta/apaga os seus próprios dados.
  * - Ninguém, nem o administrador master, lê, apaga ou restaura dados de outra pessoa
  *   (regra Kernex Finance: o painel do administrador nunca vê documentos nem valores).
- * - O backup geral só roda para o master e só devolve contagens, sem dados.
+ * - O backup geral só roda para o master e só devolve contagens, sem dados sensíveis.
  */
 
 const COLECOES_PRUMO = [
@@ -75,27 +76,27 @@ async function apagarDadosUsuario(db, uid) {
   if (!uid || typeof uid !== 'string') throw new Error('Identificador de usuário (uid) inválido.');
 
   const userDocRef = db.collection('prumo_users').doc(uid);
-      let totalApagados = 0;
+  let totalApagados = 0;
 
-    for (const col of COLECOES_PRUMO) {
-      const itens = await listarColecao(userDocRef.collection(col));
-      for (const item of itens) {
-        if (item && item.id) {
-          await userDocRef.collection(col).doc(item.id).delete();
-          totalApagados++;
-        }
+  for (const col of COLECOES_PRUMO) {
+    const itens = await listarColecao(userDocRef.collection(col));
+    for (const item of itens) {
+      if (item && item.id) {
+        await userDocRef.collection(col).doc(item.id).delete();
+        totalApagados++;
       }
     }
+  }
 
-    // Remove o documento do usuário se existir
-    try {
-      const snap = await userDocRef.get();
-      if (snap && snap.exists) {
-        await userDocRef.delete();
-      }
-    } catch (err) {
-      console.warn('[prumo-backup] Falha ao remover doc do usuário:', err && err.message);
+  // Remove o documento do usuário se existir
+  try {
+    const snap = await userDocRef.get();
+    if (snap && snap.exists) {
+      await userDocRef.delete();
     }
+  } catch (err) {
+    console.warn('[prumo-backup] Falha ao remover doc do usuário:', err && err.message);
+  }
 
   return { ok: true, uid, totalApagados, apagado_em: new Date().toISOString() };
 }
