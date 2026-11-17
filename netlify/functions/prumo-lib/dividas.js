@@ -85,7 +85,8 @@ async function agirDividas(acao, body, c) {
       const aVista = body.a_vista === undefined || body.a_vista === '' ? 0 : numero(body.a_vista);
       if (!Number.isFinite(extra) || extra < 0 || extra > 1e7 || !Number.isFinite(aVista) || aVista < 0 || aVista > 1e8) return [400, { error: 'Extra e valor à vista precisam ser números iguais ou maiores que zero.' }];
       const mes = agoraIso.slice(0, 7);
-      const [lancs, contas] = await Promise.all([listar(base.collection('lancamentos')), listar(base.collection('contas'))]);
+      const [lancsTodos, contas] = await Promise.all([listar(base.collection('lancamentos')), listar(base.collection('contas'))]);
+      const lancs = require('./previsto').realizados(lancsTodos, 'data', require('./previsto').hojeDe(c.agoraIso));
       const t = totais(lancs.filter((x) => String(x.data).startsWith(mes)));
       const economia = t.receitas > 0 ? dinheiro(t.receitas - t.despesas) : null;
       const vals = []; for (let i = 1; i <= 3; i++) { const d = totais(lancs.filter((x) => String(x.data).startsWith(cartoes.somarMes(mes, -i)))).despesas; if (d > 0) vals.push(d); }

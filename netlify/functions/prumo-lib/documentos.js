@@ -7,6 +7,7 @@
  */
 const crypto = require('crypto');
 const { conciliar, chave, patrimonio, totais } = require('./motor');
+const prv = require('./previsto');
 
 const TIPOS_LANC = ['despesa', 'receita', 'transferencia_propria', 'pagamento_fatura'];
 const CATEGORIAS_KF = ['moradia', 'alimentacao', 'transporte', 'saude', 'educacao', 'familia', 'lazer', 'compras', 'assinaturas', 'financeiro', 'impostos', 'investimentos', 'renda', 'outros'];
@@ -126,6 +127,7 @@ async function agirDoc(acao, body, c) {
   if (!['doc_ler', 'doc_confirmar', 'lanc_listar', 'lanc_apagar', 'inicio_resumo'].includes(acao)) return null;
   const { base, listar, deps, agoraIso } = c;
   const col = base.collection('lancamentos');
+  const hoje = prv.hojeDe(agoraIso);
   switch (acao) {
     case 'doc_ler': {
       const im = c.lerImagens(body.imagens);
@@ -167,12 +169,12 @@ async function agirDoc(acao, body, c) {
         const id = idDe(l);
         if (existentes.has(id)) { jaExistiam++; continue; }
         existentes.add(id);
-        await col.doc(id).set({ ...l, origem: 'documento', criado_em: agoraIso });
+        await col.doc(id).set({ ...l, status: prv.statusInicial(l.data, hoje), origem: 'documento', criado_em: agoraIso });
         gravados++;
       }
       for (const l of forcados) {
         const { forcar, ...limpo } = l;
-        await col.doc(idDe(l) + '-' + novoId()).set({ ...limpo, origem: 'documento', revisado: true, criado_em: agoraIso });
+        await col.doc(idDe(l) + '-' + novoId()).set({ ...limpo, status: prv.statusInicial(limpo.data, hoje), origem: 'documento', revisado: true, criado_em: agoraIso });
         gravados++;
       }
       return [200, { ok: true, gravados, ja_existiam: jaExistiam, para_conferir: r.conferir.length, rejeitados }];
@@ -182,7 +184,12 @@ async function agirDoc(acao, body, c) {
       if (mes && !MES.test(mes)) return [400, { error: 'O mês precisa estar no formato AAAA-MM.' }];
       const perfilPedido = body.perfil === 'pj' ? 'pj' : 'pf'; // totais de PF e PJ nunca se misturam
       const todos = (await listar(col)).filter((x) => (x.perfil === 'pj' ? 'pj' : 'pf') === perfilPedido).filter((x) => !mes || String(x.data).startsWith(mes)).sort((a, b) => String(b.data).localeCompare(String(a.data)));
-      return [200, { lancamentos: todos.slice(0, 300), total: todos.length, ...totais(todos) }];
+      // Só o que já aconteceu entra nos totais; o previsto (data futura) aparece à parte.
+      const comStatus = todos.map((x) => ({ ...x, status: prv.statusDe(x, 'data', hoje) }));
+      const prontos = comStatus.filter((x) => x.status === 'realizado');
+      const futuros = comStatus.filter((x) => x.status === 'previsto');
+      const ap = prv.resumoPrevisto({ lancs: futuros.map((x) => ({ ...x, perfil: 'pf' })), pagamentos: [], dividas: [] }, mes || agoraIso.slice(0, 7), hoje);
+      return [200, { lancamentos: comStatus.slice(0, 300), total: todos.length, ...totais(prontos), a_receber: mes ? ap.a_receber : totais(futuros).receitas, a_pagar: mes ? ap.a_pagar : totais(futuros).despesas }];
     }
     case 'lanc_apagar': {
       const id = texto(body.id, 80);
@@ -195,7 +202,9 @@ async function agirDoc(acao, body, c) {
       if (!MES.test(mes)) return [400, { error: 'O mês precisa estar no formato AAAA-MM.' }];
       const fin = require('./financas');
       const [lancsTodos, carteira, pontos, cartoes, contas, limites, dividas] = await Promise.all([listar(col), c.listarCarteira(), listar(base.collection('pontos')), listar(base.collection('cartoes')), listar(base.collection('contas')), listar(base.collection('limites')), listar(base.collection('dividas'))]);
-      const lancs = lancsTodos.filter((x) => x.perfil !== 'pj'); // PJ nunca entra nos totais pessoais
+      const lancs = prv.realizados(lancsTodos.filter((x) => x.perfil !== 'pj'), 'data', hoje); // PJ nunca entra nos totais pessoais; previsto (data futura) fica de fora
+      const pagamentosTodos = await listar(base.collection('pagamentos'));
+      const aReceberPagar = prv.resumoPrevisto({ lancs: lancsTodos, pagamentos: pagamentosTodos, dividas }, mes, hoje);
       const cfgDiv = await base.collection('config').doc('dividas').get();
       const resDiv = require('./dividas').resumoDividas(dividas, !!(cfgDiv && cfgDiv.exists && cfgDiv.data().sem_dividas), doMesReceitas(lancs, mes));
       const doMes = totais(lancs.filter((x) => String(x.data).startsWith(mes)));
@@ -215,7 +224,7 @@ async function agirDoc(acao, body, c) {
       return [200, { mes, receitas: doMes.receitas, despesas: doMes.despesas, economia: Math.round((doMes.receitas - doMes.despesas) * 100) / 100,
         despesas_mes_anterior: anterior.despesas, variacao_despesas_pct: pct(doMes.despesas, anterior.despesas), por_categoria: doMes.por_categoria,
         saldo_disponivel: sd.saldo, outras_moedas: sd.outras_moedas, limites: consumo, alertas_limite: consumo.filter((x) => x.status !== 'ok'),
-        dividas: resDiv, investimentos: Math.round(carteira.reduce((t, x) => t + Math.round((x.valor || 0) * 100), 0)) / 100, patrimonio: pat, milhas_estimado: milhas, vencimentos, fluxo_inicio, lacunas, qtd_lancamentos: lancs.length }];
+        dividas: resDiv, investimentos: Math.round(carteira.reduce((t, x) => t + Math.round((x.valor || 0) * 100), 0)) / 100, patrimonio: pat, milhas_estimado: milhas, vencimentos, fluxo_inicio, lacunas, a_receber: aReceberPagar.a_receber, a_pagar: aReceberPagar.a_pagar, previstos: aReceberPagar.itens, qtd_lancamentos: lancs.length }];
     }
     default: return null;
   }

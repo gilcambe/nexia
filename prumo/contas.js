@@ -3,6 +3,7 @@
 (function () {
   const MB = window.MB;
   const carregarUi = () => MB.ui ? Promise.resolve(MB.ui) : new Promise((ok, falha) => { const s = document.createElement('script'); s.src = '/prumo/ui.js'; s.onload = () => ok(MB.ui); s.onerror = falha; document.body.appendChild(s); });
+  const carregarLeitura = () => MB.leitura ? Promise.resolve(MB.leitura) : new Promise((ok) => { const s = document.createElement('script'); s.src = '/prumo/leitura.js'; s.onload = () => ok(MB.leitura); s.onerror = () => ok(null); document.body.appendChild(s); });
   const CAT = { moradia: 'Moradia', alimentacao: 'Alimentação', transporte: 'Transporte', saude: 'Saúde', educacao: 'Educação', familia: 'Família', lazer: 'Lazer', compras: 'Compras', assinaturas: 'Assinaturas', financeiro: 'Financeiro', impostos: 'Impostos', investimentos: 'Investimentos', outros: 'Outros' };
   const COR = { ok: '', atencao: '#f59e0b', estourado: '#ef4444' };
 
@@ -21,7 +22,7 @@
       <button class="btn sec" id="novo-limite" type="button">+ Limite por categoria</button>
       <div class="card" style="margin-top:12px">${l.limites.map((x) => `<div style="margin:8px 0" data-cat="${esc(x.categoria)}"><div class="item" style="padding:0;border:0"><span class="n">${esc(CAT[x.categoria] || x.categoria)}${x.status === 'estourado' ? ' 🔴' : x.status === 'atencao' ? ' 🟠' : ''}</span><span>${brl(x.gasto)} de ${brl(x.limite)}</span></div>${barra(x.pct, COR[x.status])}<div class="fraco">${x.status === 'estourado' ? 'Passou ' + brl(-x.restante) : 'Restam ' + brl(x.restante)} · ${String(x.pct).replace('.', ',')}%</div></div>`).join('') || '<p class="fraco">Defina quanto quer gastar por categoria. Eu aviso a partir de 80%.</p>'}</div>`;
 
-    const editarConta = (x) => formulario(x ? 'Editar conta' : 'Nova conta', [
+    const editarConta = (x, lido) => formulario(lido ? 'Confira a conta' : x ? 'Editar conta' : 'Nova conta', [
       { nome: 'nome', rotulo: 'Nome da conta', valor: x && x.nome },
       { nome: 'tipo', rotulo: 'Tipo', opcoes: opcoes(c.tipos, x ? x.tipo : 'corrente') },
       { nome: 'instituicao', rotulo: 'Banco ou instituição', valor: x && x.instituicao },
@@ -30,6 +31,9 @@
     ], async (d) => { await MB.api('conta_salvar', { ...d, id: x && x.id }); MB.ui.ok('Conta salva.'); },
     x ? async () => { await MB.api('conta_apagar', { id: x.id }); } : null);
     el.querySelector('#nova-conta').onclick = () => editarConta(null);
+    const lei = await carregarLeitura();
+    if (lei) lei.botao(el, { id: 'ct-ler', rotulo: '📷 Preencher por print ou arquivo', ajuda: 'Tire print do saldo no app do banco (ou mande o PDF do extrato). Eu não peço senha.', acao: 'conta_print_ler',
+      aoLer: (l) => { const c0 = l.conta; const ja = c.contas.find((x) => String(x.nome).toLowerCase() === String(c0.nome).toLowerCase() && x.moeda === 'BRL'); editarConta({ ...(ja || {}), ...c0, id: ja && ja.id }, true); } });
     el.querySelectorAll('.item[data-id]').forEach((d) => { d.onclick = () => editarConta(c.contas.find((x) => x.id === d.dataset.id)); });
     const editarLimite = (x) => formulario(x ? 'Editar limite' : 'Novo limite', [
       { nome: 'categoria', rotulo: 'Categoria', opcoes: opcoes(CAT, x ? x.categoria : 'alimentacao') },

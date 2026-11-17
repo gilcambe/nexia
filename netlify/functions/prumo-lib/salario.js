@@ -4,6 +4,7 @@
  * Chamado por agirExtra (extra.js). Devolve null se a ação não for daqui.
  */
 const MES = /^\d{4}-\d{2}$/;
+const prv = require('./previsto');
 const DATA = /^\d{4}-\d{2}-\d{2}$/;
 const TIPOS = ['adiantamento', 'mensal', 'decimo_terceiro_1', 'decimo_terceiro_2', 'ferias', 'plr', 'outro'];
 const texto = (v, max) => (typeof v === 'string' ? v.trim().slice(0, max) : '');
@@ -82,7 +83,7 @@ async function agirSalario(acao, body, c) {
   };
   const pagamentosDe = async (mes) => {
     const todos = await c.listar(base.collection('pagamentos'));
-    return todos.filter((p) => !mes || p.mes === mes).sort((a, b) => String(a.data_pagamento).localeCompare(String(b.data_pagamento)));
+    return todos.filter((p) => !mes || p.mes === mes).map((p) => ({ ...p, status: prv.statusDe(p, 'data_pagamento', prv.hojeDe(agoraIso)) })).sort((a, b) => String(a.data_pagamento).localeCompare(String(b.data_pagamento)));
   };
   switch (acao) {
     case 'salario_ler': {
@@ -112,7 +113,7 @@ async function agirSalario(acao, body, c) {
       const v = validarPagamento(body);
       if (!v.ok) return [400, { error: v.erro }];
       const id = `${v.item.mes}_${v.item.tipo}_${v.item.data_pagamento}`;
-      await base.collection('pagamentos').doc(id).set({ ...v.item, atualizado_em: agoraIso });
+      await base.collection('pagamentos').doc(id).set({ ...v.item, status: prv.statusInicial(v.item.data_pagamento, prv.hojeDe(agoraIso)), atualizado_em: agoraIso });
       if (v.item.salario_base > 0) await base.collection('config').doc('salario').set({ ...(await lerConfig()), salario_base: v.item.salario_base, atualizado_em: agoraIso });
       return [200, { ok: true, id }];
     }
@@ -145,11 +146,17 @@ async function agirSalario(acao, body, c) {
     case 'salario_previsao': {
       const mes = texto(body.mes, 7) || agoraIso.slice(0, 7);
       if (!MES.test(mes)) return [400, { error: 'O mês precisa estar no formato AAAA-MM.' }];
-      const [cfg, recebidos, pontoDoc] = await Promise.all([lerConfig(), pagamentosDe(mes), base.collection('folhas_ponto').doc(mes).get()]);
+      const [cfg, doMes, pontoDoc] = await Promise.all([lerConfig(), pagamentosDe(mes), base.collection('folhas_ponto').doc(mes).get()]);
+      // Só o que JÁ caiu conta como recebido; o que tem data futura fica à parte, como "a receber".
+      const recebidos = doMes.filter((p) => p.status === 'realizado');
+      const a_receber = doMes.filter((p) => p.status === 'previsto');
       const total_recebido = dinheiro(recebidos.reduce((s, p) => s + (Number(p.liquido) || 0), 0));
-      const sai = (previsao, motivo) => [200, { mes, recebidos, total_recebido, previsao, motivo }];
+      const total_a_receber = dinheiro(a_receber.reduce((s, p) => s + (Number(p.liquido) || 0), 0));
+      const sai = (previsao, motivo) => [200, { mes, recebidos, total_recebido, a_receber, total_a_receber, previsao, motivo }];
       if (!(cfg.salario_base > 0)) return sai(null, 'Informe seu salário base para eu estimar o fechamento.');
       if (recebidos.some((p) => p.tipo === 'mensal')) return sai(null, 'O mês já fechou: o pagamento mensal já foi recebido.');
+      const mensalPrevisto = a_receber.find((p) => p.tipo === 'mensal');
+      if (mensalPrevisto) return sai(null, 'O mês já fechou: o pagamento mensal está previsto para ' + String(mensalPrevisto.data_pagamento).slice(8, 10) + '/' + String(mensalPrevisto.data_pagamento).slice(5, 7) + ' e conta como recebido quando cair.');
       const ponto = pontoDoc.exists ? pontoDoc.data() || {} : {};
       const previsao = require('./folha').estimarFechamento({ mes, salario_base: cfg.salario_base, dependentes: cfg.dependentes || 0, jornada_mensal: cfg.jornada_mensal || 220, ponto, recebidos });
       return sai(previsao, '');

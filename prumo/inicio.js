@@ -6,12 +6,17 @@
   const carregarGraficos = () => MB.graficos ? Promise.resolve(MB.graficos) : new Promise((ok, falha) => { const s = document.createElement('script'); s.src = '/prumo/graficos.js'; s.onload = () => ok(MB.graficos); s.onerror = falha; document.body.appendChild(s); });
   const NOME_CAT = { moradia: 'Moradia', alimentacao: 'Alimentação', transporte: 'Transporte', saude: 'Saúde', educacao: 'Educação', familia: 'Família', lazer: 'Lazer', compras: 'Compras', assinaturas: 'Assinaturas', financeiro: 'Financeiro', impostos: 'Impostos', investimentos: 'Investimentos', renda: 'Renda', outros: 'Outros' };
   const carregarFluxo = () => MB.fluxoVisao ? Promise.resolve(MB.fluxoVisao) : new Promise((ok) => { const s = document.createElement('script'); s.src = '/prumo/fluxo-visao.js'; s.onload = () => ok(MB.fluxoVisao); s.onerror = () => ok(null); document.body.appendChild(s); });
+  const carregarPrevisto = () => Promise.resolve(MB.previsto || null); // previsto.js vem no index.html; sem ele a tela segue sem a parte de previstos
+  const carregarScript = (chave, src) => MB[chave] ? Promise.resolve(MB[chave]) : new Promise((ok) => { const s = document.createElement('script'); s.src = src; s.onload = () => ok(MB[chave]); s.onerror = () => ok(null); setTimeout(() => ok(MB[chave] || null), 4000); document.body.appendChild(s); });
   const LACUNA = { contas: 'suas contas bancárias', dividas: 'suas dívidas', lancamentos: 'lançamentos (envie uma fatura ou extrato)' };
 
   MB.telas.inicio = async (el) => {
     const { brl, esc, barra, aba } = await carregarUi();
     aba('inicio');
     const [r, sf] = await Promise.all([MB.api('inicio_resumo'), MB.api('saude_financeira')]);
+    const notaSaude = sf.completa || (sf.nota !== null && sf.nota !== undefined) ? sf.nota : (sf.nota_parcial === undefined ? null : sf.nota_parcial);
+    let scoreHtml = '', scoreMod = null;
+    try { scoreMod = await carregarScript('score', '/prumo/score.js'); if (scoreMod) scoreHtml = scoreMod.cartao(await MB.api('score_listar')); } catch (e) { /* sem o score, o resto da tela segue */ }
     let patrimSvg = '', hojeHtml = '', hojeTotal = 0;
     try {
       const graficos = await carregarGraficos();
@@ -39,12 +44,19 @@
       else if (r.variacao_despesas_pct <= 0) insight = `Seus gastos estão ${Math.abs(r.variacao_despesas_pct).toLocaleString('pt-BR')}% menores que no mês passado.`;
       else insight = `Seus gastos estão ${r.variacao_despesas_pct.toLocaleString('pt-BR')}% maiores que no mês passado.`;
     }
+    const pv = await carregarPrevisto();
     let fluxoHtml = '';
     try { const fv = r.fluxo_inicio && await carregarFluxo(); if (fv) fluxoHtml = fv.cartaoInicio(r.fluxo_inicio); } catch (e) { /* sem o cartão, o resto segue */ }
     const cats = Object.entries(r.por_categoria || {}).sort((a, b) => b[1] - a[1]);
     el.innerHTML = `
       <p class="fraco" style="margin:0 0 10px">${saudacao}${nome ? ', ' + esc(nome) : ''}</p>
       ${r.alertas_limite.length ? r.alertas_limite.map((a) => `<div class="aviso-c">${a.status === 'estourado' ? '🔴' : '🟠'} <b>${esc(NOME_CAT[a.categoria] || a.categoria)}</b>: ${brl(a.gasto)} de ${brl(a.limite)} (${String(a.pct).replace('.', ',')}%)${a.status === 'estourado' ? ' — passou do limite' : ' — perto do limite'}.</div>`).join('') : ''}
+      <div class="card" id="kf-saude"><div class="item" style="padding:0;border:0"><span class="fraco">Saúde financeira${sf.completa ? '' : ' (parcial)'}</span><span class="grande" style="font-size:28px">${notaSaude === null ? '—' : notaSaude + '<span class="fraco" style="font-size:14px">/100</span>'}</span></div>
+        <div class="fraco" style="margin-top:4px">${esc(sf.resumo || sf.aviso)}</div>
+        ${sf.indicadores.map((x) => `<div style="margin:6px 0"><div class="item" style="padding:0;border:0"><span>${esc(x.nome)}</span><span class="fraco">${esc(x.texto)}</span></div>${barra(x.nota, x.nota < 40 ? '#ef4444' : x.nota < 70 ? '#f59e0b' : '')}</div>`).join('')}
+        ${sf.completa ? '' : `<div class="aviso-c" style="margin-top:6px">👉 ${esc(sf.proximo_passo || 'Cadastre suas contas na aba Contas para começar.')}</div>`}
+        <div class="fraco" style="margin-top:6px">${sf.completa ? esc(sf.aviso) + (sf.nota_mes_anterior !== null && sf.nota_mes_anterior !== undefined ? ' Mês anterior: ' + sf.nota_mes_anterior + '.' : '') : ''}</div></div>
+      ${scoreHtml}
       <div class="card kf-hero"><div class="fraco">Saldo disponível</div><div class="grande">${r.saldo_disponivel === null ? '—' : brl(r.saldo_disponivel)}</div>
         <div class="fraco" style="margin-bottom:10px">${r.saldo_disponivel === null ? 'Cadastre suas contas na aba Contas.' : 'Dinheiro em conta, sem limite de cartão.'}</div>
         <div class="fraco">Patrimônio líquido</div><div class="n" style="font-size:22px">${brl(r.patrimonio.liquido)}</div>
@@ -54,9 +66,11 @@
         <div class="card"><div class="fraco">Gasto</div><div class="n verm">${brl(r.despesas)}</div></div>
         <div class="card"><div class="fraco">Economia</div><div class="n ${r.economia < 0 ? 'verm' : 'verde'}">${brl(r.economia)}</div></div>
       </div>
-      <div class="card"><div class="item" style="padding:0;border:0"><span class="fraco">Saúde financeira</span><span class="grande" style="font-size:28px">${sf.nota === null ? '—' : sf.nota + '<span class="fraco" style="font-size:14px">/100</span>'}</span></div>
-        ${sf.indicadores.map((x) => `<div style="margin:6px 0"><div class="item" style="padding:0;border:0"><span>${esc(x.nome)}</span><span class="fraco">${esc(x.texto)}</span></div>${barra(x.nota, x.nota < 40 ? '#ef4444' : x.nota < 70 ? '#f59e0b' : '')}</div>`).join('')}
-        <div class="fraco" style="margin-top:6px">${esc(sf.aviso)}${sf.nota_mes_anterior !== null && sf.nota !== null ? ' Mês anterior: ' + sf.nota_mes_anterior + '.' : ''}</div></div>
+      <div class="linha kf-tres" id="kf-previsto">
+        <div class="card"><div class="fraco">A receber no mês</div><div class="n verde">${brl(r.a_receber || 0)}</div></div>
+        <div class="card"><div class="fraco">A pagar no mês</div><div class="n verm">${brl(r.a_pagar || 0)}</div></div>
+      </div>
+      ${pv ? pv.cartao(r.previstos, 'Previsto no mês (ainda não aconteceu)') : ''}
       <div class="card kf-insight"><div class="fraco">💡 Resumo do mês</div><div>${esc(insight)}</div></div>
       <div class="card" id="kf-graf-patrimonio" style="margin-top:12px"><div class="fraco">Seu patrimônio</div>${patrimSvg}</div>
       <div class="card" id="kf-graf-hoje" style="margin-top:12px"><div class="fraco">Ganhos e perdas de hoje</div>${hojeHtml}<div class="n ${hojeTotal >= 0 ? 'verde' : 'verm'}" style="margin-top:6px">${brl(hojeTotal)}</div></div>
@@ -67,6 +81,8 @@
       ${r.vencimentos.length ? `<div class="card" style="margin-top:12px"><div class="fraco">Próximos vencimentos de fatura</div>${r.vencimentos.map((v) => `<div class="item"><span class="n">💳 ${esc(v.cartao)}</span><span>${v.em_dias === 0 ? 'hoje' : 'em ' + v.em_dias + ' dia(s)'} · dia ${v.dia}</span></div>`).join('')}</div>` : ''}
       ${cats.length ? `<div class="card" style="margin-top:12px"><div class="fraco">Gastos por categoria</div>${cats.map(([k, v]) => `<div style="margin:6px 0"><div class="item" style="padding:0;border:0"><span>${esc(NOME_CAT[k] || k)}</span><span>${brl(v)}</span></div>${barra(r.despesas ? (v / r.despesas) * 100 : 0)}</div>`).join('')}</div>` : ''}
       ${r.lacunas.length ? `<div class="card fraco" style="margin-top:12px">Para calcular saldo disponível e saúde financeira ainda faltam: ${r.lacunas.map((l) => esc(LACUNA[l] || l)).join(', ')}. Nada é estimado no lugar.</div>` : ''}`;
+    if (pv) pv.ligar(el);
+    if (scoreMod) { try { scoreMod.ligar(el, { api: MB.api, pdf: await carregarScript('pdf', '/prumo/pdf.js'), reduzir: MB.ui.reduzir, formulario: MB.ui.formulario, ok: MB.ui.ok }); } catch (e) { /* sem leitura de print, o resto segue */ } }
     el.querySelector('#kf-doc').onclick = () => MB.abrirAba('documentos');
     const bd = el.querySelector('#kf-div'); if (bd) bd.onclick = () => MB.abrirAba('dividas');
     const bf = el.querySelector('#kf-fluxo-ver'); if (bf) bf.onclick = () => MB.abrirAba('fluxo');

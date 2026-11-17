@@ -4,14 +4,32 @@
 (function () {
   const MB = window.MB;
   const carregarUi = () => MB.ui ? Promise.resolve(MB.ui) : new Promise((ok, falha) => { const s = document.createElement('script'); s.src = '/prumo/ui.js'; s.onload = () => ok(MB.ui); s.onerror = falha; document.body.appendChild(s); });
+  const carregarLeitura = () => MB.leitura ? Promise.resolve(MB.leitura) : new Promise((ok) => { const s = document.createElement('script'); s.src = '/prumo/leitura.js'; s.onload = () => ok(MB.leitura); s.onerror = () => ok(null); document.body.appendChild(s); });
   const MES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
   const nomeMes = (m) => MES[Number(m.slice(5)) - 1] + '/' + m.slice(2, 4);
 
   MB.telas.cartoes = async (el) => {
-    const { brl, esc, barra, aba } = await carregarUi();
+    const { brl, esc, barra, aba, formulario, ok } = await carregarUi();
     aba('cartoes');
     const [v, i] = await Promise.all([MB.api('cartao_visao'), MB.api('cartao_inteligencia')]);
-    if (!v.cartoes.length) { el.innerHTML = '<div class="card fraco">Cadastre seu primeiro cartão na aba Gastos, em "Meus cartões". Depois volte aqui.</div>'; return; }
+    // Preencher por print/PDF da fatura: abre o formulário do cartão já preenchido; ao salvar, usa cartao_salvar (junta com o que o cartão já tinha).
+    const ligarLeitura = async () => {
+      const lei = await carregarLeitura();
+      if (!lei) return;
+      lei.botao(el, { id: 'ca-ler', rotulo: '📷 Preencher por print ou arquivo', ajuda: 'Mande o print ou PDF da fatura (ou da tela de limite do app do cartão). Eu não peço senha.', acao: 'cartao_print_ler',
+        aoLer: (l) => {
+          const k0 = l.cartao; const ja = v.cartoes.find((x) => String(x.nome).toLowerCase() === String(k0.nome).toLowerCase());
+          if (k0.fatura_atual > 0) ok(`Fatura lida: ${brl(k0.fatura_atual)} (a fatura não é salva aqui; lance as compras na aba Gastos).`);
+          formulario('Confira o cartão', [
+            { nome: 'nome', rotulo: 'Nome do cartão', valor: (ja && ja.nome) || k0.nome },
+            { nome: 'bandeira', rotulo: 'Bandeira (opcional)', valor: k0.bandeira || (ja && ja.bandeira) },
+            { nome: 'limite', rotulo: 'Limite (R$)', tipo: 'number', valor: k0.limite || (ja && ja.limite) },
+            { nome: 'dia_fechamento', rotulo: 'Dia do fechamento (1 a 31)', tipo: 'number', valor: k0.dia_fechamento || (ja && ja.dia_fechamento) },
+            { nome: 'dia_vencimento', rotulo: 'Dia do vencimento (1 a 31)', tipo: 'number', valor: k0.dia_vencimento || (ja && ja.dia_vencimento) },
+          ], (d) => MB.api('cartao_salvar', { ...(ja || {}), ...d, limite: Number(d.limite), dia_fechamento: Number(d.dia_fechamento), dia_vencimento: Number(d.dia_vencimento), id: ja && ja.id }), null);
+        } });
+    };
+    if (!v.cartoes.length) { el.innerHTML = '<div class="card fraco">Cadastre seu primeiro cartão: mande o print da fatura aqui embaixo ou use a aba Gastos, em "Meus cartões".</div>'; await ligarLeitura(); return; }
     el.innerHTML = `
       <div class="card"><div class="fraco">Limite comprometido (estimado)</div><div class="grande">${brl(v.total_comprometido)}</div>
         <div class="fraco">de ${brl(v.total_limite)} de limite · limite de cartão não é dinheiro</div></div>
@@ -33,6 +51,7 @@
       ${i.recorrentes.length ? `<div class="card"><h3 style="margin:0 0 6px">🔁 Compras recorrentes</h3>${i.recorrentes.map((r) => `<div class="item"><span class="n">${esc(r.estabelecimento)}</span><span>${brl(r.valor_medio)} · ${r.meses} meses</span></div>`).join('')}</div>` : ''}
       ${i.suspeitas.length ? `<div class="card"><h3 style="margin:0 0 6px">🔎 Cobranças para revisar</h3><div class="fraco">Não é acusação: só valem uma olhada.</div>${i.suspeitas.map((s) => `<div class="item"><div><div class="n">${esc(s.lancamento.descricao)}</div><div class="fraco">${esc(s.motivo)} · ${s.lancamento.data.slice(8, 10)}/${s.lancamento.data.slice(5, 7)}</div></div><span class="v">${brl(s.lancamento.valor)}</span></div>`).join('')}</div>` : ''}
       <div class="fraco" style="margin-top:8px">${esc(v.aviso)}</div>`;
+    await ligarLeitura();
     el.querySelector('#sim-ir').onclick = async () => {
       const res = el.querySelector('#sim-res');
       const valor = Number(el.querySelector('#sim-valor').value);

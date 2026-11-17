@@ -80,7 +80,7 @@ async function agirEconomizador(acao, body, c) {
   if (!['econ_visao', 'econ_perfil_salvar', 'econ_oportunidades'].includes(acao)) return null;
   const { base, listar, agoraIso } = c;
   switch (acao) {
-    case 'econ_visao': return [200, visao(await listar(base.collection('lancamentos')), agoraIso.slice(0, 7))];
+    case 'econ_visao': return [200, visao(require('./previsto').realizados(await listar(base.collection('lancamentos')), 'data', require('./previsto').hojeDe(agoraIso)), agoraIso.slice(0, 7))];
     case 'econ_perfil_salvar': {
       const v = validarPerfil(body);
       if (!v.ok) return [400, { error: v.erro }];

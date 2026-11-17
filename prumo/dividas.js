@@ -4,6 +4,7 @@
 (function () {
   const MB = window.MB;
   const carregarUi = () => MB.ui ? Promise.resolve(MB.ui) : new Promise((ok, falha) => { const s = document.createElement('script'); s.src = '/prumo/ui.js'; s.onload = () => ok(MB.ui); s.onerror = falha; document.body.appendChild(s); });
+  const carregarLeitura = () => MB.leitura ? Promise.resolve(MB.leitura) : new Promise((ok) => { const s = document.createElement('script'); s.src = '/prumo/leitura.js'; s.onload = () => ok(MB.leitura); s.onerror = () => ok(null); document.body.appendChild(s); });
   const NIVEL = { baixo: '🟢 baixo', 'médio': '🟠 médio', alto: '🔴 alto' };
 
   MB.telas.dividas = async (el) => {
@@ -24,7 +25,7 @@
         <label>Valor à vista para quitar parte (R$, opcional)</label><input id="pl-vista" type="number" step="0.01" inputmode="decimal" placeholder="0">
         <button class="btn" id="pl-ir" type="button" style="margin-top:10px">Comparar</button><div id="pl-res"></div></div>` : ''}`;
 
-    const editar = (x) => formulario(x ? 'Editar dívida' : 'Nova dívida', [
+    const editar = (x, lido) => formulario(lido ? 'Confira a dívida' : x ? 'Editar dívida' : 'Nova dívida', [
       { nome: 'credor', rotulo: 'Com quem é a dívida', valor: x && x.credor },
       { nome: 'tipo', rotulo: 'Tipo', opcoes: opcoes(d.tipos, x ? x.tipo : 'cartao') },
       { nome: 'saldo', rotulo: 'Quanto falta pagar (R$)', tipo: 'number', valor: x && x.saldo },
@@ -35,6 +36,9 @@
     ], async (v) => { const o = { ...v, id: x && x.id }; for (const k of ['cet_ano', 'dia_vencimento']) if (v[k] === '') delete o[k]; await MB.api('divida_salvar', o); MB.ui.ok('Dívida salva.'); },
     x ? async () => { await MB.api('divida_apagar', { id: x.id }); } : null);
     el.querySelector('#nova-div').onclick = () => editar(null);
+    const lei = await carregarLeitura();
+    if (lei) lei.botao(el, { id: 'dv-ler', rotulo: '📷 Preencher por print ou arquivo', ajuda: 'Mande o contrato, boleto ou print da dívida (foto ou PDF). Eu não peço senha.', acao: 'divida_print_ler',
+      aoLer: (l) => { const d0 = l.divida; const ja = d.dividas.find((x) => d0.credor && String(x.credor).toLowerCase() === String(d0.credor).toLowerCase()); editar({ ...(ja || {}), ...d0, id: ja && ja.id }, true); } });
     const sem = el.querySelector('#sem-div');
     if (sem) sem.onclick = async () => { await MB.api('divida_nenhuma', { sem: !d.sem_dividas }); MB.abrirAba('dividas'); };
     el.querySelectorAll('.item[data-id]').forEach((i) => {

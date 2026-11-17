@@ -23,6 +23,17 @@ function despesaMensalMedia(lancs, mes) {
   return vals.length ? arred(vals.reduce((s, v) => s + v, 0) / vals.length) : null;
 }
 
+/** Próximo passo simples, pela primeira lacuna (sempre devolve um texto útil). */
+function proximoPasso(lacunas, qtd) {
+  if (qtd >= 3 && !lacunas.length) return 'Continue lançando seus gastos todo mês para manter a nota em dia.';
+  const l = String((lacunas || [])[0] || '');
+  if (/^contas/.test(l)) return 'Cadastre suas contas na aba Contas (pode mandar o print do saldo do banco).';
+  if (/^renda/.test(l)) return 'Mande um holerite ou extrato (aba Salário ou Documentos) para eu saber sua renda do mês.';
+  if (/^despesas/.test(l)) return 'Mande uma fatura ou extrato na aba Documentos para eu ver seus gastos.';
+  if (/^d[ií]vidas/.test(l)) return 'Cadastre suas dívidas na aba Dívidas, ou diga que não tem nenhuma.';
+  return 'Cadastre suas contas na aba Contas para começar.';
+}
+
 /** Indicadores com dados. Cada um: { id, nome, valor, texto, nota } ou lacuna. */
 function saudeFinanceira({ receitas, despesas, saldo, despesaMedia, limiteTotal, comprometido, limites, dividas }) {
   const ind = []; const lacunas = [];
@@ -53,7 +64,14 @@ function saudeFinanceira({ receitas, despesas, saldo, despesaMedia, limiteTotal,
     } else lacunas.push('renda do mês (para medir o peso das dívidas)');
   } else lacunas.push('dívidas (cadastre ou informe que não tem)');
   const nota = ind.length >= 3 ? Math.round(ind.reduce((s, x) => s + x.nota, 0) / ind.length) : null;
-  return { nota, indicadores: ind, lacunas, aviso: nota === null ? 'Ainda não há dados suficientes para uma nota (preciso de pelo menos 3 indicadores).' : `Nota calculada só com ${ind.length} indicador(es) que têm dados. O que falta está em "lacunas".` };
+  // Com pouco dado a nota completa fica null, mas o cartão do Início sempre diz algo útil: nota parcial + o que falta + próximo passo.
+  const nota_parcial = ind.length ? Math.round(ind.reduce((s, x) => s + x.nota, 0) / ind.length) : null;
+  const faltam = Math.max(0, 3 - ind.length);
+  const proximo_passo = proximoPasso(lacunas, ind.length);
+  const resumo = nota !== null ? `Nota completa, calculada com ${ind.length} indicadores.`
+    : nota_parcial !== null ? `Nota parcial (${ind.length} de 3 indicadores): falta${faltam > 1 ? 'm' : ''} ${faltam} indicador${faltam > 1 ? 'es' : ''} para a nota completa.`
+      : 'Ainda não tenho dados para uma nota: faltam 3 indicadores para a nota completa.';
+  return { nota, nota_parcial, completa: nota !== null, resumo, proximo_passo, indicadores: ind, lacunas, aviso: nota === null ? 'Ainda não há dados suficientes para uma nota (preciso de pelo menos 3 indicadores).' : `Nota calculada só com ${ind.length} indicador(es) que têm dados. O que falta está em "lacunas".` };
 }
 
 /** Posso comprar isso? Responde com regras fixas e mostra cada motivo com número. */
@@ -89,7 +107,8 @@ async function agirSaude(acao, body, c) {
   const { base, listar, agoraIso } = c;
   const mes = texto(body.mes, 7) || agoraIso.slice(0, 7);
   if (!MES.test(mes)) return [400, { error: 'O mês precisa estar no formato AAAA-MM.' }];
-  const [lancs, contas, limites, cts, gastos, dividasLista] = await Promise.all(['lancamentos', 'contas', 'limites', 'cartoes', 'gastos', 'dividas'].map((n) => listar(base.collection(n))));
+  const [lancsTodos, contas, limites, cts, gastos, dividasLista] = await Promise.all(['lancamentos', 'contas', 'limites', 'cartoes', 'gastos', 'dividas'].map((n) => listar(base.collection(n))));
+  const lancs = require('./previsto').realizados(lancsTodos, 'data', require('./previsto').hojeDe(agoraIso)); // previsto (data futura) não conta
   const cfgDiv = await base.collection('config').doc('dividas').get();
   const semDividas = !dividasLista.length && !!(cfgDiv && cfgDiv.exists && cfgDiv.data().sem_dividas);
   const doMes = totais(lancs.filter((x) => String(x.data).startsWith(mes)));
@@ -144,4 +163,4 @@ async function agirSaude(acao, body, c) {
   }
 }
 
-module.exports = { agirSaude, saudeFinanceira, posso, despesaMensalMedia };
+module.exports = { agirSaude, saudeFinanceira, proximoPasso, posso, despesaMensalMedia };
