@@ -19,6 +19,7 @@ async function _fetchTimeout(url, opts = {}, ms = 30000) {
 const { admin, db } = require('./firebase-init');
 
 const { guard, HEADERS, makeHeaders } = require('./middleware');
+const { modeloGroq } = require('../../lib/groq-modelo');
 
 exports.handler = async (event) => {
   const headers = makeHeaders(event);
@@ -190,11 +191,12 @@ Sinais:
 Gere 3 ações específicas de retenção em PT-BR. Formato JSON:
 {"actions": ["ação 1", "ação 2", "ação 3"], "urgency": "imediata|esta semana|este mês", "template_email": "assunto: ...\n\ncorpo: ..."}`;
 
+    const modelo = await modeloGroq(process.env.GROQ_API_KEY);
     const res = await _fetchTimeout('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${process.env.GROQ_API_KEY}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'llama-3.3-70b-versatile',
+        model: modelo,
         max_tokens: 400,
         messages: [
           { role: 'system', content: 'Você é um especialista em customer success SaaS. Responda APENAS em JSON válido.' },

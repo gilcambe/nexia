@@ -38,6 +38,7 @@ function sanitizeForFirestore(obj) {
 const { admin, db } = require('./firebase-init');
 
 const { guard, HEADERS, makeHeaders } = require('./middleware');
+const { modeloGroq } = require('../../lib/groq-modelo');
 
 exports.handler = async (event) => {
   const headers = makeHeaders(event);
@@ -159,11 +160,12 @@ async function debugAgent(action, payload) {
   let aiSuggestions = [];
   if (topErrors.length > 0 && process.env.GROQ_API_KEY) {
     try {
+      const modelo = await modeloGroq(process.env.GROQ_API_KEY);
       const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${process.env.GROQ_API_KEY}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          model: 'llama-3.3-70b-versatile',
+          model: modelo,
           max_tokens: 500,
           messages: [{
             role: 'user',
@@ -299,11 +301,12 @@ async function refactorAgent(action, payload) {
   const groqKey = process.env.GROQ_API_KEY;
   if (!groqKey) return { error: 'GROQ_API_KEY necessária para refactor agent' };
 
+  const modelo = await modeloGroq(groqKey);
   const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
     headers: { 'Authorization': `Bearer ${groqKey}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      model: 'llama-3.3-70b-versatile',
+      model: modelo,
       max_tokens: 1500,
       messages: [{
         role: 'system',
