@@ -28,12 +28,14 @@
   }
 
   // opts.silencioso: chamada opcional (gráfico, cotação, score) não mostra a faixa vermelha de erro.
+  const LEITURA_IMG = /^ler_print$|_ler$/;
   async function api(acao, dados, opts) {
     const avisar = (m) => { if (!(opts && opts.silencioso)) mostrarErro(m); };
     if (!usuario) { mostrarErro('Entre com sua conta.'); throw new Error('sem login'); }
     let r;
-    // Nada pode ficar esperando para sempre: ler print tem até 2 min, o resto até 25 s.
-    const limite = acao === 'ler_print' ? 180000 : 25000;
+    // Nada pode ficar esperando para sempre: LER imagem (holerite, print, PDF) tem até 3 min, o resto até 25 s.
+    // 17/11: só ler_print tinha 3 min; salario_ler e os *_print_ler desistiam em 25 s e o holerite nunca era lido.
+    const limite = LEITURA_IMG.test(String(acao)) ? 180000 : 25000;
     const ctrl = typeof AbortController === 'function' ? new AbortController() : null;
     const relogio = setTimeout(() => { if (ctrl) ctrl.abort(); }, limite);
     try {
