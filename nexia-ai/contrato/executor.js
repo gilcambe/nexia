@@ -132,6 +132,8 @@ function aplicar(texto, c, raiz) {
   if (!b.edits.length && !b.files.length) { const r = resgatarFormato(texto, c); if (r.length) { b.files = r; b.problems = []; } }
   const aplicados = [], recusas = [...b.problems];
   const permitido = p => c.arquivos.includes(p);
+  const originais = new Map();
+  const guardarOriginal = f => { if (!originais.has(f)) { const p = path.join(raiz, f); originais.set(f, fs.existsSync(p) ? fs.readFileSync(p, 'utf8') : null); } };
   for (const f of b.files) {
     if (!permitido(f.path)) { recusas.push(`${f.path}: fora dos arquivos permitidos`); continue; }
     // IA grátis costuma truncar arquivo grande: trocar um existente (>2 KB) por menos da metade é recusado.
@@ -140,6 +142,7 @@ function aplicar(texto, c, raiz) {
     if (antes > 2000 && Buffer.byteLength(f.content) < antes / 2) { recusas.push(`${f.path}: arquivo inteiro com menos da metade do atual (provável corte); use blocos SEARCH/REPLACE`); continue; }
     const velho = fs.existsSync(atualP) ? fs.readFileSync(atualP, 'utf8') : '';
     if (quebrouAcento(velho, f.content)) { recusas.push(`${f.path}: acentos com codificação quebrada (ex.: "├", "ÔÇ", "Ã©"); mande o texto em UTF-8, com os acentos normais`); continue; }
+    guardarOriginal(f.path);
     fs.mkdirSync(path.dirname(path.join(raiz, f.path)), { recursive: true });
     fs.writeFileSync(path.join(raiz, f.path), f.content);
     aplicados.push(f.path);
@@ -153,10 +156,32 @@ function aplicar(texto, c, raiz) {
     if (n !== 1) { recusas.push(`${e.path}: o trecho SEARCH aparece ${n} vez(es); copie um trecho exato e único`); continue; }
     const novo = atual.replace(e.find, () => e.replace);
     if (quebrouAcento(atual, novo)) { recusas.push(`${e.path}: acentos com codificação quebrada (ex.: "├", "ÔÇ", "Ã©"); mande o texto em UTF-8, com os acentos normais`); continue; }
+    guardarOriginal(e.path);
     fs.writeFileSync(p, novo);
     aplicados.push(e.path);
   }
+  // Melhoria 27 (17/11/2026): a #3885 passou no teste do contrato (que só lia o texto) com "const btn" declarado 2 vezes
+  // em prumo/app.js, e o Finance saiu do ar. Agora todo .js/.cjs/.mjs mudado precisa compilar (node --check); se não
+  // compilar, volta ao que era e a IA recebe o erro para corrigir.
+  for (const f of [...new Set(aplicados)]) {
+    if (!/\.(c|m)?js$/.test(f)) continue;
+    const erro = erroDeSintaxe(path.join(raiz, f));
+    if (!erro) continue;
+    if (originais.has(f)) { const v = originais.get(f); if (v === null) fs.rmSync(path.join(raiz, f), { force: true }); else fs.writeFileSync(path.join(raiz, f), v); }
+    for (let i = aplicados.length - 1; i >= 0; i--) if (aplicados[i] === f) aplicados.splice(i, 1);
+    recusas.push(`${f}: erro de sintaxe, a mudança foi desfeita (${erro}); corrija e mande de novo`);
+  }
   return { aplicados: [...new Set(aplicados)], recusas };
+}
+
+/** Mensagem curta do erro de sintaxe de um arquivo JS (ou null se compila). Usa o próprio node: entende CJS e ESM. */
+function erroDeSintaxe(arquivo) {
+  try { require('node:child_process').execFileSync(process.execPath, ['--check', arquivo], { stdio: 'pipe', timeout: 20000 }); return null; } catch (e) {
+    const txt = String((e && e.stderr) || (e && e.message) || '');
+    const linha = (/:(\d+)\r?\n/.exec(txt) || [])[1];
+    const msg = (/(SyntaxError: [^\r\n]+)/.exec(txt) || [])[1] || 'não compila';
+    return linha ? `linha ${linha}: ${msg}` : msg;
+  }
 }
 
 // Nota de uma tentativa a partir da saída do teste: testes que falharam (node --test) e, se o teste imprimir
