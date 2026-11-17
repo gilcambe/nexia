@@ -37,7 +37,7 @@ test('PA4. app chama /api/prumo com Bearer, pede avisos e mostra Em breve sem a 
   assert.match(js, /Authorization: 'Bearer '/);
   assert.match(js, /api\('avisos'\)/);
   assert.match(js, /Em breve/);
-  assert.match(js, /window\.MB = \{ api/);
+  assert.match(js, /window\.MB = (?:Object\.assign\(window\.MB \|\| \{\}, )?\{ api/);
 });
 
 test('PA5. service worker não guarda respostas da API', () => {
