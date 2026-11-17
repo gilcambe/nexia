@@ -229,6 +229,59 @@ async function agirCotacoes(acao, body, c) {
     await c.base.collection('config').doc('alocacao').set({ alvo, atualizado_em: c.agoraIso });
     return [200, { ok: true, alvo }];
   }
+  if (acao === 'mercado_buscar') {
+    const q = (body && body.q) || '';
+    if (typeof q !== 'string' || q.trim().length < 2) return [400, { error: 'Digite ao menos 2 letras para buscar.' }];
+    const f = c.deps.fetch || ((...a) => fetch(...a));
+    try {
+      const url = `https://query1.finance.yahoo.com/v1/finance/search?q=${encodeURIComponent(q.trim())}&quotesCount=10&newsCount=0`;
+      const j = await pegarJson(f, url);
+      const quotes = j && j.quotes || [];
+      const ativos = quotes
+        .filter((x) => x && x.symbol && String(x.symbol).endsWith('.SA'))
+        .map((x) => ({ ticker: String(x.symbol).replace(/\.SA$/, ''), nome: x.longname || x.shortname || '' }))
+        .filter((x) => x.ticker && x.nome);
+      return [200, { ativos }];
+    } catch (e) {
+      return [200, { ativos: [], aviso: 'Não consegui buscar agora. Tente de novo.' }];
+    }
+  }
+  if (acao === 'mercado_cotar') {
+    const raw = body && body.tickers;
+    let lista = [];
+    if (Array.isArray(raw)) lista = raw;
+    else if (typeof raw === 'string') lista = raw.split(',');
+    else return [400, { error: 'Informe os tickers.' }];
+    const vistos = new Set();
+    const validos = [];
+    const invalidos = [];
+    for (const t of lista) {
+      const tk = String(t || '').trim().toUpperCase();
+      if (!tk) continue;
+      if (vistos.has(tk)) continue;
+      vistos.add(tk);
+      if (TICKER.test(tk)) {
+        if (validos.length >= 12) continue;
+        validos.push(tk);
+      } else {
+        invalidos.push(tk);
+      }
+    }
+    if (validos.length === 0) return [400, { error: 'Nenhum ticker válido.' }];
+    const f = c.deps.fetch || ((...a) => fetch(...a));
+    const agora = c.deps.agora ? c.deps.agora() : new Date();
+    const env = c.deps.env || (typeof process !== 'undefined' ? process.env : {});
+    const cotacoes = [];
+    for (const tk of validos) {
+      try {
+        const cota = await cotar(tk, { fetch: f, agora, env });
+        cotacoes.push({ ticker: cota.ticker, preco: cota.preco, variacao_dia_pct: cota.variacao_dia_pct, fonte: cota.fonte, data_hora: cota.data_hora, desatualizada: cota.desatualizada });
+      } catch (e) {
+        cotacoes.push({ ticker: tk, preco: null, variacao_dia_pct: null, fonte: null, data_hora: agora.toISOString(), desatualizada: true });
+      }
+    }
+    return [200, { cotacoes, invalidos, em_pregao: emPregao(agora) }];
+  }
   if (acao !== 'cotacoes_vivas') return null;
   const itens = await c.listarCarteira();
   const col = c.base.collection('cotacoes');
