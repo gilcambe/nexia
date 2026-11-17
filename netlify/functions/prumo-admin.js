@@ -19,9 +19,9 @@ function createHandler(deps = {}) {
     if (method === 'OPTIONS') return { statusCode: 204, headers: cors, body: '' };
     if (method !== 'GET' && method !== 'POST') return res(405, { error: 'Method Not Allowed' });
     const auth = await getMw().requireBearerAuth(event, 'master').catch(() => ({ ok: false }));
-    if (!auth.ok) {
+    if (!auth.ok || auth.role !== 'master') {
       console.warn('[prumo-admin] acesso negado:', auth.role || 'sem role', auth.uid || 'sem uid');
-      return res(auth.statusCode || 403, { error: auth.error || 'Só o administrador da KERNEX entra aqui.' });
+      return res(403, { error: 'Acesso negado: apenas administradores (master) têm acesso a este painel.' });
     }
 
     // Estrutura inspirada em agenda.js: handler padronizado, resposta JSON consistente
