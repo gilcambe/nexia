@@ -181,7 +181,11 @@ test('M10. server.js: resposta { stream } sai em trechos e o iterador é encerra
 
 test('M11. cortex-chat só tenta IAs com chave: só GEMINI_API_KEY → Gemini primeiro, mesmo pedindo Groq', () => {
   const { chain } = require('../../netlify/functions/cortex-chat');
-  const keys = ['GEMINI_API_KEY', 'GROQ_API_KEY', 'DEEPSEEK_API_KEY', 'CEREBRAS_API_KEY', 'OPENROUTER_API_KEY', 'MISTRAL_API_KEY', 'ANTHROPIC_API_KEY'];
+  // #3781 (13/11): no Cortex Reserva havia chaves extras (IA_VAGA_*, GROQ_API_KEY_2, RESERVA_*) e o M11 ficava vermelho só
+  // lá. Guarda e apaga TODA variável que dá chave a um provedor, não só a lista fixa.
+  const keys = Object.keys(process.env).filter(k => /_API_KEY(_\d+)?$|_TOKEN$|^IA_VAGA_|^RESERVA_|^CLOUDFLARE_AI_|^GITHUB_MODELS_|_KEY(_\d+)?$/.test(k))
+    .concat(['GEMINI_API_KEY', 'GROQ_API_KEY', 'DEEPSEEK_API_KEY', 'CEREBRAS_API_KEY', 'OPENROUTER_API_KEY', 'MISTRAL_API_KEY', 'ANTHROPIC_API_KEY'])
+    .filter((k, i, a) => a.indexOf(k) === i);
   const saved = Object.fromEntries(keys.map(k => [k, process.env[k]]));
   try {
     for (const k of keys) delete process.env[k];
