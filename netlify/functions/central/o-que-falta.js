@@ -47,9 +47,9 @@ function montar({ abertas = [], fechadas = [], prs = [], agora = Date.now() }) {
   ];
 
   const seteDiasMs = 7 * 24 * 3600 * 1000;
-  // Filtra issues fechadas nos últimos 7 dias, que não sejam PRs e com state_reason diferente de 'not_planned'
+  // Filtra issues 'cortex-fila' fechadas nos últimos 7 dias (independente de rótulo 'cortex-feito')
   const issuesFechadas7dias = fechadas.filter(
-    (i) => !i.pull_request && i.closed_at && agora - Date.parse(i.closed_at) <= seteDiasMs && i.state_reason !== 'not_planned'
+    (i) => !i.pull_request && i.closed_at && agora - Date.parse(i.closed_at) <= seteDiasMs && i.state_reason !== 'not_planned' && nomes(i).includes('cortex-fila')
   );
   // Filtra PRs juntados nos últimos 7 dias
   const prsJuntados7dias = prs.filter((p) => p.merged_at && agora - Date.parse(p.merged_at) <= seteDiasMs);
@@ -121,13 +121,13 @@ async function todas(gql, q, max = 10) {
 }
 
 /** Busca no GitHub e monta. `gql` = criarGql(env) (ou um falso nos testes). */
-async function buscar(gql, agora = Date.now(), repo = 'gilcambe/nexia') {
-  const desde = new Date(agora - SETENTA_E_DUAS_H).toISOString().slice(0, 16);
+  async function buscar(gql, agora = Date.now(), repo = 'gilcambe/nexia') {
+  const desdeSeteDias = new Date(agora - 7 * 24 * 3600 * 1000).toISOString().slice(0, 16);
   const [abertas, donos, fechadas, prs, travadas] = await Promise.all([
     todas(gql, `repo:${repo} is:issue is:open label:cortex-fila`),
     todas(gql, `repo:${repo} is:issue is:open label:vez-do-dono`, 1),
-    todas(gql, `repo:${repo} is:closed closed:>=${desde}`, 1),
-    todas(gql, `repo:${repo} is:pr is:open`, 1),
+    todas(gql, `repo:${repo} is:closed closed:>=${desdeSeteDias}`),
+    todas(gql, `repo:${repo} is:pr is:merged merged:>=${desdeSeteDias}`),
     todas(gql, `repo:${repo} is:issue is:open label:cortex-travado`, 1),
   ]);
   for (const d of donos) if (!abertas.some((a) => a.number === d.number)) abertas.push(d);
