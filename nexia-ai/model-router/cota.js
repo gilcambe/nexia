@@ -6,6 +6,7 @@
 // dentro de uma execução, para a próxima não gastar chamada sem sucesso.
 const SEIS_H = 6 * 60 * 60 * 1000;
 const VINTE_E_QUATRO_H = 24 * 60 * 60 * 1000;
+const SETE_DIAS = 7 * 24 * 60 * 60 * 1000; // melhoria 24: modelo morto (404/410 end of life)
 const DOIS_MIN = 2 * 60 * 1000;
 const SESSENTA_S = 60 * 1000;
 // #821: disjuntor (circuit breaker). Modelo que falha CIRCUITO_FALHAS vezes seguidas por instabilidade
@@ -44,6 +45,8 @@ function createPlacar({ agora = () => Date.now() } = {}) {
         return retryAfterMs ? Number(retryAfterMs) : SEIS_H;
       case 'rate':
         return Math.max(Number(retryAfterMs || 0), SESSENTA_S);
+      case 'morto':
+        return SETE_DIAS;
       case 'fatal':
         return VINTE_E_QUATRO_H;
       case 'busy':

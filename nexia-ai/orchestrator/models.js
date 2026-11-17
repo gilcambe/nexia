@@ -38,7 +38,7 @@ const TAIL = [
   { provider: 'google', model: 'gemini-3.5-flash' }, { provider: 'google', model: 'gemini-3.1-flash-lite' },
   { provider: 'google', model: 'gemini-flash-latest' }, { provider: 'google', model: 'gemma-4-31b-it' },
   { provider: 'codestral', model: 'codestral-latest' },
-  { provider: 'nvidia', model: 'openai/gpt-oss-120b' }, // qwen3-coder-480b saiu da NVIDIA (410 em 12/11)
+  // nvidia/openai/gpt-oss-120b saiu (410 end of life em 03/09/2026); qwen3-coder-480b saiu da NVIDIA (410 em 12/11)
   { provider: 'cloudflare', model: '@cf/openai/gpt-oss-120b' },
   { provider: 'mistral', model: 'mistral-small-latest' }, { provider: 'mistral', model: 'devstral-small-latest' },
   { provider: 'zai', model: 'glm-4.7-flash' }, { provider: 'zai', model: 'glm-4.5-flash' },
