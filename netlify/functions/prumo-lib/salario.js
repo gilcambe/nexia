@@ -125,7 +125,7 @@ async function agirSalario(acao, body, c) {
     case 'ponto_salvar': {
       const v = validarPonto(body);
       if (!v.ok) return [400, { error: v.erro }];
-      await base.collection('pontos').doc(v.item.mes).set({ ...v.item, atualizado_em: agoraIso });
+      await base.collection('folhas_ponto').doc(v.item.mes).set({ ...v.item, atualizado_em: agoraIso });
       return [200, { ok: true, id: v.item.mes }];
     }
     case 'salario_config': {
@@ -145,7 +145,7 @@ async function agirSalario(acao, body, c) {
     case 'salario_previsao': {
       const mes = texto(body.mes, 7) || agoraIso.slice(0, 7);
       if (!MES.test(mes)) return [400, { error: 'O mês precisa estar no formato AAAA-MM.' }];
-      const [cfg, recebidos, pontoDoc] = await Promise.all([lerConfig(), pagamentosDe(mes), base.collection('pontos').doc(mes).get()]);
+      const [cfg, recebidos, pontoDoc] = await Promise.all([lerConfig(), pagamentosDe(mes), base.collection('folhas_ponto').doc(mes).get()]);
       const total_recebido = dinheiro(recebidos.reduce((s, p) => s + (Number(p.liquido) || 0), 0));
       const sai = (previsao, motivo) => [200, { mes, recebidos, total_recebido, previsao, motivo }];
       if (!(cfg.salario_base > 0)) return sai(null, 'Informe seu salário base para eu estimar o fechamento.');
