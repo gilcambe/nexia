@@ -209,8 +209,9 @@ function createHandler(deps = {}) {
     const isMaster = auth.role === 'master';
     const targetUid = body.uid || q.uid || auth.uid;
 
-    // Cada pessoa só mexe nos próprios dados. O master também (sem acesso a valores de ninguém).
-    if (targetUid !== auth.uid) {
+    // Apenas master pode aceder a dados de outros para exportação/deleção administrativa
+    const isMaster = auth.role === 'master';
+    if (targetUid !== auth.uid && !isMaster) {
       return res(403, { error: 'Acesso não autorizado aos dados de outro usuário.' });
     }
 
@@ -220,14 +221,14 @@ function createHandler(deps = {}) {
     }
 
     try {
-      // 1. Exportação (LGPD)
-      if (acao === 'export' || acao === 'exportar') {
+          // 1. Exportação (LGPD) - suporta /prumo-admin/export
+    if (acao === 'export' || acao === 'exportar' || path.includes('/export')) {
         const dados = await exportarDadosUsuario(db, targetUid);
         return res(200, { ok: true, acao: 'export', dados });
       }
 
-      // 2. Exclusão / Direito ao esquecimento (LGPD)
-      if (acao === 'delete' || acao === 'apagar') {
+      // 2. Exclusão / Direito ao esquecimento (LGPD) - suporta /prumo-admin/delete
+      if (acao === 'delete' || acao === 'apagar' || path.includes('/delete')) {
         if (body.confirmacao !== 'EXCLUIR_DADOS_DEFINITIVAMENTE') {
           return res(400, {
             error: 'Confirmação necessária. Envie { confirmacao: "EXCLUIR_DADOS_DEFINITIVAMENTE" } para confirmar o apagamento conforme LGPD.',
