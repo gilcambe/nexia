@@ -463,6 +463,17 @@ function semDuplicados(itens) {
   }
   return [...porChave.values()];
 }
+const LEITURA_MEMO = /_(listar|resumo|visao|status|previsao|ver|estado)$|^(avisos|relatorio_mensal|saude_financeira|meu_plano|inicio_resumo)$/;
+/** listar com memória só desta chamada: chave = caminho da coleção (só coleção inteira, sem filtro). Cada um recebe cópia. */
+function memoListar() {
+  const memo = new Map();
+  return (col) => {
+    const k = col && typeof col.path === 'string' && typeof col.doc === 'function' ? col.path : null;
+    if (!k) return listar(col);
+    if (!memo.has(k)) memo.set(k, listar(col).catch((e) => { memo.delete(k); throw e; }));
+    return memo.get(k).then((l) => l.map((x) => ({ ...x })));
+  };
+}
 async function listarCarteira(base) { return semDuplicados(await listar(base.collection('carteira'))); }
 async function gravarHistorico(base) {
   const itens = await listarCarteira(base);
@@ -485,7 +496,10 @@ async function agir(uid, body) {
   const apagar = async (colecao) => { if (!id) return [400, { error: 'Diga qual item apagar.' }]; await base.collection(colecao).doc(id).delete(); return [200, { ok: true }]; };
 
   // Fases 2 a 4 (holerite, orçamento, consultor, milhas) ficam em prumo-lib/extra.js.
-  const ctx = { uid, base, listar, listarCarteira: () => listarCarteira(base), salvar, apagar, deps, agoraIso, lerImagens, extrairJson, resumoMes, progressoObjetivos, resumoHistorico };
+  // 17/11 (lento no celular do dono): numa ação que só LÊ, a mesma coleção é lida uma vez só por chamada (o resumo do
+  // Início e o fluxo liam as mesmas 9 coleções de novo; o Worker só abre 6 conexões por vez).
+  const listarReq = LEITURA_MEMO.test(String(body.acao || '')) ? memoListar() : listar;
+  const ctx = { uid, base, listar: listarReq, listarCarteira: async () => semDuplicados(await listarReq(base.collection('carteira'))), salvar, apagar, deps, agoraIso, lerImagens, extrairJson, resumoMes, progressoObjetivos, resumoHistorico };
   switch (body.acao) {
     case 'carteira_listar': return [200, { itens: (await listarCarteira(base)).sort((a, b) => String(a.nome).localeCompare(String(b.nome), 'pt-BR')) }];
     case 'carteira_salvar': {

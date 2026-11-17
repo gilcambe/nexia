@@ -201,11 +201,11 @@ async function agirDoc(acao, body, c) {
       const mes = texto(body.mes, 7) || agoraIso.slice(0, 7);
       if (!MES.test(mes)) return [400, { error: 'O mês precisa estar no formato AAAA-MM.' }];
       const fin = require('./financas');
-      const [lancsTodos, carteira, pontos, cartoes, contas, limites, dividas] = await Promise.all([listar(col), c.listarCarteira(), listar(base.collection('pontos')), listar(base.collection('cartoes')), listar(base.collection('contas')), listar(base.collection('limites')), listar(base.collection('dividas'))]);
+      // 17/11 (lento no celular do dono): tudo numa leva só; o fluxo começa junto e reusa as mesmas leituras.
+      const pFluxo = require('./fluxo').carregar(c).catch(() => null);
+      const [lancsTodos, carteira, pontos, cartoes, contas, limites, dividas, pagamentosTodos, cfgDiv] = await Promise.all([listar(col), c.listarCarteira(), listar(base.collection('pontos')), listar(base.collection('cartoes')), listar(base.collection('contas')), listar(base.collection('limites')), listar(base.collection('dividas')), listar(base.collection('pagamentos')), base.collection('config').doc('dividas').get()]);
       const lancs = prv.realizados(lancsTodos.filter((x) => x.perfil !== 'pj'), 'data', hoje); // PJ nunca entra nos totais pessoais; previsto (data futura) fica de fora
-      const pagamentosTodos = await listar(base.collection('pagamentos'));
       const aReceberPagar = prv.resumoPrevisto({ lancs: lancsTodos, pagamentos: pagamentosTodos, dividas }, mes, hoje);
-      const cfgDiv = await base.collection('config').doc('dividas').get();
       const resDiv = require('./dividas').resumoDividas(dividas, !!(cfgDiv && cfgDiv.exists && cfgDiv.data().sem_dividas), doMesReceitas(lancs, mes));
       const doMes = totais(lancs.filter((x) => String(x.data).startsWith(mes)));
       const anterior = totais(lancs.filter((x) => String(x.data).startsWith(mesAnterior(mes))));
@@ -216,7 +216,7 @@ async function agirDoc(acao, body, c) {
       const dia = new Date(agoraIso).getUTCDate();
       const vencimentos = cartoes.map((k) => ({ cartao: k.nome, dia: k.dia_vencimento, em_dias: (k.dia_vencimento - dia + 31) % 31 })).filter((v) => v.em_dias <= 7).sort((a, b) => a.em_dias - b.em_dias);
       let fluxo_inicio = null;
-      try { const f = require('./fluxo'); fluxo_inicio = f.resumoInicio(await f.carregar(c), agoraIso.slice(0, 10)); } catch { fluxo_inicio = null; } // cartão "quanto ainda cai" (carreira)
+      try { const dadosFluxo = await pFluxo; if (dadosFluxo) fluxo_inicio = require('./fluxo').resumoInicio(dadosFluxo, agoraIso.slice(0, 10)); } catch { fluxo_inicio = null; } // cartão "quanto ainda cai" (carreira)
       const lacunas = [];
       if (!resDiv.registradas && !resDiv.sem) lacunas.push('dividas');
       if (!contas.length) lacunas.push('contas');
