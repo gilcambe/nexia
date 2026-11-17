@@ -16,8 +16,8 @@
     const rec = await MB.api('lanc_listar', { mes });
     el.innerHTML = `
       <div class="card"><h3 style="margin:0 0 6px">📄 Enviar documento</h3>
-        <div class="fraco">Fatura, extrato, comprovante Pix, nota, boleto ou recibo: foto, print ou PDF (até 5 páginas por vez).</div>
-        <input type="file" id="kf-arq" accept="image/*,application/pdf,.pdf" multiple style="margin-top:10px">
+        <div class="fraco">Fatura, extrato, comprovante Pix, nota, boleto ou recibo: foto, print ou PDF (até 5 páginas por vez). Extrato do banco também aceito (.ofx, .csv).</div>
+        <input type="file" id="kf-arq" accept="image/*,application/pdf,.pdf,.ofx,.csv" multiple style="margin-top:10px">
         <button class="btn" id="kf-ler" type="button" style="margin-top:10px">Ler documento</button></div>
       <div id="kf-res"></div>
       <div class="card"><div class="fraco">Lançamentos de ${mes.slice(5)}/${mes.slice(0, 4)} · entradas ${brl(rec.receitas)} · gastos ${brl(rec.despesas)}</div>
@@ -32,11 +32,31 @@
       const btn = ev.currentTarget; btn.disabled = true; btn.textContent = 'Lendo… pode levar até 2 minutos';
       res.innerHTML = '';
       try {
-        const pdf = await carregarPdf();
-        const { imagens, cortou } = await pdf.paraImagens(arqs, reduzir);
-        const r = await MB.api('doc_ler', { imagens });
-        mostrarLeitura(r);
-        if (cortou) res.insertAdjacentHTML('afterbegin', '<div class="aviso-c">Li as 5 primeiras páginas. Para o resto, mande de novo só as outras páginas.</div>');
+        const isOfxCsv = arqs.some((a) => /\.(ofx|csv)$/i.test(a.name));
+        if (isOfxCsv) {
+          const resultados = { prontos: [], conferir: [], ja_lancados: 0, receitas: 0, despesas: 0 };
+          for (const arq of arqs) {
+            if (!/\.(ofx|csv)$/i.test(arq.name)) continue;
+            const conteudo = await arq.text();
+            const r = await MB.api('extrato_ler', { nome: arq.name, conteudo });
+            if (!r || !r.prontos) continue;
+            resultados.prontos.push(...r.prontos);
+            resultados.conferir.push(...(r.conferir || []));
+            resultados.ja_lancados += (r.ja_lancados || 0);
+            resultados.receitas += (r.receitas || 0);
+            resultados.despesas += (r.despesas || 0);
+          }
+          resultados.documento = 'extrato';
+          resultados.imagens_lidas = 1;
+          resultados.imagens_total = 1;
+          mostrarLeitura(resultados);
+        } else {
+          const pdf = await carregarPdf();
+          const { imagens, cortou } = await pdf.paraImagens(arqs, reduzir);
+          const r = await MB.api('doc_ler', { imagens });
+          mostrarLeitura(r);
+          if (cortou) res.insertAdjacentHTML('afterbegin', '<div class="aviso-c">Li as 5 primeiras páginas. Para o resto, mande de novo só as outras páginas.</div>');
+        }
       } catch (e) {
         res.innerHTML = `<div class="aviso-c">${esc(e && e.message || 'Não consegui ler agora.')} Tente de novo com uma foto mais nítida.</div>`;
       } finally { btn.disabled = false; btn.textContent = 'Ler documento'; }
