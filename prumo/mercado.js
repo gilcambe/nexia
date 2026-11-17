@@ -68,7 +68,8 @@
     style.id = 'mk-estilo';
     style.textContent = `
 #mk-lista { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
-.mk-card { background: var(--cartao); border: 1px solid var(--borda); border-radius: 8px; padding: 8px; display: flex; flex-direction: column; gap: 4px; }
+.mk-card { background: var(--cartao); border: 1px solid var(--borda); border-radius: 14px; padding: 12px; display: flex; flex-direction: column; gap: 4px; }
+.mk-card [data-remover] { background: none; border: 1px solid var(--borda); color: var(--fraco); border-radius: 8px; font-size: 13px; padding: 4px 8px; cursor: pointer; align-self: flex-start; }
 .mk-preco { font-size: 1.25rem; font-weight: 700; }
 `;
     document.head.appendChild(style);

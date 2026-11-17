@@ -1,0 +1,12 @@
+{
+  "numero": 3922,
+  "data": "2026-11-17",
+  "modelo": "kilo/auto:1",
+  "tentativas": 1,
+  "pedido": "Finance: botão Remover da Mercado sai branco\n\nKernex Finance: o botão \"Remover\" da tela Mercado sai branco no tema escuro.\n\nNo CSS que `prumo/mercado.js` injeta (`<style id=\"mk-estilo\">`):\n1. Acrescente esta regra:\n   `.mk-card [data-remover] { background: none; border: 1px solid var(--borda); color: var(--fraco); border-radius: 8px; font-size: 13px; padding: 4px 8px; cursor: pointer; align-self: flex-start; }`\n2. Na regra `.mk-card`, troque `border-radius: 8px; padding: 8px;` por `border-radius: 14px; padding: 12px;`.\n\nNão mude mais nada.",
+  "arquivos": [
+    "prumo/mercado.js"
+  ],
+  "teste": "node --test tests/contrato/finance-mercado-botao.test.js tests/contrato/finance-mercado-tela.test.js tests/unit/prumo-sintaxe.test.js",
+  "diff": "diff --git a/prumo/mercado.js b/prumo/mercado.js\nindex bd32174..63216c7 100644\n--- a/prumo/mercado.js\n+++ b/prumo/mercado.js\n@@ -68,7 +68,8 @@\n     style.id = 'mk-estilo';\n     style.textContent = `\n #mk-lista { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }\n-.mk-card { background: var(--cartao); border: 1px solid var(--borda); border-radius: 8px; padding: 8px; display: flex; flex-direction: column; gap: 4px; }\n+.mk-card { background: var(--cartao); border: 1px solid var(--borda); border-radius: 14px; padding: 12px; display: flex; flex-direction: column; gap: 4px; }\n+.mk-card [data-remover] { background: none; border: 1px solid var(--borda); color: var(--fraco); border-radius: 8px; font-size: 13px; padding: 4px 8px; cursor: pointer; align-self: flex-start; }\n .mk-preco { font-size: 1.25rem; font-weight: 700; }\n `;\n     document.head.appendChild(style);"
+}
