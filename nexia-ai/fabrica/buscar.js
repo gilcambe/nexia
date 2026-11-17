@@ -2,10 +2,12 @@
 // Buscador da fábrica: ficha → modelo sugerido + módulos prontos / parecidos / que faltam (só estes vão para o Cortex).
 const { carregar, sem } = require('./catalogo');
 const { normalizarFicha, validarFicha } = require('./ficha');
+const { pedidoDeBusca, termos } = require('../escritorio/buscador');
 
 const NIVEL3 = ['pagamento', 'cobranca', 'cartao', 'financeiro', 'erp', 'marketplace', 'nota fiscal', 'multi empresa', 'app nativo'];
 const MIN_NIVEL1 = 3;          // modelo pronto + dados: gerar e publicar prévia (medido: segundos + ~26 s por 3 sites)
 const MIN_POR_FALTA = 30;      // cada módulo novo vira tarefa pequena do Cortex (SUPOSIÇÃO a medir no M7)
+const HORAS_24 = 24 * 60 * 60 * 1000;
 
 /** Ramo digitado ("Clínica odontológica") → nichos do catálogo (["saude"]). */
 function nichosDoRamo(ramo, cat) {
@@ -23,7 +25,24 @@ function acharModulo(pedido, cat) {
     || (cat.modulos || []).find(m => (m.apelidos || []).some(a => p.includes(sem(a)) || sem(a).includes(p)) || p.includes(sem(m.id)));
 }
 
-function consultar(fichaBruta, cat = carregar()) {
+/** Para cada módulo que falta, pede ao Buscador (sem repetir o mesmo termo em menos de 24 h). */
+function pedirBuscaDasFaltas(faltam, { mural, registro, agora }) {
+  const resultado = [];
+  for (const falta of (faltam || [])) {
+    const pedido = falta.pedido;
+    const t = termos(pedido);
+    const ultimo = registro && typeof registro.get === 'function' ? registro.get(t) : undefined;
+    const pediuBusca = !ultimo || agora - ultimo >= HORAS_24;
+    if (pediuBusca) {
+      mural.postar(pedidoDeBusca(pedido, 'fabrica'));
+      if (registro && typeof registro.set === 'function') registro.set(t, agora);
+    }
+    resultado.push({ pedido, termos: t, pediuBusca });
+  }
+  return resultado;
+}
+
+function consultar(fichaBruta, cat = carregar(), opcoes) {
   const ficha = normalizarFicha(fichaBruta);
   const erros = validarFicha(ficha);
   if (erros.length) return { ficha, modelo: null, prontos: [], parecidos: [], faltam: [], nivel: null, minutos: null, erros };
@@ -54,7 +73,16 @@ function consultar(fichaBruta, cat = carregar()) {
   const niveis = [...prontos.keys()].map(id => porId.get(id).nivel).concat(parecidos.map(x => x.nivel), faltam.map(x => x.nivel));
   const nivel = Math.max(1, ...niveis, modelo && !modelo.clonavel ? 2 : 1);
   const minutos = nivel >= 3 ? null : MIN_NIVEL1 + (faltam.length + parecidos.length) * MIN_POR_FALTA + (modelo && !modelo.clonavel ? MIN_POR_FALTA : 0);
-  return { ficha, modelo, prontos: [...prontos.values()], parecidos, faltam, nivel, minutos, erros: [] };
+
+  const resultado = { ficha, modelo, prontos: [...prontos.values()], parecidos, faltam, nivel, minutos, erros: [] };
+  if (opcoes && opcoes.mural) {
+    resultado.buscas = pedirBuscaDasFaltas(faltam, {
+      mural: opcoes.mural,
+      registro: opcoes.registro,
+      agora: opcoes.agora,
+    });
+  }
+  return resultado;
 }
 
-module.exports = { consultar, nichosDoRamo, acharModulo };
+module.exports = { consultar, pedirBuscaDasFaltas, nichosDoRamo, acharModulo };
