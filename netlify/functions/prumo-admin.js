@@ -28,8 +28,15 @@ function createHandler(deps = {}) {
     if (method === 'OPTIONS') return { statusCode: 204, headers: mw.makeHeaders(event), body: '' };
     if (method !== 'GET' && method !== 'POST') return res(405, { error: 'Method Not Allowed' });
     const authRes = await mw.requireBearerAuth(event, 'master');
-    if (authRes.error) return res(authRes.statusCode, { error: authRes.error });
-    const auth = authRes.user;
+    if (authRes.error) {
+      const erro = (() => { try { return JSON.parse(authRes.body || '{}').error; } catch { return null; } })();
+      return res(authRes.statusCode, { error: erro || 'Acesso negado.' });
+    }
+    // Garante 403 também se o middleware devolver (statusCode, body) em outro formato.
+    if (authRes.statusCode) return res(authRes.statusCode, { error: 'Acesso negado.' });
+    // Só o master entra; qualquer outra role recebe 403.
+    const auth = authRes.user || { uid: event._uid, role: event._role };
+    if (String(auth.role || event._role || '') !== 'master') return res(403, { error: 'Acesso restrito ao master.' });
 
     // Estrutura inspirada em agenda.js: handler padronizado, resposta JSON consistente
     // e validação de parâmetros seguindo o padrão do projeto.
