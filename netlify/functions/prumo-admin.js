@@ -1,4 +1,4 @@
-'use strict'; // prumo-admin handler — estrutura padrão agenda.js, role master obrigatória (403 para não-master)
+'use strict'; // prumo-admin handler — estrutura padrão agenda.js, role master obrigatória (403 para não-master); exporta handler para uso nas rotas
 // Kernex Finance Admin (/api/prumo-admin). Só o master entra; o resto recebe 403.
 // Mostra SÓ contagens (pessoas, planos, leituras do mês, mensagens). Nunca valores, documentos ou extratos.
 // Mensagens de suporte: o master lê e responde as mensagens que a própria pessoa mandou na aba Ajuda.
@@ -83,7 +83,7 @@ function createHandler(deps = {}) {
     }
   };
 }
-// Exportação do handler para uso nas rotas
-const handler = createHandler();
-exports.handler = handler;
+// Exportação do handler para uso nas rotas (mesma forma do agenda.js).
+// Exporte o handler direto: netlify/functions/agenda.js usa exports.handler = createHandler().
+exports.handler = createHandler();
 exports.createHandler = createHandler;
