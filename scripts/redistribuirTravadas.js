@@ -17,19 +17,16 @@ function redistribuirTravadas(issues = []) {
     const labels = (i.labels || []).map(l => (typeof l === 'string' ? l : l.name));
     // Remove os rótulos especificados
     const novosLabels = labels.filter(l => !['precisa-de-voce', 'reserva-tentou', 'cortex-travado', 'travado'].includes(l));
-    // Adiciona o rótulo cortex-reserva.yml se não estiver presente
+    // Adiciona o rótulo cortex-reserva.yml se ainda não estiver presente
+    let labelsAdicionados = [];
     if (!novosLabels.includes('cortex-reserva.yml')) {
       novosLabels.push('cortex-reserva.yml');
-    }
-    // Renova a data de execução (CONSERTO_SMOKE) a cada rodada
-    if (t.novosLabels.includes('cortex-reserva.yml')) {
-      const idx = t.novosLabels.indexOf('cortex-reserva.yml');
-      t.novosLabels.splice(idx, 1, `cortex-reserva.yml:${CONSERTO_SMOKE}`);
+      labelsAdicionados.push('cortex-reserva.yml');
     }
     return {
       number: i.number,
       labelsRemovidos: labels.filter(l => ['precisa-de-voce', 'reserva-tentou', 'cortex-travado', 'travado'].includes(l)),
-      labelsAdicionados: ['cortex-reserva.yml'],
+      labelsAdicionados,
       novosLabels
     };
   });

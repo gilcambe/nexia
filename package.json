@@ -14,6 +14,7 @@
     "preview": "vite preview",
     "audit:bundle": "node scripts/bundle-budget.js out",
     "mapa": "node scripts/gerar-mapa.js",
+    "redistribuir": "node scripts/redistribuirTravadas.js",
     "start": "node server.js",
     "typecheck": "tsc --noEmit -p .",
     "test": "node --test tests/unit/*.test.js",
