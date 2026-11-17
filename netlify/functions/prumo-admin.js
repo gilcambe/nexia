@@ -18,9 +18,11 @@ function createHandler(deps = {}) {
     const res = (statusCode, body) => ({ statusCode, headers: cors, body: JSON.stringify(body) });
     if (method === 'OPTIONS') return { statusCode: 204, headers: cors, body: '' };
     if (method !== 'GET' && method !== 'POST') return res(405, { error: 'Method Not Allowed' });
-    const auth = (headers.authorization || headers.Authorization) ? await getMw().verifyBearerToken(event).catch(() => ({ ok: false })) : { ok: false };
-    if (!auth.ok) return res(401, { error: 'Entre com sua conta.' });
-    if (auth.role !== 'master') return res(403, { error: 'Só o administrador da KERNEX entra aqui.' });
+    const auth = await getMw().requireBearerAuth(event, 'master').catch(() => ({ ok: false }));
+    if (!auth.ok) {
+      console.warn('[prumo-admin] acesso negado:', auth.role || 'sem role', auth.uid || 'sem uid');
+      return res(auth.statusCode || 403, { error: auth.error || 'Só o administrador da KERNEX entra aqui.' });
+    }
 
     // Estrutura inspirada em agenda.js: handler padronizado, resposta JSON consistente
     // e validação de parâmetros seguindo o padrão do projeto.
