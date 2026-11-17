@@ -3,6 +3,7 @@
 (function () {
   const MB = window.MB;
   const carregarUi = () => MB.ui ? Promise.resolve(MB.ui) : new Promise((ok, falha) => { const s = document.createElement('script'); s.src = '/prumo/ui.js'; s.onload = () => ok(MB.ui); s.onerror = falha; document.body.appendChild(s); });
+  const carregarGraficos = () => MB.graficos ? Promise.resolve(MB.graficos) : new Promise((ok, falha) => { const s = document.createElement('script'); s.src = '/prumo/graficos.js'; s.onload = () => ok(MB.graficos); s.onerror = falha; document.body.appendChild(s); });
   const NOME_CAT = { moradia: 'Moradia', alimentacao: 'Alimentação', transporte: 'Transporte', saude: 'Saúde', educacao: 'Educação', familia: 'Família', lazer: 'Lazer', compras: 'Compras', assinaturas: 'Assinaturas', financeiro: 'Financeiro', impostos: 'Impostos', investimentos: 'Investimentos', renda: 'Renda', outros: 'Outros' };
   const LACUNA = { contas: 'suas contas bancárias', dividas: 'suas dívidas', lancamentos: 'lançamentos (envie uma fatura ou extrato)' };
 
@@ -10,6 +11,24 @@
     const { brl, esc, barra, aba } = await carregarUi();
     aba('inicio');
     const [r, sf] = await Promise.all([MB.api('inicio_resumo'), MB.api('saude_financeira')]);
+    let patrimSvg = '', hojeHtml = '', hojeTotal = 0;
+    try {
+      const graficos = await carregarGraficos();
+      const [hist, cot] = await Promise.all([MB.api('historico_listar'), MB.api('cotacoes_vivas')]);
+      if (Array.isArray(hist) && hist.length) {
+        patrimSvg = graficos.linha(hist.map((m) => ({ rotulo: String(m.mes || ''), valor: Number(m.total || 0) })));
+      }
+      let ativos = [];
+      if (Array.isArray(cot)) {
+        for (const c of cot) {
+          const g = graficos.ganhoDoDia(c);
+          if (g != null) ativos.push({ rotulo: c.ticker || c.nome || c.rotulo || 'Ativo', valor: g });
+        }
+      }
+      ativos = ativos.sort((a, b) => Math.abs(b.valor) - Math.abs(a.valor)).slice(0, 8);
+      hojeHtml = graficos.barras(ativos);
+      hojeTotal = ativos.reduce((s, a) => s + a.valor, 0);
+    } catch (e) { /* sem os gráficos, o resto da tela segue */ }
     const nome = (MB.usuario && MB.usuario() && MB.usuario().displayName || '').split(' ')[0];
     const hora = new Date().getHours();
     const saudacao = hora < 12 ? 'Bom dia' : hora < 18 ? 'Boa tarde' : 'Boa noite';
@@ -36,6 +55,8 @@
         ${sf.indicadores.map((x) => `<div style="margin:6px 0"><div class="item" style="padding:0;border:0"><span>${esc(x.nome)}</span><span class="fraco">${esc(x.texto)}</span></div>${barra(x.nota, x.nota < 40 ? '#ef4444' : x.nota < 70 ? '#f59e0b' : '')}</div>`).join('')}
         <div class="fraco" style="margin-top:6px">${esc(sf.aviso)}${sf.nota_mes_anterior !== null && sf.nota !== null ? ' Mês anterior: ' + sf.nota_mes_anterior + '.' : ''}</div></div>
       <div class="card kf-insight"><div class="fraco">💡 Resumo do mês</div><div>${esc(insight)}</div></div>
+      <div class="card" id="kf-graf-patrimonio" style="margin-top:12px"><div class="fraco">Seu patrimônio</div>${patrimSvg}</div>
+      <div class="card" id="kf-graf-hoje" style="margin-top:12px"><div class="fraco">Ganhos e perdas de hoje</div>${hojeHtml}<div class="n ${hojeTotal >= 0 ? 'verde' : 'verm'}" style="margin-top:6px">${brl(hojeTotal)}</div></div>
       <button class="btn" id="kf-doc" type="button">📄 Enviar documento</button>
       <div class="linha" style="margin-top:8px"><button class="btn sec" id="kf-ia" type="button">🤖 Perguntar à IA</button><button class="btn sec" id="kf-posso" type="button">🛒 Posso comprar?</button></div>
       ${r.dividas.registradas ? `<div class="card" style="margin-top:12px"><div class="item" style="padding:0;border:0"><span class="fraco">Dívidas</span><span class="n verm">${brl(r.dividas.total)}</span></div><div class="fraco">Parcelas ${brl(r.dividas.parcelas_mes)} por mês${r.dividas.comprometimento_pct !== null ? ' · ' + String(r.dividas.comprometimento_pct).replace('.', ',') + '% da renda' : ''}</div><button class="btn sec mini" id="kf-div" type="button" style="margin-top:8px">Ver plano de quitação</button></div>` : r.dividas.sem ? '' : `<div class="card" style="margin-top:12px"><div class="fraco">Ainda não sei se você tem dívidas. Cadastre ou diga que não tem, e a nota de saúde fica mais completa.</div><button class="btn sec mini" id="kf-div" type="button" style="margin-top:8px">Ir para Dívidas</button></div>`}
