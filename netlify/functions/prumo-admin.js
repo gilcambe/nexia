@@ -86,5 +86,4 @@ function createHandler(deps = {}) {
 // Exportação do handler para uso nas rotas (mesma forma do agenda.js).
 // Exporte o handler direto: netlify/functions/agenda.js usa exports.handler = createHandler().
 exports.handler = createHandler();
-exports.handler = handler;
 exports.createHandler = createHandler;
