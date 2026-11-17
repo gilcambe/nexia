@@ -224,6 +224,17 @@ async function revisarItens(o, c, raiz, autor, escada, log) {
  * @param {object} o { contrato, raiz, router, modelos: [{provider,model}], rodarTeste: (cmd) => Promise<{ok, saida}>, porModelo=2, log }
  * @returns {Promise<{ ok, motivo?, modelo?, tentativas, arquivos?, historico }>}
  */
+// Melhoria 26 (17/11/2026): a escada tinha ordem fixa e a kilo (10 de 13 entregas aprovadas) era a 7ª; antes dela a
+// zai expirava em 2 min e a openrouter devolvia resposta inválida: ~4 min perdidos por tarefa. Agora os exemplos
+// aprovados (memoria/exemplos, campo "modelo") contam acertos; mais acertos nas últimas 30 entregas sobe na escada.
+// Desempate mantém a ordem original. Quem nunca acertou não some (só fica depois).
+function porAcerto(lista, exemplos, max = 30) {
+  const recentes = (exemplos || []).filter(e => e && typeof e.modelo === 'string').sort((a, b) => String(b.data || '').localeCompare(String(a.data || '')) || (b.numero || 0) - (a.numero || 0)).slice(0, max);
+  const n = new Map();
+  for (const e of recentes) n.set(e.modelo, (n.get(e.modelo) || 0) + 1);
+  return lista.map((m, i) => ({ m, i, k: n.get(`${m.provider}/${m.model}`) || 0 })).sort((a, b) => b.k - a.k || a.i - b.i).map(x => x.m);
+}
+
 async function executar(o) {
   const c = o.contrato, raiz = o.raiz, log = o.log || (() => {});
   const historico = [];
@@ -250,11 +261,19 @@ async function executar(o) {
   // Melhoria 24 (17/11/2026): o placar é COMPARTILHADO (D1) com outros robôs; um 429 deles tirava o Gemini da escada
   // inteira sem aviso (#3850). Agora quem está marcado vai para o FIM (ainda é tentado) e o log diz por quê.
   let escada = o.modelos;
+  let fora = [];
   if (placar) {
     const livres = placar.ordenar(o.modelos);
-    const fora = o.modelos.filter(m => !livres.includes(m));
+    fora = o.modelos.filter(m => !livres.includes(m));
     escada = [...livres, ...fora];
     if (fora.length) log(`placar: ${fora.map(m => `${m.provider}/${m.model}`).join(', ')} marcado(s) sem cota (por esta ou outra rodada); vai(vão) para o FIM da escada, não some(m)`);
+  }
+  // Melhoria 26: entre os livres, quem mais acertou nas entregas recentes vai primeiro.
+  if (mem) {
+    const livres = escada.filter(m => !fora.includes(m));
+    const ord = porAcerto(livres, memoria.lerExemplos(mem));
+    if (ord.some((m, i) => m !== livres[i])) log(`acerto: ${ord.slice(0, 3).map(m => `${m.provider}/${m.model}`).join(' > ')} vão primeiro (mais entregas aprovadas recentes)`);
+    escada = [...ord, ...fora];
   }
   // Melhoria 24: tipo do erro. 'morto' (404/410 fim de vida) e 'verba'/'dia' (402, cota do dia) não voltam em 45 s:
   // pulam na hora e marcam o placar; só o limite por minuto espera.
@@ -391,4 +410,4 @@ async function executar(o) {
     melhor: melhor ? { estado: melhor.estado, nota: melhor.nota, texto: textoNota(melhor.nota) } : null, notaInicio };
 }
 
-module.exports = { testeSuspeito, lerContrato, executar, aplicar, montarPedido, resgatarFormato, nota, nomesDosTestes, foco, referencias, SISTEMA, TESTE_OK };
+module.exports = { porAcerto, testeSuspeito, lerContrato, executar, aplicar, montarPedido, resgatarFormato, nota, nomesDosTestes, foco, referencias, SISTEMA, TESTE_OK };
