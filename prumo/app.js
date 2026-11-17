@@ -5,6 +5,10 @@
   'use strict';
   const $ = (id) => document.getElementById(id);
   const ABAS = ['inicio', 'documentos', 'contas', 'cartoes', 'dividas', 'investimentos', 'economizar', 'metas', 'familia', 'impostos', 'alertas', 'conexoes', 'assistente', 'carteira', 'gastos', 'compras', 'objetivos', 'orcamento', 'consultor', 'pontos', 'ajuda'];
+  const btnMenu = $('btn-menu');
+  const navAbas = $('abas');
+  const fundoMenu = $('fundo-menu');
+  const tituloAba = $('titulo-aba');
   let usuario = null;
 
   function mostrarErro(msg) {
@@ -61,7 +65,10 @@
   async function abrirAba(nome) {
     if (!ABAS.includes(nome)) nome = 'carteira';
     document.querySelectorAll('#abas button').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.aba === nome)));
+    const btn = document.querySelector(`#abas button[data-aba="${nome}"]`);
+    if (btn && btn.textContent) tituloAba.textContent = btn.textContent.trim();
     try { localStorage.setItem('prumo-aba', nome); } catch { /* sem armazenamento */ }
+    fecharMenu();
     const el = $('conteudo');
     const vez = ++abrindo;
     el.innerHTML = '<p class="em-breve">Carregando…</p>';
@@ -101,12 +108,25 @@
     } catch { /* aviso é opcional */ }
   }
 
+  function fecharMenu() {
+    navAbas.classList.remove('aberto');
+    if (btnMenu) btnMenu.setAttribute('aria-expanded', 'false');
+    if (fundoMenu) fundoMenu.hidden = true;
+  }
+
+  function abrirMenu() {
+    navAbas.classList.add('aberto');
+    if (btnMenu) btnMenu.setAttribute('aria-expanded', 'true');
+    if (fundoMenu) fundoMenu.hidden = false;
+  }
+
   function mostrar(logado) {
     $('tela-entrar').hidden = logado;
     $('tela-app').hidden = !logado;
     $('abas').hidden = !logado;
     $('sair').hidden = !logado;
     if (!logado) $('aviso').hidden = true;
+    if (!logado) fecharMenu();
   }
 
   window.MB = { api, usuario: () => usuario, telas: window.MB && window.MB.telas ? window.MB.telas : {}, abrirAba, mostrarErro };
@@ -147,6 +167,9 @@
     auth.getRedirectResult().catch((e) => mostrarErro(msgLogin(e)));
     $('sair').onclick = () => auth.signOut();
     document.querySelectorAll('#abas button').forEach((b) => { b.onclick = () => abrirAba(b.dataset.aba); });
+    if (btnMenu) btnMenu.onclick = () => { if (navAbas.classList.contains('aberto')) fecharMenu(); else abrirMenu(); };
+    if (fundoMenu) fundoMenu.onclick = fecharMenu;
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') fecharMenu(); });
     auth.onAuthStateChanged((u) => {
       usuario = u;
       mostrar(!!u);
