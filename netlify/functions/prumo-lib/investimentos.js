@@ -4,6 +4,7 @@
  * Cotação só vale com FONTE e DATA/HORA; passou de 3 dias vira "desatualizada". Nada de promessa de retorno.
  */
 const { jurosCompostos, concentracao, rentabilidade, cotacaoStatus } = require('./motor');
+const { carteiraAoVivo } = require('./cotacoes');
 
 const AVISO = 'Isto não é recomendação de investimento nem promessa de retorno. Rentabilidade passada não garante resultado futuro. Confira com um profissional certificado.';
 const texto = (v, max) => (typeof v === 'string' ? v.trim().slice(0, max) : '');
@@ -36,14 +37,52 @@ function validarCotacao(o, agoraIso) {
   return { ok: true, cotacao: { preco: Math.round(preco * 100) / 100, fonte, data_hora: dh } };
 }
 
-function visao(itens, dividendos, agoraIso) {
+function visao(itens, dividendos, agoraIso, vivo) {
+  const vivoMap = new Map();
+  let emPre = false;
+  let atualizadoEm = null;
+  if (vivo && vivo.itens) {
+    for (const e of vivo.itens) vivoMap.set(e.id, e);
+    emPre = !!vivo.em_pregao;
+    atualizadoEm = vivo.atualizado_em;
+  }
+
   const lista = (itens || []).map((x) => {
-    const st = cotacaoStatus(x.cotacao_info, agoraIso);
+    let tipo = x.tipo;
+    const tk = String(x.ticker || '').toUpperCase();
+    if (/^[A-Z]{4}11$/.test(tk) && (tipo === 'renda_fixa' || tipo === 'outro')) tipo = 'fiis';
+
+    const ve = vivoMap.get(x.id);
+    const vv = ve && ve.vivo;
+    let valor = x.valor;
+    let valorPrint = x.valor;
+    let cotacao = null;
+    let st = null;
+    let atualCot = null;
+
+    if (vv && typeof vv.valor === 'number' && vv.valor > 0) {
+      valorPrint = ve.valor_print != null ? ve.valor_print : x.valor;
+      valor = vv.valor;
+      cotacao = {
+        preco: vv.preco,
+        fonte: vv.fonte,
+        data_hora: vv.data_hora,
+        desatualizada: vv.desatualizada,
+        estimado: vv.estimado,
+      };
+      const qtd = Number(x.quantidade);
+      atualCot = qtd > 0 && vv.preco ? Math.round(qtd * vv.preco * 100) / 100 : null;
+    } else {
+      st = cotacaoStatus(x.cotacao_info, agoraIso);
+      const qtd = Number(x.quantidade);
+      atualCot = st.valida && qtd > 0 ? Math.round(qtd * x.cotacao_info.preco * 100) / 100 : null;
+      cotacao = x.cotacao_info ? { ...x.cotacao_info, ...st } : null;
+    }
+
     const qtd = Number(x.quantidade); const pm = Number(x.preco_medio);
     const custo = qtd > 0 && pm > 0 ? Math.round(qtd * pm * 100) / 100 : null;
-    const atualCot = st.valida && qtd > 0 ? Math.round(qtd * x.cotacao_info.preco * 100) / 100 : null;
     const rent = custo != null && atualCot != null ? rentabilidade(custo, atualCot) : null;
-    return { id: x.id, nome: x.nome, tipo: x.tipo, valor: x.valor, ticker: x.ticker || null, quantidade: qtd > 0 ? qtd : null, custo, valor_cotado: atualCot, rentabilidade: rent, cotacao: x.cotacao_info ? { ...x.cotacao_info, ...st } : null };
+    return { id: x.id, nome: x.nome, tipo, valor, valor_print: valorPrint, ticker: x.ticker || null, quantidade: qtd > 0 ? qtd : null, custo, valor_cotado: atualCot, rentabilidade: rent, cotacao };
   });
   const conc = concentracao(lista);
   const hoje = agoraIso.slice(0, 10); const em60 = new Date(Date.parse(hoje) + 60 * 86400000).toISOString().slice(0, 10);
@@ -55,7 +94,7 @@ function visao(itens, dividendos, agoraIso) {
   const lacunas = [];
   if (!lista.length) lacunas.push('Cadastre sua carteira para ver rentabilidade e concentração.');
   if (lista.some((x) => !x.cotacao)) lacunas.push('Alguns ativos estão sem cotação com fonte e data; não calculei a rentabilidade deles.');
-  return { itens: lista, concentracao: conc, calendario, proventos_recebidos_ano: recebidoAno, mes, lacunas, aviso: AVISO };
+  return { itens: lista, concentracao: conc, calendario, proventos_recebidos_ano: recebidoAno, mes, lacunas, em_pregao: emPre, atualizado_em: atualizadoEm, aviso: AVISO };
 }
 
 async function agirInvestimentos(acao, body, c) {
@@ -63,8 +102,15 @@ async function agirInvestimentos(acao, body, c) {
   const { base, listar, salvar, apagar, agoraIso } = c;
   switch (acao) {
     case 'invest_visao': {
-      const [itens, divs] = await Promise.all([c.listarCarteira(), listar(base.collection('dividendos'))]);
-      return [200, visao(itens, divs, agoraIso)];
+      const itens = await c.listarCarteira();
+      const divs = await listar(base.collection('dividendos'));
+      let vivo = null;
+      try {
+        vivo = await carteiraAoVivo(itens, { fetch: c.deps.fetch || fetch, agora: new Date(agoraIso), env: c.deps.env, comProventos: false });
+      } catch (e) {
+        vivo = null;
+      }
+      return [200, visao(itens, divs, agoraIso, vivo)];
     }
     case 'invest_simular': {
       const inicial = body.inicial === undefined || body.inicial === '' ? 0 : numero(body.inicial);
