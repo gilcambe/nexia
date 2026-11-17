@@ -266,39 +266,4 @@ async function avisosExtra(c) {
   try { return pontosVencendo(await c.listar(c.base.collection('pontos')), c.agoraIso); } catch { return []; }
 }
 
-module.exports = { agirExtra, avisosExtra, validarHolerite, validarOrcamento, montarOrcamento, avaliarCarteira, contextoConsultor, validarPontos, pontosVencendo, AVISO_LEGAL, handler };
-
-async function handler(req, res) {
-  let body;
-  try {
-    body = req.body === undefined || req.body === null ? null : typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
-  } catch {
-    body = null;
-  }
-  if (!body || typeof body !== 'object' || !body.acao) {
-    res.writeHead(400, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ error: 'payload inválido' }));
-    return;
-  }
-  if (body.acao === 'score') {
-    const { score_ler } = require('./score');
-    const imagem = typeof body.imagem === 'string' ? body.imagem : null;
-    const resultado = imagem ? score_ler(imagem) : score_ler();
-    res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ scores: resultado, count: resultado.length }));
-    return;
-  }
-  const resultado = await agirExtra(body.acao, body, {});
-  if (!resultado) {
-    res.writeHead(400, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ error: 'ação não reconhecida' }));
-    return;
-}
-if (Array.isArray(resultado)) {
-  res.writeHead(resultado[0] || 200, { 'Content-Type': 'application/json' });
-  res.end(JSON.stringify(resultado[1] || {}));
-  return;
-}
-res.writeHead(200, { 'Content-Type': 'application/json' });
-res.end(JSON.stringify(resultado));
-}
+module.exports = { agirExtra, avisosExtra, validarHolerite, validarOrcamento, montarOrcamento, avaliarCarteira, contextoConsultor, validarPontos, pontosVencendo, AVISO_LEGAL };
