@@ -19,3 +19,4 @@
 14. CSS: regra com #id vence regra só com classe ou elemento. Para mudar algo num modo especial (ex.: .senior), repita o MESMO #id da regra original no seletor ("body.senior #lista-mural li", não só "body.senior li"); senão a regra nova não vale no navegador.
 15. Express: app.use(middleware) só vale para as rotas registradas DEPOIS dele. Um gatilho que precisa valer para todas as rotas (ex.: salvar depois de mudança) vai antes de todas, ou não depende de rota (ex.: conferir a cada 1 s se o estado mudou e salvar).
 16. Salvar em arquivo periodicamente: grave SÓ quando o estado mudou desde a última gravação (compare com o que foi gravado por último). Regravar sem mudança gasta disco à toa no PC que hospeda.
+17. Ícone em SVG de linha: cada forma com fill="none" e stroke="currentColor" (ou no CSS: svg { fill: none; stroke: currentColor }); sem isso o navegador pinta de PRETO. Feche cada forma com "/>" (<path d="..."/>), senão o resto do desenho fica dentro dela.

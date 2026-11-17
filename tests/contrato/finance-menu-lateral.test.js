@@ -78,3 +78,21 @@ test('no PC (≥ 1024px) o menu fica sempre aberto e o ☰ some', () => {
   assert.match(decl(pc, /^nav\.abas$|^#abas$/), /transform\s*:\s*(none|translateX\(0\))/, 'no PC: transform none');
   assert.match(decl(pc, /^#btn-menu$/), /display\s*:\s*none/, 'no PC: #btn-menu { display: none }');
 });
+
+test('ícones do menu bem formados e na cor do texto (não pretos sobre o fundo escuro)', () => {
+  // 1ª entrega (#3877): os <svg> não tinham stroke/fill e saíram PRETOS (padrão do navegador) no menu escuro, quase
+  // invisíveis; e vinham malformados ("<path d=...>" sem fechar, com o resto do desenho "dentro" do path).
+  const svgs = [...nav.matchAll(/<svg[\s\S]*?<\/svg>/g)].map((m) => m[0]);
+  assert.ok(svgs.length >= ABAS.length);
+  const cssCor = decl(semMedia, /^nav\.abas( button)? svg$|^#abas( button)? svg$/);
+  const corNoCss = /stroke\s*:\s*currentColor/.test(cssCor) && /fill\s*:\s*none/.test(cssCor);
+  for (const s of svgs) {
+    for (const t of s.matchAll(/<(path|circle|rect|line|polyline|polygon|ellipse)\b[^>]*>/g)) {
+      assert.match(t[0], /\/>$/, `feche cada forma do ícone com "/>": ${t[0].slice(0, 60)}`);
+    }
+    if (!corNoCss) {
+      assert.match(s, /stroke="currentColor"/, 'ícone de linha: stroke="currentColor" (ou no CSS: nav.abas svg { stroke: currentColor; fill: none })');
+      assert.match(s, /fill="none"/, 'ícone de linha: fill="none" (senão o navegador pinta de preto)');
+    }
+  }
+});
