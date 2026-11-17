@@ -569,69 +569,8 @@ async function agir(uid, body) {
   }
 }
 
-// Medição: últimas 50 durações (ms) por ação, só em memória.
-const TEMPOS = new Map();
-function medir(acao, ms) {
-  const l = TEMPOS.get(acao) || [];
-  l.push(ms); if (l.length > 50) l.shift();
-  TEMPOS.set(acao, l);
-}
-function statsTempos() {
-  const out = {};
-  for (const [acao, l] of TEMPOS) out[acao] = { amostras: l.length, media: Math.round((l.reduce((a, b) => a + b, 0) / l.length) * 100) / 100, piorCaso: Math.max(...l) };
-  return out;
-}
-async function medida(acao, fn) {
-  const t0 = process.hrtime.bigint();
-  try { return await fn(); } finally { medir(acao, Number(process.hrtime.bigint() - t0) / 1e6); }
-}
-const serverTiming = (ms) => `tela_dados;dur=${ms.toFixed(2)}`;
-
-// Ações puras (sem banco) aceitas direto em tela_dados.
-const PURAS = {
-  soma: (p) => Number(p.a) + Number(p.b),
-  multiplica: (p) => Number(p.a) * Number(p.b),
-};
-
-// Roda todas as leituras em paralelo. `outras(acao, params)` resolve ações que precisam de conta.
-async function telaDados(body, outras) {
-  if (!body || !Array.isArray(body.leituras)) return [400, { error: 'Payload inválido' }, 0];
-  const t0 = process.hrtime.bigint();
-  const pares = await Promise.all(body.leituras.map(async (l) => {
-    const acao = l && typeof l.acao === 'string' ? l.acao : '';
-    const params = (l && l.params && typeof l.params === 'object') ? l.params : {};
-    if (PURAS[acao]) return [acao, await medida(acao, async () => PURAS[acao](params))];
-    if (!outras || !acao || acao === 'tela_dados') return [acao || '?', { error: 'Ação desconhecida.' }];
-    return [acao, await medida(acao, () => outras(acao, params))];
-  }));
-  const ms = Number(process.hrtime.bigint() - t0) / 1e6;
-  medir('tela_dados', ms);
-  return [200, Object.fromEntries(pares), ms];
-}
-
-// Estilo Node (req, res): usado pelo teste de contrato; só ações puras e estatísticas.
-async function handlerNode(req, res) {
-  const enviar = (code, corpo, headers = {}) => { res.writeHead(code, { 'Content-Type': 'application/json', ...headers }); res.end(JSON.stringify(corpo)); };
-  const rota = String(req.url || '').split('?')[0].replace(/\/+$/, '');
-  if (req.method === 'GET' && rota.endsWith('/prumo_tempos')) return enviar(200, statsTempos());
-  if (req.method === 'POST' && rota.endsWith('/tela_dados')) {
-    let body; try { body = JSON.parse(req.body || '{}'); } catch { body = null; }
-    const [status, corpo, ms] = await telaDados(body, null);
-    return enviar(status, corpo, { 'Server-Timing': serverTiming(ms) });
-  }
-  return enviar(404, { error: 'Rota não encontrada.' });
-}
-
-exports.handler = async (event, res) => {
-  if (res && typeof res.end === 'function') return handlerNode(event, res);
+exports.handler = async (event) => {
   const method = String(event.httpMethod || '').toUpperCase();
-  const rotaEv = String(event.path || '').replace(/\/+$/, '');
-  if (method === 'GET' && (rotaEv.endsWith('/prumo_tempos') || (event.queryStringParameters && event.queryStringParameters.acao === 'prumo_tempos'))) {
-    const a = await verifyBearerToken(event);
-    if (!a || !a.ok) return responder(event, 401, { error: 'Entre com sua conta.' });
-    if (!process.env.PRUMO_DONO_UID || a.uid !== process.env.PRUMO_DONO_UID) return responder(event, 403, { error: 'Só o dono.' });
-    return responder(event, 200, statsTempos());
-  }
   if (method === 'OPTIONS') return { statusCode: 204, headers: makeHeaders(event), body: '' };
   // #3304: prova pública de que a cotação ao vivo funciona no ar (só dado público de mercado, nada da pessoa).
   if (method === 'GET' && event.queryStringParameters && event.queryStringParameters.acao === 'cotacao_saude') {
@@ -649,13 +588,7 @@ exports.handler = async (event, res) => {
   let body;
   try { body = JSON.parse(event.body || '{}') || {}; } catch { return responder(event, 400, { error: 'Pedido inválido.' }); }
   try {
-    if (body.acao === 'tela_dados') {
-      const [status, corpo, ms] = await telaDados(body, async (acao, params) => { const [s, c] = await agir(auth.uid, { ...params, acao }); return s === 200 ? c : { error: (c && c.error) || 'Falhou.', status: s }; });
-      const r = responder(event, status, corpo);
-      r.headers = { ...r.headers, 'Server-Timing': serverTiming(ms) };
-      return r;
-    }
-    const [status, corpo] = await medida(String(body.acao || '?'), () => agir(auth.uid, body));
+    const [status, corpo] = await agir(auth.uid, body);
     return responder(event, status, corpo);
   } catch (e) {
     console.error('[prumo] erro', body && body.acao, e && e.code);   // sem valores da pessoa
