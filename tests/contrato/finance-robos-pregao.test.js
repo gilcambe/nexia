@@ -55,7 +55,7 @@ function cenario() {
 }
 function stub() {
   const chamadas = [];
-  cot.carteiraAoVivo = async (itens) => { chamadas.push(itens.length); return { itens: [{ id: 'c1', ticker: 'PETR4', vivo: { preco: 30, variacao_dia_pct: -5, valor: 300 }, proventos: null }], total: 300, por_tipo: { acoes: 300 }, assessor: {} }; };
+  cot.carteiraAoVivo = async (itens, op) => { chamadas.push(itens.length); if (!op || typeof op.fetch !== 'function') throw new Error('sem deps.fetch, passe o fetch global ((...a) => fetch(...a))'); return { itens: [{ id: 'c1', ticker: 'PETR4', vivo: { preco: 30, variacao_dia_pct: -5, valor: 300 }, proventos: null }], total: 300, por_tipo: { acoes: 300 }, assessor: {} }; };
   return chamadas;
 }
 
