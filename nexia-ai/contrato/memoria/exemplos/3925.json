@@ -1,0 +1,12 @@
+{
+  "numero": 3925,
+  "data": "2026-11-17",
+  "modelo": "kilo/auto:1",
+  "tentativas": 1,
+  "pedido": "Finance: o olho apaga os valores dos gráficos\n\nKernex Finance: o \"olho\" (modo privacidade) apaga os valores dos gráficos.\n\n`prumo/privacidade.js` embrulha todo \"R$ ...\" num `<span class=\"valor\">`. Dentro de um `<svg>`, o `<span>` não é desenhado, então no gráfico de ganhos e perdas some o valor.\n\nNa função `envolver(no)`, logo depois da linha `if (!pai || ... ) return;`, acrescente:\n`if (pai.namespaceURI === 'http://www.w3.org/2000/svg' || (pai.closest && pai.closest('svg'))) { pai.classList.add('valor'); return; }`\n\nNão mude mais nada.",
+  "arquivos": [
+    "prumo/privacidade.js"
+  ],
+  "teste": "node --test tests/contrato/finance-privacidade-svg.test.js tests/unit/prumo-sintaxe.test.js",
+  "diff": "diff --git a/prumo/privacidade.js b/prumo/privacidade.js\nindex 9d0778b..d3e4b28 100644\n--- a/prumo/privacidade.js\n+++ b/prumo/privacidade.js\n@@ -11,6 +11,7 @@\n     if (!RS.test(t)) return;\n     const pai = no.parentNode;\n     if (!pai || (pai.classList && pai.classList.contains('valor')) || /^(SCRIPT|STYLE|TEXTAREA|INPUT)$/.test(pai.nodeName)) return;\n+    if (pai.namespaceURI === 'http://www.w3.org/2000/svg' || (pai.closest && pai.closest('svg'))) { pai.classList.add('valor'); return; }\n     const frag = document.createDocumentFragment();\n     let ultimo = 0; RS.lastIndex = 0; let m;\n     while ((m = RS.exec(t))) {"
+}
