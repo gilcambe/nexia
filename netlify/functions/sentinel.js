@@ -38,6 +38,7 @@ async function _fetchTimeout(url, opts = {}, ms = 30000, _legacyOpts) {
 const { admin, db }          = require('./firebase-init');
 const { requireBearerAuth }  = require('./middleware');
 const modelRouter = require('../../nexia-ai/model-router'); // Fase 10: chamadas de IA via Model Router
+const { modeloGroq } = require('../../lib/groq-modelo');
 
 // ADR-HOST-01: sem Render; no container o próprio server.js responde em localhost
 const BASE   = process.env.NEXIA_APP_URL
@@ -179,7 +180,8 @@ Se canAutoFix=true, preencha firestoreOverride com dados para salvar no Firestor
       return JSON.parse((data.text || '{}').replace(/```json|```/g, '').trim());
     } else {
       // Erro HTTP → '{}' (como antes); timeout/rede cai no catch.
-      data = await modelRouter.getRouter().chat({ provider: 'groq', model: 'llama-3.3-70b-versatile' }, { maxTokens: 2000, temperature: 0, timeoutMs: 30000, messages: [{ role: 'user', content: prompt }] }).catch(e => { if (e && e.details && e.details.status) return { text: '' }; throw e; });
+      const modelo = await modeloGroq(key);
+      data = await modelRouter.getRouter().chat({ provider: 'groq', model: modelo }, { maxTokens: 2000, temperature: 0, timeoutMs: 30000, messages: [{ role: 'user', content: prompt }] }).catch(e => { if (e && e.details && e.details.status) return { text: '' }; throw e; });
       return JSON.parse((data.text || '{}').replace(/```json|```/g, '').trim());
     }
   } catch (e) {

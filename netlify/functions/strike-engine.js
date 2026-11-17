@@ -18,6 +18,7 @@ async function _fetchTimeout(url, opts = {}, ms = 30000) {
 const { admin, db } = require('./firebase-init');
 
 const { requireBearerAuth, makeHeaders } = require('./middleware');
+const { modeloGroq } = require('../../lib/groq-modelo');
 
 const REPORT_LINKS = {
   youtube:   'https://support.google.com/youtube/answer/2802268',
@@ -37,11 +38,12 @@ async function classifyViaAI(url, descricao) {
   const key = process.env.GROQ_API_KEY;
   if (!key) return { categoria:'outro', severidade:3, confianca:0.5, justificativa:'Sem GROQ_API_KEY', urgente:false };
   try {
+    const modelo = await modeloGroq(key);
     const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method:'POST',
       headers:{'Authorization':'Bearer '+key,'Content-Type':'application/json'},
       body: JSON.stringify({
-        model:'llama-3.3-70b-versatile', max_tokens:300, temperature:0,
+        model: modelo, max_tokens:300, temperature:0,
         messages:[{role:'user',content:
           'Classifique este conteúdo de mídia social:\nURL: '+url+'\nDescrição: '+descricao+
           '\n\nResponda APENAS JSON:\n{"categoria":"anuncio_falso|conteudo_sexual|assedio|discurso_odio|desinformacao|golpe|spam|abuso_infantil|outro","severidade":1-5,"confianca":0.0-1.0,"justificativa":"max 100 chars","urgente":true|false}'
