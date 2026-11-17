@@ -258,7 +258,15 @@ function createHandler(deps = {}) {
   };
 }
 
-exports.handler = createHandler();
+// Netlify schedule function handler para backup diário
+exports.handler = async (event, context) => {
+  if (event.httpMethod === undefined && event.schedule === '0 3 * * *') {
+    const db = require('./firebase-init').db;
+    return await executarBackupDiario(db);
+  }
+  return await createHandler()(event, context);
+};
+
 exports.createHandler = createHandler;
 exports.exportarDadosUsuario = exportarDadosUsuario;
 exports.apagarDadosUsuario = apagarDadosUsuario;
