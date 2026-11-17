@@ -315,26 +315,45 @@ async function lerPrint(imagens, deps) {
   };
   const lidos = await Promise.all(imagens.map(ler));
   async function viaLista(img) {
-    let tentou = 0; let melhor = null;
-    for (const d of lista) {
-      try {
-        const cap = router.capabilities(d);
-        if (!cap.available || !cap.vision) continue;
-        // O 1º modelo (o melhor) tem até 100 s, porque um print cheio de ativos gera resposta longa;
-        // os outros têm 30 s. Tudo cabe nos 180 s que o app espera.
+    // Corrida escalonada: começa só com a 1ª IA com visão; a próxima entra quando a anterior falha ou
+    // passam esperaCorridaMs sem leitura boa (no máximo 3 ao mesmo tempo). A 1ª leitura que bate vence.
+    const fila = lista.filter((d) => { try { const cap = router.capabilities(d); return cap.available && cap.vision; } catch { return false; } });
+    const esperaMs = Number.isFinite(deps.esperaCorridaMs) ? deps.esperaCorridaMs : 8000;
+    return new Promise((resolve) => {
+      let melhor = null; let proxima = 0; let rodando = 0; let fim = false;
+      const timers = new Set();
+      const acabar = (r) => { if (fim) return; fim = true; timers.forEach(clearTimeout); timers.clear(); resolve(r); };
+      const agendar = (fn, ms) => { const t = setTimeout(() => { timers.delete(t); fn(); }, ms); timers.add(t); return t; };
+      const entrar = () => {
+        if (fim) return;
+        if (proxima >= fila.length) { if (!rodando) acabar(melhor ? { j: melhor, bateu: false } : null); return; }
         const resta = 160000 - (Date.now() - inicio);
-        if (resta < 5000) break;
-        const ms = Math.min(tentou++ === 0 ? 100000 : 30000, resta);
-        const out = await Promise.race([router.chat(d, { system: LER_PRINT, messages: [{ role: 'user', content: 'Leia este print e devolva o JSON.' }], images: [img], maxTokens: 8192, temperature: 0, timeoutMs: ms }), new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), ms + 3000))]);
-        const j = extrairJson(out && out.text);
-        if (j && Array.isArray(j.itens)) {
-          if (bate(j)) return { j, bateu: true };
-          if (!melhor) melhor = j;
-          falhas.push(`${d.model}: soma não bate com o total`);
-        } else falhas.push(`${d.model}: resposta sem JSON`);
-      } catch (e) { falhas.push(`${d.model}: ${String((e && (e.code || e.message)) || 'erro').slice(0, 60)}`); }
-    }
-    return melhor ? { j: melhor, bateu: false } : null;
+        if (resta < 5000) { if (!rodando) acabar(melhor ? { j: melhor, bateu: false } : null); return; }
+        const d = fila[proxima++]; rodando++;
+        const ms = Math.min(45000, resta);
+        let terminou = false; let espera = null; let tLimite = null;
+        const concluir = (j, motivo) => {
+          if (terminou) return; terminou = true;
+          if (espera) { clearTimeout(espera); timers.delete(espera); }
+          if (tLimite) { clearTimeout(tLimite); timers.delete(tLimite); }
+          rodando--;
+          if (fim) return;
+          if (j) { if (bate(j)) return acabar({ j, bateu: true }); if (!melhor) melhor = j; falhas.push(`${d.model}: soma não bate com o total`); }
+          else falhas.push(`${d.model}: ${motivo}`);
+          entrar();
+        };
+        // Se não vier leitura boa em esperaMs, a próxima entra sem tirar esta da corrida.
+        if (rodando < 3 && proxima < fila.length) espera = agendar(() => { espera = null; if (rodando < 3) entrar(); }, esperaMs);
+        tLimite = agendar(() => { tLimite = null; concluir(null, 'timeout'); }, ms + 3000);
+        let p;
+        try { p = Promise.resolve(router.chat(d, { system: LER_PRINT, messages: [{ role: 'user', content: 'Leia este print e devolva o JSON.' }], images: [img], maxTokens: 8192, temperature: 0, timeoutMs: ms })); } catch (e) { p = Promise.reject(e); }
+        p.then((out) => {
+          const j = extrairJson(out && out.text);
+          if (j && Array.isArray(j.itens)) concluir(j); else concluir(null, 'resposta sem JSON');
+        }, (e) => concluir(null, String((e && (e.code || e.message)) || 'erro').slice(0, 60)));
+      };
+      entrar();
+    });
   }
   const conferencia = [];
   for (const lido of lidos) {
