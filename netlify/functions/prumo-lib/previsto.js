@@ -12,6 +12,8 @@
 const DATA = /^\d{4}-\d{2}-\d{2}$/;
 const MES = /^\d{4}-\d{2}$/;
 const CAMPO = { lancamentos: 'data', pagamentos: 'data_pagamento' };
+// Nome legível do recebimento (o dono via "decimo_terceiro_1" na tela).
+const NOME_PAG = { adiantamento: 'Adiantamento', mensal: 'Salário do mês', decimo_terceiro_1: '13º (1ª parcela)', decimo_terceiro_2: '13º (2ª parcela)', ferias: 'Férias', plr: 'PLR', outro: 'Recebimento' };
 const texto = (v, max) => (typeof v === 'string' ? v.trim().slice(0, max) : '');
 const cent = (v) => Math.round((Number(v) || 0) * 100);
 
@@ -47,7 +49,7 @@ function resumoPrevisto({ lancs, pagamentos, dividas }, mes, hoje) {
   }
   for (const p of previstos(pagamentos, 'data_pagamento', hoje)) {
     if (!String(p.data_pagamento).startsWith(mes)) continue;
-    itens.push({ tipo: 'receber', origem: 'pagamento', id: p.id, colecao: 'pagamentos', nome: p.empresa || p.tipo, data: p.data_pagamento, valor: p.liquido });
+    itens.push({ tipo: 'receber', origem: 'pagamento', id: p.id, colecao: 'pagamentos', nome: NOME_PAG[p.tipo] || p.empresa || 'Recebimento', data: p.data_pagamento, valor: p.liquido });
   }
   if (mes === hoje.slice(0, 7)) {
     for (const d of dividas || []) {
