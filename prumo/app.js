@@ -27,7 +27,9 @@
     if (msg) setTimeout(() => { if (el.textContent === msg) el.hidden = true; }, 8000);
   }
 
-  async function api(acao, dados) {
+  // opts.silencioso: chamada opcional (gráfico, cotação, score) não mostra a faixa vermelha de erro.
+  async function api(acao, dados, opts) {
+    const avisar = (m) => { if (!(opts && opts.silencioso)) mostrarErro(m); };
     if (!usuario) { mostrarErro('Entre com sua conta.'); throw new Error('sem login'); }
     let r;
     // Nada pode ficar esperando para sempre: ler print tem até 2 min, o resto até 25 s.
@@ -44,14 +46,14 @@
       });
     } catch (e) {
       const msg = (ctrl && ctrl.signal.aborted) ? 'O servidor demorou para responder. Tente de novo.' : 'Sem internet agora. Tente de novo quando a conexão voltar.';
-      mostrarErro(msg);
+      avisar(msg);
       const err = new Error(msg); err.status = 0; err.mostrar = true; throw err;
     } finally { clearTimeout(relogio); }
     let j = {};
     try { j = await r.json(); } catch { /* resposta vazia */ }
     if (!r.ok) {
       const msg = j.error || 'Algo deu errado. Tente de novo.';
-      mostrarErro(msg);
+      avisar(msg);
       const e = new Error(msg); e.status = r.status; throw e;
     }
     return j;

@@ -287,11 +287,18 @@ async function agirCotacoes(acao, body, c) {
   const col = c.base.collection('cotacoes');
   const guardadas = Object.fromEntries((await c.listar(col)).map((x) => [x.id, x]));
   const agora = c.deps.agora();
-  const r = await carteiraAoVivo(itens, { fetch: c.deps.fetch || ((...a) => fetch(...a)), agora, env: c.deps.env || (typeof process !== 'undefined' ? process.env : {}), guardadas });
-  for (const i of r.itens) {
-    const v = i.vivo;
-    if (i.ticker && v && !v.desatualizada && v.preco) await col.doc(i.ticker).set({ preco: v.preco, variacao_dia_pct: v.variacao_dia_pct, fonte: v.fonte, data_hora: v.data_hora });
+  // 17/11 (medido no celular do dono): com carteira grande isto levava 8 s e dava 500 (limite de chamadas do servidor).
+  // Agora: nunca 500. Se as fontes falharem, devolve o último preço guardado (desatualizado); grava só o que mudou, em paralelo.
+  let r;
+  try {
+    r = await carteiraAoVivo(itens, { fetch: c.deps.fetch || ((...a) => fetch(...a)), agora, env: c.deps.env || (typeof process !== 'undefined' ? process.env : {}), guardadas });
+  } catch (e) {
+    r = await carteiraAoVivo(itens, { fetch: async () => { throw new Error('sem rede'); }, agora, env: {}, guardadas }).catch(() => null);
+    if (!r) return [200, { itens: [], por_tipo: {}, assessor: {}, aviso: 'Cotações indisponíveis agora. Tente de novo em instantes.' }];
+    r.aviso = 'Cotações ao vivo indisponíveis agora: mostrando o último preço guardado.';
   }
+  const mudou = r.itens.filter((i) => { const v = i.vivo; const g = i.ticker && guardadas[i.ticker]; return i.ticker && v && !v.desatualizada && v.preco && !(g && g.preco === v.preco && g.data_hora === v.data_hora); });
+  try { await Promise.all(mudou.map((i) => col.doc(i.ticker).set({ preco: i.vivo.preco, variacao_dia_pct: i.vivo.variacao_dia_pct, fonte: i.vivo.fonte, data_hora: i.vivo.data_hora }))); } catch (e) { /* guardar é opcional */ }
   const cfg = await c.base.collection('config').doc('alocacao').get();
   const alvo = cfg && cfg.exists ? (cfg.data() || {}).alvo : null;
   r.assessor.alocacao_alvo = alvo || null;

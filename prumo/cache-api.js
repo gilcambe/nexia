@@ -34,7 +34,7 @@
       return acao + JSON.stringify(dados || {});
     }
 
-    async function api(acao, dados) {
+    async function api(acao, dados, opts) {
       if (ehLeitura(acao)) {
         const chave = chaveDe(acao, dados);
         const agoraMs = agora();
@@ -46,7 +46,7 @@
         if (voo) return voo;
         const promessa = (async () => {
           try {
-            const resposta = await apiReal(acao, dados);
+            const resposta = await apiReal(acao, dados, opts);
             guardados.set(chave, { resposta, tempo: agora() });
             if (guardados.size > MAX_GUARDADOS) {
               const maisVelha = guardados.keys().next().value;
@@ -61,7 +61,7 @@
         return promessa;
       }
       try {
-        return await apiReal(acao, dados);
+        return await apiReal(acao, dados, opts);
       } finally {
         limpar();
       }
