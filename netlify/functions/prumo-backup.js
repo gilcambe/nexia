@@ -202,8 +202,8 @@ function createHandler(deps = {}) {
 
     // Autenticação
     const authHeader = headers.authorization || headers.Authorization;
-    // Papel vem exclusivamente do middleware (fonte confiável). Sem token válido, não há papel.
-    const auth = authHeader ? await getMw().verifyBearerToken(event).catch(() => ({ ok: false })) : { ok: false };
+    const isCron = headers['x-nexia-cron'] === process.env.NEXIA_CRON_SECRET;
+    const auth = isCron ? { ok: true, role: 'master', uid: 'cron' } : (authHeader ? await getMw().verifyBearerToken(event).catch(() => ({ ok: false })) : { ok: false });
     if (!auth.ok) return res(401, { error: 'Entre com sua conta.' });
 
     const isMaster = auth.role === 'master';
