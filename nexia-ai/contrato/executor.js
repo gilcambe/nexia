@@ -67,16 +67,48 @@ function referencias(c, raiz) {
   return saida;
 }
 
+// Melhoria 28 (17/11/2026): arquivo grande (ex.: netlify/functions/prumo.js, 38 KB) era cortado nos 20 mil primeiros
+// caracteres; a IA não via o trecho a mudar, tentava mandar o arquivo inteiro e a resposta era cortada (#3935).
+// Agora: arquivo até ARQUIVO_INTEIRO_MAX vai inteiro; maior vai em TRECHOS: o começo + cada definição
+// (function/const/class/case/método) cujo nome aparece no pedido ou no teste, com as linhas seguintes.
+const ARQUIVO_INTEIRO_MAX = 20000, TRECHO_COMECO = 2500, TRECHO_LINHAS = 70, TRECHOS_MAX = 24000;
+const DEF = /^\s*(?:export\s+)?(?:async\s+)?(?:function\s*\*?\s*([A-Za-z_$][\w$]*)|(?:const|let|var|class)\s+([A-Za-z_$][\w$]*)|case\s+['"]([\w-]+)['"]|([A-Za-z_$][\w$]*)\s*[:=]\s*(?:async\s*)?(?:function|\())/;
+function trechosRelevantes(txt, pistas) {
+  if (txt.length <= ARQUIVO_INTEIRO_MAX) return { grande: false, texto: txt };
+  const linhas = txt.split('\n'), marcar = new Array(linhas.length).fill(false);
+  let n = 0, i = 0;
+  while (i < linhas.length && n < TRECHO_COMECO) { marcar[i] = true; n += linhas[i].length + 1; i++; }
+  const achou = (nome) => !!nome && nome.length >= 3 && new RegExp(`(^|[^\\w$])${nome.replace(/\$/g, '\\$')}([^\\w$]|$)`).test(pistas);
+  for (let k = 0; k < linhas.length; k++) {
+    const d = DEF.exec(linhas[k]); if (!d) continue;
+    if (!achou(d[1] || d[2] || d[3] || d[4])) continue;
+    for (let j = Math.max(0, k - 2); j < Math.min(linhas.length, k + TRECHO_LINHAS); j++) marcar[j] = true;
+  }
+  const saida = []; let total = 0, pulou = 0;
+  for (let k = 0; k < linhas.length; k++) {
+    if (!marcar[k] || total > TRECHOS_MAX) { pulou++; continue; }
+    if (pulou) { saida.push(`/* ... (${pulou} linha(s) omitida(s): não copie esta linha no SEARCH) ... */`); pulou = 0; }
+    saida.push(linhas[k]); total += linhas[k].length + 1;
+  }
+  if (pulou) saida.push(`/* ... (${pulou} linha(s) omitida(s) até o fim) ... */`);
+  return { grande: true, texto: saida.join('\n') };
+}
+
 function montarPedido(c, raiz, anterior, exemplos = '', enxuto = false) {
   const partes = [`PEDIDO:\n${c.pedido}`, `ARQUIVOS PERMITIDOS: ${c.arquivos.join(', ')}`, `TESTE DE ACEITAÇÃO: ${c.teste}`];
   if (exemplos) partes.push(exemplos);
   for (const f of c.testes) { const p = path.join(raiz, f); if (fs.existsSync(p)) partes.push(`--- TESTE (só leitura) ${f} ---\n${fs.readFileSync(p, 'utf8').slice(0, 12000)}`); }
   if (!enxuto) partes.push(...referencias(c, raiz));
+  const pistas = [c.pedido, ...c.testes.map((f) => { const p = path.join(raiz, f); return fs.existsSync(p) ? fs.readFileSync(p, 'utf8') : ''; })].join('\n');
   for (const f of c.arquivos) {
     const p = path.join(raiz, f);
-    const pequeno = fs.existsSync(p) && fs.statSync(p).size <= ARQUIVO_PEQUENO;
-    partes.push(!fs.existsSync(p) ? `--- ARQUIVO ${f} --- (não existe: crie o arquivo inteiro)`
-      : `--- ARQUIVO ${f} ---${pequeno ? ' (arquivo pequeno: responda com o ARQUIVO INTEIRO novo, sem SEARCH/REPLACE)' : ''}\n${fs.readFileSync(p, 'utf8').slice(0, 20000)}`);
+    if (!fs.existsSync(p)) { partes.push(`--- ARQUIVO ${f} --- (não existe: crie o arquivo inteiro)`); continue; }
+    const txt = fs.readFileSync(p, 'utf8');
+    const pequeno = Buffer.byteLength(txt) <= ARQUIVO_PEQUENO;
+    const t = trechosRelevantes(txt, pistas);
+    partes.push(t.grande
+      ? `--- ARQUIVO ${f} (GRANDE: ${txt.length} caracteres; abaixo só o começo e os trechos ligados ao pedido. Use SÓ blocos SEARCH/REPLACE com trecho EXATO copiado daqui; NUNCA mande este arquivo inteiro) ---\n${t.texto}`
+      : `--- ARQUIVO ${f} ---${pequeno ? ' (arquivo pequeno: responda com o ARQUIVO INTEIRO novo, sem SEARCH/REPLACE)' : ''}\n${txt}`);
   }
   if (anterior) partes.push(`A TENTATIVA ANTERIOR NÃO PASSOU. Corrija a partir do estado atual dos arquivos acima.\nMOTIVO:\n${anterior.slice(-4000)}`);
   return partes.join('\n\n');
@@ -370,7 +402,9 @@ async function executar(o) {
       if (!texto.trim()) { historico.push({ modelo: `${m.provider}/${m.model}`, erro: `resposta vazia (${parada || 'sem motivo'})` }); log(`${m.provider}/${m.model}: resposta vazia, parada=${parada || '?'} (próximo degrau)`); break; }
       // Resposta cortada pelo limite de tamanho: aplicar quebraria o arquivo. Pede de novo, mais enxuto.
       if (/^(length|max_tokens|MAX_TOKENS)$/.test(parada)) {
-        anterior = 'Sua resposta anterior foi CORTADA por tamanho e não foi aplicada. Mande o arquivo inteiro de novo, mais enxuto (sem comentários longos e sem explicação fora do código).';
+        anterior = c.arquivos.some((f) => { const p = path.join(raiz, f); return fs.existsSync(p) && fs.statSync(p).size > ARQUIVO_INTEIRO_MAX; })
+          ? 'Sua resposta anterior foi CORTADA por tamanho e não foi aplicada. O arquivo é GRANDE: NÃO mande o arquivo inteiro; mande só blocos SEARCH/REPLACE pequenos, com trecho EXATO copiado do arquivo mostrado (código novo grande: ponha no REPLACE logo depois de uma linha existente).'
+          : 'Sua resposta anterior foi CORTADA por tamanho e não foi aplicada. Mande o arquivo inteiro de novo, mais enxuto (sem comentários longos e sem explicação fora do código).';
         historico.push({ modelo: `${m.provider}/${m.model}`, aplicados: [], recusas: ['resposta cortada'] });
         log(`${m.provider}/${m.model}: resposta cortada (parada=${parada}, ${texto.length} caracteres); pedindo de novo mais enxuta`);
         continue;
@@ -435,4 +469,4 @@ async function executar(o) {
     melhor: melhor ? { estado: melhor.estado, nota: melhor.nota, texto: textoNota(melhor.nota) } : null, notaInicio };
 }
 
-module.exports = { porAcerto, testeSuspeito, lerContrato, executar, aplicar, montarPedido, resgatarFormato, nota, nomesDosTestes, foco, referencias, SISTEMA, TESTE_OK };
+module.exports = { trechosRelevantes, porAcerto, testeSuspeito, lerContrato, executar, aplicar, montarPedido, resgatarFormato, nota, nomesDosTestes, foco, referencias, SISTEMA, TESTE_OK };
