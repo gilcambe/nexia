@@ -37,6 +37,8 @@ test('#fundo-menu cobre a tela, escurece e fica entre a página e a gaveta', () 
   assert.ok(zf !== null && zn !== null, 'z-index no #fundo-menu e no nav.abas');
   assert.ok(zf > 5 && zf < zn, `z-index: topo 5 < fundo (${zf}) < gaveta (${zn})`);
   if (/display\s*:/.test(f)) assert.match(decl(/^#fundo-menu\[hidden\]$/), /display\s*:\s*none/, 'se der display ao #fundo-menu, ponha #fundo-menu[hidden] { display: none }');
+  // 2ª rodada (#3885): o fundo tinha "display:none" fixo e nunca aparecia (tocar fora não fechava). Sem hidden ele APARECE.
+  assert.doesNotMatch(f, /display\s*:\s*none/, '#fundo-menu sem display:none (quem esconde é o atributo hidden)');
 });
 
 test('botão X para fechar dentro da gaveta', () => {
