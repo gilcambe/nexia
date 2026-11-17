@@ -261,10 +261,14 @@ function createHandler(deps = {}) {
 
 // Netlify schedule function handler para backup diário
 exports.handler = async (event, context) => {
-  // Verifica se é um disparo de cron
-  if (event.httpMethod === undefined && event.path === undefined) {
+  // Verifica se é um disparo de cron (execução automática pelo agendador do Netlify)
+  if (event.httpMethod === undefined && event.path === undefined && event.source === 'aws.events') {
     const db = require('./firebase-init').db;
-    return await executarBackupDiario(db);
+    const resultado = await executarBackupDiario(db);
+    return {
+      statusCode: 200,
+      body: JSON.stringify(resultado),
+    };
   }
   return await createHandler()(event, context);
 };
