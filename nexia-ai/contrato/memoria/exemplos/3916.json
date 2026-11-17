@@ -1,0 +1,12 @@
+{
+  "numero": 3916,
+  "data": "2026-11-17",
+  "modelo": "kilo/auto:1",
+  "tentativas": 1,
+  "pedido": "Finance: gráficos do Início aparecem vazios\n\nKernex Finance: os gráficos do Início aparecem vazios.\n\nA API devolve objetos, não listas:\n- `MB.api('historico_listar')` devolve `{ meses: [{ mes, total, ... }] }`;\n- `MB.api('cotacoes_vivas')` devolve `{ itens: [{ ticker, nome, vivo: { valor, variacao_dia_pct } }], ... }`.\n\nEm `prumo/inicio.js`:\n- troque `Array.isArray(hist)` / `hist.map` por `hist && Array.isArray(hist.meses)` / `hist.meses.map`;\n- troque `Array.isArray(cot)` / `for (const c of cot)` por `cot && Array.isArray(cot.itens)` / `for (const c of cot.itens)`.\n\nVeja a lição 23. O teste roda a tela de verdade com dados falsos.",
+  "arquivos": [
+    "prumo/inicio.js"
+  ],
+  "teste": "node --test tests/contrato/finance-inicio-graficos-dados.test.js tests/contrato/finance-inicio-graficos.test.js tests/unit/prumo-app.test.js",
+  "diff": "diff --git a/prumo/inicio.js b/prumo/inicio.js\nindex 4a5bcaa..ff416ad 100644\n--- a/prumo/inicio.js\n+++ b/prumo/inicio.js\n@@ -15,12 +15,12 @@\n     try {\n       const graficos = await carregarGraficos();\n       const [hist, cot] = await Promise.all([MB.api('historico_listar'), MB.api('cotacoes_vivas')]);\n-      if (Array.isArray(hist) && hist.length) {\n-        patrimSvg = graficos.linha(hist.map((m) => ({ rotulo: String(m.mes || ''), valor: Number(m.total || 0) })));\n+      if (hist && Array.isArray(hist.meses) && hist.meses.length) {\n+        patrimSvg = graficos.linha(hist.meses.map((m) => ({ rotulo: String(m.mes || ''), valor: Number(m.total || 0) })));\n       }\n       let ativos = [];\n-      if (Array.isArray(cot)) {\n-        for (const c of cot) {\n+      if (cot && Array.isArray(cot.itens)) {\n+        for (const c of cot.itens) {\n           const g = graficos.ganhoDoDia(c);\n           if (g != null) ativos.push({ rotulo: c.ticker || c.nome || c.rotulo || 'Ativo', valor: g });\n         }"
+}

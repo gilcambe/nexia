@@ -15,12 +15,12 @@
     try {
       const graficos = await carregarGraficos();
       const [hist, cot] = await Promise.all([MB.api('historico_listar'), MB.api('cotacoes_vivas')]);
-      if (Array.isArray(hist) && hist.length) {
-        patrimSvg = graficos.linha(hist.map((m) => ({ rotulo: String(m.mes || ''), valor: Number(m.total || 0) })));
+      if (hist && Array.isArray(hist.meses) && hist.meses.length) {
+        patrimSvg = graficos.linha(hist.meses.map((m) => ({ rotulo: String(m.mes || ''), valor: Number(m.total || 0) })));
       }
       let ativos = [];
-      if (Array.isArray(cot)) {
-        for (const c of cot) {
+      if (cot && Array.isArray(cot.itens)) {
+        for (const c of cot.itens) {
           const g = graficos.ganhoDoDia(c);
           if (g != null) ativos.push({ rotulo: c.ticker || c.nome || c.rotulo || 'Ativo', valor: g });
         }
