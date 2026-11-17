@@ -189,6 +189,7 @@
     document.getElementById('fechar-menu').onclick = fecharMenu;
     auth.onAuthStateChanged((u) => {
       usuario = u;
+      if (window.MB.api && typeof window.MB.api.limpar === 'function') window.MB.api.limpar();
       mostrar(!!u);
       if (u) {
         let ultima = 'inicio';
@@ -198,6 +199,8 @@
       }
     });
   }
+
+  window.MB.api = MB.criarCacheApi(api);
 
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('/prumo/sw.js', { scope: '/prumo/' }).catch(() => {});
   iniciar();
