@@ -1,0 +1,12 @@
+{
+  "numero": 3908,
+  "data": "2026-11-17",
+  "modelo": "kilo/auto:1",
+  "tentativas": 1,
+  "pedido": "Finance: tocar fora do menu não fecha\n\nKernex Finance: tocar fora do menu não fecha.\n\nEm `prumo/index.html`, a regra `#fundo-menu { ...; display:none; }` deixa o fundo escuro SEMPRE escondido. Quem esconde o fundo é o atributo `hidden`, que já tem a regra `#fundo-menu[hidden] { display:none !important; }`.\n\nTire só o `display:none;` da regra `#fundo-menu { ... }`. Não mude mais nada.",
+  "arquivos": [
+    "prumo/index.html"
+  ],
+  "teste": "node --test tests/contrato/finance-menu-gaveta.test.js tests/contrato/finance-menu-lateral.test.js tests/contrato/finance-layout-base.test.js",
+  "diff": "diff --git a/prumo/index.html b/prumo/index.html\nindex f8ba0cd..b437d2a 100644\n--- a/prumo/index.html\n+++ b/prumo/index.html\n@@ -45,7 +45,7 @@\n     border-top: 1px solid var(--borda);\n     z-index: 10;\n   }\n-  #fundo-menu { position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:9; display:none; }\n+  #fundo-menu { position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:9; }\n   #fundo-menu[hidden] { display:none !important; }\n   nav.abas.aberto { transform: translateX(0); }\n   nav.abas button {"
+}
