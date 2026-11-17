@@ -20,7 +20,7 @@
 //    duplica). Se vier salario_base > 0, guarda também em config/salario (campo salario_base).
 //  - 'pagamento_listar' { mes? }: [200, { pagamentos }] (do mês, ou todos), ordenados por data_pagamento.
 //  - 'pagamento_apagar' { id }.
-//  - 'ponto_salvar' { mes, he50, he100, noturnas, faltas }: grava em 'pontos' com id = mes.
+//  - 'ponto_salvar' { mes, he50, he100, noturnas, faltas }: grava em 'folhas_ponto' com id = mes ('pontos' é a coleção das MILHAS: não misturar).
 //  - 'salario_config' { salario_base, dependentes, jornada_mensal }: grava em config/salario (junta com o que já tem);
 //    sem campos, só devolve o que tem.
 //  - 'salario_previsao' { mes }: [200, { mes, recebidos, total_recebido, previsao, motivo }] onde previsao =

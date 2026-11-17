@@ -4,6 +4,7 @@
   const MB = window.MB;
   let brl, esc, TIPOS, CATS, hoje, opcoes, barra, formulario, reduzir, recarregar, ok;
   const carregarUi = () => MB.ui ? Promise.resolve(MB.ui) : new Promise((ok, falha) => { const s = document.createElement('script'); s.src = '/prumo/ui.js'; s.onload = () => ok(MB.ui); s.onerror = falha; document.body.appendChild(s); });
+  const carregarScript = (chave, src) => MB[chave] ? Promise.resolve(MB[chave]) : new Promise((ok, falha) => { const s = document.createElement('script'); s.src = src; s.onload = () => ok(MB[chave]); s.onerror = falha; document.body.appendChild(s); });
   const iniciar = async (aba) => { ({ brl, esc, TIPOS, CATS, hoje, opcoes, barra, formulario, reduzir, recarregar, ok } = await carregarUi()); MB.ui.aba(aba); };
 
   MB.telas.pontos = async (el) => {
@@ -25,6 +26,51 @@
       { nome: 'valor_milheiro', rotulo: 'Quanto vale 1.000 pontos (R$)', tipo: 'number', valor: p ? p.valor_milheiro : 20 },
     ], (d) => MB.api('pontos_salvar', { ...d, saldo: Math.round(Number(d.saldo) || 0), id: p && p.id }), p && (() => MB.api('pontos_apagar', { id: p.id })));
     el.querySelector('#novo').onclick = () => editar(null);
+    // Saldo por print (sem senha): vários prints/PDFs, a IA lê cada um, a pessoa confere e o app atualiza o programa.
+    el.insertAdjacentHTML('afterbegin', `<div class="card"><button class="btn" id="pp-ler" type="button">📷 Atualizar saldos por print</button>
+      <input type="file" id="pp-arq" accept="image/*,application/pdf,.pdf" multiple hidden>
+      <p class="fraco">Tire print do saldo no app do programa (Smiles, LATAM Pass, TudoAzul, Livelo, Esfera…). Eu não peço senha.</p><div id="pp-res"></div></div>`);
+    const mm = await carregarScript('milhas', '/prumo/milhas.js');
+    el.querySelector('#pp-ler').onclick = () => el.querySelector('#pp-arq').click();
+    el.querySelector('#pp-arq').onchange = async (ev) => {
+      const arqs = [...(ev && ev.target && ev.target.files || el.querySelector('#pp-arq').files)];
+      const res = el.querySelector('#pp-res');
+      if (!arqs.length) return;
+      if (arqs.length > 5) { res.innerHTML = '<div class="aviso-c">Envie no máximo 5 arquivos por vez.</div>'; return; }
+      res.innerHTML = '<div class="fraco">Lendo… pode levar um pouco.</div>';
+      try {
+        const pdf = await carregarScript('pdf', '/prumo/pdf.js');
+        const { imagens } = await pdf.paraImagens(arqs, reduzir);
+        const { lidos } = await MB.api('pontos_print_ler', { imagens });
+        res.innerHTML = '';
+        const falhas = lidos.filter((l) => !l.ok).length;
+        if (falhas) ok(`${falhas} print(s) não deu para ler. Tente de novo com uma imagem mais nítida ou digite o saldo.`);
+        lidos.filter((l) => l.ok).forEach((l) => {
+          const ja = itens.find((x) => mm.nomePrograma(x.programa) === mm.nomePrograma(l.pontos.programa));
+          formulario(ja ? `Confira: atualizar ${ja.programa}` : 'Confira: novo programa', [
+            { nome: 'programa', rotulo: 'Programa', valor: l.pontos.programa },
+            { nome: 'saldo', rotulo: 'Saldo de pontos', tipo: 'number', valor: l.pontos.saldo },
+            { nome: 'a_vencer_pontos', rotulo: 'Pontos a vencer (opcional)', tipo: 'number', valor: l.pontos.a_vencer_pontos },
+            { nome: 'validade', rotulo: 'Data em que vencem (opcional)', tipo: 'date', valor: l.pontos.validade },
+          ], (d) => MB.api('pontos_print_salvar', { programa: d.programa, saldo: Number(d.saldo), a_vencer_pontos: d.a_vencer_pontos === '' ? null : Number(d.a_vencer_pontos), validade: d.validade || null }), null);
+        });
+      } catch (e) { res.innerHTML = `<div class="aviso-c">${esc(e && e.message || 'Não consegui ler agora.')}</div>`; }
+    };
+    // Valor das milhas em reais: carteira x milheiro de referência por programa (editável; padrões são estimativa).
+    const vc = mm.valorCarteira(itens);
+    if (vc.linhas.length) {
+      el.insertAdjacentHTML('beforeend', `<div class="card" id="vc"><h3 style="margin:0 0 6px">💰 Quanto valem suas milhas</h3>
+        ${vc.linhas.map((l, i) => `<div class="item"><div><div class="n">${esc(l.programa)}</div><div class="fraco">${l.saldo.toLocaleString('pt-BR')} pts · milheiro (${esc(l.origem)}):</div></div><input class="vc-ref" data-i="${i}" type="number" step="0.01" inputmode="decimal" value="${l.milheiro}" style="width:90px"></div>`).join('')}
+        <button class="btn sec" id="vc-ir" type="button" style="margin-top:8px">Recalcular</button><div id="vc-res"><div class="n" style="margin-top:8px">Total: ${brl(vc.total)}</div></div>
+        <div class="fraco">Estimativa: os valores padrão são suposições; mude para o que você acha justo.</div></div>`);
+      el.querySelector('#vc-ir').onclick = () => {
+        const refs = {};
+        vc.linhas.forEach((l, i) => { refs[l.programa] = Number(el.querySelector(`.vc-ref[data-i="${i}"]`).value); });
+        el.querySelector('#vc-res').innerHTML = `<div class="n" style="margin-top:8px">Total: ${brl(mm.valorCarteira(itens, refs).total)}</div>`;
+      };
+    }
+    el.insertAdjacentHTML('beforeend', mm.htmlCalculadoras());
+    mm.ligarCalculadoras(el, brl, esc);
     const mv = await MB.api('milhas_visao');
     const pctB = (n) => String(n).replace('.', ',');
     el.insertAdjacentHTML('beforeend', `
