@@ -21,6 +21,11 @@ function redistribuirTravadas(issues = []) {
     if (!novosLabels.includes('cortex-reserva.yml')) {
       novosLabels.push('cortex-reserva.yml');
     }
+    // Renova a data de execução (CONSERTO_SMOKE) a cada rodada
+    if (t.novosLabels.includes('cortex-reserva.yml')) {
+      const idx = t.novosLabels.indexOf('cortex-reserva.yml');
+      t.novosLabels.splice(idx, 1, `cortex-reserva.yml:${CONSERTO_SMOKE}`);
+    }
     return {
       number: i.number,
       labelsRemovidos: labels.filter(l => ['precisa-de-voce', 'reserva-tentou', 'cortex-travado', 'travado'].includes(l)),

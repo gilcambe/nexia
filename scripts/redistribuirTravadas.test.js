@@ -17,7 +17,7 @@ test('redistribuirTravadas processa as 12 tarefas travadas corretamente', () => 
     assert.ok(!t.novosLabels.includes('precisa-de-voce'));
     assert.ok(!t.novosLabels.includes('reserva-tentou'));
     assert.ok(!t.novosLabels.includes('cortex-travado'));
-    assert.ok(t.novosLabels.includes('cortex-reserva.yml'));
+    assert.ok(t.novosLabels.some(l => l === 'cortex-reserva.yml' || l.startsWith('cortex-reserva.yml:')));
     assert.ok(t.novosLabels.includes('outra-label'));
   }
 });
