@@ -5,18 +5,20 @@
   if (MB.ui) return;
   const st = document.createElement('style');
   st.textContent = `.card{background:var(--cartao);border:1px solid var(--borda);border-radius:16px;padding:14px;margin:0 0 12px}
-.grande{font-size:30px;font-weight:700}.fraco{color:var(--fraco);font-size:14px}.verm{color:var(--perigo)}.verde{color:var(--verde2)}
-.btn.sec{background:#1d3127;color:var(--texto)}.btn.perigo{background:#3a1717;color:#fecaca}.btn.mini{min-height:36px;padding:0 10px;font-size:14px;width:auto}
+.grande{font-size:30px;font-weight:700;font-variant-numeric:tabular-nums}.fraco{color:var(--fraco);font-size:14px}.verm{color:var(--perda)}.verde{color:var(--ganho)}
+.btn.sec{background:#16244a;color:var(--texto)}.btn.perigo{background:#3a1717;color:#fecaca}.btn.mini{min-height:36px;padding:0 10px;font-size:14px;width:auto}
 .linha{display:flex;gap:8px;flex-wrap:wrap}.linha>.btn{flex:1;width:auto;font-size:16px;min-height:46px}
+.linha.kf-tres{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.linha.kf-tres>.card{margin:0}
 .item{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--borda)}.item:last-child{border:0}
-.item .n{font-weight:600}.item .v{font-weight:700;white-space:nowrap}
-.barra{height:8px;background:#0e1a14;border-radius:8px;overflow:hidden;margin-top:4px}.barra i{display:block;height:100%;background:var(--verde2)}
+.item .n{font-weight:600;font-variant-numeric:tabular-nums}.item .v{font-weight:700;white-space:nowrap;font-variant-numeric:tabular-nums}
+.n{font-variant-numeric:tabular-nums}
+.barra{height:8px;background:#0b1530;border-radius:8px;overflow:hidden;margin-top:4px}.barra i{display:block;height:100%;background:var(--verde2)}
 #conteudo label{display:block;font-size:14px;color:var(--fraco);margin:10px 0 4px}dialog label{display:block;font-size:14px;color:var(--fraco);margin:10px 0 4px}
-#conteudo input,#conteudo select,dialog input,dialog select{width:100%;min-height:44px;padding:8px 12px;border-radius:10px;border:1px solid var(--borda);background:#0e1a14;color:var(--texto);font-size:16px}
+#conteudo input,#conteudo select,dialog input,dialog select{width:100%;min-height:44px;padding:8px 12px;border-radius:10px;border:1px solid var(--borda);background:#0b1530;color:var(--texto);font-size:16px}
 .aviso-c{background:#33260c;border:1px solid var(--aviso);color:#fde68a;border-radius:12px;padding:10px 12px;margin:0 0 12px}
 .toast{position:fixed;left:16px;right:16px;bottom:110px;background:#0f3a20;color:#bbf7d0;padding:12px;border-radius:12px;z-index:9}
 dialog{border:0;border-radius:16px;background:var(--cartao);color:var(--texto);width:min(560px,94vw);max-height:90vh;padding:16px}dialog::backdrop{background:#000a}
-.chip{display:inline-block;padding:6px 10px;border-radius:20px;background:#1d3127;margin:3px;font-size:14px;cursor:pointer}`;
+.chip{display:inline-block;padding:6px 10px;border-radius:20px;background:#16244a;margin:3px;font-size:14px;cursor:pointer}`;
   document.head.appendChild(st);
   const brl = (v) => (Number(v) || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
   const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
