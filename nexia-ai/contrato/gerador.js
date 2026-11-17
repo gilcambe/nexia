@@ -19,7 +19,7 @@ const { safePath } = require('../orchestrator/edit-blocks');
 
 const PROIBIDO = /^(tests\/|\.github\/|node_modules\/|dist\/|build\/)|(^|\/)\.env|wrangler\.toml$|package(-lock)?\.json$|(^|\/)(deploy|publicar)[^/]*$/i;
 // B6 (12/11): fs/path/os liberados para LER o arquivo da solução e gravar só em pasta temporária (mkdtemp).
-const MODULOS_OK = new Set(['node:test', 'node:assert', 'node:assert/strict', 'assert', 'assert/strict', 'node:fs', 'fs', 'node:path', 'path', 'node:os', 'os']);
+const MODULOS_OK = new Set(['node:test', 'node:assert', 'node:assert/strict', 'assert', 'assert/strict', 'node:fs', 'fs', 'node:path', 'path', 'node:os', 'os', 'node:vm', 'vm']); // vm: rodar tela do app num contexto falso (17/11)
 const EXT_OK = /\.((c|m)?js|jsx|ts|tsx|html|css|json|md)$/i;
 const GRAVA = /\b(writeFileSync|writeFile|appendFileSync|appendFile|mkdirSync|rmSync|rmdirSync|unlinkSync|renameSync|copyFileSync|cpSync)\b/;
 const ABSOLUTO = /['"`]([A-Za-z]:\\|\/(home|etc|usr|var|tmp|Users|root)\/)/;
@@ -27,7 +27,7 @@ const ABSOLUTO = /['"`]([A-Za-z]:\\|\/(home|etc|usr|var|tmp|Users|root)\/)/;
 const SISTEMA = [
   'Você escreve TESTES DE ACEITAÇÃO para outra IA implementar depois. Você NÃO escreve a solução.',
   'Responda SÓ com um JSON: {"testavel": true|false, "motivo": "...", "arquivos": ["lib/x.js"], "teste": "tests/unit/contrato-x.test.js", "codigo": "conteúdo do teste"}.',
-  'Regras do teste: CommonJS; pode usar require("node:test"), require("node:assert/strict"), require("node:fs"), require("node:path"), require("node:os") e require("../../<arquivo da solução>");',
+  'Regras do teste: CommonJS; pode usar require("node:test"), require("node:assert/strict"), require("node:fs"), require("node:path"), require("node:os"), require("node:vm") e require("../../<arquivo da solução>");',
   'nada de rede, child_process, process.env, timers, tempo atual ou dados aleatórios; gravar em disco só dentro de fs.mkdtempSync(path.join(os.tmpdir(), ...)); caminhos sempre relativos a __dirname;',
   'no mínimo 3 asserções com valores concretos e corretos; cubra o caso comum, um caso de borda e uma entrada inválida.',
   'Mudar um arquivo existente É testável (o teste falha hoje e passa depois da mudança):',
@@ -35,6 +35,10 @@ const SISTEMA = [
   '- endpoint/rota: importe o handler e chame com um pedido falso (objeto com method, body, headers) e dependências falsas; verifique status e corpo;',
   '- texto, título, link ou configuração em .tsx/.html/.json/.md: leia o arquivo com fs.readFileSync(path.join(__dirname, "../../<arquivo>"), "utf8") e verifique o conteúdo novo e a ausência do antigo.',
   'Com "referencia" pedida: mande também "solucao": {"<arquivo da solução>": "conteúdo COMPLETO do arquivo depois da mudança"}: uma solução simples que PASSA no seu teste. Ela só prova que o teste é possível e é descartada (outra IA implementa sem vê-la).',
+  // 17/11/2026: contratos gerados assim pediram gravar score em arquivo do servidor (#3979) e ações inventadas 'soma' (#3980).
+  'Kernex Finance (netlify/functions/prumo*, prumo/): servidor = p.agir(uid, { acao, ... }) de netlify/functions/prumo.js com p.deps.db = banco falso; dado da pessoa vive em c.base.collection(...), NUNCA em arquivo. Não peça handler novo, rota de teste nem ação que o pedido não citou.',
+  'Tela (prumo/<aba>.js): rode o arquivo num vm com window.MB falso (api, ui) e um elemento falso; chame MB.telas.<aba>(el), clique (chame o onclick) e verifique o MB.api chamado com o corpo certo. Respostas falsas no MESMO formato do servidor. Teste que só procura texto no código NÃO vale para tela.',
+  'Não exija posição em lista nem trecho exato de código; verifique comportamento.',
   'Só responda {"testavel": false, "motivo": "..."} se a mudança depender de serviço externo (painel da Cloudflare, Firebase, Play Store, DNS), de deploy ou de olhar humano (cor, layout).',
 ].join('\n');
 

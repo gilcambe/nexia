@@ -26,3 +26,9 @@
 21. Cor pelo nome do token, não pelo nome da classe antiga: ganho = var(--ganho) (verde), perda = var(--perda) (vermelho). --verde no Finance é AZUL (cor da marca).
 22. Dependência injetada (deps.fetch, deps.env, deps.agora) só existe nos TESTES; no servidor ela falta. Sempre com reserva: fetch: (deps && deps.fetch) || ((...a) => fetch(...a)); env: (deps && deps.env) || process.env. Nunca passe "deps && deps.fetch" sozinho (vira undefined). E NUNCA chame a constante de "fetch": "const fetch = ... || ((...a) => fetch(...a))" chama a si mesma; use globalThis.fetch(...a).
 23. Antes de usar a resposta de MB.api(acao), veja o que o SERVIDOR devolve naquela ação (o "return [200, {...}]"): quase sempre é um OBJETO com a lista dentro ({ meses: [...] }, { itens: [...] }), não a lista. Array.isArray(resposta) dá false e a tela fica vazia sem erro.
+24. Nunca recrie window.MB = {...}: apaga o que outros scripts já guardaram (derrubou o Finance em 17/11). Junte: window.MB = Object.assign(window.MB || {}, {...}).
+25. Servidor sem estado: dado da pessoa só em c.base.collection('x') (já é a área dela). Nunca fs.writeFile no servidor (some e mistura usuários). Coleção nova entra em COLECOES de prumo-lib/ajuda.js.
+26. Zero código de teste em produção: se o teste pede ação estranha (soma, handler de teste), o contrato está errado; não crie isso no app.
+27. Botão que só aparece às vezes: const b = el.querySelector('#x'); if (b) b.onclick = ... . prompt() cancelado devolve null: (prompt(...) || '').
+28. Vários arquivos: TODOS (até 5), foto e PDF juntos em const { imagens } = await MB.pdf.paraImagens(arquivos, reduzir); uma IA por imagem com Promise.all. A resposta vem em envelope { ok, pagamento }: use lido.pagamento, não o envelope.
+29. Teste não exige posição em lista (ex.: "minha aba é a última"); outra mudança quebra o teste à toa.
