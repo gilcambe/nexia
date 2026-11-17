@@ -11,6 +11,7 @@
     if (!RS.test(t)) return;
     const pai = no.parentNode;
     if (!pai || (pai.classList && pai.classList.contains('valor')) || /^(SCRIPT|STYLE|TEXTAREA|INPUT)$/.test(pai.nodeName)) return;
+    if (pai.namespaceURI === 'http://www.w3.org/2000/svg' || (pai.closest && pai.closest('svg'))) { pai.classList.add('valor'); return; }
     const frag = document.createDocumentFragment();
     let ultimo = 0; RS.lastIndex = 0; let m;
     while ((m = RS.exec(t))) {
