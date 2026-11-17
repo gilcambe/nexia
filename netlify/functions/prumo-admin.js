@@ -6,20 +6,23 @@
 const { PLANOS } = require('./prumo-lib/ajuda');
 
 // Handler padrão do projeto (igual ao agenda.js): exporta a função direto em module.exports.handler.
-async function handler(req, res, next) {
+async function handler(event, context) {
   const mw = require('./middleware');
-  const authRes = await mw.requireBearerAuth(req, 'master');
+  const authRes = await mw.requireBearerAuth(event, 'master');
   if (!authRes || authRes.error || authRes.statusCode) {
     // Falha de autenticação ou de autorização: sempre 403 (o pedido exige 403 para não-master).
     let erro = 'Acesso negado.';
     try { const j = JSON.parse((authRes && authRes.body) || '{}'); if (j && j.error) erro = j.error; } catch { /* mantém padrão */ }
-    return res.status(403).json({ error: erro });
+    return { statusCode: 403, body: JSON.stringify({ error: erro }) };
   }
-  req.auth = authRes.user || {};
+  const auth = authRes.user || {};
   // Só o master entra; qualquer outra role recebe 403.
-  const role = String((authRes.user && authRes.user.role) || req.auth.role || '');
-  if (role !== 'master') return res.status(403).json({ error: 'Acesso restrito ao master.' });
-  return next();
+  const role = String(auth.role || '');
+  if (role !== 'master') return { statusCode: 403, body: JSON.stringify({ error: 'Acesso restrito ao master.' }) };
+  
+  // Delega para o handler completo criado
+  const fullHandler = createHandler();
+  return await fullHandler(event, context);
 }
 // Arquivo pronto e exportado para uso nas rotas do painel.
 
