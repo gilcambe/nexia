@@ -17,6 +17,8 @@ async function _fetchTimeout(url, opts = {}, ms = 30000) {
 }
 
 const { admin, db } = require('./firebase-init');
+const { modeloGroq } = require('../../lib/groq-modelo');
+
 
 const { guard, HEADERS, makeHeaders } = require('./middleware');
 
@@ -178,6 +180,8 @@ function calcChurnScore(signals) {
 
 async function getAIRecommendation(tenant, signals, score) {
   try {
+    const groqKey = process.env.GROQ_API_KEY;
+    const modelo = await modeloGroq(groqKey);
     const prompt = `Tenant: ${tenant.name || tenant.id}
 Plano: ${tenant.plan || 'free'}
 Churn Score: ${score}/100
@@ -192,9 +196,9 @@ Gere 3 ações específicas de retenção em PT-BR. Formato JSON:
 
     const res = await _fetchTimeout('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
-      headers: { 'Authorization': `Bearer ${process.env.GROQ_API_KEY}`, 'Content-Type': 'application/json' },
+      headers: { 'Authorization': `Bearer ${groqKey}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'llama-3.3-70b-versatile',
+        model: modelo,
         max_tokens: 400,
         messages: [
           { role: 'system', content: 'Você é um especialista em customer success SaaS. Responda APENAS em JSON válido.' },

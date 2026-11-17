@@ -1,6 +1,6 @@
 'use strict';
 
-// ── fetchWithTimeout helper ──
+// ÔöÇÔöÇ fetchWithTimeout helper ÔöÇÔöÇ
 async function _fetchTimeout(url, opts = {}, ms = 30000) {
   const ctrl = new AbortController();
   const tid = setTimeout(() => ctrl.abort(), ms);
@@ -9,21 +9,21 @@ async function _fetchTimeout(url, opts = {}, ms = 30000) {
 }
 
 /**
- * ╔══════════════════════════════════════════════════════════════╗
- * ║  NEXIA OS — AI FINANCIAL ENGINE v1.0                        ║
- * ║  Análise financeira inteligente por tenant                  ║
- * ║  Previsões, alertas, DRE, fluxo de caixa                   ║
- * ╚══════════════════════════════════════════════════════════════╝
+ * ÔòöÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòù
+ * Ôòæ  NEXIA OS ÔÇö AI FINANCIAL ENGINE v1.0                        Ôòæ
+ * Ôòæ  An├ílise financeira inteligente por tenant                  Ôòæ
+ * Ôòæ  Previs├Áes, alertas, DRE, fluxo de caixa                   Ôòæ
+ * ÔòÜÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòØ
  */
 
 const { admin, db } = require('./firebase-init');
-
+const { modeloGroq } = require('../../lib/groq-modelo');
 const { guard, HEADERS, makeHeaders } = require('./middleware');
 
 exports.handler = async (event) => {
   const headers = makeHeaders(event);
   if (event.httpMethod === 'OPTIONS') return { statusCode: 204, headers, body: '' };
-  const auth = await guard(event, 'ai-financial'); // VULN-01 fix: await obrigatório
+  const auth = await guard(event, 'ai-financial'); // VULN-01 fix: await obrigat├│rio
   if (auth) return auth; // guard retorna resposta de erro ou null se ok
 
   let body;
@@ -42,7 +42,7 @@ exports.handler = async (event) => {
     if (action === 'alerts') return resp(await getFinancialAlerts(tenantId));
     if (action === 'ask' && question && tenantId) return resp(await askAI(tenantId, question));
     if (action === 'empire') return resp(await getEmpireFinancials());
-    return { statusCode: 400, headers, body: JSON.stringify({ error: 'action inválida' }) };
+    return { statusCode: 400, headers, body: JSON.stringify({ error: 'action inv├ílida' }) };
   } catch (e) {
     return { statusCode: 500, headers, body: JSON.stringify({ error: 'Internal error' }) };
   }
@@ -53,10 +53,10 @@ function resp(data) {
 }
 
 async function getFinancialSummary(tenantId) {
-  if (!db) return { error: 'Firebase não configurado' };
+  if (!db) return { error: 'Firebase n├úo configurado' };
   const thisMonth = new Date().toISOString().slice(0, 7);
 
-  // Lê transações do mês
+  // L├¬ transa├º├Áes do m├¬s
   const txSnap = await db.collection('data').doc(tenantId)
     .collection('financeiro').where('mes', '==', thisMonth).get();
 
@@ -86,7 +86,7 @@ async function getFinancialSummary(tenantId) {
 }
 
 async function getDRE(tenantId) {
-  if (!db) return { error: 'Firebase não configurado' };
+  if (!db) return { error: 'Firebase n├úo configurado' };
   const months = [];
   const now = new Date();
 
@@ -115,7 +115,7 @@ async function getDRE(tenantId) {
 }
 
 async function getCashFlow(tenantId) {
-  if (!db) return { error: 'Firebase não configurado' };
+  if (!db) return { error: 'Firebase n├úo configurado' };
   const snap = await db.collection('data').doc(tenantId)
     .collection('financeiro').orderBy('data', 'desc').limit(100).get().catch(() => ({ docs: [] }));
 
@@ -130,9 +130,9 @@ async function getCashFlow(tenantId) {
 }
 
 async function getForecast(tenantId) {
-  if (!db) return { error: 'Firebase não configurado' };
+  if (!db) return { error: 'Firebase n├úo configurado' };
 
-  // Lê últimos 3 meses para tendência
+  // L├¬ ├║ltimos 3 meses para tend├¬ncia
   const months = [];
   const now = new Date();
   for (let i = 2; i >= 0; i--) {
@@ -149,7 +149,7 @@ async function getForecast(tenantId) {
     historico.push({ mes, receitas });
   }
 
-  // Tendência linear simples
+  // Tend├¬ncia linear simples
   const valores = historico.map(h => h.receitas);
   const avg = valores.reduce((a, b) => a + b, 0) / Math.max(valores.length, 1);
   const crescimento = valores.length >= 2
@@ -161,7 +161,7 @@ async function getForecast(tenantId) {
     const d = new Date(now); d.setMonth(d.getMonth() + i);
     const mes = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
     const projecao = Math.max(0, Math.round(avg + crescimento * i));
-    forecast.push({ mes, projecao, confianca: i === 1 ? 'ALTA' : i === 2 ? 'MÉDIA' : 'BAIXA' });
+    forecast.push({ mes, projecao, confianca: i === 1 ? 'ALTA' : i === 2 ? 'M├ëDIA' : 'BAIXA' });
   }
 
   return { tenantId, historico, forecast, crescimentoMensal: Math.round(crescimento) };
@@ -182,7 +182,7 @@ async function getFinancialAlerts(tenantId) {
     if (overdue.size > 0) {
       let total = 0;
       overdue.forEach(d => { total += d.data().valor || 0; });
-      alerts.push({ tenantId: t.id, level: 'HIGH', type: 'PAGAMENTOS_VENCIDOS', detail: `${overdue.size} pagamento(s) vencido(s) — R$ ${total.toLocaleString('pt-BR')}` });
+      alerts.push({ tenantId: t.id, level: 'HIGH', type: 'PAGAMENTOS_VENCIDOS', detail: `${overdue.size} pagamento(s) vencido(s) ÔÇö R$ ${total.toLocaleString('pt-BR')}` });
     }
   }
 
@@ -190,7 +190,7 @@ async function getFinancialAlerts(tenantId) {
 }
 
 async function getEmpireFinancials() {
-  if (!db) return { error: 'Firebase não configurado' };
+  if (!db) return { error: 'Firebase n├úo configurado' };
   const PLAN_MRR = { free: 0, starter: 297, pro: 597, business: 997, enterprise: 1497 };
   const snap = await db.collection('tenants').get();
   let mrr = 0, arr = 0; const tenants = [];
@@ -211,16 +211,17 @@ async function getEmpireFinancials() {
 async function askAI(tenantId, question) {
   const summary = await getFinancialSummary(tenantId).catch(() => ({}));
   const groqKey = process.env.GROQ_API_KEY;
-  if (!groqKey) return { error: 'GROQ_API_KEY necessária' };
+  if (!groqKey) return { error: 'GROQ_API_KEY necess├íria' };
+  const modelo = await modeloGroq(groqKey);
 
   const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
     headers: { 'Authorization': `Bearer ${groqKey}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      model: 'llama-3.3-70b-versatile',
+      model: modelo,
       max_tokens: 600,
       messages: [
-        { role: 'system', content: 'Você é um CFO virtual especialista em finanças SaaS. Responda em português brasileiro, de forma direta e orientada a ação.' },
+        { role: 'system', content: 'Voc├¬ ├® um CFO virtual especialista em finan├ºas SaaS. Responda em portugu├¬s brasileiro, de forma direta e orientada a a├º├úo.' },
         { role: 'user', content: `Dados financeiros do tenant ${tenantId}:\n${JSON.stringify(summary)}\n\nPergunta: ${question}` }
       ]
     })
