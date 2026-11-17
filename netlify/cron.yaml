@@ -13,4 +13,13 @@
 [[functions]]
   function = "prumo-backup"
   schedule = "0 3 * * *"
-  path = "/prumo-backup"
+
+[[functions]]
+  function = "prumo-admin"
+  schedule = "0 3 * * *"
+  path = "/prumo-admin/export"
+
+[[functions]]
+  function = "prumo-admin"
+  schedule = "0 3 * * *"
+  path = "/prumo-admin/delete"
