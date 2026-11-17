@@ -50,11 +50,11 @@
     el.innerHTML = `
       <p class="fraco" style="margin:0 0 10px">${saudacao}${nome ? ', ' + esc(nome) : ''}</p>
       ${r.alertas_limite.length ? r.alertas_limite.map((a) => `<div class="aviso-c">${a.status === 'estourado' ? '🔴' : '🟠'} <b>${esc(NOME_CAT[a.categoria] || a.categoria)}</b>: ${brl(a.gasto)} de ${brl(a.limite)} (${String(a.pct).replace('.', ',')}%)${a.status === 'estourado' ? ' — passou do limite' : ' — perto do limite'}.</div>`).join('') : ''}
-      <div class="card" id="kf-saude"><div class="item" style="padding:0;border:0"><span class="fraco">Saúde financeira${sf.completa ? '' : ' (parcial)'}</span><span class="grande" style="font-size:28px">${notaSaude === null ? '—' : notaSaude + '<span class="fraco" style="font-size:14px">/100</span>'}</span></div>
-        <div class="fraco" style="margin-top:4px">${esc(sf.resumo || sf.aviso)}</div>
+      <details class="card kf-dobra" id="kf-saude"><summary><span class="fraco">Saúde financeira${sf.completa ? '' : ' (parcial)'}</span><span><b class="kf-num">${notaSaude === null ? '—' : notaSaude}</b>${notaSaude === null ? '' : '<span class="fraco" style="font-size:12px">/100</span>'}</span></summary>
+        <div class="kf-dobra-corpo"><div class="fraco">${esc(sf.resumo || sf.aviso)}</div>
         ${sf.indicadores.map((x) => `<div style="margin:6px 0"><div class="item" style="padding:0;border:0"><span>${esc(x.nome)}</span><span class="fraco">${esc(x.texto)}</span></div>${barra(x.nota, x.nota < 40 ? '#ef4444' : x.nota < 70 ? '#f59e0b' : '')}</div>`).join('')}
-        ${sf.completa ? '' : `<div class="aviso-c" style="margin-top:6px">👉 ${esc(sf.proximo_passo || 'Cadastre suas contas na aba Contas para começar.')}</div>`}
-        <div class="fraco" style="margin-top:6px">${sf.completa ? esc(sf.aviso) + (sf.nota_mes_anterior !== null && sf.nota_mes_anterior !== undefined ? ' Mês anterior: ' + sf.nota_mes_anterior + '.' : '') : ''}</div></div>
+        ${sf.completa ? '' : `<div class="aviso-c" style="margin:6px 0 0">👉 ${esc(sf.proximo_passo || 'Cadastre suas contas na aba Contas para começar.')}</div>`}
+        <div class="fraco" style="margin-top:6px">${sf.completa ? esc(sf.aviso) + (sf.nota_mes_anterior !== null && sf.nota_mes_anterior !== undefined ? ' Mês anterior: ' + sf.nota_mes_anterior + '.' : '') : ''}</div></div></details>
       <div id="kf-score">${sc ? sc.html : ''}</div>
       <div class="card kf-hero"><div class="fraco">Saldo disponível</div><div class="grande">${r.saldo_disponivel === null ? '—' : brl(r.saldo_disponivel)}</div>
         <div class="fraco" style="margin-bottom:10px">${r.saldo_disponivel === null ? 'Cadastre suas contas na aba Contas.' : 'Dinheiro em conta, sem limite de cartão.'}</div>
