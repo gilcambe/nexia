@@ -68,7 +68,7 @@
       try {
         const { imagens } = await MB.pdf.paraImagens(arquivos, reduzir);
         ({ lidos } = await MB.api('salario_ler', { tipo, imagens }));
-      } catch { return recarregar(); }
+      } catch (e) { await recarregar(); return ok('⚠️ ' + ((e && e.message) || 'Não consegui ler agora. Tente de novo.')); }
       lidos = lidos || [];
       const boas = lidos.filter((l) => l && l.ok);
       recarregar();
