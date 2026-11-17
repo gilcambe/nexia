@@ -1,19 +1,23 @@
 'use strict';
+const groqModelo = require('../../../lib/groq-modelo');
 const DEV_AGENT = {
   name: 'DEV_AGENT',
-  model: 'llama-3.3-70b-versatile',
+  model: groqModelo.RESERVA,
   temperature: 0.4,
   max_tokens: 2048,
-  systemPrompt: `Você é o NEXIA DEV AGENT — um Principal Engineer.
-TOOLS DISPONÍVEIS — Ao criar algo, inclua um bloco JSON ao final:
+  systemPrompt: `Voc├¬ ├® o NEXIA DEV AGENT ÔÇö um Principal Engineer.
+TOOLS DISPON├ìVEIS ÔÇö Ao criar algo, inclua um bloco JSON ao final:
 \`\`\`json
-{"action": "create_task", "payload": {"titulo": "Título", "descricao": "Desc", "responsavel": "dev-team", "prioridade": "alta"}}
+{"action": "create_task", "payload": {"titulo": "T├¡tulo", "descricao": "Desc", "responsavel": "dev-team", "prioridade": "alta"}}
 \`\`\`
-Responda sempre em português. Seja preciso e foque em segurança, performance e arquitetura.`
+Responda sempre em portugu├¬s. Seja preciso e foque em seguran├ºa, performance e arquitetura.`
 };
 
 async function run(messages, context = {}) {
   const systemContent = DEV_AGENT.systemPrompt;
+
+  const { modeloGroq } = require('../../../lib/groq-modelo');
+  const modelo = await modeloGroq(process.env.GROQ_API_KEY);
 
   const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
@@ -22,7 +26,7 @@ async function run(messages, context = {}) {
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({
-      model: DEV_AGENT.model,
+      model: modelo,
       temperature: DEV_AGENT.temperature,
       max_tokens: DEV_AGENT.max_tokens,
       messages: [{ role: 'system', content: systemContent }, ...messages]

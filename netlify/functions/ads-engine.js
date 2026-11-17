@@ -23,10 +23,12 @@ const { requireBearerAuth, makeHeaders } = require('./middleware');
 async function generateAdCreative(produto, publico, objetivo, tom) {
   const key = process.env.GROQ_API_KEY;
   if (!key) throw new Error('GROQ_API_KEY não configurada');
+  const { modeloGroq } = require('../../lib/groq-modelo');
+  const modelo = await modeloGroq(key);
   const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method:'POST', headers:{'Authorization':'Bearer '+key,'Content-Type':'application/json'},
     body: JSON.stringify({
-      model:'llama-3.3-70b-versatile', max_tokens:1500, temperature:0.7,
+      model: modelo, max_tokens:1500, temperature:0.7,
       messages:[{role:'user',content:
         'Você é um copywriter especialista em tráfego pago.\n\n'+
         'Produto/Serviço: '+produto+'\nPúblico-alvo: '+publico+'\nObjetivo: '+objetivo+'\nTom: '+(tom||'profissional')+'\n\n'+
