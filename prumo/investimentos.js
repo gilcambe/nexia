@@ -18,7 +18,7 @@
           <div class="fraco">${c.total === null ? esc(c.lacuna) : `${c.diversificacao} tipo(s) de investimento · proventos recebidos no ano ${brl(v.proventos_recebidos_ano)}`}</div></div>
         ${v.lacunas.map((l) => `<div class="card"><div class="fraco">ℹ️ ${esc(l)}</div></div>`).join('')}
         ${c.alertas.length ? `<div class="card"><div class="n">⚠️ Concentração</div>${c.alertas.map((a) => `<div class="fraco">• ${esc(a)}</div>`).join('')}</div>` : ''}
-        ${v.itens.length ? `<div class="card"><h3 style="margin:0 0 6px">Seus ativos</h3>${v.itens.map((x) => `<div class="item" data-id="${esc(x.id)}"><div><div class="n">${esc(x.nome)}</div><div class="fraco">${esc(TIPOS[x.tipo] || x.tipo)}${x.rentabilidade ? ` · rentabilidade ${pct(x.rentabilidade.pct)}%` : ''}${x.cotacao ? x.cotacao.estimado ? ` · cotação estimada pelo CDI (${esc(x.cotacao.fonte)})` : ` · cotação ${brl(x.cotacao.preco)} (${esc(x.cotacao.fonte)})${x.cotacao.desatualizada ? ' <b class="verm">desatualizada</b>' : ''}` : ' · sem cotação'}</div></div><div class="v">${brl(x.valor)}</div></div>`).join('')}<div class="fraco">Toque num ativo para registrar a cotação (precisa de fonte).</div></div>` : ''}
+        ${v.itens.length ? `<div class="card"><h3 style="margin:0 0 6px">Seus ativos</h3>${v.itens.map((x) => `<div class="item" data-id="${esc(x.id)}"><div><div class="n">${esc(x.nome)}</div><div class="fraco">${esc(TIPOS[x.tipo] || x.tipo)}${x.rentabilidade ? ` · rentabilidade ${pct(x.rentabilidade.pct)}%` : ''}${x.cotacao ? x.cotacao.estimado ? ` · cotação estimada pelo CDI (${esc(x.cotacao.fonte)})` : ` · cotação ${brl(x.cotacao.preco)} (${esc(x.cotacao.fonte)})${x.cotacao.desatualizada ? ' <b class="verm">desatualizada</b>' : ''}` : ' · sem cotação'}</div></div><div class="v">${brl(x.valor)}</div></div>`).join('')}<div class="fraco">Toque num ativo para registrar a cotação (precisa de fonte).</div><button class="btn sec" id="limpar-carteira" type="button">🧹 Limpar e refazer a carteira</button></div>` : ''}
         <div class="card"><h3 style="margin:0 0 6px">📅 Próximos 60 dias</h3>${v.calendario.length ? v.calendario.map((x) => `<div class="item"><div><div class="n">${esc(x.nome)}</div><div class="fraco">${x.tipo === 'vencimento' ? 'Vencimento' : 'Provento (' + esc(x.tipo) + ')'} · ${esc(x.data)}</div></div><div class="v">${brl(x.valor)}</div></div>`).join('') : '<div class="fraco">Nada a vencer ou receber. Cadastre vencimentos na carteira e proventos aqui.</div>'}
           <button class="btn sec" id="novo-prov" type="button" style="margin-top:8px">+ Provento</button></div>
         <div class="card"><h3 style="margin:0 0 6px">🧮 Simulador de aportes</h3>
@@ -41,6 +41,11 @@
           ], async (f) => { const o = { id: x.id, preco: Number(f.preco), fonte: f.fonte }; if (f.data_hora) o.data_hora = new Date(f.data_hora).toISOString(); await MB.api('invest_cotacao', o); MB.ui.ok('Cotação salva.'); }, null);
         };
       });
+      el.querySelector('#limpar-carteira').onclick = async () => {
+        if (prompt('Isso apaga TODOS os investimentos salvos para você mandar os prints de novo. Para confirmar, escreva LIMPAR').toUpperCase() !== 'LIMPAR') return;
+        await MB.api('carteira_limpar', { confirmar: 'LIMPAR' });
+        MB.telas.investimentos(el);
+      };
       el.querySelector('#novo-prov').onclick = () => formulario('Novo provento', [
         { nome: 'ativo', rotulo: 'Ativo' }, { nome: 'data', rotulo: 'Data (AAAA-MM-DD)' }, { nome: 'valor', rotulo: 'Valor (R$)', tipo: 'number' },
       ], async (f) => { await MB.api('invest_dividendo_salvar', { ...f, valor: Number(f.valor) }); MB.ui.ok('Provento salvo.'); }, null);
