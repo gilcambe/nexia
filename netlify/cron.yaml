@@ -1,7 +1,6 @@
 # Netlify Scheduled Functions - Backup Diário Prumo
 # Executa todo dia às 03:00 UTC (meia-noite BRT)
 
-[[schedule]]
-  function = "prumo-backup"
-  cron = "0 3 * * *"
-  data = "{ \"acao\": \"backup_diario\" }"
+[[functions]]
+  path = "/api/prumo-backup"
+  schedule = "0 3 * * *"

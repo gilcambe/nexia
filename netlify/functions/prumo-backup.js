@@ -183,7 +183,7 @@ function createHandler(deps = {}) {
     if (method === 'POST' && event.body) {
       try {
         body = JSON.parse(event.body);
-      } catch {
+      } catch (_) {
         return res(400, { error: 'Pedido inválido.' });
       }
     }
