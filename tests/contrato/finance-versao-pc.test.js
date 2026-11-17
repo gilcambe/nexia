@@ -29,9 +29,11 @@ test('existe um @media (min-width: entre 1000 e 1280px) para o PC', () => {
 
 test('no PC o menu de abas (nav.abas) vira barra lateral à esquerda, em coluna', () => {
   const nav = regra(blocosPc(), /(^|,|\s)nav\.abas$|(^|,|\s)\.abas$|#abas$/);
-  assert.match(nav, /flex-direction\s*:\s*column/, 'nav.abas no PC: flex-direction: column');
+  // 17/11: com o menu lateral (gaveta), a coluna vem da regra-base de nav.abas e vale também no PC.
+  const semMedia = css.replace(/@media[^{]*\{(?:[^{}]*\{[^}]*\})*[^{}]*\}/g, '');
+  assert.match(nav + ';' + regra(semMedia, /(^|,|\s)nav\.abas$|(^|,|\s)\.abas$|#abas$/), /flex-direction\s*:\s*column/, 'nav.abas no PC: flex-direction: column (no bloco do PC ou na regra-base)');
   assert.match(nav, /left\s*:\s*0/, 'nav.abas no PC: presa à esquerda (left: 0)');
-  assert.match(nav, /right\s*:\s*auto/, 'nav.abas no PC: solte a direita (right: auto)');
+  assert.doesNotMatch(nav + ';' + regra(semMedia, /(^|,|\s)nav\.abas$|(^|,|\s)\.abas$|#abas$/), /(^|;)\s*right\s*:\s*0/, 'nav.abas no PC: não pode esticar até a direita (sem right: 0)');
   assert.match(nav, /top\s*:\s*\d/, 'nav.abas no PC: de cima (top) até embaixo');
   assert.match(nav, /width\s*:\s*\d{3}px/, 'nav.abas no PC: largura fixa (ex.: width: 220px)');
 });
