@@ -43,6 +43,9 @@ function ciVerde(runs) {
 }
 
 // Quais PRs revisar: branch nexia/ deste repositório, para develop, sem automerge e sem recusa anterior.
+// Áreas em que a aprovação das IAs grátis não basta (produção com dados pessoais).
+const SO_CLAUDE = /^(prumo\/|netlify\/functions\/prumo)/;
+
 function escolher(prs) {
   return (prs || []).filter(pr => pr.base && pr.base.ref === 'develop'
     && pr.head && pr.head.repo && pr.head.repo.full_name === REPO && /^nexia\//.test(pr.head.ref || '')
@@ -154,6 +157,13 @@ async function main() {
       d.votos = [v1, v2].filter(Boolean);
     }
     const quem = (d.votos || [d.voto]).filter(Boolean).map(v => `${v.provider}${v.model ? `/${v.model}` : ''} nota ${v.nota}`).join(', ');
+    // 17/11/2026 (dono): Kernex Finance é app em produção com dados pessoais. Entrega do Cortex ali derrubou o app 2x e
+    // juntou código errado (#3944, #3979, #3980). Aprovação das IAs grátis NÃO junta: espera a revisão da Claude.
+    if (d.acao === 'aprovar' && arquivos.some((a) => SO_CLAUDE.test(a.filename))) {
+      await gh(token, 'POST', `/issues/${pr.number}/labels`, { labels: ['revisao-manual'] });
+      await gh(token, 'POST', `/issues/${pr.number}/comments`, { body: `${MARCA(pr.head.sha)}🪜 Revisor grátis aprovou (${quem}), mas é Kernex Finance: espera a revisão da Claude antes de juntar.` });
+      continue;
+    }
     if (d.acao === 'aprovar') {
       await gh(token, 'POST', `/issues/${pr.number}/labels`, { labels: ['automerge'] });
       await gh(token, 'DELETE', `/issues/${pr.number}/labels/revisao-manual`);
@@ -172,4 +182,4 @@ async function main() {
 }
 
 if (require.main === module) main().catch(e => { console.error(e); process.exit(1); });
-module.exports = { issueDoPr, ciVerde, escolher, barreira, montarDiff, lerVeredito, decidir, MARCA, NOTA_MIN };
+module.exports = { SO_CLAUDE, issueDoPr, ciVerde, escolher, barreira, montarDiff, lerVeredito, decidir, MARCA, NOTA_MIN };

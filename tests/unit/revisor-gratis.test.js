@@ -52,3 +52,13 @@ test('REVISOR5: issue do PR e diff cortado no limite', () => {
   const d = r.montarDiff(grande);
   assert.ok(d.length < 50000 && /cortado/.test(d));
 });
+
+test('Finance (prumo) nunca entra só com a aprovação das IAs grátis: espera a Claude', () => {
+  const { SO_CLAUDE } = require('../../scripts/revisor-gratis.js');
+  assert.ok(SO_CLAUDE.test('prumo/app.js'));
+  assert.ok(SO_CLAUDE.test('netlify/functions/prumo.js'));
+  assert.ok(SO_CLAUDE.test('netlify/functions/prumo-lib/score.js'));
+  assert.ok(!SO_CLAUDE.test('src/pages/central/x.tsx'));
+  const wf = require('fs').readFileSync(require('path').join(__dirname, '../../.github/workflows/auto-merge.yml'), 'utf8');
+  assert.match(wf, /\|prumo\/\|netlify\/functions\/prumo\|/, 'o portão do Merge automático trata o Finance como área sensível');
+});
