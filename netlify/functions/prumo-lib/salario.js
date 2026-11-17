@@ -158,4 +158,4 @@ async function agirSalario(acao, body, c) {
   }
 }
 
-module.exports = { agirSalario };
+module.exports = { agirSalario, perguntarVisaoGratis };

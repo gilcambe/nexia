@@ -254,7 +254,7 @@ async function agirExtra(acao, body, c) {
     case 'pontos_salvar': return salvar('pontos', validarPontos(body));
     case 'pontos_apagar': return apagar('pontos');
     case 'pontos_listar': {
-      const itens = (await listar(base.collection('pontos'))).sort((a, b) => String(a.programa).localeCompare(String(b.programa), 'pt-BR'));
+      const itens = (await listar(base.collection('pontos'))).filter((p) => p && p.programa).sort((a, b) => String(a.programa).localeCompare(String(b.programa), 'pt-BR'));
       return [200, { itens, total_estimado: dinheiro(itens.reduce((s, p) => s + (p.saldo / 1000) * (p.valor_milheiro || 0), 0)), vencendo: pontosVencendo(itens, agoraIso) }];
     }
     default: return null;
