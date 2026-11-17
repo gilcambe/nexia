@@ -41,8 +41,9 @@
           ], async (f) => { const o = { id: x.id, preco: Number(f.preco), fonte: f.fonte }; if (f.data_hora) o.data_hora = new Date(f.data_hora).toISOString(); await MB.api('invest_cotacao', o); MB.ui.ok('Cotação salva.'); }, null);
         };
       });
-      el.querySelector('#limpar-carteira').onclick = async () => {
-        if (prompt('Isso apaga TODOS os investimentos salvos para você mandar os prints de novo. Para confirmar, escreva LIMPAR').toUpperCase() !== 'LIMPAR') return;
+      const lc = el.querySelector('#limpar-carteira'); // só existe quando há ativos (#3954)
+      if (lc) lc.onclick = async () => {
+        if ((prompt('Isso apaga TODOS os investimentos salvos para você mandar os prints de novo. Para confirmar, escreva LIMPAR') || '').toUpperCase() !== 'LIMPAR') return;
         await MB.api('carteira_limpar', { confirmar: 'LIMPAR' });
         MB.telas.investimentos(el);
       };
