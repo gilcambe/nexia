@@ -71,7 +71,9 @@ test('PA9. modo privacidade: botão, script no service worker e estilo', () => {
   assert.match(ler('index.html'), /id="olho"/);
   assert.match(ler('index.html'), /body\.privado \.valor/);
   assert.match(ler('sw.js'), /privacidade\.js/);
-  assert.match(ler('sw.js'), /v29-kernexfinance/);
+  // Versão do cache sobe a cada arquivo novo na casca (v29 em 16/11); o teste só exige o padrão.
+  const v = /prumo-casca-v(\d+)-kernexfinance/.exec(ler('sw.js'));
+  assert.ok(v && Number(v[1]) >= 29, 'versão do cache vNN-kernexfinance (>= 29)');
 });
 
 test('PA10. abas Início e Documentos: no menu, no app e no service worker, com os arquivos existindo', () => {
