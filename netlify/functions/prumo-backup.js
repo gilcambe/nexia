@@ -268,9 +268,11 @@ function createHandler(deps = {}) {
 // Netlify schedule function handler para backup diário
 exports.handler = async (event, context) => {
   // Verifica se é um disparo de cron (execução automática pelo agendador do Netlify)
-  if (event.httpMethod === undefined && event.path === undefined && event.source === 'aws.events') {
+  if (event && event.httpMethod === undefined && event.path === undefined && event.source === 'aws.events') {
+    console.log('[prumo-backup] Backup diário acionado pelo agendador Netlify.');
     const db = require('./firebase-init').db;
     const resultado = await executarBackupDiario(db);
+    console.log(`[prumo-backup] Backup diário concluído: ${resultado.totalUsuarios || 0} usuários processados.`);
     return {
       statusCode: 200,
       body: JSON.stringify(resultado),
@@ -279,7 +281,6 @@ exports.handler = async (event, context) => {
   return await createHandler()(event, context);
 };
 
-exports.handler = handler;
 exports.createHandler = createHandler;
 exports.exportarDadosUsuario = exportarDadosUsuario;
 exports.apagarDadosUsuario = apagarDadosUsuario;
