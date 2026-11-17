@@ -92,6 +92,10 @@ test('robos_checar confere com a cotação ao vivo, marca o dia e guarda o dispa
   assert.equal(chamadas.length, 1, 'chamou carteiraAoVivo uma vez');
   assert.equal(chamadas[0].itens.length, 1, 'passou a carteira da pessoa');
   assert.ok(chamadas[0].op && chamadas[0].op.agora instanceof Date, 'passou { agora: Date }');
+  // 1ª entrega (#3888) passava fetch: c.deps && c.deps.fetch, que no servidor é undefined (lá deps não tem fetch):
+  // nada era cotado. Use c.deps.fetch || ((...a) => fetch(...a)), como em agirCotacoes.
+  assert.equal(p.deps.fetch, undefined, 'como no servidor: deps sem fetch');
+  assert.equal(typeof chamadas[0].op.fetch, 'function', 'sem deps.fetch, passe o fetch global ((...a) => fetch(...a))');
   console.log(JSON.stringify(c[1]));
   assert.equal(c[1].disparos.length, 1, 'só o preco_abaixo dispara (30 < 35); preco_acima 50 não');
   assert.equal(c[1].disparos[0].regra_id, r1[1].id);

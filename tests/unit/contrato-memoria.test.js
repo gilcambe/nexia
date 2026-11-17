@@ -17,6 +17,10 @@ test('o caderno de lições do repositório existe e cabe no limite', () => {
   assert.ok(t.length > 200, 'licoes.md vazio');
   assert.ok(t.length <= memoria.LICOES_MAX + 10);
   assert.match(t, /atalho/);
+  // 17/11: o caderno passou de 3500 caracteres e a lição 17 era cortada sem ninguém ver. Nenhuma lição pode ficar de fora.
+  const bruto = fs.readFileSync(path.join(__dirname, '../../nexia-ai/contrato/memoria/licoes.md'), 'utf8').trim();
+  assert.ok(bruto.length <= memoria.LICOES_MAX, `licoes.md tem ${bruto.length} caracteres e o limite é ${memoria.LICOES_MAX}: as últimas lições não chegam à IA (encurte ou aumente o limite)`);
+  assert.doesNotMatch(t, /\(\.\.\.\)$/, 'caderno cortado');
 });
 
 test('gravarExemplo + buscarExemplos: acha o parecido, ignora o diferente e o próprio número', () => {
