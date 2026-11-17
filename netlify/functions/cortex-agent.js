@@ -27,6 +27,7 @@ const { admin, db }                       = require('./firebase-init');
 const { isCortexPermitido } = require('./middleware'); // Importação adicionada (CommonJS)
 const { guard, assertTenantAccess, sanitizePrompt, makeHeaders, HEADERS } = require('./middleware');
 const { publicErrorBody } = require('../../lib/safe-error');
+const { modeloGroq } = require('../../lib/groq-modelo');
 
 // FIX: helper centralizado para serverTimestamp — evita repetição
 const now = () => admin.firestore.FieldValue.serverTimestamp();
@@ -243,11 +244,12 @@ async function executeTool(toolName, args, tenantId, userId) {
       const apiKey = process.env.GROQ_API_KEY;
       if (!apiKey) throw new Error('GROQ_API_KEY não configurada para análise de código');
 
+      const modelo = await modeloGroq(apiKey);
       const res = await _fetchTimeout('https://api.groq.com/openai/v1/chat/completions', {
         method:  'POST',
         headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          model:       'llama-3.3-70b-versatile',
+          model:       modelo,
           temperature: 0.1,
           max_tokens:  800,
           messages: [
@@ -402,11 +404,12 @@ async function runAgentLoop(jobId, task, agentType, tenantId, userId) {
         break;
       }
 
+      const modelo = await modeloGroq(apiKey);
       const res = await _fetchTimeout('https://api.groq.com/openai/v1/chat/completions', {
         method:  'POST',
         headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          model:       'llama-3.3-70b-versatile',
+          model:       modelo,
           temperature: 0.3,
           max_tokens:  2500,
           messages:    [{ role: 'system', content: systemPrompt }, ...messages],

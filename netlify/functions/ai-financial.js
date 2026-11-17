@@ -19,6 +19,7 @@ async function _fetchTimeout(url, opts = {}, ms = 30000) {
 const { admin, db } = require('./firebase-init');
 
 const { guard, HEADERS, makeHeaders } = require('./middleware');
+const { modeloGroq } = require('../../lib/groq-modelo');
 
 exports.handler = async (event) => {
   const headers = makeHeaders(event);
@@ -213,11 +214,12 @@ async function askAI(tenantId, question) {
   const groqKey = process.env.GROQ_API_KEY;
   if (!groqKey) return { error: 'GROQ_API_KEY necessária' };
 
+  const modelo = await modeloGroq(groqKey);
   const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
     headers: { 'Authorization': `Bearer ${groqKey}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      model: 'llama-3.3-70b-versatile',
+      model: modelo,
       max_tokens: 600,
       messages: [
         { role: 'system', content: 'Você é um CFO virtual especialista em finanças SaaS. Responda em português brasileiro, de forma direta e orientada a ação.' },

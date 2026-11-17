@@ -20,6 +20,7 @@ const { admin, db } = require('./firebase-init');
 const modelRouter = require('../../nexia-ai/model-router'); // Fase 10: chamadas de IA via Model Router
 
 const { HEADERS, makeHeaders, requireBearerAuth } = require('./middleware');
+const { modeloGroq } = require('../../lib/groq-modelo');
 
 const SALES_SYSTEM = (tenantConfig) => `Você é ${tenantConfig.agentName || 'ARIA'}, a consultora de IA da ${tenantConfig.companyName || 'NEXIA'}.
 
@@ -125,7 +126,8 @@ async function callAI(messages, tenantConfig) {
 
   if (groqKey) {
     // Erro HTTP → tenta o próximo (como antes, res.ok falso); erro de rede propaga.
-    const data = await modelRouter.getRouter().chat({ provider: 'groq', model: 'llama-3.3-70b-versatile' }, {
+    const modelo = await modeloGroq(groqKey);
+    const data = await modelRouter.getRouter().chat({ provider: 'groq', model: modelo }, {
         maxTokens: 600,
         temperature: 0.7,
         system: SALES_SYSTEM(tenantConfig),
