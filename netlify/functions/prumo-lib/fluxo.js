@@ -8,6 +8,7 @@
 const folha = require('./folha');
 const cartoes = require('./cartoes');
 const motor = require('./motor');
+const previsto = require('./previsto');
 
 const MES = /^\d{4}-\d{2}$/;
 const DIA_ISO = /^\d{4}-\d{2}-\d{2}$/;
@@ -37,7 +38,7 @@ async function carregar(c) {
     listar(base.collection('dividas')), listar(base.collection('contas')), listar(base.collection('lancamentos')), listar(base.collection('objetivos')),
     c.listarCarteira(),
   ]);
-  return { cfg, carreira, orc: { fixas: [], guardar: [], limites: {}, renda_extra: 0, ...orcDoc }, pagamentos, pontos, cartoes: cartoesL, gastos, dividas, contas, lancs: lancs.filter((x) => x.perfil !== 'pj'), objetivos, carteira };
+  return { cfg, carreira, orc: { fixas: [], guardar: [], limites: {}, renda_extra: 0, ...orcDoc }, pagamentos, pontos, cartoes: cartoesL, gastos, dividas, contas, lancs: previsto.realizados(lancs.filter((x) => x.perfil !== 'pj'), 'data', previsto.hojeDe(c.agoraIso)), objetivos, carteira };
 }
 
 // ---------- salário ----------
@@ -194,7 +195,8 @@ function resumoInicio(d, hoje) {
   const dias = diffDias(hoje, fimMes) + 1;
   const evs = eventos(d, hoje, dias);
   const prev = previsaoMes(d, mes);
-  const recebeuMensal = d.pagamentos.some((p) => p.mes === mes && p.tipo === 'mensal');
+  // Só conta como "já caiu" o que está realizado; o previsto (data futura) o Fluxo mostra à parte, sem contar em dobro.
+  const recebeuMensal = d.pagamentos.some((p) => p.mes === mes && p.tipo === 'mensal' && previsto.statusDe(p, 'data_pagamento', hoje) === 'realizado');
   const salario = prev && !recebeuMensal ? prev.a_receber : null;
   const contas = r2(evs.filter((e) => e.tipo === 'saida').reduce((s, e) => s + e.valor, 0));
   return {

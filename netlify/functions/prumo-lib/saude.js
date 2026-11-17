@@ -89,7 +89,8 @@ async function agirSaude(acao, body, c) {
   const { base, listar, agoraIso } = c;
   const mes = texto(body.mes, 7) || agoraIso.slice(0, 7);
   if (!MES.test(mes)) return [400, { error: 'O mês precisa estar no formato AAAA-MM.' }];
-  const [lancs, contas, limites, cts, gastos, dividasLista] = await Promise.all(['lancamentos', 'contas', 'limites', 'cartoes', 'gastos', 'dividas'].map((n) => listar(base.collection(n))));
+  const [lancsTodos, contas, limites, cts, gastos, dividasLista] = await Promise.all(['lancamentos', 'contas', 'limites', 'cartoes', 'gastos', 'dividas'].map((n) => listar(base.collection(n))));
+  const lancs = require('./previsto').realizados(lancsTodos, 'data', require('./previsto').hojeDe(agoraIso)); // previsto (data futura) não conta
   const cfgDiv = await base.collection('config').doc('dividas').get();
   const semDividas = !dividasLista.length && !!(cfgDiv && cfgDiv.exists && cfgDiv.data().sem_dividas);
   const doMes = totais(lancs.filter((x) => String(x.data).startsWith(mes)));

@@ -5,6 +5,7 @@
   const MB = window.MB;
   const carregarPdf = () => MB.pdf ? Promise.resolve(MB.pdf) : new Promise((ok, falha) => { const s = document.createElement('script'); s.src = '/prumo/pdf.js'; s.onload = () => ok(MB.pdf); s.onerror = falha; document.body.appendChild(s); });
   const carregarUi = () => MB.ui ? Promise.resolve(MB.ui) : new Promise((ok, falha) => { const s = document.createElement('script'); s.src = '/prumo/ui.js'; s.onload = () => ok(MB.ui); s.onerror = falha; document.body.appendChild(s); });
+  const carregarPrevisto = () => Promise.resolve(MB.previsto || null); // previsto.js vem no index.html; sem ele a tela segue sem a parte de previstos
   const TIPO = { despesa: 'Gasto', receita: 'Entrada', transferencia_propria: 'Transferência própria', pagamento_fatura: 'Pagamento de fatura' };
   const DOC = { fatura: 'Fatura de cartão', extrato: 'Extrato', comprovante: 'Comprovante', nota: 'Nota fiscal', boleto: 'Boleto', recibo: 'Recibo', conta: 'Conta de consumo', corretora: 'Extrato de corretora', milhas: 'Extrato de milhas', outro: 'Documento' };
 
@@ -14,14 +15,20 @@
     const hoje = new Date();
     const mes = hoje.toISOString().slice(0, 7);
     const rec = await MB.api('lanc_listar', { mes });
+    const pv = await carregarPrevisto();
+    const futuros = rec.lancamentos.filter((l) => l.status === 'previsto'); // data futura: não entra nos totais
+    const passados = rec.lancamentos.filter((l) => l.status !== 'previsto');
+    const itensPrev = futuros.map((l) => ({ tipo: l.tipo === 'receita' ? 'receber' : 'pagar', nome: l.descricao, data: l.data, valor: l.valor, colecao: 'lancamentos', id: l.id }));
     el.innerHTML = `
       <div class="card"><h3 style="margin:0 0 6px">📄 Enviar documento</h3>
         <div class="fraco">Fatura, extrato, comprovante Pix, nota, boleto ou recibo: foto, print ou PDF (até 5 páginas por vez).</div>
         <input type="file" id="kf-arq" accept="image/*,application/pdf,.pdf" multiple style="margin-top:10px">
         <button class="btn" id="kf-ler" type="button" style="margin-top:10px">Ler documento</button></div>
       <div id="kf-res"></div>
-      <div class="card"><div class="fraco">Lançamentos de ${mes.slice(5)}/${mes.slice(0, 4)} · entradas ${brl(rec.receitas)} · gastos ${brl(rec.despesas)}</div>
-        ${rec.lancamentos.map((l) => `<div class="item"><div><div class="n">${esc(l.descricao)}${l.parcela ? ` <span class="fraco">${l.parcela}/${l.parcelas_total || '?'}</span>` : ''}</div><div class="fraco">${l.data.slice(8, 10)}/${l.data.slice(5, 7)} · ${esc(TIPO[l.tipo] || l.tipo)}${l.instituicao ? ' · ' + esc(l.instituicao) : ''}</div></div><div><span class="v ${l.tipo === 'receita' ? 'verde' : ''}">${brl(l.valor)}</span> <button class="btn perigo mini" data-apagar="${esc(l.id)}" type="button" aria-label="Apagar">✕</button></div></div>`).join('') || '<p class="fraco">Nenhum lançamento neste mês ainda.</p>'}</div>`;
+      ${pv ? pv.cartao(itensPrev, 'Previsto (ainda não aconteceu)') : ''}
+      <div class="card"><div class="fraco">Lançamentos de ${mes.slice(5)}/${mes.slice(0, 4)} · entradas ${brl(rec.receitas)} · gastos ${brl(rec.despesas)}${rec.a_receber || rec.a_pagar ? ' · a receber ' + brl(rec.a_receber) + ' · a pagar ' + brl(rec.a_pagar) : ''}</div>
+        ${passados.map((l) => `<div class="item"><div><div class="n">${esc(l.descricao)}${l.parcela ? ` <span class="fraco">${l.parcela}/${l.parcelas_total || '?'}</span>` : ''}</div><div class="fraco">${l.data.slice(8, 10)}/${l.data.slice(5, 7)} · ${esc(TIPO[l.tipo] || l.tipo)}${l.instituicao ? ' · ' + esc(l.instituicao) : ''}</div></div><div><span class="v ${l.tipo === 'receita' ? 'verde' : ''}">${brl(l.valor)}</span> <button class="btn perigo mini" data-apagar="${esc(l.id)}" type="button" aria-label="Apagar">✕</button></div></div>`).join('') || '<p class="fraco">Nenhum lançamento neste mês ainda.</p>'}</div>`;
+    if (pv) pv.ligar(el);
     el.querySelectorAll('[data-apagar]').forEach((b) => { b.onclick = async () => { if (!confirm('Apagar este lançamento?')) return; await MB.api('lanc_apagar', { id: b.dataset.apagar }); MB.abrirAba('documentos'); }; });
 
     const res = el.querySelector('#kf-res');

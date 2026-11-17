@@ -11,7 +11,7 @@
   let mesSel = new Date().toISOString().slice(0, 7);
   MB.telas.orcamento = async (el) => {
     await iniciar('orcamento');
-    await Promise.all([carregarJs('salario', '/prumo/salario.js'), carregarJs('pdf', '/prumo/pdf.js')]);
+    await Promise.all([carregarJs('salario', '/prumo/salario.js'), carregarJs('previsto', '/prumo/previsto.js'), carregarJs('pdf', '/prumo/pdf.js')]);
     const [r, { objetivos }, sal] = await Promise.all([MB.api('orcamento_resumo', { mes: mesSel }), MB.api('objetivo_listar'), MB.api('salario_previsao', { mes: mesSel })]);
     const o = r.orcamento;
     const nomeObj = Object.fromEntries(objetivos.map((x) => [x.id, x.nome]));
@@ -32,6 +32,7 @@
         ${(o.guardar || []).map((g, i) => `<div class="item" data-g="${i}"><span>🎯 ${esc(nomeObj[g.objetivo_id] || 'Objetivo apagado')}</span><span class="v">${brl(g.valor)}</span></div>`).join('') || `<p class="fraco">${objetivos.length ? 'Quanto separar para cada objetivo.' : 'Crie objetivos na aba Objetivos.'}</p>`}</div>
       <div class="card"><div class="item" style="padding-top:0"><b>Limite por categoria</b><button class="btn sec mini" id="lim">Editar</button></div>
         ${Object.entries(o.limites || {}).map(([k, v]) => `<div class="item"><span>${esc(CATS[k] || k)}</span><span class="v">${brl(v)}</span></div>`).join('') || '<p class="fraco">Ex.: mercado até R$ 1.200 por mês.</p>'}</div>`;
+    if (MB.previsto) MB.previsto.ligar(el);
     el.querySelector('#mes').onchange = (e) => { mesSel = e.target.value || mesSel; recarregar(); };
     const salvarOrc = (mud) => MB.api('orcamento_salvar', { ...o, ...mud });
     const editarFixa = (i) => { const f = i == null ? null : o.fixas[i]; formulario(f ? 'Editar conta' : 'Nova conta fixa', [

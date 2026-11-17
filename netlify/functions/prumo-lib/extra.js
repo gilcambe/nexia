@@ -197,6 +197,8 @@ async function agirExtra(acao, body, c) {
   if (opf) return opf;
   const flx = await require('./fluxo').agirFluxo(acao, body, c);
   if (flx) return flx;
+  const prv = await require('./previsto').agirPrevisto(acao, body, c);
+  if (prv) return prv;
   const { base, listar, salvar, apagar, deps, agoraIso } = c;
   const lerOrcamento = async () => { const s = await base.collection('orcamento').doc('atual').get(); return s && s.exists ? s.data() : null; };
   const holerites = async () => (await listar(base.collection('holerites'))).sort((a, b) => String(b.mes).localeCompare(String(a.mes)));

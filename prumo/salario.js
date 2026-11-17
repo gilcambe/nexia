@@ -29,7 +29,11 @@
       h += `<p class="fraco">${esc(r.motivo)}</p>`;
       if (/sal[aá]rio base/i.test(String(r.motivo || ''))) h += '<button type="button" class="btn sec" data-acao="salario-base">Informar salário base</button>';
     }
-    return h + '</div>';
+    // Data futura: fica à parte, não entra no total recebido.
+    const prev = (r.a_receber || []).map((x) => ({ tipo: 'receber', nome: nomeTipo(x.tipo), data: x.data_pagamento, valor: x.liquido, colecao: 'pagamentos', id: x.id }));
+    if (prev.length && MB.previsto) h += '</div>' + MB.previsto.cartao(prev, 'A receber (ainda não caiu)');
+    else return h + '</div>';
+    return h;
   }
 
   function camposRecebimento(p, mesSel) {
