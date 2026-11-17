@@ -3,7 +3,7 @@
 /**
  * Kernex Finance (Prumo Backup & LGPD) — netlify/functions/prumo-backup.js
  * Rotina de exportação, exclusão (LGPD - direito ao esquecimento) e backup/restauração.
- * Implementado conforme cron diário.
+ * Implementado conforme cron diário (Netlify Schedule).
  *
  * Regras:
  * - Nunca grava em disco (sem fs.writeFileSync / require dinâmico).
