@@ -10,7 +10,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 
-const LICOES_MAX = 3500, EXEMPLO_MAX = 3500, EXEMPLOS_TOTAL = 7000, DIFF_MAX = 6000;
+const LICOES_MAX = 7000, EXEMPLO_MAX = 3500, EXEMPLOS_TOTAL = 7000, DIFF_MAX = 6000;
 const VAZIAS = new Set(('para pela pelo pelos pelas como quando onde qual quais isso esse essa este esta todo toda todos todas cada '
   + 'deve devem pode podem precisa fazer faça feito arquivo arquivos teste testes pedido criar crie mudar altere adicione '
   + 'função funcao retorna retornar devolve devolver sempre nunca mais menos with that this from return').split(' '));
