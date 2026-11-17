@@ -15,26 +15,25 @@
     aba('inicio');
     const [r, sf] = await Promise.all([MB.api('inicio_resumo'), MB.api('saude_financeira')]);
     const notaSaude = sf.completa || (sf.nota !== null && sf.nota !== undefined) ? sf.nota : (sf.nota_parcial === undefined ? null : sf.nota_parcial);
-    let scoreHtml = '', scoreMod = null;
-    try { scoreMod = await carregarScript('score', '/prumo/score.js'); if (scoreMod) scoreHtml = scoreMod.cartao(await MB.api('score_listar')); } catch (e) { /* sem o score, o resto da tela segue */ }
-    let patrimSvg = '', hojeHtml = '', hojeTotal = 0;
-    try {
+    // Opcionais (score, gráfico, cotação ao vivo) rodam em paralelo e NÃO seguram a tela: o principal aparece primeiro.
+    const SIL = { silencioso: true };
+    const pScore = carregarScript('score', '/prumo/score.js')
+      .then(async (m) => (m ? { m, html: m.cartao(await MB.api('score_listar', {}, SIL)) } : null)).catch(() => null);
+    const pGraf = (async () => {
       const graficos = await carregarGraficos();
-      const [hist, cot] = await Promise.all([MB.api('historico_listar'), MB.api('cotacoes_vivas')]);
-      if (hist && Array.isArray(hist.meses) && hist.meses.length) {
-        patrimSvg = graficos.linha(hist.meses.map((m) => ({ rotulo: String(m.mes || ''), valor: Number(m.total || 0) })));
-      }
+      const [hist, cot] = await Promise.all([MB.api('historico_listar', {}, SIL).catch(() => null), MB.api('cotacoes_vivas', {}, SIL).catch(() => null)]);
+      let patrimSvg = '';
+      if (hist && Array.isArray(hist.meses) && hist.meses.length) patrimSvg = graficos.linha(hist.meses.map((m) => ({ rotulo: String(m.mes || ''), valor: Number(m.total || 0) })));
       let ativos = [];
-      if (cot && Array.isArray(cot.itens)) {
-        for (const c of cot.itens) {
-          const g = graficos.ganhoDoDia(c);
-          if (g != null) ativos.push({ rotulo: c.ticker || c.nome || c.rotulo || 'Ativo', valor: g });
-        }
-      }
+      if (cot && Array.isArray(cot.itens)) for (const c of cot.itens) { const g = graficos.ganhoDoDia(c); if (g != null) ativos.push({ rotulo: c.ticker || c.nome || c.rotulo || 'Ativo', valor: g }); }
       ativos = ativos.sort((a, b) => Math.abs(b.valor) - Math.abs(a.valor)).slice(0, 8);
-      hojeHtml = graficos.barras(ativos);
-      hojeTotal = ativos.reduce((s, a) => s + a.valor, 0);
-    } catch (e) { /* sem os gráficos, o resto da tela segue */ }
+      return { patrimSvg, hojeHtml: graficos.barras(ativos), hojeTotal: ativos.reduce((t, a) => t + a.valor, 0) };
+    })().catch(() => null);
+    // Espera no máximo 1,2 s: se chegou, já entra junto; se não, entra quando chegar.
+    const rapido = (p) => Promise.race([p, new Promise((ok) => setTimeout(() => ok(undefined), 1200))]);
+    const [sc, gr] = await Promise.all([rapido(pScore), rapido(pGraf)]);
+    const corpoHoje = (g) => `${g.hojeHtml}<div class="n ${g.hojeTotal >= 0 ? 'verde' : 'verm'}" style="margin-top:6px">${brl(g.hojeTotal)}</div>`;
+    const esperando = '<p class="fraco">Carregando…</p>';
     const nome = (MB.usuario && MB.usuario() && MB.usuario().displayName || '').split(' ')[0];
     const hora = new Date().getHours();
     const saudacao = hora < 12 ? 'Bom dia' : hora < 18 ? 'Boa tarde' : 'Boa noite';
@@ -56,7 +55,7 @@
         ${sf.indicadores.map((x) => `<div style="margin:6px 0"><div class="item" style="padding:0;border:0"><span>${esc(x.nome)}</span><span class="fraco">${esc(x.texto)}</span></div>${barra(x.nota, x.nota < 40 ? '#ef4444' : x.nota < 70 ? '#f59e0b' : '')}</div>`).join('')}
         ${sf.completa ? '' : `<div class="aviso-c" style="margin-top:6px">👉 ${esc(sf.proximo_passo || 'Cadastre suas contas na aba Contas para começar.')}</div>`}
         <div class="fraco" style="margin-top:6px">${sf.completa ? esc(sf.aviso) + (sf.nota_mes_anterior !== null && sf.nota_mes_anterior !== undefined ? ' Mês anterior: ' + sf.nota_mes_anterior + '.' : '') : ''}</div></div>
-      ${scoreHtml}
+      <div id="kf-score">${sc ? sc.html : ''}</div>
       <div class="card kf-hero"><div class="fraco">Saldo disponível</div><div class="grande">${r.saldo_disponivel === null ? '—' : brl(r.saldo_disponivel)}</div>
         <div class="fraco" style="margin-bottom:10px">${r.saldo_disponivel === null ? 'Cadastre suas contas na aba Contas.' : 'Dinheiro em conta, sem limite de cartão.'}</div>
         <div class="fraco">Patrimônio líquido</div><div class="n" style="font-size:22px">${brl(r.patrimonio.liquido)}</div>
@@ -72,8 +71,8 @@
       </div>
       ${pv ? pv.cartao(r.previstos, 'Previsto no mês (ainda não aconteceu)') : ''}
       <div class="card kf-insight"><div class="fraco">💡 Resumo do mês</div><div>${esc(insight)}</div></div>
-      <div class="card" id="kf-graf-patrimonio" style="margin-top:12px"><div class="fraco">Seu patrimônio</div>${patrimSvg}</div>
-      <div class="card" id="kf-graf-hoje" style="margin-top:12px"><div class="fraco">Ganhos e perdas de hoje</div>${hojeHtml}<div class="n ${hojeTotal >= 0 ? 'verde' : 'verm'}" style="margin-top:6px">${brl(hojeTotal)}</div></div>
+      <div class="card" id="kf-graf-patrimonio" style="margin-top:12px"><div class="fraco">Seu patrimônio</div><div id="kf-patrim-corpo">${gr ? gr.patrimSvg : gr === null ? '' : esperando}</div></div>
+      <div class="card" id="kf-graf-hoje" style="margin-top:12px"><div class="fraco">Ganhos e perdas de hoje</div><div id="kf-hoje-corpo">${gr ? corpoHoje(gr) : gr === null ? '' : esperando}</div></div>
       <button class="btn" id="kf-doc" type="button">📄 Enviar documento</button>
       <div class="linha" style="margin-top:8px"><button class="btn sec" id="kf-ia" type="button">🤖 Perguntar à IA</button><button class="btn sec" id="kf-posso" type="button">🛒 Posso comprar?</button></div>
       ${r.dividas.registradas ? `<div class="card" style="margin-top:12px"><div class="item" style="padding:0;border:0"><span class="fraco">Dívidas</span><span class="n verm">${brl(r.dividas.total)}</span></div><div class="fraco">Parcelas ${brl(r.dividas.parcelas_mes)} por mês${r.dividas.comprometimento_pct !== null ? ' · ' + String(r.dividas.comprometimento_pct).replace('.', ',') + '% da renda' : ''}</div><button class="btn sec mini" id="kf-div" type="button" style="margin-top:8px">Ver plano de quitação</button></div>` : r.dividas.sem ? '' : `<div class="card" style="margin-top:12px"><div class="fraco">Ainda não sei se você tem dívidas. Cadastre ou diga que não tem, e a nota de saúde fica mais completa.</div><button class="btn sec mini" id="kf-div" type="button" style="margin-top:8px">Ir para Dívidas</button></div>`}
@@ -82,7 +81,13 @@
       ${cats.length ? `<div class="card" style="margin-top:12px"><div class="fraco">Gastos por categoria</div>${cats.map(([k, v]) => `<div style="margin:6px 0"><div class="item" style="padding:0;border:0"><span>${esc(NOME_CAT[k] || k)}</span><span>${brl(v)}</span></div>${barra(r.despesas ? (v / r.despesas) * 100 : 0)}</div>`).join('')}</div>` : ''}
       ${r.lacunas.length ? `<div class="card fraco" style="margin-top:12px">Para calcular saldo disponível e saúde financeira ainda faltam: ${r.lacunas.map((l) => esc(LACUNA[l] || l)).join(', ')}. Nada é estimado no lugar.</div>` : ''}`;
     if (pv) pv.ligar(el);
-    if (scoreMod) { try { scoreMod.ligar(el, { api: MB.api, pdf: await carregarScript('pdf', '/prumo/pdf.js'), reduzir: MB.ui.reduzir, formulario: MB.ui.formulario, ok: MB.ui.ok }); } catch (e) { /* sem leitura de print, o resto segue */ } }
+    const ligarScore = async (x) => { if (!x) return; try { x.m.ligar(el, { api: MB.api, pdf: await carregarScript('pdf', '/prumo/pdf.js'), reduzir: MB.ui.reduzir, formulario: MB.ui.formulario, ok: MB.ui.ok }); } catch (e) { /* sem leitura de print, o resto segue */ } };
+    if (sc) await ligarScore(sc);
+    else if (sc === undefined) pScore.then((x) => { const slot = el.querySelector('#kf-score'); if (x && slot) { slot.innerHTML = x.html; ligarScore(x); } });
+    if (gr === undefined) pGraf.then((g) => {
+      const a = el.querySelector('#kf-patrim-corpo'); const b = el.querySelector('#kf-hoje-corpo');
+      if (a) a.innerHTML = g ? g.patrimSvg : ''; if (b) b.innerHTML = g ? corpoHoje(g) : '<p class="fraco">Cotações indisponíveis agora.</p>';
+    });
     el.querySelector('#kf-doc').onclick = () => MB.abrirAba('documentos');
     const bd = el.querySelector('#kf-div'); if (bd) bd.onclick = () => MB.abrirAba('dividas');
     const bf = el.querySelector('#kf-fluxo-ver'); if (bf) bf.onclick = () => MB.abrirAba('fluxo');
