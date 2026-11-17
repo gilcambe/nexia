@@ -97,3 +97,6 @@ function createHandler(deps = {}) {
 // Exportação do handler para uso nas rotas (mesma forma do agenda.js).
 exports.handler = createHandler();
 exports.createHandler = createHandler;
+
+// Handler principal exportado para uso nas rotas (mesmo formato do agenda.js)
+module.exports.handler = createHandler();
