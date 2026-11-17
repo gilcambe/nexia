@@ -40,6 +40,40 @@
   .dica h3 { margin:0 0 8px; } .dica ol { margin:0 0 16px; padding-left:20px; color:var(--texto); }
   .valor { transition:filter .15s; } body.privado .valor { filter:blur(7px); user-select:none; }
   [hidden] { display:none !important; }
+
+  @media (min-width: 1024px) {
+    nav.abas {
+      position: fixed;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      right: auto;
+      width: 220px;
+      overflow-x: hidden;
+      flex-direction: column;
+      align-items: stretch;
+    }
+    nav.abas button {
+      flex-direction: row;
+      justify-content: flex-start;
+      padding: 12px 16px;
+      text-align: left;
+      min-width: auto;
+      flex: 0 0 auto;
+    }
+    nav.abas button span {
+      margin-right: 8px;
+    }
+    main {
+      max-width: 1100px;
+      margin-left: 220px;
+    }
+    #conteudo {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+  }
 </style>
 </head>
 <body>
