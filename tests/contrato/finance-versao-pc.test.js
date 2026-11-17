@@ -51,6 +51,6 @@ test('no PC os cartões ficam em 2 colunas (grid)', () => {
 
 test('no celular nada muda: o menu continua embaixo fora do @media', () => {
   const fora = css.replace(/@media[^{]*\{[\s\S]*?\}\s*\}/g, '');
-  assert.match(regra(fora, /nav\.abas$/), /bottom\s*:/, 'a regra base de nav.abas continua com bottom (menu embaixo no celular)');
+  // 17/11/2026: no celular o menu virou gaveta lateral (contrato finance-menu-lateral); a barra embaixo saiu.
   assert.match(regra(fora, /(^|\s)main$/), /max-width\s*:\s*720px/, 'main base continua 720px no celular');
 });
