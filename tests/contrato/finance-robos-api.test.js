@@ -96,6 +96,10 @@ test('robos_checar confere com a cotação ao vivo, marca o dia e guarda o dispa
   // nada era cotado. Use c.deps.fetch || ((...a) => fetch(...a)), como em agirCotacoes.
   assert.equal(p.deps.fetch, undefined, 'como no servidor: deps sem fetch');
   assert.equal(typeof chamadas[0].op.fetch, 'function', 'sem deps.fetch, passe o fetch global ((...a) => fetch(...a))');
+  const antes = globalThis.fetch; let chegou = false;
+  globalThis.fetch = async () => { chegou = true; return { ok: true }; };
+  try { await chamadas[0].op.fetch('https://exemplo.invalid/'); } catch (e) { assert.fail('o fetch passado falhou: ' + e.message + ' (não dê o nome "fetch" à constante; use globalThis.fetch)'); } finally { globalThis.fetch = antes; }
+  assert.ok(chegou, 'o fetch passado chama o fetch global');
   console.log(JSON.stringify(c[1]));
   assert.equal(c[1].disparos.length, 1, 'só o preco_abaixo dispara (30 < 35); preco_acima 50 não');
   assert.equal(c[1].disparos[0].regra_id, r1[1].id);
