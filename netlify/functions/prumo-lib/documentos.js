@@ -206,6 +206,8 @@ async function agirDoc(acao, body, c) {
       const milhas = Math.round(pontos.reduce((s, p) => s + ((p.saldo || 0) / 1000) * (p.valor_milheiro || 0), 0) * 100) / 100;
       const dia = new Date(agoraIso).getUTCDate();
       const vencimentos = cartoes.map((k) => ({ cartao: k.nome, dia: k.dia_vencimento, em_dias: (k.dia_vencimento - dia + 31) % 31 })).filter((v) => v.em_dias <= 7).sort((a, b) => a.em_dias - b.em_dias);
+      let fluxo_inicio = null;
+      try { const f = require('./fluxo'); fluxo_inicio = f.resumoInicio(await f.carregar(c), agoraIso.slice(0, 10)); } catch { fluxo_inicio = null; } // cartão "quanto ainda cai" (carreira)
       const lacunas = [];
       if (!resDiv.registradas && !resDiv.sem) lacunas.push('dividas');
       if (!contas.length) lacunas.push('contas');
@@ -213,7 +215,7 @@ async function agirDoc(acao, body, c) {
       return [200, { mes, receitas: doMes.receitas, despesas: doMes.despesas, economia: Math.round((doMes.receitas - doMes.despesas) * 100) / 100,
         despesas_mes_anterior: anterior.despesas, variacao_despesas_pct: pct(doMes.despesas, anterior.despesas), por_categoria: doMes.por_categoria,
         saldo_disponivel: sd.saldo, outras_moedas: sd.outras_moedas, limites: consumo, alertas_limite: consumo.filter((x) => x.status !== 'ok'),
-        dividas: resDiv, investimentos: Math.round(carteira.reduce((t, x) => t + Math.round((x.valor || 0) * 100), 0)) / 100, patrimonio: pat, milhas_estimado: milhas, vencimentos, lacunas, qtd_lancamentos: lancs.length }];
+        dividas: resDiv, investimentos: Math.round(carteira.reduce((t, x) => t + Math.round((x.valor || 0) * 100), 0)) / 100, patrimonio: pat, milhas_estimado: milhas, vencimentos, fluxo_inicio, lacunas, qtd_lancamentos: lancs.length }];
     }
     default: return null;
   }
