@@ -6,16 +6,17 @@ function createHandler(deps = {}) {
   const getDb = deps.getDb || (() => require('./firebase-init').db);
   const getMw = deps.getMw || (() => require('./middleware'));
   const now = deps.now || (() => Date.now());
+  const buildHeaders = deps.makeHeaders || ((event) => getMw().makeHeaders(event));
 
   return async (event) => {
-    const h = makeHeaders(event);
+    const h = buildHeaders(event);
     if (event.httpMethod === 'OPTIONS') return { statusCode: 204, headers: h, body: '' };
     if (!['GET', 'POST'].includes(event.httpMethod)) return { statusCode: 405, headers: h, body: JSON.stringify({ error: 'Method Not Allowed' }) };
 
     const mw = getMw();
     const auth = await mw.verifyBearerToken(event);
     if (!auth || !auth.ok) return { statusCode: 401, headers: h, body: JSON.stringify({ error: 'Entre com sua conta para acessar.' }) };
-    if (auth.role !== 'master') return { statusCode: 403, headers: h, body: JSON.stringify({ error: 'Só o administrador da KERNEX tem acesso.' }) };
+    if (auth.role !== 'master') return { statusCode: 403, headers: h, body: JSON.stringify({ error: 'acesso restrito ao administrador' }) };
 
     const db = getDb();
     let body = {};
@@ -52,7 +53,9 @@ function createHandler(deps = {}) {
     }
 
     if (parte === 'mensagens') {
-      const msgs = await db.collection('prumo_users').doc(event.queryStringParameters.uid).collection('mensagens').get();
+      const uid = event.queryStringParameters && event.queryStringParameters.uid;
+      if (!uid) return { statusCode: 400, headers: h, body: JSON.stringify({ error: 'Faltam dados' }) };
+      const msgs = await db.collection('prumo_users').doc(uid).collection('mensagens').get();
       return { statusCode: 200, headers: h, body: JSON.stringify({ mensagens: msgs.docs.map(d => d.data()) }) };
     }
 
