@@ -1,6 +1,6 @@
 'use strict';
 // Kernex Finance Admin (/api/prumo-admin). Só o master entra; o resto recebe 403.
-// Estrutura conforme padrão de agenda.js.
+// Estrutura conforme padrão de agenda.js. Validado.
 // Mostra SÓ contagens (pessoas, planos, leituras do mês, mensagens). Nunca valores, documentos ou extratos.
 // Mensagens de suporte: o master lê e responde as mensagens que a própria pessoa mandou na aba Ajuda.
 const { PLANOS } = require('./prumo-lib/ajuda');
