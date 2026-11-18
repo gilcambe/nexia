@@ -76,7 +76,7 @@ async function agirSalario(acao, body, c) {
   };
   switch (acao) {
     case 'salario_ler': {
-      const im = c.lerImagens(body.imagens);
+      const im = c.lerImagens(body.imagens, { pdf: true });
       if (!im.ok) return [400, { error: im.erro }];
       const ponto = body.tipo === 'ponto';
       const sistema = ponto ? LER_PONTO : LER_HOLERITE;

@@ -65,12 +65,71 @@ function candidatas(deps, img, sistema, ms) {
   return out;
 }
 
+/**
+ * PDF cru (17/11: o pdf.js não abria o holerite no celular do dono). Duas rotas grátis na mesma corrida:
+ * 1) Gemini lê o PDF direto (inline_data application/pdf), inclusive PDF escaneado;
+ * 2) Cloudflare transforma o PDF em texto (AI.toMarkdown) e uma IA de texto devolve o JSON.
+ */
+const GEMINI_PDF = ['gemini-3.5-flash', 'gemini-3.1-flash-lite', 'gemini-flash-latest'];
+function candidatasPdf(deps, img, sistema, ms) {
+  const out = [];
+  const env = deps.env || (typeof process !== 'undefined' ? process.env : {}) || {};
+  const chave = env.GEMINI_API_KEY;
+  const buscar = deps.fetch || (typeof fetch === 'function' ? fetch : null);
+  if (chave && buscar) {
+    for (const modelo of GEMINI_PDF) {
+      out.push({ nome: `gemini-pdf/${modelo}`, rodar: async () => {
+        const ctrl = typeof AbortController === 'function' ? new AbortController() : null;
+        const t = setTimeout(() => ctrl && ctrl.abort(), ms);
+        try {
+          const r = await buscar(`https://generativelanguage.googleapis.com/v1beta/models/${modelo}:generateContent`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'x-goog-api-key': chave },
+            body: JSON.stringify({
+              systemInstruction: { parts: [{ text: sistema }] },
+              contents: [{ role: 'user', parts: [{ inline_data: { mime_type: 'application/pdf', data: img.data } }, { text: 'Leia o documento e devolva o JSON.' }] }],
+              generationConfig: { temperature: 0, maxOutputTokens: 4096, responseMimeType: 'application/json', thinkingConfig: { thinkingBudget: 1024 } },
+            }),
+            signal: ctrl ? ctrl.signal : undefined,
+          });
+          if (!r.ok) throw new Error('gemini ' + r.status);
+          const j = await r.json();
+          const partes = (((j.candidates || [])[0] || {}).content || {}).parts || [];
+          return partes.map((p) => p.text || '').join('');
+        } finally { clearTimeout(t); }
+      } });
+    }
+  }
+  const ai = deps.ai !== undefined ? deps.ai : globalThis.__NEXIA_AI__;
+  let router = null;
+  try { router = deps.getRouter && deps.getRouter(); } catch { router = null; }
+  if (ai && typeof ai.toMarkdown === 'function' && router) {
+    out.splice(Math.min(1, out.length), 0, { nome: 'cloudflare-pdf-texto', rodar: async () => {
+      const bin = Buffer.from(img.data, 'base64');
+      const res = await ai.toMarkdown([{ name: 'documento.pdf', blob: new Blob([bin], { type: 'application/pdf' }) }]);
+      const texto = String(((Array.isArray(res) ? res[0] : res) || {}).data || '').slice(0, 30000);
+      if (texto.replace(/\s/g, '').length < 30) throw new Error('PDF sem texto');
+      let fila = [];
+      try { fila = deps.listFor ? deps.listFor('fast') : []; } catch { fila = []; }
+      for (const d of fila) {
+        if (!d || d.provider === 'anthropic') continue;
+        try {
+          const r = await router.chat(d, { system: sistema, messages: [{ role: 'user', content: 'Texto do documento (extraído do PDF):\n\n' + texto + '\n\nDevolva o JSON.' }], maxTokens: 2048, temperature: 0, timeoutMs: ms });
+          if (r && temJson(r.text)) return r.text;
+        } catch { /* próxima IA */ }
+      }
+      return null;
+    } });
+  }
+  return out;
+}
+
 async function perguntarVisao(deps, img, sistema, opcoes) {
   const o = opcoes || {};
   const espera = Number.isFinite(deps.esperaCorridaMs) ? deps.esperaCorridaMs : 6000;
   const porIa = Number.isFinite(o.porIaMs) ? o.porIaMs : 40000;
   const total = Number.isFinite(o.totalMs) ? o.totalMs : 75000;
-  const fila = candidatas(deps, img, sistema, porIa);
+  const fila = img && img.mime === 'application/pdf' ? candidatasPdf(deps, img, sistema, porIa) : candidatas(deps, img, sistema, porIa);
   if (!fila.length) return null;
   return new Promise((resolve) => {
     let proxima = 0, rodando = 0, fim = false;
@@ -98,4 +157,4 @@ async function perguntarVisao(deps, img, sistema, opcoes) {
   });
 }
 
-module.exports = { perguntarVisao, VISAO, WORKERS };
+module.exports = { perguntarVisao, VISAO, WORKERS, GEMINI_PDF };
