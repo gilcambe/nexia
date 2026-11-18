@@ -1,5 +1,7 @@
 'use strict';
 
+// Handler administrativo para Prumo com restrição de acesso
+
 
 
 function createHandler(deps = {}) {
