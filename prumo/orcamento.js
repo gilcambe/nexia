@@ -8,6 +8,14 @@
 
   const carregarJs = (nome, src) => MB[nome] ? Promise.resolve() : new Promise((res, falha) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = falha; document.body.appendChild(s); });
 
+  // PDF como está (data:application/pdf;base64,...), até 3 MB.
+  const lerCru = (a) => new Promise((ok, falha) => {
+    if (a.size > 3 * 1024 * 1024) return falha(new Error('PDF grande demais (máx. 3 MB). Tire um print da página.'));
+    const r = new FileReader();
+    r.onload = () => ok(String(r.result).replace(/^data:[^;]*;/, 'data:application/pdf;'));
+    r.onerror = () => falha(new Error('O celular não entregou o arquivo. Baixe o PDF para o aparelho e escolha de novo.'));
+    r.readAsDataURL(a);
+  });
   let mesSel = new Date().toISOString().slice(0, 7);
   MB.telas.orcamento = async (el) => {
     await iniciar('orcamento');
@@ -66,7 +74,13 @@
       el.innerHTML = `<div class="card">📄 Lendo ${tipo === 'ponto' ? 'sua folha de ponto' : 'seus holerites'}… isso leva até 1 minuto.</div>`;
       let lidos;
       try {
-        const { imagens } = await MB.pdf.paraImagens(arquivos, reduzir);
+        // 17/11: o pdf.js não abria o holerite no celular do dono. Se o celular não converter (erro ou 25 s), o PDF vai CRU
+        // e o servidor lê com o Gemini/Cloudflare (salario_ler aceita application/pdf).
+        let imagens;
+        try { ({ imagens } = await Promise.race([MB.pdf.paraImagens(arquivos, reduzir), new Promise((_, n) => setTimeout(() => n(new Error('demorou')), 25000))])); } catch (e) {
+          if (!arquivos.every((a) => MB.pdf.ehPdf(a) || /^image\//.test(a.type || ''))) throw e;
+          imagens = await Promise.all(arquivos.map((a) => (MB.pdf.ehPdf(a) ? lerCru(a) : reduzir(a))));
+        }
         ({ lidos } = await MB.api('salario_ler', { tipo, imagens }));
       } catch (e) { await recarregar(); return ok('⚠️ ' + ((e && e.message) || 'Não consegui ler agora. Tente de novo.')); }
       lidos = lidos || [];

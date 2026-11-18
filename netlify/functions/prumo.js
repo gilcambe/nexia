@@ -202,11 +202,14 @@ function extrairJson(t) {
 }
 const IMG = /^data:(image\/(?:jpeg|png|webp));base64,([A-Za-z0-9+/=]+)$/;
 const MAX_IMG = Math.floor(4 * 1024 * 1024 * 4 / 3); // 4 MB em base64
-function lerImagens(lista) {
+// 17/11: o PDF do holerite não abria no celular do dono (pdf.js). Telas que aceitam PDF cru passam { pdf: true }:
+// o arquivo vai como está e o leitor (prumo-lib/visao.js) manda ao Gemini (lê PDF) e à Cloudflare (PDF → texto).
+const PDF_CRU = /^data:(application\/pdf);base64,([A-Za-z0-9+/=]+)$/;
+function lerImagens(lista, opcoes) {
   if (!Array.isArray(lista) || lista.length < 1 || lista.length > 5) return erro('Mande de 1 a 5 prints.');
   const out = [];
   for (const b of lista) {
-    const m = typeof b === 'string' ? IMG.exec(b) : null;
+    const m = typeof b === 'string' ? (IMG.exec(b) || (opcoes && opcoes.pdf ? PDF_CRU.exec(b) : null)) : null;
     if (!m) return erro('Imagem inválida. Use foto ou print em JPG, PNG ou WEBP.');
     if (m[2].length > MAX_IMG) return erro('Imagem grande demais.');
     out.push({ mime: m[1], data: m[2] });
