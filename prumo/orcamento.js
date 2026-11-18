@@ -44,8 +44,8 @@
         <div class="fraco" style="margin-top:10px">Sobra do mês</div><div class="grande" style="color:${r.sobra >= 0 ? 'var(--verde2)' : 'var(--perigo)'}">${brl(r.sobra)}</div>
         ${r.renda ? barra(Math.min(100, ((r.fixas + r.guardar + r.cartao) / r.renda) * 100), r.sobra < 0 ? '#ef4444' : '') : ''}</div>
       ${MB.salario.cartao(sal)}
-      <div class="linha" style="margin-bottom:12px"><button class="btn" id="sal-holerite">📄 Holerite (foto ou PDF)</button><button class="btn sec" id="sal-ponto">🕒 Folha de ponto</button><button class="btn sec" id="sal-manual">✍️ Lançar à mão</button></div>
-      <input type="file" id="sal-arq" accept="image/*,application/pdf,.pdf" multiple hidden>
+      <div class="linha" style="margin-bottom:12px"><button class="btn" id="sal-holerite">📷 Holerite (print ou foto)</button><button class="btn sec" id="sal-holerite-pdf">📄 Holerite em PDF</button><button class="btn sec" id="sal-ponto">🕒 Folha de ponto</button><button class="btn sec" id="sal-manual">✍️ Lançar à mão</button></div>
+      <input type="file" id="sal-arq" accept="image/*" multiple hidden>
       <div class="card"><div class="item" style="padding-top:0"><b>Contas fixas</b><button class="btn sec mini" id="addf">+ Conta</button></div>
         ${(o.fixas || []).map((f, i) => `<div class="item" data-f="${i}"><span>${esc(f.nome)}${f.dia ? ` <span class="fraco">dia ${f.dia}</span>` : ''}</span><span class="v">${brl(f.valor)}</span></div>`).join('') || '<p class="fraco">Aluguel, luz, internet, escola…</p>'}</div>
       <div class="card"><div class="item" style="padding-top:0"><b>Guardar todo mês</b><button class="btn sec mini" id="addg"${objetivos.length ? '' : ' disabled'}>+ Objetivo</button></div>
@@ -77,8 +77,11 @@
       (d) => MB.api('salario_config', { salario_base: Number(d.salario_base) }).then(() => { ok('✅ Salário base salvo.'); recarregar(); }));
     const arq = el.querySelector('#sal-arq');
     let modo = 'holerite';
-    el.querySelector('#sal-holerite').onclick = () => { modo = 'holerite'; arq.click(); };
-    el.querySelector('#sal-ponto').onclick = () => { modo = 'ponto'; arq.click(); };
+    // Print/foto: seletor de IMAGENS (o de documentos entregava 0 KB no Android). PDF: botão próprio.
+    const escolher = (m, aceita) => { modo = m; arq.accept = aceita; arq.value = ''; arq.click(); };
+    el.querySelector('#sal-holerite').onclick = () => escolher('holerite', 'image/*');
+    const btPdf = el.querySelector('#sal-holerite-pdf'); if (btPdf) btPdf.onclick = () => escolher('holerite', 'application/pdf,.pdf');
+    el.querySelector('#sal-ponto').onclick = () => escolher('ponto', 'image/*');
     arq.onchange = async () => {
       const arquivos = [...arq.files].slice(0, 5);
       if (!arquivos.length) return;

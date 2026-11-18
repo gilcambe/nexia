@@ -11,12 +11,15 @@
    */
   function botao(el, opcoes) {
     const id = opcoes.id;
-    el.insertAdjacentHTML('afterbegin', `<div class="card"><button class="btn" id="${id}" type="button">${opcoes.rotulo || '📷 Preencher por print ou arquivo'}</button>
-      <input type="file" id="${id}-arq" accept="image/*,application/pdf,.pdf" multiple hidden>
+    el.insertAdjacentHTML('afterbegin', `<div class="card"><button class="btn" id="${id}" type="button">${opcoes.rotulo || '📷 Preencher por print ou foto'}</button> <button class="btn sec" id="${id}-pdf" type="button">📄 PDF</button>
+      <input type="file" id="${id}-arq" accept="image/*" multiple hidden>
       <p class="fraco">${opcoes.ajuda || 'Mande um print, foto ou PDF. Eu não peço senha.'}</p><div id="${id}-res"></div></div>`);
     const bt = el.querySelector('#' + id); const arq = el.querySelector(`#${id}-arq`); const res = el.querySelector(`#${id}-res`);
     if (!bt || !arq) return; // botão que não foi desenhado não ganha onclick
-    bt.onclick = () => arq.click();
+    // Print/foto: seletor de IMAGENS (o de documentos entregava 0 KB no Android, 18/11). PDF: botão próprio.
+    const escolher = (aceita) => { arq.accept = aceita; arq.value = ''; arq.click(); };
+    bt.onclick = () => escolher('image/*');
+    const btPdf = el.querySelector('#' + id + '-pdf'); if (btPdf) btPdf.onclick = () => escolher('application/pdf,.pdf');
     arq.onchange = async (ev) => {
       const arqs = [...((ev && ev.target && ev.target.files) || arq.files || [])];
       if (!arqs.length) return;
