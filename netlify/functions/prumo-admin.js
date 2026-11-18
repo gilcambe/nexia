@@ -3,7 +3,7 @@
 /**
  * Handler administrativo para Prumo com restrição de acesso.
  * Verifica se o usuário autenticado possui role 'master'.
- * Se não for master, responde 403.
+ * Caso contrário, responde 403.
  */
 
 function createHandler(deps = {}) {
