@@ -5,7 +5,18 @@
 // Dados em prumo_users/{uid}/{colecao}/{id}, gravados SÓ aqui (servidor); cada pessoa só vê os seus.
 // Nunca pede senha de banco. Nunca escreve valores da pessoa em log.
 
-const { verifyBearerToken, checkRateLimit, makeHeaders } = require('./middleware');
+const { verifyBearerToken, makeHeaders } = require('./middleware');
+
+// Limite de pedidos por pessoa NA MEMÓRIA do Worker (18/11, hotfix): a transação no Firestore, num documento só por
+// pessoa, travava quando o app mandava vários pedidos juntos (todos esperavam 25 s). 300 pedidos por minuto basta.
+const LIMITE_POR_MINUTO = 300;
+const _limite = new Map();
+function dentroDoLimite(uid, agora = Date.now()) {
+  const e = _limite.get(uid);
+  if (!e || agora - e.ini > 60000) { _limite.set(uid, { n: 1, ini: agora }); if (_limite.size > 5000) _limite.clear(); return true; }
+  e.n += 1;
+  return e.n <= LIMITE_POR_MINUTO;
+}
 const extra = require('./prumo-lib/extra');
 
 const TIPOS = ['renda_fixa', 'acoes', 'fiis', 'etf', 'fundos', 'tesouro', 'cripto', 'previdencia', 'fgts', 'poupanca', 'outro'];
@@ -612,8 +623,7 @@ exports.handler = async (event) => {
   if (method !== 'POST') return responder(event, 405, { error: 'Use POST.' });
   const auth = await verifyBearerToken(event);
   if (!auth || !auth.ok) return responder(event, 401, { error: 'Entre com sua conta.' });
-  const rl = await checkRateLimit(auth.uid, 'prumo').catch(() => ({ ok: true }));
-  if (rl && rl.ok === false) return responder(event, 429, { error: 'Muitos pedidos seguidos. Aguarde um instante.' });
+  if (!dentroDoLimite(auth.uid)) return responder(event, 429, { error: 'Muitos pedidos seguidos. Aguarde um instante.' });
   let body;
   try { body = JSON.parse(event.body || '{}') || {}; } catch { return responder(event, 400, { error: 'Pedido inválido.' }); }
   try {
@@ -625,4 +635,4 @@ exports.handler = async (event) => {
   }
 };
 
-Object.assign(exports, { tipoPeloTicker, conferirValor, ETFS, chaveAtivo, semDuplicados, viaWorkersAi, separarLinhasIguais, tirarSubtotais, conferir, VISAO, LER_PRINT, normalizarLido, valorLido, validarItemCarteira, validarCartao, validarGasto, resumoMes, validarLista, avisosPendentes, extrairJson, lerImagens, lerPrint, validarObjetivo, progressoObjetivos, resumoHistorico, fotoDoDia, agir, deps, TIPOS, CATEGORIAS });
+Object.assign(exports, { dentroDoLimite, tipoPeloTicker, conferirValor, ETFS, chaveAtivo, semDuplicados, viaWorkersAi, separarLinhasIguais, tirarSubtotais, conferir, VISAO, LER_PRINT, normalizarLido, valorLido, validarItemCarteira, validarCartao, validarGasto, resumoMes, validarLista, avisosPendentes, extrairJson, lerImagens, lerPrint, validarObjetivo, progressoObjetivos, resumoHistorico, fotoDoDia, agir, deps, TIPOS, CATEGORIAS });
