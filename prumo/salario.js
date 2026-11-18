@@ -20,6 +20,12 @@
     h += rec.length
       ? rec.map((x) => `<div class="item" data-pag="${esc(x.id || '')}" style="cursor:pointer"><span>${esc(nomeTipo(x.tipo))} <span class="fraco">${esc(dm(x.data_pagamento))} ✏️</span></span><span class="v">${brl(x.liquido)}</span></div>`).join('') + linha('<b>Total recebido</b>', brl(r.total_recebido))
       : '<p class="fraco">Nenhum recebimento lançado neste mês.</p>';
+    const pt = r.ponto;
+    if (pt) {
+      const hh = (v) => { const n = Number(v) || 0; const H = Math.floor(n); const M = Math.round((n - H) * 60); return `${H}:${String(M).padStart(2, '0')}`; };
+      const partes = [['HE 50%', pt.he50], ['HE 75%', pt.he75], ['HE 100%', pt.he100], ['Noturno', pt.noturnas], ['Sobreaviso', pt.sobreaviso], ['Faltas', pt.faltas]].filter(([, v]) => Number(v) > 0).map(([n, v]) => `${n} ${hh(v)}`);
+      h += `<div class="item" data-ponto="1" style="cursor:pointer"><span>🕒 Folha de ponto <span class="fraco">${esc(partes.join(' · ') || 'sem horas extras')} ✏️</span></span></div>`;
+    }
     const p = r.previsao;
     if (p) {
       h += `<div id="sal-previsao"><div class="fraco" style="margin-top:10px">Previsão do fechamento</div><div class="grande">${brl(p.a_receber)}</div>`

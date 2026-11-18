@@ -130,13 +130,18 @@ function estimarFechamento({ mes, salario_base, jornada_mensal = 220, dependente
 
   const he50 = typeof ponto.he50 === 'number' && isFinite(ponto.he50) ? ponto.he50 : 0;
   const he100 = typeof ponto.he100 === 'number' && isFinite(ponto.he100) ? ponto.he100 : 0;
+  const he75 = typeof ponto.he75 === 'number' && isFinite(ponto.he75) ? ponto.he75 : 0;
+  const sobreaviso = typeof ponto.sobreaviso === 'number' && isFinite(ponto.sobreaviso) ? ponto.sobreaviso : 0;
   const noturnas = typeof ponto.noturnas === 'number' && isFinite(ponto.noturnas) ? ponto.noturnas : 0;
   const faltas = typeof ponto.faltas === 'number' && isFinite(ponto.faltas) ? ponto.faltas : 0;
 
-  const horasExtras = valor_hora * 1.5 * he50 + valor_hora * 2 * he100;
+  const horasExtras = valor_hora * 1.5 * he50 + valor_hora * 1.75 * he75 + valor_hora * 2 * he100;
   const adicionalNoturno = valor_hora * 0.2 * noturnas;
+  // Sobreaviso: hora à disposição paga a 1/3 da hora normal (CLT art. 244, § 2º).
+  const valorSobreaviso = (valor_hora / 3) * sobreaviso;
   linhas.push({ nome: 'Horas extras', valor: round2(horasExtras) });
   linhas.push({ nome: 'Adicional noturno', valor: round2(adicionalNoturno) });
+  linhas.push({ nome: 'Sobreaviso', valor: round2(valorSobreaviso) });
 
   let descanso = 0;
   let uteis = 1; // evita divisão por zero
@@ -145,13 +150,13 @@ function estimarFechamento({ mes, salario_base, jornada_mensal = 220, dependente
     uteis = dm.uteis || 1;
     descanso = dm.descanso;
   }
-  const dsr = (horasExtras + adicionalNoturno) * descanso / uteis;
+  const dsr = (horasExtras + adicionalNoturno + valorSobreaviso) * descanso / uteis;
   linhas.push({ nome: 'DSR', valor: round2(dsr) });
 
   const descontoFaltas = valor_hora * faltas;
   linhas.push({ nome: 'Faltas', valor: -round2(descontoFaltas) });
 
-  const bruto = round2(salario_base + horasExtras + adicionalNoturno + dsr - descontoFaltas);
+  const bruto = round2(salario_base + horasExtras + adicionalNoturno + valorSobreaviso + dsr - descontoFaltas);
   const inssValor = inss(bruto);
   const irrfValor = irrf({ rendimento: bruto, inss: inssValor, dependentes });
   const liquido = round2(bruto - inssValor - irrfValor);
