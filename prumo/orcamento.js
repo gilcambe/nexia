@@ -12,7 +12,7 @@
   const lerCru = (a) => new Promise((ok, falha) => {
     if (a.size > 3 * 1024 * 1024) return falha(new Error('PDF grande demais (máx. 3 MB). Tire um print da página.'));
     const r = new FileReader();
-    r.onload = () => ok(String(r.result).replace(/^data:[^;]*;/, 'data:application/pdf;'));
+    r.onload = () => ok(String(r.result)); // o servidor reconhece o PDF pelo conteúdo
     r.onerror = () => falha(new Error('O celular não entregou o arquivo. Baixe o PDF para o aparelho e escolha de novo.'));
     r.readAsDataURL(a);
   });
@@ -77,8 +77,8 @@
         // 17/11: no celular do dono o pdf.js falhava ou gerava imagem vazia ('Imagem inválida'). Holerite em PDF vai CRU
         // (o servidor lê PDF com o Gemini/Cloudflare); foto/print é reduzida. Nada vazio sai daqui.
         const imagens = await Promise.all(arquivos.map((a) => (MB.pdf.ehPdf(a) ? lerCru(a) : reduzir(a))));
-        const boa = (d) => /^data:(image\/(jpeg|png|webp)|application\/pdf);base64,[A-Za-z0-9+/=]{200,}$/.test(d);
-        if (!imagens.every(boa)) throw new Error('Não consegui preparar o arquivo no celular. Tire um print do holerite e mande a imagem.');
+        const ruim = imagens.find((d) => typeof d !== 'string' || d.length < 200 || !/^data:[^,]{0,120},/.test(d));
+        if (ruim !== undefined) throw new Error('Não consegui preparar o arquivo no celular (' + (typeof ruim === 'string' ? ruim.slice(0, 40) + '… ' + ruim.length : typeof ruim) + '). Tire um print do holerite e mande a imagem.');
         ({ lidos } = await MB.api('salario_ler', { tipo, imagens }));
       } catch (e) { await recarregar(); return ok('⚠️ ' + ((e && e.message) || 'Não consegui ler agora. Tente de novo.')); }
       lidos = lidos || [];
