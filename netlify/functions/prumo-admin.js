@@ -16,7 +16,7 @@ function createHandler(deps = {}) {
     const mw = getMw();
     const auth = await mw.verifyBearerToken(event);
     if (!auth || !auth.ok) return { statusCode: 401, headers: h, body: JSON.stringify({ error: 'Entre com sua conta para acessar.' }) };
-    if (auth.role !== 'master') return { statusCode: 403, headers: h, body: JSON.stringify({ error: 'acesso restrito ao administrador (master)' }) };
+    if (auth.role !== 'master') return { statusCode: 403, headers: h, body: JSON.stringify({ error: 'Só o administrador da KERNEX' }) };
 
     const db = getDb();
     let body = {};
