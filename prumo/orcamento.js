@@ -72,6 +72,23 @@
     const conferir = (p) => formulario('Confira o recebimento', MB.salario.camposRecebimento(p, mesSel),
       (d) => MB.api('pagamento_salvar', MB.salario.corpoPagamento(p, d)).then(() => { ok('✅ Recebimento salvo.'); recarregar(); }));
     el.querySelector('#sal-manual').onclick = () => conferir({});
+    // Folha de ponto: confere antes de salvar (mês e horas); a do mês aparece no cartão com editar/apagar.
+    const hh = (v) => { const n = Number(v) || 0; const H = Math.floor(n); return `${H}:${String(Math.round((n - H) * 60)).padStart(2, '0')}`; };
+    const CAMPOS_PT = [['he50', 'HE 50% (horas, ex.: 10:30)'], ['he75', 'HE 75%'], ['he100', 'HE 100%'], ['noturnas', 'Horas noturnas (total)'], ['sobreaviso', 'Sobreaviso (horas à disposição)'], ['faltas', 'Faltas (horas)']];
+    const conferirPonto = (pt, apagavel) => formulario('Confira a folha de ponto', [{ nome: 'mes', rotulo: 'Mês do salário que ela afeta', tipo: 'month', valor: (pt && pt.mes) || mesSel }, ...CAMPOS_PT.map(([k, r]) => ({ nome: k, rotulo: r, valor: pt && Number(pt[k]) > 0 ? hh(pt[k]) : '' }))],
+      (d) => MB.api('ponto_salvar', d).then(() => { ok('✅ Folha de ponto salva. A previsão já usa as horas.'); recarregar(); }),
+      apagavel ? () => MB.api('ponto_apagar', { mes: pt.mes }).then(() => ok('🗑️ Folha de ponto apagada.')) : undefined);
+    const ajustes = el.querySelector('[data-acao="salario-ajustes"]');
+    if (ajustes) ajustes.onclick = () => { const pf = (sal.previsao && sal.previsao.perfil) || {}; formulario('Ajustes da folha (o holerite mensal preenche sozinho)', [
+      { nome: 'salario_base', rotulo: 'Salário base (R$)', tipo: 'number', valor: (sal.previsao && sal.previsao.linhas || []).find((l) => l.nome === 'Salário base')?.valor },
+      { nome: 'noturno_pct', rotulo: 'Adicional noturno (%)', tipo: 'number', valor: pf.noturno_pct },
+      { nome: 'fixos', rotulo: 'Adicionais fixos: triênio, gratificação (R$)', tipo: 'number', valor: pf.fixos || '' },
+      { nome: 'nao_tributavel', rotulo: 'Ajuda de custo sem imposto (R$)', tipo: 'number', valor: pf.nao_tributavel || '' },
+      { nome: 'prev_pct', rotulo: 'Previdência privada (% do salário)', tipo: 'number', valor: pf.prev_pct || '' },
+      { nome: 'descontos_fixos', rotulo: 'Outros descontos fixos: VA, plano (R$)', tipo: 'number', valor: pf.descontos_fixos || '' },
+    ], (d) => MB.api('salario_config', { salario_base: d.salario_base, perfil: { noturno_pct: d.noturno_pct, fixos: d.fixos, nao_tributavel: d.nao_tributavel, prev_pct: d.prev_pct, descontos_fixos: d.descontos_fixos } }).then(() => { ok('✅ Ajustes salvos. A previsão já usa.'); recarregar(); })); };
+    const linhaPonto = el.querySelector('[data-ponto]');
+    if (linhaPonto && sal.ponto) linhaPonto.onclick = () => conferirPonto(sal.ponto, true);
     // Tocar num recebimento: editar ou apagar (tudo que sobe pode ser apagado).
     el.querySelectorAll('[data-pag]').forEach((n) => {
       const p = (sal.recebidos || []).find((x) => x.id === n.dataset.pag);
@@ -111,7 +128,7 @@
       const falhas = lidos.length - boas.length;
       if (falhas) ok(`⚠️ Não deu para ler ${falhas} ${falhas === 1 ? 'arquivo' : 'arquivos'}.`);
       for (const l of boas) {
-        if (tipo === 'ponto') { try { await MB.api('ponto_salvar', l.ponto); ok('✅ Folha de ponto salva.'); } catch { ok('⚠️ Não consegui salvar a folha de ponto.'); } } else conferir(l.pagamento);
+        if (tipo === 'ponto') conferirPonto(l.ponto); else conferir(l.pagamento);
       }
     };
   };

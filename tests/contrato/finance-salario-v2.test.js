@@ -78,7 +78,8 @@ test('salario_ler: imagem que a IA não leu vira { ok:false }, as outras continu
 test('salario_ler tipo ponto: lê horas extras, noturnas e faltas', async () => {
   preparar([{ mes: '2026-11', he50: 10, he100: 2, noturnas: 0, faltas: 0 }]);
   const r = await p.agir('u1', { acao: 'salario_ler', tipo: 'ponto', imagens: [IMG(1)] });
-  assert.deepEqual(r[1].lidos[0].ponto, { mes: '2026-11', he50: 10, he100: 2, noturnas: 0, faltas: 0 });
+  // 18/11: a folha também tem HE 75% e sobreaviso (folha real do dono).
+  assert.deepEqual(r[1].lidos[0].ponto, { mes: '2026-11', he50: 10, he75: 0, he100: 2, noturnas: 0, sobreaviso: 0, faltas: 0 });
 });
 
 test('dois recebimentos no mesmo mês ficam guardados (não se apagam) e não duplicam', async () => {

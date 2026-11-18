@@ -202,9 +202,16 @@ test('fluxo folha de ponto: salva o ponto lido; lançar à mão abre o formulár
   arq.files = [{ name: 'ponto.jpg', type: 'image/jpeg' }];
   await arq.onchange(); await espera();
   assert.equal(t.chamadas.find((c) => c.acao === 'salario_ler').dados.tipo, 'ponto');
+  // 18/11: a folha lida abre a CONFERÊNCIA (mês + horas) antes de salvar; Salvar manda ponto_salvar.
+  const fp = t.forms.find((x) => /folha de ponto/i.test(x.titulo));
+  assert.ok(fp, 'abre a conferência da folha de ponto');
+  assert.equal(campo(fp.campos, 'mes').valor, '2026-11');
+  assert.equal(campo(fp.campos, 'he50').valor, '10:00');
+  assert.ok(campo(fp.campos, 'he75') && campo(fp.campos, 'sobreaviso'), 'tem HE 75% e sobreaviso');
+  await fp.aoSalvar({ mes: '2026-11', he50: '10:00', he75: '', he100: '', noturnas: '', sobreaviso: '', faltas: '' });
   const ps = t.chamadas.find((c) => c.acao === 'ponto_salvar');
   assert.ok(ps, 'salvou com ponto_salvar');
-  assert.deepEqual({ ...ps.dados }, ponto, 'manda o ponto lido (não { ok, ponto })');
+  assert.equal(ps.dados.he50, '10:00');
   t.stub('#sal-manual').onclick();
   const f = t.forms[t.forms.length - 1];
   assert.ok(f && campo(f.campos, 'tipo') && campo(f.campos, 'data_pagamento'), 'formulário à mão tem tipo e data do pagamento');
