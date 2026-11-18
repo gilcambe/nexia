@@ -30,7 +30,7 @@
     if (p) {
       h += `<div id="sal-previsao"><div class="fraco" style="margin-top:10px">Previsão do fechamento</div><div class="grande">${brl(p.a_receber)}</div>`
         + (p.linhas || []).filter((l) => Number(l.valor) !== 0).map((l) => linha(esc(l.nome), brl(l.valor))).join('')
-        + `<p class="fraco">${esc(p.aviso)}</p></div>`;
+        + `<p class="fraco">${esc(p.aviso)}</p><button type="button" class="btn sec mini" data-acao="salario-ajustes">⚙️ Ajustes da folha</button></div>`;
     } else {
       h += `<p class="fraco">${esc(r.motivo)}</p>`;
       if (/sal[aá]rio base/i.test(String(r.motivo || ''))) h += '<button type="button" class="btn sec" data-acao="salario-base">Informar salário base</button>';

@@ -78,6 +78,15 @@
     const conferirPonto = (pt, apagavel) => formulario('Confira a folha de ponto', [{ nome: 'mes', rotulo: 'Mês do salário que ela afeta', tipo: 'month', valor: (pt && pt.mes) || mesSel }, ...CAMPOS_PT.map(([k, r]) => ({ nome: k, rotulo: r, valor: pt && Number(pt[k]) > 0 ? hh(pt[k]) : '' }))],
       (d) => MB.api('ponto_salvar', d).then(() => { ok('✅ Folha de ponto salva. A previsão já usa as horas.'); recarregar(); }),
       apagavel ? () => MB.api('ponto_apagar', { mes: pt.mes }).then(() => ok('🗑️ Folha de ponto apagada.')) : undefined);
+    const ajustes = el.querySelector('[data-acao="salario-ajustes"]');
+    if (ajustes) ajustes.onclick = () => { const pf = (sal.previsao && sal.previsao.perfil) || {}; formulario('Ajustes da folha (o holerite mensal preenche sozinho)', [
+      { nome: 'salario_base', rotulo: 'Salário base (R$)', tipo: 'number', valor: (sal.previsao && sal.previsao.linhas || []).find((l) => l.nome === 'Salário base')?.valor },
+      { nome: 'noturno_pct', rotulo: 'Adicional noturno (%)', tipo: 'number', valor: pf.noturno_pct },
+      { nome: 'fixos', rotulo: 'Adicionais fixos: triênio, gratificação (R$)', tipo: 'number', valor: pf.fixos || '' },
+      { nome: 'nao_tributavel', rotulo: 'Ajuda de custo sem imposto (R$)', tipo: 'number', valor: pf.nao_tributavel || '' },
+      { nome: 'prev_pct', rotulo: 'Previdência privada (% do salário)', tipo: 'number', valor: pf.prev_pct || '' },
+      { nome: 'descontos_fixos', rotulo: 'Outros descontos fixos: VA, plano (R$)', tipo: 'number', valor: pf.descontos_fixos || '' },
+    ], (d) => MB.api('salario_config', { salario_base: d.salario_base, perfil: { noturno_pct: d.noturno_pct, fixos: d.fixos, nao_tributavel: d.nao_tributavel, prev_pct: d.prev_pct, descontos_fixos: d.descontos_fixos } }).then(() => { ok('✅ Ajustes salvos. A previsão já usa.'); recarregar(); })); };
     const linhaPonto = el.querySelector('[data-ponto]');
     if (linhaPonto && sal.ponto) linhaPonto.onclick = () => conferirPonto(sal.ponto, true);
     // Tocar num recebimento: editar ou apagar (tudo que sobe pode ser apagado).

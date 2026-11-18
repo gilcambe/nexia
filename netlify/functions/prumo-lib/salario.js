@@ -29,6 +29,32 @@ function listaValores(l) {
   return out;
 }
 
+/** Aprende o perfil da folha de um holerite MENSAL (proventos/descontos lidos). Só devolve o que achou. */
+const sem = (s) => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+function perfilDoHolerite(item) {
+  if (!item || item.tipo !== 'mensal') return null;
+  const out = {}; let fixos = 0, naoTrib = 0, prev = 0, desc = 0, achou = false;
+  for (const p of item.proventos || []) {
+    const n = sem(p.nome);
+    const pct = /noturn/.test(n) && /(\d{2})\s*%/.exec(n);
+    if (pct) { out.noturno_pct = Number(pct[1]); achou = true; }
+    else if (/trienio|anuenio|quinquenio|biênio|bienio|gratificacao|adicional de tempo/.test(n)) { fixos += p.valor; achou = true; }
+    else if (/ajuda de custo|home office|auxilio (home|internet|energia)/.test(n)) { naoTrib += p.valor; achou = true; }
+  }
+  for (const d of item.descontos || []) {
+    const n = sem(d.nome);
+    if (/adiant|inss|ir retido|irrf|imposto|base |fgts|salario contrib|rat\b|empregador/.test(n)) continue;
+    if (/prev|previd|pgbl|fundo de pensao/.test(n)) { prev += d.valor; achou = true; }
+    else if (/vale (alimenta|refei)|\bva\b|\bvr\b|plano|saude|odont|convenio|sindic|seguro de vida|vale transp/.test(n)) { desc += d.valor; achou = true; }
+  }
+  if (!achou) return null;
+  if (fixos) out.fixos = dinheiro(fixos);
+  if (naoTrib) out.nao_tributavel = dinheiro(naoTrib);
+  if (prev && item.salario_base > 0) out.prev_pct = Math.round((prev / item.salario_base) * 10000) / 100;
+  if (desc) out.descontos_fixos = dinheiro(desc);
+  return out;
+}
+
 function validarPagamento(o) {
   const mes = texto(o && o.mes, 7);
   const data = texto(o && o.data_pagamento, 10);
@@ -105,7 +131,18 @@ async function agirSalario(acao, body, c) {
       if (!v.ok) return [400, { error: v.erro }];
       const id = `${v.item.mes}_${v.item.tipo}_${v.item.data_pagamento}`;
       await base.collection('pagamentos').doc(id).set({ ...v.item, status: prv.statusInicial(v.item.data_pagamento, prv.hojeDe(agoraIso)), atualizado_em: agoraIso });
-      if (v.item.salario_base > 0) await base.collection('config').doc('salario').set({ ...(await lerConfig()), salario_base: v.item.salario_base, atualizado_em: agoraIso });
+      // Editou e mudou data/tipo/mês: o id muda; apaga o antigo para não ficar duplicado.
+      const antigo = texto(body.id, 80);
+      if (antigo && antigo !== id) await base.collection('pagamentos').doc(antigo).delete();
+      // Holerite MENSAL ensina o perfil da folha (noturno %, triênio, ajuda de custo, previdência, VA).
+      const perfil = perfilDoHolerite(v.item);
+      if (v.item.salario_base > 0 || perfil) {
+        const cfg = await lerConfig();
+        const novo = { ...cfg, atualizado_em: agoraIso };
+        if (v.item.salario_base > 0) novo.salario_base = v.item.salario_base;
+        if (perfil) novo.perfil = { ...(cfg.perfil || {}), ...perfil };
+        await base.collection('config').doc('salario').set(novo);
+      }
       return [200, { ok: true, id }];
     }
     case 'pagamento_listar': {
@@ -137,6 +174,19 @@ async function agirSalario(acao, body, c) {
         novo[k] = k === 'dependentes' ? Math.floor(n) : dinheiro(n);
         mudou = true;
       }
+      // Ajustes da folha (à mão): mesmos campos do perfil aprendido.
+      if (body.perfil && typeof body.perfil === 'object') {
+        const lim = { noturno_pct: 100, fixos: 1e6, nao_tributavel: 1e6, prev_pct: 50, descontos_fixos: 1e6 };
+        const pf = { ...(atual.perfil || {}) };
+        for (const k of Object.keys(lim)) {
+          const v = body.perfil[k];
+          if (v === undefined || v === null || v === '') { delete pf[k]; continue; }
+          const n = numero(v);
+          if (!Number.isFinite(n) || n < 0 || n > lim[k]) return [400, { error: 'Valor inválido em ' + k + '.' }];
+          pf[k] = k.endsWith('_pct') ? Math.round(n * 100) / 100 : dinheiro(n);
+        }
+        novo.perfil = pf; mudou = true;
+      }
       if (mudou) { novo.atualizado_em = agoraIso; await base.collection('config').doc('salario').set(novo); }
       return [200, { ok: true, config: novo }];
     }
@@ -156,11 +206,11 @@ async function agirSalario(acao, body, c) {
       const mensalPrevisto = a_receber.find((p) => p.tipo === 'mensal');
       if (mensalPrevisto) return sai(null, 'O mês já fechou: o pagamento mensal está previsto para ' + String(mensalPrevisto.data_pagamento).slice(8, 10) + '/' + String(mensalPrevisto.data_pagamento).slice(5, 7) + ' e conta como recebido quando cair.');
       const ponto = pontoDoc.exists ? pontoDoc.data() || {} : {};
-      const previsao = require('./folha').estimarFechamento({ mes, salario_base: cfg.salario_base, dependentes: cfg.dependentes || 0, jornada_mensal: cfg.jornada_mensal || 220, ponto, recebidos });
+      const previsao = require('./folha').estimarFechamento({ mes, salario_base: cfg.salario_base, dependentes: cfg.dependentes || 0, jornada_mensal: cfg.jornada_mensal || 220, ponto, recebidos, perfil: cfg.perfil || {} });
       return sai(previsao, '');
     }
     default: return null;
   }
 }
 
-module.exports = { agirSalario, perguntarVisaoGratis };
+module.exports = { agirSalario, perguntarVisaoGratis, perfilDoHolerite };
