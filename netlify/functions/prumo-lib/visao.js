@@ -71,7 +71,7 @@ function candidatas(deps, img, sistema, ms) {
  * 2) Cloudflare transforma o PDF em texto (AI.toMarkdown) e uma IA de texto devolve o JSON.
  */
 const GEMINI_PDF = ['gemini-3.5-flash', 'gemini-3.1-flash-lite', 'gemini-flash-latest'];
-function candidatasPdf(deps, img, sistema, ms) {
+function candidatasPdf(deps, img, sistema, ms, maxTokens) {
   const out = [];
   const env = deps.env || (typeof process !== 'undefined' ? process.env : {}) || {};
   const chave = env.GEMINI_API_KEY;
@@ -88,7 +88,7 @@ function candidatasPdf(deps, img, sistema, ms) {
             body: JSON.stringify({
               systemInstruction: { parts: [{ text: sistema }] },
               contents: [{ role: 'user', parts: [{ inline_data: { mime_type: 'application/pdf', data: img.data } }, { text: 'Leia o documento e devolva o JSON.' }] }],
-              generationConfig: { temperature: 0, maxOutputTokens: 4096, responseMimeType: 'application/json', thinkingConfig: { thinkingBudget: 1024 } },
+              generationConfig: { temperature: 0, maxOutputTokens: maxTokens || 4096, responseMimeType: 'application/json', thinkingConfig: { thinkingBudget: 1024 } },
             }),
             signal: ctrl ? ctrl.signal : undefined,
           });
@@ -114,7 +114,7 @@ function candidatasPdf(deps, img, sistema, ms) {
       for (const d of fila) {
         if (!d || d.provider === 'anthropic') continue;
         try {
-          const r = await router.chat(d, { system: sistema, messages: [{ role: 'user', content: 'Texto do documento (extraído do PDF):\n\n' + texto + '\n\nDevolva o JSON.' }], maxTokens: 2048, temperature: 0, timeoutMs: ms });
+          const r = await router.chat(d, { system: sistema, messages: [{ role: 'user', content: 'Texto do documento (extraído do PDF):\n\n' + texto + '\n\nDevolva o JSON.' }], maxTokens: maxTokens || 2048, temperature: 0, timeoutMs: ms });
           if (r && temJson(r.text)) return r.text;
         } catch { /* próxima IA */ }
       }
@@ -129,7 +129,7 @@ async function perguntarVisao(deps, img, sistema, opcoes) {
   const espera = Number.isFinite(deps.esperaCorridaMs) ? deps.esperaCorridaMs : 6000;
   const porIa = Number.isFinite(o.porIaMs) ? o.porIaMs : 40000;
   const total = Number.isFinite(o.totalMs) ? o.totalMs : 75000;
-  const fila = img && img.mime === 'application/pdf' ? candidatasPdf(deps, img, sistema, porIa) : candidatas(deps, img, sistema, porIa);
+  const fila = img && img.mime === 'application/pdf' ? candidatasPdf(deps, img, sistema, porIa, o.maxTokens) : candidatas(deps, img, sistema, porIa);
   if (!fila.length) return null;
   return new Promise((resolve) => {
     let proxima = 0, rodando = 0, fim = false;

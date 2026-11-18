@@ -460,7 +460,7 @@ async function agirAposentadoria(acao, body, c) {
     }
 
     case 'apos_cnis_ler': {
-      const im = c.lerImagens(body.imagens);
+      const im = c.lerImagens(body.imagens, { pdf: true });
       if (!im.ok) return [400, { error: im.erro }];
       const perguntar = c.deps.perguntarVisao || ((img, s) => perguntarVisaoGratis(c.deps, img, s));
       const lidos = await Promise.all(im.imagens.map(async (img) => {
@@ -486,7 +486,7 @@ async function agirAposentadoria(acao, body, c) {
       const atual = await lerDoc('fgts');
       let saldo = body.saldo === undefined || body.saldo === '' || body.saldo === null ? undefined : num(body.saldo);
       if (saldo === undefined && Array.isArray(body.imagens)) {
-        const im = c.lerImagens(body.imagens);
+        const im = c.lerImagens(body.imagens, { pdf: true });
         if (!im.ok) return [400, { error: im.erro }];
         const perguntar = c.deps.perguntarVisao || ((img, s) => perguntarVisaoGratis(c.deps, img, s));
         const lidos = await Promise.all(im.imagens.map(async (img) => {
