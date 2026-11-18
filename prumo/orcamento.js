@@ -72,6 +72,14 @@
     const conferir = (p) => formulario('Confira o recebimento', MB.salario.camposRecebimento(p, mesSel),
       (d) => MB.api('pagamento_salvar', MB.salario.corpoPagamento(p, d)).then(() => { ok('✅ Recebimento salvo.'); recarregar(); }));
     el.querySelector('#sal-manual').onclick = () => conferir({});
+    // Tocar num recebimento: editar ou apagar (tudo que sobe pode ser apagado).
+    el.querySelectorAll('[data-pag]').forEach((n) => {
+      const p = (sal.recebidos || []).find((x) => x.id === n.dataset.pag);
+      if (!p || !p.id) return;
+      n.onclick = () => formulario('Recebimento', MB.salario.camposRecebimento(p, mesSel),
+        (d) => MB.api('pagamento_salvar', { ...MB.salario.corpoPagamento(p, d), id: p.id }).then(() => { ok('✅ Recebimento salvo.'); recarregar(); }),
+        () => MB.api('pagamento_apagar', { id: p.id }).then(() => ok('🗑️ Recebimento apagado.')));
+    });
     const base = el.querySelector('[data-acao="salario-base"]');
     if (base) base.onclick = () => formulario('Salário base', [{ nome: 'salario_base', rotulo: 'Salário base bruto (R$)', tipo: 'number' }],
       (d) => MB.api('salario_config', { salario_base: Number(d.salario_base) }).then(() => { ok('✅ Salário base salvo.'); recarregar(); }));
