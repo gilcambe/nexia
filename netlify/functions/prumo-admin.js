@@ -8,8 +8,6 @@
  * Segue estrutura padrão de handlers da NEXIA.
  */
 
-
-
 function createHandler(deps = {}) {
   const getDb = deps.getDb || (() => require('./firebase-init').db);
   const getMw = deps.getMw || (() => require('./middleware'));
