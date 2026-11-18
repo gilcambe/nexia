@@ -66,8 +66,7 @@ function criarPedidos(env = process.env, fetchFn = fetch) {
       itens = itens.filter(i => i.precisaVoce);
     } else if (estado === 'fila') {
       itens = itens.filter(i => i.estado === 'fila');
-    } else if (estado) {
-      // Filtro flexível por qualquer estado retornado por estadoTarefa (ex: aguardando-ia, falhou)
+    } else if (estado && estado !== 'todos' && estado !== 'todas') {
       itens = itens.filter(i => i.estado === estado);
     }
     
