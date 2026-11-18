@@ -18,7 +18,7 @@
     const rec = r.recebidos || [];
     let h = `<div class="card" id="sal-cartao"><b>Recebimentos de ${m ? `${m[2]}/${m[1]}` : esc(r.mes)}</b>`;
     h += rec.length
-      ? rec.map((x) => linha(`${esc(nomeTipo(x.tipo))} <span class="fraco">${esc(dm(x.data_pagamento))}</span>`, brl(x.liquido))).join('') + linha('<b>Total recebido</b>', brl(r.total_recebido))
+      ? rec.map((x) => `<div class="item" data-pag="${esc(x.id || '')}" style="cursor:pointer"><span>${esc(nomeTipo(x.tipo))} <span class="fraco">${esc(dm(x.data_pagamento))} ✏️</span></span><span class="v">${brl(x.liquido)}</span></div>`).join('') + linha('<b>Total recebido</b>', brl(r.total_recebido))
       : '<p class="fraco">Nenhum recebimento lançado neste mês.</p>';
     const p = r.previsao;
     if (p) {
