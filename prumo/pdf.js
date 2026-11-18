@@ -30,8 +30,18 @@
   }
   async function abrir(arquivo) {
     const lib = await carregarPdfJs();
-    try { return await lib.getDocument({ data: new Uint8Array(await arquivo.arrayBuffer()) }).promise; } catch (e) {
-      throw new Error(/password/i.test(String(e && e.name) + String(e && e.message)) ? 'Este PDF tem senha. Abra no app do banco e tire um print da página.' : 'Não consegui abrir este PDF. Tire um print da página.');
+    // 17/11: no celular do dono o PDF do holerite 'não abria' sem dizer por quê. Agora a mensagem traz o motivo (código curto).
+    let bytes;
+    try { bytes = new Uint8Array(await arquivo.arrayBuffer()); } catch (e) {
+      throw new Error('O celular não entregou o arquivo (' + ((e && e.name) || 'erro') + '). Baixe o PDF para o aparelho e escolha de novo, ou tire um print.');
+    }
+    if (!bytes.length) throw new Error('O arquivo veio vazio. Baixe o PDF para o aparelho e escolha de novo, ou tire um print.');
+    // O pdf.js leva os bytes para o worker (o buffer fica vazio depois): cabeçalho e tamanho são lidos ANTES.
+    const cab = String.fromCharCode.apply(null, bytes.slice(0, 5)); const kb = Math.round(bytes.length / 1024);
+    try { return await lib.getDocument({ data: bytes }).promise; } catch (e) {
+      if (/password/i.test(String(e && e.name) + String(e && e.message))) throw new Error('Este PDF tem senha. Abra no app do banco e tire um print da página.');
+      const motivo = cab === '%PDF-' ? ((e && e.name) || 'erro') : 'não é PDF: ' + cab.replace(/[^ -~]/g, '?');
+      throw new Error('Não consegui abrir este PDF (' + motivo + ', ' + kb + ' KB). Tire um print da página.');
     }
   }
   async function pagina(doc, n) {
