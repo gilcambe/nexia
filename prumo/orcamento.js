@@ -9,13 +9,25 @@
   const carregarJs = (nome, src) => MB[nome] ? Promise.resolve() : new Promise((res, falha) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = falha; document.body.appendChild(s); });
 
   // PDF como está (data:application/pdf;base64,...), até 3 MB.
-  const lerCru = (a) => new Promise((ok, falha) => {
-    if (a.size > 3 * 1024 * 1024) return falha(new Error('PDF grande demais (máx. 3 MB). Tire um print da página.'));
+  const viaLeitor = (a) => new Promise((ok) => {
     const r = new FileReader();
-    r.onload = () => ok(String(r.result)); // o servidor reconhece o PDF pelo conteúdo
-    r.onerror = () => falha(new Error('O celular não entregou o arquivo. Baixe o PDF para o aparelho e escolha de novo.'));
+    r.onload = () => ok(String(r.result || '')); r.onerror = () => ok('');
     r.readAsDataURL(a);
   });
+  const viaBytes = async (a) => {
+    try {
+      const b = new Uint8Array(await a.arrayBuffer()); let bin = '';
+      for (let i = 0; i < b.length; i += 0x8000) bin += String.fromCharCode.apply(null, b.subarray(i, i + 0x8000));
+      return b.length ? 'data:application/pdf;base64,' + btoa(bin) : '';
+    } catch { return ''; }
+  };
+  const lerCru = async (a) => {
+    if (a.size > 3 * 1024 * 1024) throw new Error('PDF grande demais (máx. 3 MB). Tire um print da página.');
+    let d = await viaLeitor(a); // o servidor reconhece o PDF pelo conteúdo
+    if (d.length - d.indexOf(',') < 100) d = await viaBytes(a);
+    if (d.length - d.indexOf(',') < 100) throw new Error(`O celular entregou o PDF vazio (${Math.round((a.size || 0) / 1024)} KB informados). Abra o PDF pelo app "Arquivos" (ou baixe de novo) e escolha por lá.`);
+    return d;
+  };
   let mesSel = new Date().toISOString().slice(0, 7);
   MB.telas.orcamento = async (el) => {
     await iniciar('orcamento');
@@ -71,12 +83,13 @@
       const arquivos = [...arq.files].slice(0, 5);
       if (!arquivos.length) return;
       const tipo = modo;
+      // Lê os arquivos ANTES de mexer na tela (com o <input> ainda na página): no Android eles chegavam vazios.
+      // Holerite em PDF vai CRU (o servidor lê PDF com o Gemini/Cloudflare); foto/print é reduzida. Nada vazio sai daqui.
+      let imagens;
+      try { imagens = await Promise.all(arquivos.map((a) => (MB.pdf.ehPdf(a) ? lerCru(a) : reduzir(a)))); } catch (e) { return ok('⚠️ ' + ((e && e.message) || 'Não consegui abrir o arquivo.')); }
       el.innerHTML = `<div class="card">📄 Lendo ${tipo === 'ponto' ? 'sua folha de ponto' : 'seus holerites'}… isso leva até 1 minuto.</div>`;
       let lidos;
       try {
-        // 17/11: no celular do dono o pdf.js falhava ou gerava imagem vazia ('Imagem inválida'). Holerite em PDF vai CRU
-        // (o servidor lê PDF com o Gemini/Cloudflare); foto/print é reduzida. Nada vazio sai daqui.
-        const imagens = await Promise.all(arquivos.map((a) => (MB.pdf.ehPdf(a) ? lerCru(a) : reduzir(a))));
         const ruim = imagens.find((d) => typeof d !== 'string' || d.length < 200 || !/^data:[^,]{0,120},/.test(d));
         if (ruim !== undefined) throw new Error('Não consegui preparar o arquivo no celular (' + (typeof ruim === 'string' ? ruim.slice(0, 40) + '… ' + ruim.length : typeof ruim) + '). Tire um print do holerite e mande a imagem.');
         ({ lidos } = await MB.api('salario_ler', { tipo, imagens }));

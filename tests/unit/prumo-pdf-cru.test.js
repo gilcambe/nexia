@@ -47,3 +47,11 @@ test('tela do salário manda o PDF cru quando o celular não converte', () => {
   assert.match(s, /data:application\/pdf;/);
   assert.match(fs.readFileSync(path.join(__dirname, '../../netlify/functions/prumo-lib/salario.js'), 'utf8'), /lerImagens\(body\.imagens, \{ pdf: true \}\)/);
 });
+
+test('Salário lê os arquivos ANTES de trocar a tela (no Android o PDF chegava vazio)', () => {
+  const s = fs.readFileSync(path.join(__dirname, '../../prumo/orcamento.js'), 'utf8');
+  const iLer = s.indexOf('imagens = await Promise.all(arquivos.map('); const iTela = s.indexOf('Lendo ${tipo');
+  assert.ok(iLer > 0 && iTela > iLer, 'lê primeiro, depois mostra "Lendo…"');
+  assert.match(s, /viaBytes/, 'se o FileReader vier vazio, tenta arrayBuffer');
+  assert.match(s, /O celular entregou o PDF vazio/);
+});
