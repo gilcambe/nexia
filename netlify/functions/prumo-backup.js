@@ -264,12 +264,16 @@ function createHandler(deps = {}) {
         return res(200, { ok: true, acao: 'restaurar', resultado });
       }
 
-      // Status padrão se nenhuma ação específica for enviada
+          // Status padrão se nenhuma ação específica for enviada
       return res(200, {
         ok: true,
         servico: 'prumo-backup',
         uid: targetUid,
         em: new Date(now()).toISOString(),
+        endpoints: [
+          '/api/prumo-admin/export',
+          '/api/prumo-admin/delete'
+        ]
       });
     } catch (err) {
       console.error('[prumo-backup] Erro na operação:', err && err.message);
