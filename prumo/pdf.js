@@ -54,7 +54,24 @@
     return c.toDataURL('image/jpeg', 0.8);
   }
   /** Fotos e PDFs → lista de imagens (data-URL), no máximo 5. `reduzir` é o mesmo das fotos. */
+  /** PDF inteiro como data URL (o servidor lê). 18/11: renderizar no celular do dono falhava. */
+  async function pdfCru(a) {
+    if (a.size > 3 * 1024 * 1024) throw new Error('PDF grande demais (máx. 3 MB). Mande só as páginas que importam ou um print.');
+    let d = await new Promise((ok) => { const r = new FileReader(); r.onload = () => ok(String(r.result || '')); r.onerror = () => ok(''); r.readAsDataURL(a); });
+    if (d.length - d.indexOf(',') < 100) {
+      try { const b = new Uint8Array(await a.arrayBuffer()); let bin = ''; for (let i = 0; i < b.length; i += 0x8000) bin += String.fromCharCode.apply(null, b.subarray(i, i + 0x8000)); d = b.length ? 'data:application/pdf;base64,' + btoa(bin) : ''; } catch { d = ''; }
+    }
+    if (d.length - d.indexOf(',') < 100) throw new Error('O celular entregou o PDF vazio. Abra o PDF no celular, toque em Compartilhar e escolha Kernex Finance.');
+    return d;
+  }
   async function paraImagens(arquivos, reduzir, max = MAX) {
+    // 18/11: todo PDF vai INTEIRO ao servidor (que lê PDF); foto/print é reduzida no celular.
+    const lista = [...arquivos].slice(0, max);
+    const imagens = [];
+    for (const a of lista) imagens.push(ehPdf(a) ? await pdfCru(a) : await reduzir(a));
+    return { imagens, cortou: arquivos.length > max };
+  }
+  async function paraImagensAntigo(arquivos, reduzir, max = MAX) {
     const itens = [];
     for (const a of arquivos) itens.push(ehPdf(a) ? { pdf: true, a, doc: await abrir(a) } : { pdf: false, a });
     itens.forEach((x) => { if (x.pdf) x.paginas = x.doc.numPages; });
@@ -67,7 +84,7 @@
     }
     return { imagens, cortou };
   }
-  const api = { ehPdf, planejar, paraImagens, MAX };
+  const api = { ehPdf, planejar, paraImagens, paraImagensAntigo, pdfCru, MAX };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else { raiz.MB = raiz.MB || {}; raiz.MB.pdf = api; }
 })(typeof window !== 'undefined' ? window : globalThis);

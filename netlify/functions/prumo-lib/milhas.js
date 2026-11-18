@@ -114,7 +114,7 @@ async function agirMilhas(acao, body, c) {
   const hoje = agoraIso.slice(0, 10);
   switch (acao) {
     case 'pontos_print_ler': {
-      const im = c.lerImagens(body.imagens);
+      const im = c.lerImagens(body.imagens, { pdf: true });
       if (!im.ok) return [400, { error: im.erro }];
       const perguntar = c.deps.perguntarVisao || ((img, s) => require('./salario').perguntarVisaoGratis(c.deps, img, s));
       const lidos = await Promise.all(im.imagens.map(async (img) => { // cada imagem separada

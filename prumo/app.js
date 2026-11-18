@@ -209,9 +209,32 @@
               const c = await caches.open('kf-compartilhado');
               for (const k of await c.keys()) { const r = await c.match(k); const b = await r.blob(); if (b.size) arqs.push(new File([b], decodeURIComponent(r.headers.get('X-Nome') || 'arquivo'), { type: b.type || r.headers.get('Content-Type') || '' })); await c.delete(k); }
             } catch { /* sem arquivos */ }
-            MB.compartilhados = arqs.length ? arqs : null;
-            if (!arqs.length) mostrarErro('O arquivo compartilhado chegou vazio. Tente de novo ou mande um print.');
-            abrirAba('orcamento');
+            if (!arqs.length) { mostrarErro('O arquivo compartilhado chegou vazio. Tente de novo ou mande um print.'); return abrirAba(ultima); }
+            // Pergunta o que é e leva o arquivo à tela certa (a tela lê com o mesmo caminho do botão dela).
+            const DEST = [
+              ['holerite', 'Holerite / contracheque', 'orcamento'], ['ponto', 'Folha de ponto', 'orcamento'],
+              ['documento', 'Extrato, fatura, comprovante, nota, boleto', 'documentos', '#kf-arq', '#kf-ler'],
+              ['conta', 'Conta (luz, água, internet, aluguel...)', 'contas', '#ct-ler-arq'], ['cartao', 'Cartão de crédito', 'cartoes', '#ca-ler-arq'],
+              ['divida', 'Dívida / contrato / boleto de acordo', 'dividas', '#dv-ler-arq'], ['score', 'Score (Serasa, SPC, Boa Vista)', 'inicio', '#score-arq'],
+              ['milhas', 'Milhas / pontos', 'pontos', '#pp-arq'], ['cnis', 'CNIS (extrato do INSS)', 'aposentadoria', '#apo-arq'],
+            ];
+            const dlg = document.createElement('dialog');
+            dlg.innerHTML = '<h3 style="margin-top:0">' + (arqs.length === 1 ? 'Arquivo recebido' : arqs.length + ' arquivos recebidos') + '</h3><label>O que é?</label><select id="kf-dest">'
+              + DEST.map((d) => '<option value="' + d[0] + '">' + d[1] + '</option>').join('') + '</select><div class="linha" style="margin-top:16px"><button type="button" class="btn sec" id="kf-dest-nao">Cancelar</button><button type="button" class="btn" id="kf-dest-ok">Ler</button></div>';
+            document.body.appendChild(dlg); dlg.showModal();
+            dlg.querySelector('#kf-dest-nao').onclick = () => { dlg.close(); dlg.remove(); abrirAba(ultima); };
+            dlg.querySelector('#kf-dest-ok').onclick = async () => {
+              const d = DEST.find((x) => x[0] === dlg.querySelector('#kf-dest').value) || DEST[0];
+              dlg.close(); dlg.remove();
+              if (d[2] === 'orcamento') { MB.compartilhados = arqs; MB.compartilhadoTipo = d[0]; return abrirAba('orcamento'); }
+              await abrirAba(d[2]);
+              // Espera a tela desenhar o campo de arquivo (até 8 s) e entrega os arquivos a ele.
+              let inp = null;
+              for (let i = 0; i < 40 && !inp; i++) { inp = document.querySelector(d[3]); if (!inp) await new Promise((r) => setTimeout(r, 200)); }
+              if (!inp) return mostrarErro('Não achei onde ler este arquivo. Abra a tela e use o botão de print.');
+              try { const dt = new DataTransfer(); arqs.forEach((f) => dt.items.add(f)); inp.files = dt.files; } catch { return mostrarErro('Este celular não deixou passar o arquivo. Use o botão de print na tela.'); }
+              if (d[4]) { const bt = document.querySelector(d[4]); if (bt) bt.click(); } else inp.dispatchEvent(new Event('change'));
+            };
           })();
         } else abrirAba(ultima);
         verAvisos();

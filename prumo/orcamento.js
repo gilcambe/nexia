@@ -137,7 +137,9 @@
     // Arquivo vindo do "Compartilhar" do Android: pergunta o que é e lê igual.
     if (MB.compartilhados && MB.compartilhados.length) {
       const comp = MB.compartilhados; MB.compartilhados = null;
-      formulario(`Arquivo recebido (${comp.length})`, [{ nome: 'tipo', rotulo: 'O que é?', opcoes: '<option value="holerite">Holerite / contracheque</option><option value="ponto">Folha de ponto</option>' }],
+      const tipoJa = MB.compartilhadoTipo; MB.compartilhadoTipo = null;
+      if (tipoJa) setTimeout(() => processar(comp, tipoJa === 'ponto' ? 'ponto' : 'holerite'), 0);
+      else formulario(`Arquivo recebido (${comp.length})`, [{ nome: 'tipo', rotulo: 'O que é?', opcoes: '<option value="holerite">Holerite / contracheque</option><option value="ponto">Folha de ponto</option>' }],
         (d) => { setTimeout(() => processar(comp, d.tipo === 'ponto' ? 'ponto' : 'holerite'), 0); });
     }
     // Holerites enviados (todos os meses + sistema antigo), cada um com apagar. Carrega sem segurar a tela.

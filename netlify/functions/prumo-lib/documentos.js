@@ -112,6 +112,11 @@ async function lerComVisao(imagens, deps) {
   // Duas pistas ao mesmo tempo, como no print da carteira: a lista de IAs grátis e o Workers AI do Cloudflare.
   // Sem o Workers AI, documentos davam 503 quando o Gemini estava sem cota e a NVIDIA demorava.
   const ler = (img) => {
+    // PDF inteiro (18/11): o leitor único manda ao Gemini (lê PDF, várias páginas) e à Cloudflare (PDF → texto).
+    if (img && img.mime === 'application/pdf') {
+      const perguntar = deps.perguntarVisao || ((im, s) => require('./visao').perguntarVisao(deps, im, s, { maxTokens: 8192, totalMs: 140000, porIaMs: 90000 }));
+      return Promise.resolve(perguntar(img, LER_DOC)).then((t) => { const j = t && extrairJson(t); return j && Array.isArray(j.lancamentos) ? j : null; }).catch(() => null);
+    }
     const pistas = [uma(img)];
     if (ai && typeof ai.run === 'function') pistas.push(viaWorkersAi(ai, img, [], LER_DOC, 'lancamentos', 'Leia este documento e devolva o JSON.'));
     return Promise.any(pistas.map((x) => x.then((j) => j || Promise.reject(new Error('nada'))))).catch(() => null);
@@ -130,7 +135,7 @@ async function agirDoc(acao, body, c) {
   const hoje = prv.hojeDe(agoraIso);
   switch (acao) {
     case 'doc_ler': {
-      const im = c.lerImagens(body.imagens);
+      const im = c.lerImagens(body.imagens, { pdf: true });
       if (!im.ok) return [400, { error: im.erro }];
       const aj = require('./ajuda');
       const lim = await aj.contarLeitura(base, agoraIso, im.imagens.length);

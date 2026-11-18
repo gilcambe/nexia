@@ -13,7 +13,7 @@ const MSG_NAO_LEU = 'Não consegui ler esta imagem. Tente de novo com uma imagem
  * Devolve [200, { lidos: [{ ok, [chave]: item } | { ok:false, erro }] }] na mesma ordem das imagens.
  */
 async function lerPorImagens(c, body, sistema, validar, chave) {
-  const im = c.lerImagens(body && body.imagens);
+  const im = c.lerImagens(body && body.imagens, { pdf: true });
   if (!im.ok) return [400, { error: im.erro }];
   const perguntar = c.deps.perguntarVisao || ((img, s) => require('./salario').perguntarVisaoGratis(c.deps, img, s));
   const lidos = await Promise.all(im.imagens.map(async (img) => {
