@@ -211,7 +211,17 @@ async function agirExtra(acao, body, c) {
     const h = hs.find((x) => x.mes === mes) || hs[0];
     const orc = await lerOrcamento();
     const resumo = c.resumoMes(await listar(base.collection('gastos')), mes);
-    return { mes, holerite_mes: h ? h.mes : null, ...montarOrcamento(h ? h.liquido : 0, orc, resumo), orcamento: orc || { fixas: [], guardar: [], limites: {}, renda_extra: 0 } };
+    // Renda do mês pelo Salário novo: recebido + o que falta (previsão) ou os lançados com data futura.
+    let renda = h ? h.liquido : 0; let fonte = h ? 'holerite' : null;
+    try {
+      const sp = await require('./salario').agirSalario('salario_previsao', { mes }, c);
+      const d = sp && sp[0] === 200 ? sp[1] : null;
+      if (d) {
+        const total = (Number(d.total_recebido) || 0) + (d.previsao ? Number(d.previsao.a_receber) || 0 : Number(d.total_a_receber) || 0);
+        if (total > 0) { renda = Math.round(total * 100) / 100; fonte = 'salario'; }
+      }
+    } catch { /* sem o Salário novo, fica o holerite antigo */ }
+    return { mes, holerite_mes: fonte === 'holerite' && h ? h.mes : null, renda_fonte: fonte, ...montarOrcamento(renda, orc, resumo), orcamento: orc || { fixas: [], guardar: [], limites: {}, renda_extra: 0 } };
   };
   switch (acao) {
     case 'holerite_ler': {
