@@ -1,6 +1,9 @@
 'use strict';
 
-// Handler administrativo para Prumo com restrição de acesso
+/**
+ * Handler administrativo para Prumo com restrição de acesso.
+ * Verifica se o usuário autenticado possui role 'master'.
+ */
 
 
 
