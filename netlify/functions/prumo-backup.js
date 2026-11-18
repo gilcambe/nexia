@@ -288,8 +288,9 @@ exports.handler = async (event, context) => {
   if (event && event.source === 'aws.events' && !event.httpMethod) {
     console.log('[prumo-backup] Backup diário acionado pelo agendador Netlify.');
     const db = require('./firebase-init').db;
-    const resultado = await executarBackupDiario(db);
-    console.log(`[prumo-backup] Backup diário concluído. Log de integridade executado com sucesso para o total de ${resultado.totalItens || 0} itens.`);
+          const resultado = await executarBackupDiario(db);
+      const carimbo = new Date().toISOString();
+      console.log(`[prumo-backup] ${carimbo} Backup diário concluído. Log de integridade executado com sucesso: ${resultado.totalUsuariosVerificados || 0} usuários, ${resultado.totalItens || 0} itens verificados.`);
     return {
       statusCode: 200,
       body: JSON.stringify(resultado),
