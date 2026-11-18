@@ -122,7 +122,7 @@ test('aba Salário usa a API nova, aceita PDF e lê holerite e folha de ponto', 
 function montarTela(respostaLer) {
   const chamadas = []; const forms = []; const avisos = []; const pdfs = [];
   const stubs = {};
-  const stub = (sel) => (stubs[sel] = stubs[sel] || { sel, onclick: null, onchange: null, dataset: {}, files: [], value: '', click() {}, closest() { return null; }, addEventListener() {} });
+  const stub = (sel) => (stubs[sel] = stubs[sel] || { sel, onclick: null, onchange: null, dataset: {}, files: [], value: '', click() {}, closest() { return null; }, addEventListener() {}, querySelectorAll() { return []; } });
   const el = { innerHTML: '', querySelector: stub, querySelectorAll: () => [], addEventListener() {}, appendChild() {} };
   const window = { MB: { telas: {} } };
   const MB = window.MB;
