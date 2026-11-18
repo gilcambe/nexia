@@ -62,7 +62,8 @@ function estadoTarefa(issue, agora = Date.now(), cfg = { minutosParada: 30, maxT
 }
 
 function resumoDia(contagens, ias) {
-  return `Hoje: ${contagens.andamento || 0} em andamento, ${contagens.travada || 0} travadas, ${contagens.concluida || 0} concluídas. IAs ativas: ${ias ? ias.length : 0} de ${ias ? ias.length : 0}.`;
+  const totalIas = ias ? ias.length : 0;
+  return `Hoje: ${contagens.andamento || 0} em andamento, ${contagens.travada || 0} travadas, ${contagens.concluida || 0} concluídas. IAs ativas: ${totalIas} de ${totalIas}.`;
 }
 
 module.exports = { estadoTarefa, resumoDia };
