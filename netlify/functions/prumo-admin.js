@@ -68,5 +68,5 @@ function createHandler(deps = {}) {
   };
 }
 
-exports.handler = createHandler();
 exports.createHandler = createHandler;
+exports.handler = createHandler();
