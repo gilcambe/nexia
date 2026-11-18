@@ -46,6 +46,7 @@
       ${MB.salario.cartao(sal)}
       <div class="linha" style="margin-bottom:12px"><button class="btn" id="sal-holerite">📷 Holerite (print ou foto)</button><button class="btn sec" id="sal-holerite-pdf">📄 Holerite em PDF</button><button class="btn sec" id="sal-ponto">🕒 Folha de ponto</button><button class="btn sec" id="sal-manual">✍️ Lançar à mão</button></div>
       <input type="file" id="sal-arq" accept="image/*" multiple hidden>
+      <div class="card" id="sal-hist"><b>📄 Holerites enviados</b><p class="fraco">Carregando…</p></div>
       <div class="card"><div class="item" style="padding-top:0"><b>Contas fixas</b><button class="btn sec mini" id="addf">+ Conta</button></div>
         ${(o.fixas || []).map((f, i) => `<div class="item" data-f="${i}"><span>${esc(f.nome)}${f.dia ? ` <span class="fraco">dia ${f.dia}</span>` : ''}</span><span class="v">${brl(f.valor)}</span></div>`).join('') || '<p class="fraco">Aluguel, luz, internet, escola…</p>'}</div>
       <div class="card"><div class="item" style="padding-top:0"><b>Guardar todo mês</b><button class="btn sec mini" id="addg"${objetivos.length ? '' : ' disabled'}>+ Objetivo</button></div>
@@ -107,10 +108,8 @@
     el.querySelector('#sal-holerite').onclick = () => escolher('holerite', 'image/*');
     const btPdf = el.querySelector('#sal-holerite-pdf'); if (btPdf) btPdf.onclick = () => escolher('holerite', 'application/pdf,.pdf');
     el.querySelector('#sal-ponto').onclick = () => escolher('ponto', 'image/*');
-    arq.onchange = async () => {
-      const arquivos = [...arq.files].slice(0, 5);
+    const processar = async (arquivos, tipo) => {
       if (!arquivos.length) return;
-      const tipo = modo;
       // Lê os arquivos ANTES de mexer na tela (com o <input> ainda na página): no Android eles chegavam vazios.
       // Holerite em PDF vai CRU (o servidor lê PDF com o Gemini/Cloudflare); foto/print é reduzida. Nada vazio sai daqui.
       let imagens;
@@ -131,5 +130,33 @@
         if (tipo === 'ponto') conferirPonto(l.ponto); else conferir(l.pagamento);
       }
     };
+    arq.onchange = () => processar([...arq.files].slice(0, 5), modo);
+    // Arquivo vindo do "Compartilhar" do Android: pergunta o que é e lê igual.
+    if (MB.compartilhados && MB.compartilhados.length) {
+      const comp = MB.compartilhados; MB.compartilhados = null;
+      formulario(`Arquivo recebido (${comp.length})`, [{ nome: 'tipo', rotulo: 'O que é?', opcoes: '<option value="holerite">Holerite / contracheque</option><option value="ponto">Folha de ponto</option>' }],
+        (d) => { setTimeout(() => processar(comp, d.tipo === 'ponto' ? 'ponto' : 'holerite'), 0); });
+    }
+    // Holerites enviados (todos os meses + sistema antigo), cada um com apagar. Carrega sem segurar a tela.
+    const hist = el.querySelector('#sal-hist');
+    if (hist) {
+      const SIL = { silencioso: true };
+      Promise.all([MB.api('pagamento_listar', {}, SIL).catch(() => ({ pagamentos: [] })), MB.api('holerite_listar', {}, SIL).catch(() => ({ holerites: [] }))]).then(([pg, ho]) => {
+        const nomeT = (t) => (MB.salario.nomeTipo ? MB.salario.nomeTipo(t) : t);
+        const mm = (m) => (/^\d{4}-\d{2}/.test(String(m || '')) ? `${String(m).slice(5, 7)}/${String(m).slice(0, 4)}` : '');
+        const itens = [
+          ...(pg.pagamentos || []).map((p) => ({ col: 'pagamento', id: p.id, txt: `${esc(nomeT(p.tipo))} <span class="fraco">${mm(p.mes)}</span>`, v: p.liquido, ord: String(p.data_pagamento || p.mes) })),
+          ...(ho.holerites || []).map((h) => ({ col: 'holerite', id: h.id, txt: `Holerite <span class="fraco">${mm(h.mes)} · sistema antigo</span>`, v: h.liquido, ord: String(h.mes) })),
+        ].filter((x) => x.id).sort((a, b) => b.ord.localeCompare(a.ord));
+        hist.innerHTML = '<b>📄 Holerites enviados</b>' + (itens.length
+          ? itens.map((x, i) => `<div class="item"><span>${x.txt}</span><span class="v">${brl(x.v || 0)} <button type="button" class="btn sec mini" data-apagar-h="${i}" aria-label="Apagar">🗑️</button></span></div>`).join('')
+          : '<p class="fraco">Nenhum holerite enviado ainda.</p>');
+        hist.querySelectorAll('[data-apagar-h]').forEach((b) => { b.onclick = async () => {
+          const x = itens[Number(b.dataset.apagarH)];
+          if (!x || !confirm('Apagar este holerite?')) return;
+          try { await MB.api(x.col === 'pagamento' ? 'pagamento_apagar' : 'holerite_apagar', { id: x.id }); ok('🗑️ Holerite apagado.'); recarregar(); } catch { /* erro já mostrado */ }
+        }; });
+      });
+    }
   };
 })();

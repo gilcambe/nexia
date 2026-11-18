@@ -291,6 +291,12 @@ async function atender(request, env, { getFunction }, reqId) {
   const url = new URL(request.url);
   const pathname = url.pathname.replace(/\/\/+/g, '/').replace(/(.+)\/$/, '$1') || '/';
 
+  // Kernex Finance: "Compartilhar → Kernex Finance" é recebido pelo service worker do app. Se ele ainda não estiver
+  // ativo, o pedido chega aqui: volta para o app (que avisa para compartilhar de novo) em vez de mostrar erro 405.
+  if (request.method === 'POST' && pathname === '/prumo/compartilhar') {
+    return new Response(null, { status: 303, headers: { Location: '/prumo/?compartilhado=0' } });
+  }
+
   if (request.method === 'OPTIONS') {
     // APIs dos sites de clientes (…pages.dev): quem chama é uma página em OUTRO endereço e a autenticação vai no
     // corpo do pedido (nunca em cookie), então a pergunta prévia (CORS) precisa liberar qualquer origem, igual

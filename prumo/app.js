@@ -199,7 +199,21 @@
       if (u) {
         let ultima = 'inicio';
         try { ultima = localStorage.getItem('prumo-aba') || 'inicio'; } catch { /* sem armazenamento */ }
-        abrirAba(ultima);
+        // Aberto pelo "Compartilhar" do Android: pega os arquivos guardados pelo service worker e vai ao Salário.
+        const qtdComp = new URLSearchParams(location.search).get('compartilhado');
+        if (qtdComp !== null) {
+          try { history.replaceState(null, '', '/prumo/'); } catch { /* segue */ }
+          (async () => {
+            const arqs = [];
+            try {
+              const c = await caches.open('kf-compartilhado');
+              for (const k of await c.keys()) { const r = await c.match(k); const b = await r.blob(); if (b.size) arqs.push(new File([b], decodeURIComponent(r.headers.get('X-Nome') || 'arquivo'), { type: b.type || r.headers.get('Content-Type') || '' })); await c.delete(k); }
+            } catch { /* sem arquivos */ }
+            MB.compartilhados = arqs.length ? arqs : null;
+            if (!arqs.length) mostrarErro('O arquivo compartilhado chegou vazio. Tente de novo ou mande um print.');
+            abrirAba('orcamento');
+          })();
+        } else abrirAba(ultima);
         verAvisos();
       }
     });
