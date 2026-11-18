@@ -53,20 +53,23 @@ function estadoTarefa(issue, agora = Date.now(), cfg = {}) {
     ls.some((l) => l.startsWith('jules-'))
   ) {
     ia = 'Jules';
-  } else if (
-    has('reserva-tentou') ||
-    has('reserva-volta') ||
-    ls.some((l) => l.startsWith('reserva-'))
-  ) {
-    ia = 'IAs grátis';
+  } else {
+    const reserva = ls.find((l) => l.startsWith('reserva-volta-'));
+    if (reserva) ia = reserva;
+    else if (has('reserva-tentou') || has('reserva-volta') || ls.some((l) => l.startsWith('reserva-'))) {
+      ia = 'IAs grátis';
+    }
   }
 
   // Determinar se tem label de aguardando-ia
+  const prAberto = issue.pull_request ? true : false;
+  const ehWorkflow = ls.some((l) => l === 'workflow');
   const ehAguardandoIa =
     has('jules-enviado') ||
     has('cortex-jules') ||
     has('reserva-tentou') ||
     has('reserva-volta') ||
+    ls.some((l) => l.startsWith('reserva-volta-')) ||
     has('vez-do-claude');
 
   // Determinar o estado (um dos 6: fila, andamento, aguardando-ia, travada, concluida, falhou)
@@ -96,6 +99,10 @@ function estadoTarefa(issue, agora = Date.now(), cfg = {}) {
       travouPorTempo = true;
     } else if (ehCortexRodando) {
       estado = 'andamento';
+    } else if (prAberto) {
+      estado = 'aguardando-ia';
+    } else if (ehWorkflow) {
+      estado = 'aguardando-ia';
     } else if (ehAguardandoIa) {
       estado = 'aguardando-ia';
     } else {
@@ -107,15 +114,16 @@ function estadoTarefa(issue, agora = Date.now(), cfg = {}) {
 
   // Motivo
   let motivo = motivoDe(issue).texto;
-  if (travouPorTempo) {
+  if (prAberto) {
+    motivo = `Aguardando revisão do PR #${issue.number}`;
+  } else if (ehWorkflow) {
+    motivo = 'Aguardando permissão de workflow';
+  } else if (travouPorTempo) {
     motivo = `Sem atividade há ${minInativo} min. A IA pode ter parado.`;
   }
 
   // Precisa do dono / você
-  // 09/11 (dono): "aparece precisa de você mas não diz o que fazer". Só entra aqui o que ELE pode fazer
-  // (rótulo vez-do-dono ou esperando-dono). Tarefa que as IAs não conseguiram é das IAs/Claude, não do dono leigo.
-  void maxTentativas;
-  const precisaVoce = !fechada && (has('vez-do-dono') || has('esperando-dono'));
+  const precisaVoce = !fechada && (has('vez-do-dono') || has('esperando-dono') || has('precisa-de-voce'));
 
   return {
     estado,
