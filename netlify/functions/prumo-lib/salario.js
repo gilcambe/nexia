@@ -183,14 +183,14 @@ async function agirSalario(acao, body, c) {
       }
       // Ajustes da folha (à mão): mesmos campos do perfil aprendido.
       if (body.perfil && typeof body.perfil === 'object') {
-        const lim = { noturno_pct: 100, fixos: 1e6, nao_tributavel: 1e6, prev_pct: 50, descontos_fixos: 1e6 };
+        const lim = { noturno_pct: 100, fixos: 1e6, nao_tributavel: 1e6, prev_pct: 50, descontos_fixos: 1e6, adiantamento_pct: 100, dia_adiantamento: 31, dia_salario: 31 };
         const pf = { ...(atual.perfil || {}) };
         for (const k of Object.keys(lim)) {
           const v = body.perfil[k];
           if (v === undefined || v === null || v === '') { delete pf[k]; continue; }
           const n = numero(v);
           if (!Number.isFinite(n) || n < 0 || n > lim[k]) return [400, { error: 'Valor inválido em ' + k + '.' }];
-          pf[k] = k.endsWith('_pct') ? Math.round(n * 100) / 100 : dinheiro(n);
+          pf[k] = k.startsWith('dia_') ? Math.round(n) : k.endsWith('_pct') ? Math.round(n * 100) / 100 : dinheiro(n);
         }
         novo.perfil = pf; mudou = true;
       }
@@ -213,7 +213,21 @@ async function agirSalario(acao, body, c) {
       const mensalPrevisto = a_receber.find((p) => p.tipo === 'mensal');
       if (mensalPrevisto) return sai(null, 'O mês já fechou: o pagamento mensal está previsto para ' + String(mensalPrevisto.data_pagamento).slice(8, 10) + '/' + String(mensalPrevisto.data_pagamento).slice(5, 7) + ' e conta como recebido quando cair.');
       const ponto = pontoDoc.exists ? pontoDoc.data() || {} : {};
-      const previsao = require('./folha').estimarFechamento({ mes, salario_base: cfg.salario_base, dependentes: cfg.dependentes || 0, jornada_mensal: cfg.jornada_mensal || 220, ponto, recebidos, perfil: cfg.perfil || {} });
+      // Adiantamento: o lançado (já caiu ou com data futura) ou, sem lançamento, o automático (50% do base, dia 15).
+      const pf = cfg.perfil || {};
+      const ultimoDia = new Date(Date.UTC(Number(mes.slice(0, 4)), Number(mes.slice(5, 7)), 0)).getUTCDate();
+      const dia = (d, padrao) => String(Math.min(ultimoDia, Math.max(1, Math.round(Number(d) || padrao)))).padStart(2, '0');
+      const lancado = doMes.find((p) => p.tipo === 'adiantamento');
+      const pct = Number.isFinite(Number(pf.adiantamento_pct)) && pf.adiantamento_pct !== '' && pf.adiantamento_pct != null ? Number(pf.adiantamento_pct) : 50;
+      const adiantamento = lancado
+        ? { valor: dinheiro(Number(lancado.liquido) || 0), data: lancado.data_pagamento, status: lancado.status === 'realizado' ? 'caiu' : 'previsto', automatico: false }
+        : { valor: dinheiro(cfg.salario_base * pct / 100), data: `${mes}-${dia(pf.dia_adiantamento, 15)}`, status: `${mes}-${dia(pf.dia_adiantamento, 15)}` <= agoraIso.slice(0, 10) ? 'caiu' : 'previsto', automatico: true };
+      const paraConta = [...recebidos.filter((p) => p.tipo !== 'adiantamento'), { tipo: 'adiantamento', liquido: adiantamento.valor }];
+      const previsao = require('./folha').estimarFechamento({ mes, salario_base: cfg.salario_base, dependentes: cfg.dependentes || 0, jornada_mensal: cfg.jornada_mensal || 220, ponto, recebidos: paraConta, perfil: pf });
+      previsao.data_salario = `${mes}-${dia(pf.dia_salario, 30)}`;
+      previsao.adiantamento = adiantamento;
+      // Outros recebimentos do mês (13º, férias, PLR...) somam na renda do mês.
+      previsao.extras = dinheiro(doMes.filter((p) => !['adiantamento', 'mensal'].includes(p.tipo)).reduce((s, p) => s + (Number(p.liquido) || 0), 0));
       return sai(previsao, '');
     }
     default: return null;

@@ -34,7 +34,8 @@ async function carregar(c) {
   const lerDoc = async (col, id) => { const s = await base.collection(col).doc(id).get(); return s && s.exists ? s.data() || {} : {}; };
   const [cfg, carreira, orcDoc, pagamentos, pontos, cartoesL, gastos, dividas, contas, lancs, objetivos, carteira] = await Promise.all([
     lerDoc('config', 'salario'), lerDoc('config', 'carreira'), lerDoc('orcamento', 'atual'),
-    listar(base.collection('pagamentos')), listar(base.collection('pontos')), listar(base.collection('cartoes')), listar(base.collection('gastos')),
+    listar(base.collection('pagamentos')), listar(base.collection('folhas_ponto')), // 18/11: era 'pontos' (milhas!)
+    listar(base.collection('cartoes')), listar(base.collection('gastos')),
     listar(base.collection('dividas')), listar(base.collection('contas')), listar(base.collection('lancamentos')), listar(base.collection('objetivos')),
     c.listarCarteira(),
   ]);
@@ -43,12 +44,20 @@ async function carregar(c) {
 
 // ---------- salário ----------
 /** Previsão de uma competência (mês) com o que já foi recebido e o ponto dela. */
+function adiantamentoAuto(cfg) {
+  const pf = (cfg && cfg.perfil) || {};
+  const pct = pf.adiantamento_pct === undefined || pf.adiantamento_pct === null || pf.adiantamento_pct === '' ? 50 : Number(pf.adiantamento_pct) || 0;
+  return Math.round(cfg.salario_base * pct) / 100;
+}
 function previsaoMes(d, mes, recebidosExtra) {
   const cfg = d.cfg || {};
   if (!(cfg.salario_base > 0)) return null;
-  const recebidos = [...d.pagamentos.filter((p) => p.mes === mes), ...(recebidosExtra || [])];
+  const pf = cfg.perfil || {};
+  let recebidos = [...d.pagamentos.filter((p) => p.mes === mes), ...(recebidosExtra || [])];
+  // Mesma regra do Salário: sem adiantamento lançado, entra o automático (% do base, padrão 50%).
+  if (!recebidos.some((p) => p.tipo === 'adiantamento')) recebidos = [...recebidos, { tipo: 'adiantamento', liquido: adiantamentoAuto(cfg) }];
   const ponto = d.pontos.find((p) => p.id === mes) || {};
-  return folha.estimarFechamento({ mes, salario_base: cfg.salario_base, dependentes: cfg.dependentes || 0, jornada_mensal: cfg.jornada_mensal || 220, ponto, recebidos });
+  return folha.estimarFechamento({ mes, salario_base: cfg.salario_base, dependentes: cfg.dependentes || 0, jornada_mensal: cfg.jornada_mensal || 220, ponto, recebidos, perfil: pf });
 }
 /** Aprende o padrão do último pagamento do tipo: dia do mês e se cai no mês seguinte à competência. */
 function padrao(pagamentos, tipo) {
@@ -85,10 +94,12 @@ function eventos(d, hoje, dias) {
     for (let m = somarMes(mesHoje, -1); m <= mesDe(fim); m = somarMes(m, 1)) {
       const doMes = d.pagamentos.filter((p) => p.mes === m);
       const temAd = doMes.some((p) => p.tipo === 'adiantamento');
+      const pfc = cfg.perfil || {};
       if (pAd && !temAd) add(dataNoMes(somarMes(m, pAd.deslocamento), pAd.dia), 'entrada', 'adiantamento', NOMES.adiantamento, pAd.valor, true);
+      else if (!temAd) add(dataNoMes(m, pfc.dia_adiantamento || 15), 'entrada', 'adiantamento', NOMES.adiantamento, adiantamentoAuto(cfg), true);
       if (!doMes.some((p) => p.tipo === 'mensal')) {
         // SUPOSIÇÃO: sem histórico, o salário do mês cai no último dia do mês da competência.
-        const dia = pMe ? pMe.dia : 31; const desloc = pMe ? pMe.deslocamento : 0;
+        const dia = pMe ? pMe.dia : (pfc.dia_salario || 30); const desloc = pMe ? pMe.deslocamento : 0;
         const prev = previsaoMes(d, m, !temAd && pAd ? [{ tipo: 'adiantamento', liquido: pAd.valor }] : []);
         if (prev) add(dataNoMes(somarMes(m, desloc), dia), 'entrada', 'salario', NOMES.mensal, prev.a_receber, true);
       }
