@@ -204,13 +204,25 @@ const IMG = /^data:(image\/(?:jpeg|png|webp));base64,([A-Za-z0-9+/=]+)$/;
 const MAX_IMG = Math.floor(4 * 1024 * 1024 * 4 / 3); // 4 MB em base64
 // 17/11: o PDF do holerite não abria no celular do dono (pdf.js). Telas que aceitam PDF cru passam { pdf: true }:
 // o arquivo vai como está e o leitor (prumo-lib/visao.js) manda ao Gemini (lê PDF) e à Cloudflare (PDF → texto).
-const PDF_CRU = /^data:(application\/pdf);base64,([A-Za-z0-9+/=]+)$/;
+// 17/11 (2ª vez): o celular manda o PDF com tipo variado (vazio, octet-stream...). O PDF é reconhecido pelo CONTEÚDO:
+// base64 começando com JVBERi0 (= "%PDF-"), qualquer que seja o tipo; espaços/quebras no base64 são removidos.
+const DATA_URL = /^data:([^,]*?)(;base64)?,([\s\S]*)$/;
+function pdfCru(b) {
+  const m = DATA_URL.exec(b);
+  if (!m || !m[2]) return null;
+  const data = m[3].replace(/\s/g, '');
+  return /^JVBERi0[A-Za-z0-9+/=]*$/.test(data) ? [b, 'application/pdf', data] : null;
+}
 function lerImagens(lista, opcoes) {
   if (!Array.isArray(lista) || lista.length < 1 || lista.length > 5) return erro('Mande de 1 a 5 prints.');
   const out = [];
   for (const b of lista) {
-    const m = typeof b === 'string' ? (IMG.exec(b) || (opcoes && opcoes.pdf ? PDF_CRU.exec(b) : null)) : null;
-    if (!m) return erro('Imagem inválida. Use foto ou print em JPG, PNG ou WEBP.');
+    const m = typeof b === 'string' ? (IMG.exec(b) || (opcoes && opcoes.pdf ? pdfCru(b) : null)) : null;
+    if (!m) {
+      // Só o cabeçalho (sem conteúdo do arquivo) vai ao log, para achar o motivo.
+      console.log('[prumo] imagem recusada', typeof b === 'string' ? b.slice(0, Math.max(0, Math.min(60, b.indexOf(',') + 8))) : typeof b, typeof b === 'string' ? b.length : 0);
+      return erro(opcoes && opcoes.pdf ? 'Arquivo inválido. Use PDF, foto ou print (JPG, PNG ou WEBP).' : 'Imagem inválida. Use foto ou print em JPG, PNG ou WEBP.');
+    }
     if (m[2].length > MAX_IMG) return erro('Imagem grande demais.');
     out.push({ mime: m[1], data: m[2] });
   }
