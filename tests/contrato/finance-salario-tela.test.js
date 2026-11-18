@@ -102,7 +102,10 @@ test('aba Salário usa a API nova, aceita PDF e lê holerite e folha de ponto', 
   assert.match(o, /salario_previsao/);
   assert.match(o, /MB\.salario\.cartao\(/);
   for (const id of ['sal-holerite', 'sal-ponto', 'sal-manual']) assert.match(o, new RegExp(`id="${id}"`), `botão #${id}`);
-  assert.match(o, /accept="image\/\*,application\/pdf,\.pdf"/);
+  // 18/11: accept misto abria o seletor de documentos do Android, que entregava 0 KB. Print = image/*; PDF = botão próprio.
+  assert.match(o, /id="sal-arq" accept="image\/\*"/);
+  assert.match(o, /id="sal-holerite-pdf"/);
+  assert.match(o, /'application\/pdf,\.pdf'/);
   // 17/11 (celular do dono): o pdf.js falhava ou gerava imagem vazia. PDF vai CRU (FileReader) e o servidor lê.
   assert.match(o, /readAsDataURL/, 'PDF vai inteiro (data:application/pdf)');
   assert.match(o, /\/prumo\/pdf\.js/);
