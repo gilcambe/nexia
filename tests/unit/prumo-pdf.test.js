@@ -26,7 +26,10 @@ test('PDF que passa do limite junto com fotos é cortado e avisa', () => {
 
 test('tela Documentos aceita PDF e o app guarda pdf.js no cache', () => {
   const raiz = path.join(__dirname, '../../prumo');
-  assert.match(fs.readFileSync(path.join(raiz, 'documentos.js'), 'utf8'), /accept="image\/\*,application\/pdf/);
+  // 18/11: accept misto abria o seletor de documentos do Android (0 KB). Print = image/*; PDF = botão próprio.
+  assert.match(fs.readFileSync(path.join(raiz, 'documentos.js'), 'utf8'), /id="kf-arq" accept="image\/\*"/);
+  assert.match(fs.readFileSync(path.join(raiz, 'documentos.js'), 'utf8'), /id="kf-pdf"[\s\S]*'application\/pdf,\.pdf'/);
+  for (const f of fs.readdirSync(raiz).filter((x) => x.endsWith('.js'))) assert.doesNotMatch(fs.readFileSync(path.join(raiz, f), 'utf8'), /accept="image\/\*,application\/pdf/, `${f} sem seletor misto`);
   assert.doesNotMatch(fs.readFileSync(path.join(raiz, 'documentos.js'), 'utf8'), /PDF em breve/);
   assert.match(fs.readFileSync(path.join(raiz, 'sw.js'), 'utf8'), /\/prumo\/pdf\.js/);
   assert.match(fs.readFileSync(path.join(raiz, 'pdf.js'), 'utf8'), /pdf\.js\/3\.11\.174\//);

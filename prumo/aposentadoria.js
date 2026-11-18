@@ -27,14 +27,15 @@
         <div class="fraco">Tudo aqui é estimativa com as regras de 2026. Eu nunca peço sua senha do gov.br: o dado entra por digitação, PDF ou print.</div>
         <div class="linha" style="margin-top:10px">
           <button class="btn" type="button" id="apo-perfil">${p ? '✍️ Editar meus dados' : '✍️ Informar meus dados'}</button>
-          <button class="btn sec" type="button" id="apo-cnis">📄 Ler CNIS (PDF ou print)</button>
+          <button class="btn sec" type="button" id="apo-cnis">📷 Ler CNIS (print)</button>
+          <button class="btn sec" type="button" id="apo-cnis-pdf">📄 CNIS em PDF</button>
           <button class="btn sec" type="button" id="apo-fgts-btn">💰 FGTS</button>
           <button class="btn sec" type="button" id="apo-fgts-print">📷 Saldo do FGTS por print</button>
           <button class="btn sec" type="button" id="apo-imovel">🏠 FGTS no imóvel</button>
           <button class="btn sec" type="button" id="apo-prev-btn">🏦 Simular previdência</button>
           <button class="btn sec" type="button" id="apo-guardar-btn">🎯 Quanto guardar</button>
         </div>
-        <input type="file" id="apo-arq" accept="image/*,application/pdf,.pdf" multiple hidden>
+        <input type="file" id="apo-arq" accept="image/*" multiple hidden>
         <input type="file" id="apo-fgts-arq" accept="image/*" multiple hidden>
         <div id="apo-alertas"></div>
         ${(v.faltando || []).map((f) => `<div class="aviso-c">${A.esc(f)}</div>`).join('')}</div>
@@ -51,7 +52,10 @@
 
     // CNIS: PDF vira imagens; a IA lê; a pessoa confere antes de salvar.
     const arqCnis = el.querySelector('#apo-arq');
-    el.querySelector('#apo-cnis').onclick = () => arqCnis.click();
+    // CNIS: print/foto pelo seletor de imagens; o botão "PDF" abre o de documentos.
+    el.querySelector('#apo-cnis').onclick = () => { arqCnis.accept = 'image/*'; arqCnis.value = ''; arqCnis.click(); };
+    const cnisPdf = el.querySelector('#apo-cnis-pdf');
+    if (cnisPdf) cnisPdf.onclick = () => { arqCnis.accept = 'application/pdf,.pdf'; arqCnis.value = ''; arqCnis.click(); };
     arqCnis.onchange = async () => {
       const arquivos = [...arqCnis.files];
       if (!arquivos.length) return;

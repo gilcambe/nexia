@@ -27,11 +27,13 @@
     ], (d) => MB.api('pontos_salvar', { ...d, saldo: Math.round(Number(d.saldo) || 0), id: p && p.id }), p && (() => MB.api('pontos_apagar', { id: p.id })));
     el.querySelector('#novo').onclick = () => editar(null);
     // Saldo por print (sem senha): vários prints/PDFs, a IA lê cada um, a pessoa confere e o app atualiza o programa.
-    el.insertAdjacentHTML('afterbegin', `<div class="card"><button class="btn" id="pp-ler" type="button">📷 Atualizar saldos por print</button>
-      <input type="file" id="pp-arq" accept="image/*,application/pdf,.pdf" multiple hidden>
+    el.insertAdjacentHTML('afterbegin', `<div class="card"><button class="btn" id="pp-ler" type="button">📷 Atualizar saldos por print</button> <button class="btn sec" id="pp-pdf" type="button">📄 PDF</button>
+      <input type="file" id="pp-arq" accept="image/*" multiple hidden>
       <p class="fraco">Tire print do saldo no app do programa (Smiles, LATAM Pass, TudoAzul, Livelo, Esfera…). Eu não peço senha.</p><div id="pp-res"></div></div>`);
     const mm = await carregarScript('milhas', '/prumo/milhas.js');
-    el.querySelector('#pp-ler').onclick = () => el.querySelector('#pp-arq').click();
+    const ppArq = el.querySelector('#pp-arq');
+    el.querySelector('#pp-ler').onclick = () => { ppArq.accept = 'image/*'; ppArq.value = ''; ppArq.click(); };
+    el.querySelector('#pp-pdf').onclick = () => { ppArq.accept = 'application/pdf,.pdf'; ppArq.value = ''; ppArq.click(); };
     el.querySelector('#pp-arq').onchange = async (ev) => {
       const arqs = [...(ev && ev.target && ev.target.files || el.querySelector('#pp-arq').files)];
       const res = el.querySelector('#pp-res');

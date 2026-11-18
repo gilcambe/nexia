@@ -22,7 +22,8 @@
     el.innerHTML = `
       <div class="card"><h3 style="margin:0 0 6px">📄 Enviar documento</h3>
         <div class="fraco">Fatura, extrato, comprovante Pix, nota, boleto ou recibo: foto, print ou PDF (até 5 páginas por vez).</div>
-        <input type="file" id="kf-arq" accept="image/*,application/pdf,.pdf" multiple style="margin-top:10px">
+        <input type="file" id="kf-arq" accept="image/*" multiple style="margin-top:10px">
+        <button class="btn sec mini" id="kf-pdf" type="button" style="margin-top:6px">📄 Escolher PDF</button>
         <button class="btn" id="kf-ler" type="button" style="margin-top:10px">Ler documento</button></div>
       <div id="kf-res"></div>
       ${pv ? pv.cartao(itensPrev, 'Previsto (ainda não aconteceu)') : ''}
@@ -32,8 +33,11 @@
     el.querySelectorAll('[data-apagar]').forEach((b) => { b.onclick = async () => { if (!confirm('Apagar este lançamento?')) return; await MB.api('lanc_apagar', { id: b.dataset.apagar }); MB.abrirAba('documentos'); }; });
 
     const res = el.querySelector('#kf-res');
+    const kfPdf = el.querySelector('#kf-pdf');
+    if (kfPdf) kfPdf.onclick = () => { const a = el.querySelector('#kf-arq'); a.accept = 'application/pdf,.pdf'; a.value = ''; a.click(); };
     el.querySelector('#kf-ler').onclick = async (ev) => {
       const arqs = [...el.querySelector('#kf-arq').files];
+      el.querySelector('#kf-arq').accept = 'image/*';
       if (!arqs.length) { res.innerHTML = '<div class="aviso-c">Escolha pelo menos uma foto, print ou PDF.</div>'; return; }
       if (arqs.length > 5) { res.innerHTML = '<div class="aviso-c">Envie no máximo 5 arquivos por vez.</div>'; return; }
       const btn = ev.currentTarget; btn.disabled = true; btn.textContent = 'Lendo… pode levar até 2 minutos';
