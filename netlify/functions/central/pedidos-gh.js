@@ -69,8 +69,10 @@ function criarPedidos(env = process.env, fetchFn = fetch) {
       itens = itens.filter((item) => item.estado === 'travada' && !item.precisaVoce);
     } else if (estado === 'concluidas') {
       itens = itens.filter((item) => item.estado === 'concluida');
-    } else if (estado === 'precisa' || estado === 'todas') {
-      if (estado === 'precisa') itens = itens.filter((item) => item.precisaVoce);
+    } else if (estado === 'todas') {
+      // 'todas' = sem filtro adicional: usa o resultado padrão da busca
+    } else if (estado === 'precisa') {
+      itens = itens.filter((item) => item.precisaVoce);
     } else {
        // Filtros padrão (andamento, travada, etc) já cobertos se necessário, mantendo compatibilidade
     }
