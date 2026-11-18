@@ -7,6 +7,27 @@
 const COLLECTION = 'prumo_usuarios';
 
 function createHandler(deps = {}) {
+  const getMw = deps.getMw || (() => require('./middleware'));
+  return async (event) => {
+    const mw = getMw();
+    if (!mw || typeof mw.verifyBearerToken !== 'function') {
+      return { statusCode: 500, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ok: false, error: 'Middleware indisponível.' }) };
+    }
+    const auth = await mw.verifyBearerToken(event);
+    if (!auth || !auth.ok || auth.role !== 'master') {
+      return { statusCode: 403, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ok: false, error: 'Acesso negado: usuário não é master.' }) };
+    }
+    return { statusCode: 200, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ok: true, uid: auth.uid, email: auth.email, role: auth.role }) };
+  };
+}
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports.handler = createHandler();
+  module.exports.createHandler = createHandler;
+  module.exports.COLLECTION = COLLECTION;
+}
+
+function createHandler(deps = {}) {
   const getDb = deps.getDb || (() => require('./firebase-init').db);
   const getMw = deps.getMw || (() => require('./middleware'));
 
