@@ -1,6 +1,7 @@
 'use strict';
 
 // Kernex Finance Admin (/api/prumo-admin).
+
 // Estrutura baseada no padrão de agenda.js.
 // Só o master da NEXIA tem acesso (role 'master').
 
