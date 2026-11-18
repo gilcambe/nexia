@@ -1,4 +1,4 @@
-'use strict';
+'use strict'; // health check handler
 // Health check central: validado e pronto para Worker invocar. // Implementado via pedido
 // Criado e salvo via Cortex.
 // Central NEXIA: saúde dos serviços principais de infraestrutura (Cortex, Firebase, Cloudflare, GitHub, Vault).
