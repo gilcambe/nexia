@@ -25,7 +25,7 @@
     if (a.size > 3 * 1024 * 1024) throw new Error('PDF grande demais (máx. 3 MB). Tire um print da página.');
     let d = await viaLeitor(a); // o servidor reconhece o PDF pelo conteúdo
     if (d.length - d.indexOf(',') < 100) d = await viaBytes(a);
-    if (d.length - d.indexOf(',') < 100) throw new Error(`O celular entregou o PDF vazio (${Math.round((a.size || 0) / 1024)} KB informados). Abra o PDF pelo app "Arquivos" (ou baixe de novo) e escolha por lá.`);
+    if (d.length - d.indexOf(',') < 100) throw new Error(`O celular entregou o PDF vazio (${Math.round((a.size || 0) / 1024)} KB informados). Abra o PDF no celular, toque em Compartilhar e escolha Kernex Finance.`);
     return d;
   };
   let mesSel = new Date().toISOString().slice(0, 7);
@@ -76,7 +76,7 @@
     // Folha de ponto: confere antes de salvar (mês e horas); a do mês aparece no cartão com editar/apagar.
     const hh = (v) => { const n = Number(v) || 0; const H = Math.floor(n); return `${H}:${String(Math.round((n - H) * 60)).padStart(2, '0')}`; };
     const CAMPOS_PT = [['he50', 'HE 50% (horas, ex.: 10:30)'], ['he75', 'HE 75%'], ['he100', 'HE 100%'], ['noturnas', 'Horas noturnas (total)'], ['sobreaviso', 'Sobreaviso (horas à disposição)'], ['faltas', 'Faltas (horas)']];
-    const conferirPonto = (pt, apagavel) => formulario('Confira a folha de ponto', [{ nome: 'mes', rotulo: 'Mês do salário que ela afeta', tipo: 'month', valor: (pt && pt.mes) || mesSel }, ...CAMPOS_PT.map(([k, r]) => ({ nome: k, rotulo: r, valor: pt && Number(pt[k]) > 0 ? hh(pt[k]) : '' }))],
+    const conferirPonto = (pt, apagavel) => formulario('Confira a folha de ponto', [{ nome: 'mes', rotulo: 'Mês do salário que ela paga (a folha fecha dia 11 e paga no dia 30)', tipo: 'month', valor: (pt && pt.mes) || mesSel }, ...CAMPOS_PT.map(([k, r]) => ({ nome: k, rotulo: r, valor: pt && Number(pt[k]) > 0 ? hh(pt[k]) : '' }))],
       (d) => MB.api('ponto_salvar', d).then(() => { ok('✅ Folha de ponto salva. A previsão já usa as horas.'); recarregar(); }),
       apagavel ? () => MB.api('ponto_apagar', { mes: pt.mes }).then(() => ok('🗑️ Folha de ponto apagada.')) : undefined);
     const ajustes = el.querySelector('[data-acao="salario-ajustes"]');
@@ -87,7 +87,10 @@
       { nome: 'nao_tributavel', rotulo: 'Ajuda de custo sem imposto (R$)', tipo: 'number', valor: pf.nao_tributavel || '' },
       { nome: 'prev_pct', rotulo: 'Previdência privada (% do salário)', tipo: 'number', valor: pf.prev_pct || '' },
       { nome: 'descontos_fixos', rotulo: 'Outros descontos fixos: VA, plano (R$)', tipo: 'number', valor: pf.descontos_fixos || '' },
-    ], (d) => MB.api('salario_config', { salario_base: d.salario_base, perfil: { noturno_pct: d.noturno_pct, fixos: d.fixos, nao_tributavel: d.nao_tributavel, prev_pct: d.prev_pct, descontos_fixos: d.descontos_fixos } }).then(() => { ok('✅ Ajustes salvos. A previsão já usa.'); recarregar(); })); };
+      { nome: 'adiantamento_pct', rotulo: 'Adiantamento (% do salário base)', tipo: 'number', valor: pf.adiantamento_pct == null ? 50 : pf.adiantamento_pct },
+      { nome: 'dia_adiantamento', rotulo: 'Dia do adiantamento', tipo: 'number', valor: pf.dia_adiantamento || 15 },
+      { nome: 'dia_salario', rotulo: 'Dia do salário', tipo: 'number', valor: pf.dia_salario || 30 },
+    ], (d) => MB.api('salario_config', { salario_base: d.salario_base, perfil: { noturno_pct: d.noturno_pct, fixos: d.fixos, nao_tributavel: d.nao_tributavel, prev_pct: d.prev_pct, descontos_fixos: d.descontos_fixos, adiantamento_pct: d.adiantamento_pct, dia_adiantamento: d.dia_adiantamento, dia_salario: d.dia_salario } }).then(() => { ok('✅ Ajustes salvos. A previsão já usa.'); recarregar(); })); };
     const linhaPonto = el.querySelector('[data-ponto]');
     if (linhaPonto && sal.ponto) linhaPonto.onclick = () => conferirPonto(sal.ponto, true);
     // Tocar num recebimento: editar ou apagar (tudo que sobe pode ser apagado).

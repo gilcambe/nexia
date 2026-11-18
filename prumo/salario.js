@@ -28,9 +28,12 @@
     }
     const p = r.previsao;
     if (p) {
-      h += `<div id="sal-previsao"><div class="fraco" style="margin-top:10px">Previsão do fechamento</div><div class="grande">${brl(p.a_receber)}</div>`
-        + (p.linhas || []).filter((l) => Number(l.valor) !== 0).map((l) => linha(esc(l.nome), brl(l.valor))).join('')
-        + `<p class="fraco">${esc(p.aviso)}</p><button type="button" class="btn sec mini" data-acao="salario-ajustes">⚙️ Ajustes da folha</button></div>`;
+      const ad = p.adiantamento;
+      h += '<div id="sal-previsao">'
+        + (ad ? linha(`📅 Dia ${esc(dm(ad.data).slice(0, 2))} · Adiantamento <span class="fraco">${ad.status === 'caiu' ? '✓ caiu' : 'previsto'}</span>`, brl(ad.valor)) : '')
+        + `<div class="fraco" style="margin-top:10px">📅 Dia ${esc(dm(p.data_salario).slice(0, 2))} · Você vai receber</div><div class="grande">${brl(p.a_receber)}</div>`
+        + `<details style="margin-top:6px"><summary class="fraco">Ver cálculo</summary>${(p.linhas || []).filter((l) => Number(l.valor) !== 0).map((l) => linha(esc(l.nome), brl(l.valor))).join('')}<p class="fraco">${esc(p.aviso)}</p></details>`
+        + '<button type="button" class="btn sec mini" data-acao="salario-ajustes">⚙️ Ajustes da folha</button></div>';
     } else {
       h += `<p class="fraco">${esc(r.motivo)}</p>`;
       if (/sal[aá]rio base/i.test(String(r.motivo || ''))) h += '<button type="button" class="btn sec" data-acao="salario-base">Informar salário base</button>';

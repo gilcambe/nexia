@@ -217,7 +217,7 @@ async function agirExtra(acao, body, c) {
       const sp = await require('./salario').agirSalario('salario_previsao', { mes }, c);
       const d = sp && sp[0] === 200 ? sp[1] : null;
       if (d) {
-        const total = (Number(d.total_recebido) || 0) + (d.previsao ? Number(d.previsao.a_receber) || 0 : Number(d.total_a_receber) || 0);
+        const total = d.previsao ? (Number(d.previsao.liquido) || 0) + (Number(d.previsao.extras) || 0) : (Number(d.total_recebido) || 0) + (Number(d.total_a_receber) || 0);
         if (total > 0) { renda = Math.round(total * 100) / 100; fonte = 'salario'; }
       }
     } catch { /* sem o Salário novo, fica o holerite antigo */ }

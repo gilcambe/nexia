@@ -78,7 +78,9 @@ test('cartão: recebimentos do mês, total e previsão do fechamento', () => {
   assert.match(h, /13º \(1ª parcela\)[\s\S]*19\/11[\s\S]*R\$\s5\.883,37/);
   assert.match(h, /Total recebido[\s\S]*R\$\s10\.317,72/);
   assert.match(h, /id="sal-previsao"/);
-  assert.match(h, /Previsão do fechamento[\s\S]*R\$\s2\.759,64/);
+  // 18/11 (dono): "só o valor que receberei no dia 30"; o cálculo fica em "Ver cálculo".
+  assert.match(h, /Você vai receber<\/div><div class="grande">R\$\s2\.759,64/);
+  assert.match(h, /<summary[^>]*>Ver cálculo<\/summary>/);
   assert.match(h, /Horas extras[\s\S]*R\$\s604,68/);
   assert.match(h, /DSR/);
   assert.doesNotMatch(h, /Adicional noturno/, 'linha com valor 0 não aparece');
