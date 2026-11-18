@@ -120,15 +120,15 @@ test('EST3. precisaVoce (tentativa-3 + cortex-travado e labels de humano)', () =
   assert.strictEqual(r2.estado, 'travada');
   assert.strictEqual(r2.precisaVoce, true);
 
-  // Travada com tentativa-2 sem label de dono: precisaVoce false
+  // Travada com tentativa-3 sem label de dono: precisaVoce true
   const r3 = estadoTarefa({
     state: 'open',
-    labels: [{ name: 'cortex-fila' }, { name: 'cortex-travado' }, { name: 'tentativa-2' }],
+    labels: [{ name: 'cortex-fila' }, { name: 'cortex-travado' }, { name: 'tentativa-3' }],
     updated_at: new Date(agora).toISOString(),
   }, agora, { maxTentativas: 3 });
 
   assert.strictEqual(r3.estado, 'travada');
-  assert.strictEqual(r3.precisaVoce, false);
+  assert.strictEqual(r3.precisaVoce, true);
 });
 
 test('EST4. resumoDia frase e agregação', () => {

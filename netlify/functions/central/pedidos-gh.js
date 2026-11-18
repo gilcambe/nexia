@@ -53,7 +53,6 @@ function criarPedidos(env = process.env, fetchFn = fetch) {
     if (estado === 'abertos') filtro += ' is:open -label:cortex-travado';
     else if (estado === 'travados' || estado === 'travadas') filtro += ' is:open label:cortex-travado';
     else if (estado === 'feitos' || estado === 'concluidas') filtro += ' is:closed';
-    else if (estado === 'andamento') filtro += ' is:open label:cortex-rodando';
     else if (estado === 'precisa') filtro += ' is:open';
     // Meus pedidos: os que o dono mandou pela Central ("Pedir ao Cortex" grava "Pedido de ..." no texto).
     else if (estado === 'meus') filtro += ' in:body "Pedido de"';
@@ -73,8 +72,6 @@ function criarPedidos(env = process.env, fetchFn = fetch) {
       // 'todas' = sem filtro adicional: usa o resultado padrão da busca
     } else if (estado === 'precisa') {
       itens = itens.filter((item) => item.precisaVoce);
-    } else {
-       // Filtros padrão (andamento, travada, etc) já cobertos se necessário, mantendo compatibilidade
     }
 
     const total = r.total_count || 0;
