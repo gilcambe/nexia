@@ -289,7 +289,7 @@ exports.handler = async (event, context) => {
     console.log('[prumo-backup] Backup diário acionado pelo agendador Netlify.');
     const db = require('./firebase-init').db;
     const resultado = await executarBackupDiario(db);
-    console.log(`[prumo-backup] Backup diário concluído: ${resultado.totalUsuarios || 0} usuários processados.`);
+    console.log(`[prumo-backup] Backup diário concluído. Log de integridade executado com sucesso para o total de ${resultado.totalItens || 0} itens.`);
     return {
       statusCode: 200,
       body: JSON.stringify(resultado),
