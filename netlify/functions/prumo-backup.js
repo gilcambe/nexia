@@ -264,7 +264,7 @@ function createHandler(deps = {}) {
         return res(200, { ok: true, acao: 'restaurar', resultado });
       }
 
-          // Status padrão se nenhuma ação específica for enviada
+      // Status padrão (exposição de endpoints)
       return res(200, {
         ok: true,
         servico: 'prumo-backup',
@@ -272,7 +272,8 @@ function createHandler(deps = {}) {
         em: new Date(now()).toISOString(),
         endpoints: [
           '/api/prumo-admin/export',
-          '/api/prumo-admin/delete'
+          '/api/prumo-admin/delete',
+          '/api/prumo-admin/restaurar'
         ]
       });
     } catch (err) {
