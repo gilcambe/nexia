@@ -18,9 +18,15 @@ function createHandler(deps = {}) {
     if (!['GET', 'POST'].includes(event.httpMethod)) return { statusCode: 405, headers: h, body: JSON.stringify({ error: 'Method Not Allowed' }) };
 
     const mw = getMw();
-    const auth = await mw.verifyBearerToken(event);
-    if (!auth || !auth.ok) return { statusCode: 401, headers: h, body: JSON.stringify({ error: 'Entre com sua conta para acessar.' }) };
-    if (auth.role !== 'master') return { statusCode: 403, headers: h, body: JSON.stringify({ error: 'Acesso negado: Requer role master' }) };
+    const authResult = await mw.requireBearerAuth(event, 'master');
+    if (!authResult.ok) {
+      return {
+        statusCode: authResult.statusCode || 403,
+        headers: h,
+        body: JSON.stringify({ error: authResult.reason || 'Acesso negado' })
+      };
+    }
+    const auth = authResult.user;
     const db = getDb();
     let body = {};
     if (event.httpMethod === 'POST') {
