@@ -74,13 +74,11 @@
       el.innerHTML = `<div class="card">📄 Lendo ${tipo === 'ponto' ? 'sua folha de ponto' : 'seus holerites'}… isso leva até 1 minuto.</div>`;
       let lidos;
       try {
-        // 17/11: o pdf.js não abria o holerite no celular do dono. Se o celular não converter (erro ou 25 s), o PDF vai CRU
-        // e o servidor lê com o Gemini/Cloudflare (salario_ler aceita application/pdf).
-        let imagens;
-        try { ({ imagens } = await Promise.race([MB.pdf.paraImagens(arquivos, reduzir), new Promise((_, n) => setTimeout(() => n(new Error('demorou')), 25000))])); } catch (e) {
-          if (!arquivos.every((a) => MB.pdf.ehPdf(a) || /^image\//.test(a.type || ''))) throw e;
-          imagens = await Promise.all(arquivos.map((a) => (MB.pdf.ehPdf(a) ? lerCru(a) : reduzir(a))));
-        }
+        // 17/11: no celular do dono o pdf.js falhava ou gerava imagem vazia ('Imagem inválida'). Holerite em PDF vai CRU
+        // (o servidor lê PDF com o Gemini/Cloudflare); foto/print é reduzida. Nada vazio sai daqui.
+        const imagens = await Promise.all(arquivos.map((a) => (MB.pdf.ehPdf(a) ? lerCru(a) : reduzir(a))));
+        const boa = (d) => /^data:(image\/(jpeg|png|webp)|application\/pdf);base64,[A-Za-z0-9+/=]{200,}$/.test(d);
+        if (!imagens.every(boa)) throw new Error('Não consegui preparar o arquivo no celular. Tire um print do holerite e mande a imagem.');
         ({ lidos } = await MB.api('salario_ler', { tipo, imagens }));
       } catch (e) { await recarregar(); return ok('⚠️ ' + ((e && e.message) || 'Não consegui ler agora. Tente de novo.')); }
       lidos = lidos || [];
