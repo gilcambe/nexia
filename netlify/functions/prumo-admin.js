@@ -1,6 +1,6 @@
 'use strict';
 
-const { makeHeaders } = require('./middleware');
+
 
 function createHandler(deps = {}) {
   const getDb = deps.getDb || (() => require('./firebase-init').db);
