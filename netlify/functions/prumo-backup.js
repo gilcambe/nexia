@@ -116,8 +116,13 @@ async function restaurarDadosUsuario(db, uid, backup) {
   }
 
   const colecoes = backup.colecoes || {};
-  let totalRestaurados = 0;
+  
+  // Validação de estrutura do backup antes da restauração
+  if (!backup.uid || typeof backup.colecoes !== 'object') {
+     throw new Error('Backup inválido: estrutura incorreta.');
+  }
 
+  let totalRestaurados = 0;
   for (const [colName, itens] of Object.entries(colecoes)) {
     if (!Array.isArray(itens)) continue;
     for (const item of itens) {
@@ -142,25 +147,32 @@ async function executarBackupDiario(db) {
 
   const usersSnap = await db.collection('prumo_users').get().catch(() => ({ docs: [] }));
   const docs = (usersSnap && usersSnap.docs) || [];
-  console.log(`[prumo-backup] Iniciando backup diário para ${docs.length} usuários.`);
+  console.log(`[prumo-backup] Iniciando verificação de integridade diária para ${docs.length} usuários.`);
 
-  const resultados = [];
+  let totalItens = 0;
+  let totalUsuariosVerificados = 0;
   for (const d of docs) {
     try {
-      const exportacao = await exportarDadosUsuario(db, d.id);
-      const qtdItens = Object.values(exportacao.colecoes).reduce((acc, c) => acc + c.length, 0);
-      resultados.push({ itens: qtdItens, ok: true });
+      const userDocRef = db.collection('prumo_users').doc(d.id);
+      let itensUsuario = 0;
+      for (const col of COLECOES_PRUMO) {
+        const snap = await userDocRef.collection(col).get();
+        itensUsuario += (snap && snap.size) || 0;
+      }
+      totalItens += itensUsuario;
+      totalUsuariosVerificados++;
     } catch (err) {
-      console.warn('[prumo-backup] Falha ao conferir um usuário:', err && err.message);
-      resultados.push({ ok: false });
+      console.warn(`[prumo-backup] Falha ao verificar integridade do usuário ${d.id}:`, err && err.message);
     }
   }
 
-  console.log(`[prumo-backup] Conferência concluída. Processados: ${resultados.length}.`);
+  const msg = `[prumo-backup] Verificação concluída. Usuários: ${totalUsuariosVerificados}. Total itens: ${totalItens}.`;
+  console.log(msg);
   return {
     ok: true,
-    totalUsuarios: resultados.length,
-    resultados,
+    totalUsuariosVerificados,
+    totalItens,
+    relatorio: msg,
     executado_em: new Date().toISOString(),
   };
 }
@@ -209,7 +221,8 @@ function createHandler(deps = {}) {
     const isMaster = auth.role === 'master';
     const targetUid = body.uid || q.uid || auth.uid;
 
-    if (targetUid !== auth.uid && !isMaster) {
+    // Regra Kernex Finance: Master NUNCA acessa dados de outro usuário
+    if (targetUid !== auth.uid) {
       return res(403, { error: 'Acesso não autorizado aos dados de outro usuário.' });
     }
 
