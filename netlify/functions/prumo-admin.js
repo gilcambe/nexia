@@ -1,4 +1,4 @@
-'use strict';
+'use strict'; // prumo-admin handler
 
 /**
  * Handler administrativo para Prumo com restrição de acesso.
