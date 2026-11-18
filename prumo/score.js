@@ -8,8 +8,8 @@
 
   function cartao(r) {
     const biros = Object.values((r && r.por_biro) || {});
-    const botoes = '<div class="linha" style="margin-top:10px"><button type="button" class="btn sec" id="score-atualizar">📷 Atualizar score</button><button type="button" class="btn sec" id="score-digitar">✍️ Digitar</button></div>'
-      + '<input type="file" id="score-arq" accept="image/*,application/pdf,.pdf" multiple hidden><div id="score-res"></div>';
+    const botoes = '<div class="linha" style="margin-top:10px"><button type="button" class="btn sec" id="score-atualizar">📷 Atualizar score</button><button type="button" class="btn sec" id="score-pdf">📄 PDF</button><button type="button" class="btn sec" id="score-digitar">✍️ Digitar</button></div>'
+      + '<input type="file" id="score-arq" accept="image/*" multiple hidden><div id="score-res"></div>';
     if (!biros.length) {
       return '<div class="card" id="score-cartao"><div class="fraco">Seu score de crédito</div>'
         + '<p class="fraco">Ainda não tenho seu score. Mande o print do app do Serasa, SPC ou Boa Vista (ou digite o valor). Não existe consulta grátis automática e eu nunca peço sua senha.</p>'
@@ -48,8 +48,10 @@
     const conferir = (s, titulo) => formulario(titulo, campos(s), (d) => api('score_salvar', corpo(s, d)), null);
     bt.onclick = () => {
       // O arquivo é escolhido pelo botão; quem prefere digitar usa "Digitar" logo abaixo.
-      arq.click();
+      arq.accept = 'image/*'; arq.value = ''; arq.click();
     };
+    const btPdf = el.querySelector('#score-pdf');
+    if (btPdf) btPdf.onclick = () => { arq.accept = 'application/pdf,.pdf'; arq.value = ''; arq.click(); };
     const dig = el.querySelector('#score-digitar'); if (dig) dig.onclick = () => conferir({ biro: 'serasa', data: new Date().toISOString().slice(0, 10) }, 'Digite seu score');
     arq.onchange = async (ev) => {
       const arqs = [...((ev && ev.target && ev.target.files) || arq.files || [])];

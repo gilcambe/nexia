@@ -29,3 +29,22 @@ test('com o perfil, a estimativa de out/2026 bate com o holerite real', () => {
   assert.ok(Math.abs(r.irrf - 1912.21) < 5, `IR ${r.irrf}`);
   assert.ok(Math.abs(r.a_receber - 4145.55) < 5, `a receber ${r.a_receber} (real 4.145,55)`);
 });
+
+// 18/11 (verificação completa): mandar o holerite de OUTUBRO trocava o salário de NOVEMBRO (8.868,69 → 8.446,37).
+test('holerite antigo não troca o salário base novo; o perfil antigo entra se não houver outro', async () => {
+  const p = require('../../netlify/functions/prumo.js');
+  const dados = new Map();
+  const col = (c) => ({ path: c, doc: (id) => ({ collection: (n) => col(`${c}/${id}/${n}`), set: async (v) => { dados.set(`${c}/${id}`, v); }, delete: async () => { dados.delete(`${c}/${id}`); }, get: async () => { const v = dados.get(`${c}/${id}`); return { exists: !!v, data: () => v }; } }),
+    get: async () => ({ docs: [...dados.entries()].filter(([k]) => k.startsWith(c + '/') && !k.slice(c.length + 1).includes('/')).map(([k, v]) => ({ id: k.split('/').pop(), data: () => v })) }), where: () => col(c), orderBy: () => col(c), limit: () => col(c) });
+  p.deps.db = () => ({ collection: col }); p.deps.agora = () => new Date('2026-11-18T12:00:00Z');
+  // como está no banco do dono hoje: salário salvo SEM o mês
+  dados.set('prumo_users/u1/config/salario', { salario_base: 8868.69, atualizado_em: '2026-11-17T22:00:00Z' });
+  const r = await p.agir('u1', { acao: 'pagamento_salvar', ...OUT, data_pagamento: '2026-10-30', bruto: 12190.66, liquido: 4145.55 });
+  assert.equal(r[0], 200);
+  const cfg = dados.get('prumo_users/u1/config/salario');
+  assert.equal(cfg.salario_base, 8868.69, 'o salário novo continua');
+  assert.equal(cfg.perfil.noturno_pct, 30, 'o perfil do holerite antigo entra (não havia outro)');
+  // holerite de dezembro (mais novo) troca
+  await p.agir('u1', { acao: 'pagamento_salvar', tipo: 'adiantamento', mes: '2026-12', data_pagamento: '2026-12-13', bruto: 4600, liquido: 4600, salario_base: 9200 });
+  assert.equal(dados.get('prumo_users/u1/config/salario').salario_base, 9200);
+});

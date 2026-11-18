@@ -139,8 +139,13 @@ async function agirSalario(acao, body, c) {
       if (v.item.salario_base > 0 || perfil) {
         const cfg = await lerConfig();
         const novo = { ...cfg, atualizado_em: agoraIso };
-        if (v.item.salario_base > 0) novo.salario_base = v.item.salario_base;
-        if (perfil) novo.perfil = { ...(cfg.perfil || {}), ...perfil };
+        // 18/11 (verificação): holerite ANTIGO não pode trocar o salário novo (out/2026 8.446,37 apagava o de nov 8.868,69).
+        // Só atualiza com holerite do mesmo mês ou mais novo que o último usado; o perfil idem.
+        // Salário salvo antes desta regra não tem o mês: vale o mês em que foi salvo.
+        const mesBase = cfg.salario_base_mes || (cfg.salario_base > 0 ? String(cfg.atualizado_em || '').slice(0, 7) : '');
+        if (v.item.salario_base > 0 && !(mesBase && v.item.mes < mesBase)) { novo.salario_base = v.item.salario_base; novo.salario_base_mes = v.item.mes; }
+        if (perfil && !(cfg.perfil_mes && v.item.mes < cfg.perfil_mes)) { novo.perfil = { ...(cfg.perfil || {}), ...perfil }; novo.perfil_mes = v.item.mes; }
+        else if (perfil && !cfg.perfil) novo.perfil = perfil;
         await base.collection('config').doc('salario').set(novo);
       }
       return [200, { ok: true, id }];
@@ -172,6 +177,8 @@ async function agirSalario(acao, body, c) {
         const n = numero(body[k]);
         if (!Number.isFinite(n) || n < 0 || (k === 'jornada_mensal' && n === 0)) return [400, { error: 'Valor inválido em ' + k + '.' }];
         novo[k] = k === 'dependentes' ? Math.floor(n) : dinheiro(n);
+        // Salário digitado à mão vale a partir deste mês (holerite antigo não o troca depois).
+        if (k === 'salario_base' && novo.salario_base !== atual.salario_base) novo.salario_base_mes = agoraIso.slice(0, 7);
         mudou = true;
       }
       // Ajustes da folha (à mão): mesmos campos do perfil aprendido.
