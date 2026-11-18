@@ -73,4 +73,7 @@ function createHandler(deps = {}) {
 }
 
 exports.createHandler = createHandler;
-exports.handler = createHandler();
+exports.handler = async (event) => {
+  const handler = createHandler();
+  return handler(event);
+};
