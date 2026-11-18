@@ -14,7 +14,11 @@ function createHandler(deps = {}) {
       return { statusCode: 500, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ok: false, error: 'Middleware indisponível.' }) };
     }
     const auth = await mw.verifyBearerToken(event);
-    if (!auth || !auth.ok || auth.role !== 'master') {
+    // Sem autenticação válida, 401. Autenticado, mas sem role 'master', 403.
+    if (!auth || !auth.ok) {
+      return { statusCode: 401, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ok: false, error: 'Não autenticado.' }) };
+    }
+    if (auth.role !== 'master') {
       return { statusCode: 403, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ok: false, error: 'Acesso negado: usuário não é master.' }) };
     }
     return { statusCode: 200, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ok: true, uid: auth.uid, email: auth.email, role: auth.role }) };
