@@ -103,7 +103,8 @@ test('aba Salário usa a API nova, aceita PDF e lê holerite e folha de ponto', 
   assert.match(o, /MB\.salario\.cartao\(/);
   for (const id of ['sal-holerite', 'sal-ponto', 'sal-manual']) assert.match(o, new RegExp(`id="${id}"`), `botão #${id}`);
   assert.match(o, /accept="image\/\*,application\/pdf,\.pdf"/);
-  assert.match(o, /paraImagens\(/, 'PDF vira imagens com MB.pdf.paraImagens');
+  // 17/11 (celular do dono): o pdf.js falhava ou gerava imagem vazia. PDF vai CRU (FileReader) e o servidor lê.
+  assert.match(o, /readAsDataURL/, 'PDF vai inteiro (data:application/pdf)');
   assert.match(o, /\/prumo\/pdf\.js/);
   assert.match(o, /salario_ler/);
   assert.match(o, /pagamento_salvar/);
@@ -130,12 +131,14 @@ function montarTela(respostaLer) {
     if (acao === 'salario_ler') return { lidos: respostaLer };
     return { ok: true };
   };
-  const reduzir = async (f) => `R:${f.name}`;
+  const B64 = 'A'.repeat(300);
+  const reduzir = async (f) => `data:image/jpeg;base64,${B64}${f.name.length}`;
   MB.ui = { aba() {}, brl: (v) => `R$ ${v}`, esc: (s) => String(s == null ? '' : s), TIPOS: {}, CATS: {}, hoje: () => '2026-11-20', opcoes: () => '', barra: () => '',
     formulario: (titulo, campos, aoSalvar) => { forms.push({ titulo, campos, aoSalvar }); }, reduzir, recarregar() {}, ok: (m) => { avisos.push(m); }, aviso: (m) => { avisos.push(m); } };
   MB.pdf = { ehPdf: (a) => /\.pdf$/.test(a.name), MAX: 5, paraImagens: async (arqs, red) => { pdfs.push({ arqs, red }); const imagens = []; for (const a of arqs) { if (/\.pdf$/.test(a.name)) imagens.push(`P1:${a.name}`, `P2:${a.name}`); else imagens.push(await red(a)); } return { imagens: imagens.slice(0, 5), cortou: false }; } };
   const document = { createElement: () => ({}), body: { appendChild: (s) => { if (s.onload) setTimeout(s.onload, 0); } }, querySelector: () => null };
-  const ctx = { window, document, console, setTimeout, clearTimeout, Promise };
+  class FileReader { readAsDataURL(a) { this.result = `data:${a.type || ''};base64,${B64}P${a.name.length}`; setTimeout(() => this.onload(), 0); } }
+  const ctx = { window, document, console, setTimeout, clearTimeout, Promise, FileReader };
   vm.runInNewContext(ler('salario.js'), ctx);
   vm.runInNewContext(ler('orcamento.js'), ctx);
   return { MB, el, stub, chamadas, forms, avisos, pdfs };
@@ -170,12 +173,12 @@ test('fluxo holerite: lê TODOS os arquivos (foto + PDF), confere cada um e salv
   assert.equal(typeof arq.onchange, 'function', '<input type=file id="sal-arq"> com onchange');
   arq.files = [{ name: 'adiant.png', type: 'image/png' }, { name: 'decimo.pdf', type: 'application/pdf' }];
   await arq.onchange(); await espera();
-  assert.equal(t.pdfs.length, 1, 'uma chamada a MB.pdf.paraImagens com todos os arquivos');
-  assert.equal(t.pdfs[0].arqs.length, 2, 'os 2 arquivos (não só 1)');
+  assert.equal(t.pdfs.length, 0, 'PDF não passa mais pelo pdf.js do celular');
   const ler1 = t.chamadas.find((c) => c.acao === 'salario_ler');
   assert.ok(ler1, 'chamou salario_ler');
   assert.equal(ler1.dados.tipo, 'holerite');
-  assert.deepEqual([...ler1.dados.imagens], ['R:adiant.png', 'P1:decimo.pdf', 'P2:decimo.pdf']);
+  const B = 'A'.repeat(300);
+  assert.deepEqual([...ler1.dados.imagens], [`data:image/jpeg;base64,${B}10`, `data:application/pdf;base64,${B}P10`], 'foto reduzida + PDF inteiro');
   assert.equal(t.forms.length, 2, 'um formulário de conferência por recebimento lido');
   assert.match(campo(t.forms[0].campos, 'tipo').opcoes, /value="adiantamento"[^>]*selected/);
   assert.equal(campo(t.forms[1].campos, 'data_pagamento').valor, '2026-11-19');
