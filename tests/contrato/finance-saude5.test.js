@@ -3,7 +3,7 @@
 //  - scoreSaude(p): score 0-100 em 5 pilares (fluxo 25, reserva 25, dívidas 20, futuro 20, organização 10).
 //    Pilar sem dado = estado 'sem_dados' e pontos null (NUNCA zero). O total é proporcional só aos pilares com dado
 //    (round(soma pontos / soma pesos com dado * 100)) e vem com estimado = true se faltar algum pilar.
-//    Nenhum pilar com dado -> total null e faixa 'sem_dados'. Faixas: 0-39 critico, 40-59 atencao, 60-79 tranquilo, 80-100 excelente.
+//    Menos de 3 pilares com dado -> total null e faixa 'sem_dados' (os pilares com dado continuam com seus pontos). Faixas: 0-39 critico, 40-59 atencao, 60-79 tranquilo, 80-100 excelente.
 //    Notas: fluxo = min(1, max(0, sobra/renda) / 0.20) * 25 (precisa renda > 0 e sobra != null).
 //           reserva = min(1, reserva_meses / 6) * 25.
 //           dividas = rotativo true -> 0; senão pct <= 30 -> 20; 30 < pct < 60 -> 20 * (60 - pct) / 30; pct >= 60 -> 0.
@@ -21,6 +21,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const S = require('../../netlify/functions/prumo-lib/saude5');
+const malha = (p, t) => Math.round((p / t) * 100);
 
 test('score completo e faixas', () => {
   const r = S.scoreSaude({ renda: 5000, sobra: 1000, reserva_meses: 3, divida_renda_pct: 10, rotativo: false, investe_pct: 7.5,
@@ -40,13 +41,17 @@ test('score completo e faixas', () => {
 });
 
 test('pilar sem dado não vira zero e marca estimado', () => {
-  const r = S.scoreSaude({ renda: 4000, sobra: 400, reserva_meses: null, divida_renda_pct: null, rotativo: null, investe_pct: null, dias_desde_atualizacao: null });
+  const r = S.scoreSaude({ renda: 4000, sobra: 400, reserva_meses: null, divida_renda_pct: 45, rotativo: false, investe_pct: null, dias_desde_atualizacao: 40, contas_em_dia: false, pontos_vencendo: true });
   const p = Object.fromEntries(r.pilares.map((x) => [x.id, x]));
   assert.equal(p.reserva.estado, 'sem_dados');
   assert.equal(p.reserva.pontos, null);
   assert.equal(p.fluxo.pontos, 12.5); // 10% de sobra = metade da nota
-  assert.equal(r.total, 50); // 12,5 de 25
+  assert.equal(r.total, malha(12.5 + 10 + 0, 25 + 20 + 10)); // 22,5 de 55 = 41
   assert.equal(r.faixa, 'atencao');
+  const so2 = S.scoreSaude({ renda: 4000, sobra: 400, dias_desde_atualizacao: 1 });
+  assert.equal(so2.total, null, 'com 2 pilares não mostra número');
+  assert.equal(so2.faixa, 'sem_dados');
+  assert.equal(so2.pilares.find((x) => x.id === 'fluxo').pontos, 12.5);
   assert.equal(r.estimado, true);
 });
 
@@ -60,7 +65,9 @@ test('sem nenhum dado', () => {
 test('rotativo zera dívidas; dívida alta cai linear', () => {
   const a = S.scoreSaude({ divida_renda_pct: 5, rotativo: true });
   assert.equal(a.pilares.find((x) => x.id === 'dividas').pontos, 0);
-  assert.equal(a.faixa, 'critico');
+  const z = S.scoreSaude({ divida_renda_pct: 5, rotativo: true, reserva_meses: 0, investe_pct: 0 });
+  assert.equal(z.total, 0);
+  assert.equal(z.faixa, 'critico');
   const b = S.scoreSaude({ divida_renda_pct: 45, rotativo: false });
   assert.equal(b.pilares.find((x) => x.id === 'dividas').pontos, 10);
   const c = S.scoreSaude({ renda: 3000, sobra: -500 });

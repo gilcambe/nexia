@@ -20,7 +20,8 @@ function scoreSaude(p = {}) {
   const og = temN(p.dias_desde_atualizacao) ? (p.contas_em_dia !== false ? 4 : 0) + (p.dias_desde_atualizacao < 35 ? 4 : 0) + (!p.pontos_vencendo ? 2 : 0) : null;
   add('organizacao', 'Organização', 10, og, (Number(p.dias_desde_atualizacao) === 0 ? 'Atualizado hoje' : `Atualizado há ${p.dias_desde_atualizacao} dia(s)`), 'Mantenha os dados em dia e use os pontos antes de vencer.');
   const com = pil.filter((x) => x.pontos != null);
-  const total = com.length ? Math.round((com.reduce((s, x) => s + x.pontos, 0) / com.reduce((s, x) => s + x.peso, 0)) * 100) : null;
+  // Dono 19/11 (teste com documentos reais): com 1 ou 2 pilares o número enganava (100 "excelente" só com o salário).
+  const total = com.length >= 3 ? Math.round((com.reduce((s, x) => s + x.pontos, 0) / com.reduce((s, x) => s + x.peso, 0)) * 100) : null;
   return { total, faixa: faixa(total), estimado: com.length < pil.length, pilares: pil };
 }
 function diasRestantes(hoje) { const [a, m, d] = String(hoje).slice(0, 10).split('-').map(Number); return new Date(Date.UTC(a, m, 0)).getUTCDate() - d + 1; }

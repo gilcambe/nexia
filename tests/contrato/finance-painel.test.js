@@ -37,7 +37,7 @@ test('painel com salário, adiantamento e fatura', async () => {
   assert.equal(Math.round((r2.kpis.a_pagar - r1.kpis.a_pagar) * 100) / 100, 800.5);
   assert.equal(Math.round((r1.kpis.posso_mes - r2.kpis.posso_mes) * 100) / 100, 800.5);
   assert.equal(r2.kpis.estado, 'completo');
-  assert.ok(r2.score.total !== null);
+  assert.ok(r2.score.pilares.find((x) => x.id === 'fluxo').pontos !== null, 'fluxo medido');
   assert.ok(r2.alertas.length <= 3);
 });
 

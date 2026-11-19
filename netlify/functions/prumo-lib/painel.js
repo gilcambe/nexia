@@ -100,7 +100,7 @@ async function montarPainel(c) {
   const vencendo = require('./extra').pontosVencendo(pontos, hoje);
   const score = S.scoreSaude({
     renda: renda > 0 ? renda : null,
-    sobra: renda > 0 ? r2(renda - despesasMes - a_pagar) : null,
+    sobra: renda > 0 && (despesasMes > 0 || comprometido_cadastrado) ? r2(renda - despesasMes - a_pagar) : null, // sem nenhum gasto, não dá para medir a sobra
     reserva_meses: gastoMensal > 0 && contas.length ? r2(guardado / gastoMensal) : null,
     divida_renda_pct: resDiv.sem ? 0 : resDiv.registradas ? resDiv.comprometimento_pct : null,
     rotativo: resDiv.registradas ? dividas.some((d) => ['cheque_especial', 'cartao'].includes(d.tipo) && Number(d.saldo) > 0) : resDiv.sem ? false : null,
@@ -129,7 +129,9 @@ async function montarPainel(c) {
     investimentos: carteira.length > 0, gastos: doMes.some((l) => l.tipo === 'despesa'), aposentadoria: apos.length > 0,
   });
   const sc = scores.slice().sort((a, b) => String(b.data || '').localeCompare(String(a.data || '')))[0] || null;
-  const ultimos = reais.slice().sort((a, b) => String(b.data).localeCompare(String(a.data))).slice(0, 5)
+  const NOMEP = { adiantamento: 'Adiantamento', mensal: 'Salário', decimo_terceiro_1: '13º (1ª parcela)', decimo_terceiro_2: '13º (2ª parcela)', ferias: 'Férias', plr: 'PLR', outro: 'Recebimento' };
+  const pagsReais = pagamentos.filter((x) => x.data_pagamento && String(x.data_pagamento) <= hoje && x.status !== 'previsto').map((x) => ({ id: x.id, data: x.data_pagamento, descricao: NOMEP[x.tipo] || x.empresa || 'Recebimento', valor: x.liquido, tipo: 'receita', categoria: 'renda' }));
+  const ultimos = [...reais, ...pagsReais].slice().sort((a, b) => String(b.data).localeCompare(String(a.data))).slice(0, 5)
     .map((l) => ({ id: l.id, data: l.data, descricao: l.descricao, valor: l.valor, tipo: l.tipo, categoria: l.categoria || null }));
 
   return {
