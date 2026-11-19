@@ -129,7 +129,7 @@ const mesAnterior = (mes) => { const [a, m] = mes.split('-').map(Number); const 
 const pct = (a, b) => (b > 0 ? Math.round(((a - b) / b) * 1000) / 10 : null);
 
 async function agirDoc(acao, body, c) {
-  if (!['doc_ler', 'doc_confirmar', 'lanc_listar', 'lanc_apagar', 'inicio_resumo'].includes(acao)) return null;
+  if (!['doc_ler', 'doc_confirmar', 'lanc_listar', 'lanc_apagar', 'lanc_editar', 'inicio_resumo'].includes(acao)) return null;
   const { base, listar, deps, agoraIso } = c;
   const col = base.collection('lancamentos');
   const hoje = prv.hojeDe(agoraIso);
@@ -195,6 +195,19 @@ async function agirDoc(acao, body, c) {
       const futuros = comStatus.filter((x) => x.status === 'previsto');
       const ap = prv.resumoPrevisto({ lancs: futuros.map((x) => ({ ...x, perfil: 'pf' })), pagamentos: [], dividas: [] }, mes || agoraIso.slice(0, 7), hoje);
       return [200, { lancamentos: comStatus.slice(0, 300), total: todos.length, ...totais(prontos), a_receber: mes ? ap.a_receber : totais(futuros).receitas, a_pagar: mes ? ap.a_pagar : totais(futuros).despesas }];
+    }
+    case 'lanc_editar': { // dono 19/11: "não deixa editar". Troca descrição, valor, data, tipo e categoria; o id muda junto (o id vem do conteúdo).
+      const id = texto(body.id, 80);
+      if (!id) return [400, { error: 'Diga qual lançamento editar.' }];
+      const s0 = await col.doc(id).get();
+      if (!s0 || !s0.exists) return [404, { error: 'Esse lançamento já não existe.' }];
+      const antigo = s0.data();
+      const v = normalizarLancamento({ ...antigo, ...['descricao', 'valor', 'data', 'tipo', 'categoria'].reduce((o, k) => (body[k] !== undefined && body[k] !== '' ? { ...o, [k]: body[k] } : o), {}) }, { tipo_documento: antigo.documento });
+      if (!v.ok) return [400, { error: 'Não deu para salvar: ' + v.motivo + '.' }];
+      const novoId = idDe(v.item);
+      await col.doc(novoId).set({ ...antigo, ...v.item, id: novoId, editado_em: agoraIso });
+      if (novoId !== id) await col.doc(id).delete();
+      return [200, { ok: true, id: novoId }];
     }
     case 'lanc_apagar': {
       const id = texto(body.id, 80);
