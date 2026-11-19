@@ -154,7 +154,7 @@
     // Dono 19/11 ("não deixa apagar, editar... nada"): tudo que a pessoa cadastrou, de todas as telas, num lugar só.
     const tut = () => carregarScript('tutorial', '/prumo/tutorial.js');
     const como = el.querySelector('#kf-como'); if (como) como.onclick = () => tut().then((m) => m && m.abrir());
-    tut().then((m) => { if (m && m.primeiraVez() && !(r.qtd_lancamentos > 0)) m.abrir(); }).catch(() => {}); // 1ª vez e conta vazia: mostra sozinho
+    tut().then((m) => { if (m && m.primeiraVez() && !(r.qtd_lancamentos > 0) && document.body.contains(el) && !document.querySelector('dialog[open]')) m.abrir(); }).catch(() => {}); // 1ª vez e conta vazia: mostra sozinho
     // Melhorias 6, 10, 14 e 17 (dono 19/11): uma leitura só, sem segurar a tela.
     const NOMEP = { adiantamento: 'Adiantamento', mensal: 'Salário', decimo_terceiro_1: '13º (1ª parcela)', decimo_terceiro_2: '13º (2ª parcela)', ferias: 'Férias', plr: 'PLR', outro: 'Recebimento' };
     MB.api('planejar_mes', {}, { silencioso: true }).then((pl) => {
