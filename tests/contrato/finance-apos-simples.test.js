@@ -12,7 +12,7 @@ function banco() { const d = new Map(); const col = (c) => ({ doc: (id) => ({ co
 const IMG = 'data:image/jpeg;base64,' + Buffer.alloc(400, 7).toString('base64');
 
 test('média corrigida pela inflação e aviso de poucos meses', async () => {
-  P.deps.db = () => banco(); P.deps.agora = () => new Date('2026-11-19T12:00:00Z');
+  { const b0 = banco(); P.deps.db = () => b0; } P.deps.agora = () => new Date('2026-11-19T12:00:00Z');
   P.deps.perguntarVisao = async () => JSON.stringify({ vinculos: [{ empresa: 'A', inicio: '2004-06-01', fim: '2004-07-20', tipo: 'Empregado' }], contribuicoes: [{ competencia: '2004-06', valor: 1000 }] });
   const r = (await P.agir('u', { acao: 'apos_cnis_ler', imagens: [IMG] }))[1].resumo;
   delete P.deps.perguntarVisao;
@@ -21,7 +21,7 @@ test('média corrigida pela inflação e aviso de poucos meses', async () => {
 });
 
 test('apos_apagar apaga perfil e FGTS', async () => {
-  P.deps.db = () => banco(); P.deps.agora = () => new Date('2026-11-19T12:00:00Z');
+  { const b0 = banco(); P.deps.db = () => b0; } P.deps.agora = () => new Date('2026-11-19T12:00:00Z');
   await P.agir('u', { acao: 'apos_perfil_salvar', nascimento: '1985-12-17', sexo: 'M', tc_2019_meses: 165, tc_total_meses: 250 });
   assert.equal((await P.agir('u', { acao: 'apos_apagar', parte: 'perfil' }))[0], 200);
   const v = (await P.agir('u', { acao: 'apos_visao' }))[1];
