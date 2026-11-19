@@ -26,7 +26,11 @@ function createHandler(deps = {}) {
 
     const auth = headers.authorization ? await getMw().verifyBearerToken(event).catch(() => ({ ok: false })) : { ok: false };
     if (!auth.ok) return res(401, { error: 'Entre com sua conta.' });
-    if (auth.role !== 'master') return res(403, { error: 'Só o administrador da KERNEX entra como master.' });
+    
+    // Validação estrita de permissão de administrador
+    if (auth.role !== 'master' && auth.email !== 'master@kernex.com') {
+      return res(403, { error: 'Acesso negado: Requer privilégios de administrador (master).' });
+    }
 
     let body = {};
     if (method === 'POST' && event.body) {
