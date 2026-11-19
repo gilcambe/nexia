@@ -399,7 +399,8 @@ function simularPrevidencia(b) {
 
 // ---------- IA: leitura de documentos ----------
 const LER_CNIS = `Você lê UM extrato CNIS (INSS) em imagem. Responda SÓ com JSON:
-{"vinculos":[{"empresa":"","inicio":"AAAA-MM-DD","fim":"AAAA-MM-DD ou vazio se aberto","tipo":"","pendencias":[""]}],"contribuicoes":[{"competencia":"AAAA-MM","valor":0}]}
+{"nascimento":"AAAA-MM-DD ou vazio","vinculos":[{"empresa":"","inicio":"AAAA-MM-DD","fim":"AAAA-MM-DD ou vazio se aberto","tipo":"","pendencias":[""]}],"contribuicoes":[{"competencia":"AAAA-MM","valor":0}],"simulacao":{"tc_2019_meses":0,"tc_total_meses":0}}
+Se for SIMULAÇÃO DE APOSENTADORIA do INSS (não CNIS), vinculos e contribuicoes ficam vazios e "simulacao" traz o tempo de contribuição escrito ("13 anos, 9 meses" vira 165), em meses. Se não for simulação, "simulacao" fica null.
 Copie só o que está escrito. Não copie CPF, NIT, nome da pessoa nem endereço. Valores em número (R$ 1.234,56 vira 1234.56). Pendência = indicadores como PEXT, PREM-EXT, PADM, AEXT-VT... com a descrição curta.`;
 const LER_FGTS = `Você lê UM print do app FGTS. Responda SÓ com JSON: {"saldo":0,"modalidade":"rescisao|aniversario|"}. saldo = saldo total em número (R$ 1.234,56 vira 1234.56). Não copie CPF nem nome.`;
 
@@ -468,7 +469,10 @@ async function agirAposentadoria(acao, body, c) {
           const t = await perguntar(img, LER_CNIS);
           const j = t && c.extrairJson(t);
           if (!j) return { ok: false, erro: 'Não consegui ler esta imagem. Tente de novo ou digite os valores.' };
-          return { ok: true, vinculos: limparVinculos(j.vinculos), contribuicoes: limparContribs(j.contribuicoes) };
+          const nasc = /^\d{4}-\d{2}-\d{2}$/.test(String(j.nascimento || '')) ? j.nascimento : null;
+          const m = (v) => { const n = Math.round(Number(v)); return Number.isFinite(n) && n > 0 && n < 900 ? n : null; };
+          const sim = j.simulacao && typeof j.simulacao === 'object' ? { tc_2019_meses: m(j.simulacao.tc_2019_meses), tc_total_meses: m(j.simulacao.tc_total_meses) } : null;
+          return { ok: true, nascimento: nasc, simulacao: sim, vinculos: limparVinculos(j.vinculos), contribuicoes: limparContribs(j.contribuicoes) };
         } catch { return { ok: false, erro: 'Não consegui ler esta imagem agora.' }; }
       }));
       // Junta as páginas; o mesmo vínculo em duas páginas não duplica.
@@ -479,7 +483,12 @@ async function agirAposentadoria(acao, body, c) {
       }
       const t = tempoDosVinculos(vinculos, hoje);
       const md = mediaDasContribuicoes([...contribs.values()]);
-      return [200, { lidos, resumo: { vinculos, tc_total_meses: t.tc_total_meses, tc_2019_meses: t.tc_2019_meses, media_salarial: md.media, contribuicoes_lidas: contribs.size, alertas: [...t.alertas, ...md.alertas] }, conferir: 'Confira os dados antes de salvar: a leitura por IA pode errar.' }];
+      // Dono 19/11: simulação do INSS e data de nascimento também entram (antes a simulação não dava nada).
+      const okL = lidos.filter((x) => x.ok);
+      const nascimento = (okL.find((x) => x.nascimento) || {}).nascimento || null;
+      const sim = (okL.find((x) => x.simulacao && (x.simulacao.tc_2019_meses || x.simulacao.tc_total_meses)) || {}).simulacao || null;
+      if (!vinculos.length && sim) { if (sim.tc_2019_meses) t.tc_2019_meses = sim.tc_2019_meses; if (sim.tc_total_meses) t.tc_total_meses = sim.tc_total_meses; }
+      return [200, { lidos, resumo: { nascimento, simulacao: !!sim, vinculos, tc_total_meses: t.tc_total_meses, tc_2019_meses: t.tc_2019_meses, media_salarial: md.media, contribuicoes_lidas: contribs.size, alertas: [...t.alertas, ...md.alertas] }, conferir: 'Confira os dados antes de salvar: a leitura por IA pode errar.' }];
     }
 
     case 'fgts_salvar': {

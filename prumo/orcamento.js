@@ -134,7 +134,7 @@
         if (tipo === 'ponto') conferirPonto(l.ponto); else conferir(l.pagamento);
       }
     };
-    arq.onchange = () => processar([...arq.files].slice(0, 5), modo);
+    arq.onchange = (ev) => processar([...((ev && ev.target && ev.target.files) || arq.files)].slice(0, 5), (ev && ev.modo) || modo);
     // Arquivo vindo do "Compartilhar" do Android: pergunta o que é e lê igual.
     if (MB.compartilhados && MB.compartilhados.length) {
       const comp = MB.compartilhados; MB.compartilhados = null;
