@@ -282,7 +282,8 @@
             };
           })();
         } else abrirAba(ultima);
-        verAvisos();
+        // Redesign fase 7: os avisos (pontos vencendo etc.) agora ficam no "Atenção" do Início, no máximo 3; a faixa de cima saiu.
+        void verAvisos;
       }
     });
   }

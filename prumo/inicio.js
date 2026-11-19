@@ -29,7 +29,7 @@
 .ki-zero{color:#5D6886!important}.ki-in{color:#2ECC71}.ki-out{color:#F5A623}.ki-neg{color:#FF5A5F}
 .ki-bar{height:8px;border-radius:8px;background:#0B1530;overflow:hidden;margin:8px 0 4px}.ki-bar i{display:block;height:100%;border-radius:8px}
 .ki-lin{display:flex;justify-content:space-between;gap:8px;align-items:center;font-size:13px}.ki-lin .fraco{font-size:12px}
-.ki-alerta{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--borda);font-size:14px;cursor:pointer}.ki-alerta:last-child{border:0;padding-bottom:0}
+.ki-alerta{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--borda);font-size:14px}.ki-alerta:last-child{border:0;padding-bottom:0}
 .ki-alerta .p{width:8px;height:8px;border-radius:50%;margin-top:6px;flex:none}
 .ki-perg{display:flex;gap:8px}.ki-perg input{flex:1;min-height:44px;border-radius:12px;border:1px solid var(--borda);background:#0B1530;color:var(--texto);padding:0 12px;font-size:15px}
 .ki-perg button{min-height:44px;border-radius:12px;border:0;background:var(--verde);color:#fff;padding:0 14px;font-weight:600}
@@ -98,7 +98,7 @@
         </section>
       </div>
       <div style="display:grid;gap:12px">
-        ${p.alertas && p.alertas.length ? `<section class="card" aria-label="Atenção"><b>Atenção</b>${p.alertas.map((a) => `<div class="ki-alerta" data-aba="${esc(a.aba)}"><span class="p" style="background:${NIV[a.nivel] || '#5B8DFF'}"></span><span>${esc(a.texto)}</span></div>`).join('')}</section>` : ''}
+        ${p.alertas && p.alertas.length ? `<section class="card" aria-label="Atenção"><b>Atenção</b>${p.alertas.map((a) => `<div class="ki-alerta"><span class="p" style="background:${NIV[a.nivel] || '#5B8DFF'}"></span><div style="flex:1"><div>${esc(a.texto)}</div>${a.dado ? `<div class="ki-rot">${esc(a.dado)}</div>` : ''}<div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap"><button class="btn sec mini" type="button" style="margin-top:0" data-ir-aba="${esc(a.aba)}">${esc(a.acao || 'Ver')}</button>${a.dispensavel ? `<button class="btn sec mini" type="button" style="margin-top:0;color:var(--fraco)" data-dispensar="${esc(a.id)}">Dispensar</button>` : ''}</div></div></div>`).join('')}<div class="ki-rot" style="margin-top:8px">Apoio à decisão com os seus números. Não é consultoria financeira.</div></section>` : ''}
         <section class="card" aria-label="Pergunte"><b>Pergunte</b><form class="ki-perg" id="ki-perg" style="margin-top:8px"><input name="q" placeholder="Posso comprar um celular de R$ 1.500?" aria-label="Pergunta"><button type="submit">Perguntar</button></form></section>
         <section class="card" aria-label="Últimos lançamentos"><div class="ki-lin"><b>Últimos lançamentos</b>${p.ultimos.length ? '<button class="ki-como" id="ki-todos" type="button">Ver todos</button>' : ''}</div>
           ${p.ultimos.length ? p.ultimos.map((l) => `<div class="ki-ult"><span>${esc(l.descricao)}<br><span class="d">${esc(String(l.data).slice(8, 10) + '/' + String(l.data).slice(5, 7))}</span></span><span class="val ${l.tipo === 'receita' ? 'ki-in' : ''}">${l.tipo === 'receita' ? '+' : '−'} ${brl(l.valor)}</span></div>`).join('')
@@ -124,7 +124,8 @@
     };
     const rx = el.querySelector('#ki-raiox');
     if (rx) rx.onclick = () => (MB.raiox ? MB.raiox.abrir(p) : MB.abrirAba((cf.faltam[0] && cf.faltam[0].aba) || 'perfil'));
-    el.querySelectorAll('.ki-alerta').forEach((a) => { a.onclick = () => MB.abrirAba(a.dataset.aba === 'raiox' ? 'perfil' : a.dataset.aba); });
+    el.querySelectorAll('[data-ir-aba]').forEach((b) => { b.onclick = () => MB.abrirAba(b.dataset.irAba === 'raiox' ? 'perfil' : b.dataset.irAba); });
+    el.querySelectorAll('[data-dispensar]').forEach((b) => { b.onclick = async () => { try { await MB.api('insight_dispensar', { id: b.dataset.dispensar }); b.closest('.ki-alerta').remove(); } catch { /* erro já mostrado */ } }; });
     const todos = el.querySelector('#ki-todos'); if (todos) todos.onclick = () => MB.abrirAba('documentos');
     const pri = el.querySelector('#ki-primeiro'); if (pri) pri.onclick = () => MB.abrirLancar();
     el.querySelector('#ki-perg').onsubmit = (e) => { e.preventDefault(); const q = String(new FormData(e.target).get('q') || '').trim(); MB.perguntaPendente = q || null; MB.abrirAba('assistente'); };
