@@ -50,7 +50,10 @@
     const cats = Object.entries(r.por_categoria || {}).sort((a, b) => b[1] - a[1]);
     const prox = [...(r.previstos || []), ...(r.proximos || [])].sort((a, b) => String(a.data).localeCompare(String(b.data))).slice(0, 4);
     const dmy = (d) => `${String(d).slice(8, 10)}/${String(d).slice(5, 7)}`;
-    const proxHtml = prox.length ? `<div class="card" id="kf-proximos"><div class="fraco">Próximos</div>${prox.map((x) => `<div class="item"><span>${x.tipo === 'receber' ? '💰' : '🧾'} ${esc(x.nome)} <span class="fraco">${dmy(x.data)}</span></span><span class="n ${x.tipo === 'receber' ? 'verde' : 'verm'}">${brl(x.valor)}</span></div>`).join('')}</div>` : '';
+    const hojeIso = new Date().toISOString().slice(0, 10);
+    const emDias = (d) => Math.round((Date.parse(String(d).slice(0, 10)) - Date.parse(hojeIso)) / 86400000);
+    const alerta = (x) => { if (x.tipo !== 'pagar') return ''; const n = emDias(x.data); return n >= 0 && n <= 3 ? ` <span class="chip" style="color:var(--verm,#e5484d)">⚠️ ${n === 0 ? 'vence hoje' : 'vence em ' + n + (n === 1 ? ' dia' : ' dias')}</span>` : ''; };
+    const proxHtml = prox.length ? `<div class="card" id="kf-proximos"><div class="fraco">Próximos</div>${prox.map((x) => `<div class="item"><span>${x.tipo === 'receber' ? '💰' : '🧾'} ${esc(x.nome)} <span class="fraco">${dmy(x.data)}</span>${alerta(x)}</span><span class="n ${x.tipo === 'receber' ? 'verde' : 'verm'}">${brl(x.valor)}</span></div>`).join('')}</div>` : '';
     el.innerHTML = `
       <p class="fraco" style="margin:0 0 10px">${saudacao}${nome ? ', ' + esc(nome) : ''}</p>
       <div class="card" id="kf-mandar">
@@ -69,6 +72,7 @@
       </div>` : ''}
       ${proxHtml}
       <div class="card" id="kf-primeiros-passos" hidden></div>
+      <button class="btn sec mini" id="kf-como" type="button">❓ Como usar (1 minuto)</button>
       <button class="btn sec" id="kf-cadastros" type="button">📋 Meus cadastros: ver, editar ou apagar</button><div id="kf-cad"></div>
       <details class="kf-mais" id="kf-mais"><summary class="btn sec" style="margin-top:4px">Ver mais detalhes</summary>
       ${r.alertas_limite.length ? r.alertas_limite.map((a) => `<div class="aviso-c">${a.status === 'estourado' ? '🔴' : '🟠'} <b>${esc(NOME_CAT[a.categoria] || a.categoria)}</b>: ${brl(a.gasto)} de ${brl(a.limite)} (${String(a.pct).replace('.', ',')}%)${a.status === 'estourado' ? ' — passou do limite' : ' — perto do limite'}.</div>`).join('') : ''}
@@ -144,6 +148,9 @@
       };
     }
     // Dono 19/11 ("não deixa apagar, editar... nada"): tudo que a pessoa cadastrou, de todas as telas, num lugar só.
+    const tut = () => carregarScript('tutorial', '/prumo/tutorial.js');
+    const como = el.querySelector('#kf-como'); if (como) como.onclick = () => tut().then((m) => m && m.abrir());
+    tut().then((m) => { if (m && m.primeiraVez() && !(r.qtd_lancamentos > 0)) m.abrir(); }).catch(() => {}); // 1ª vez e conta vazia: mostra sozinho
     const cadBtn = el.querySelector('#kf-cadastros'); const cad = el.querySelector('#kf-cad');
     const desenharCad = async (msg) => {
       const r = await MB.api('cadastros_listar');
