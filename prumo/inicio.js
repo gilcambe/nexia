@@ -84,6 +84,7 @@
         <button class="card" type="button" data-como="recebi"><div class="r">Recebi</div><div class="v">${val(k.recebi, 'ki-in')}</div>${k.recebi_estimado ? '<div class="r" style="font-size:10px">com adiantamento estimado</div>' : ''}</button>
         <button class="card" type="button" data-como="pagar"><div class="r">A pagar</div><div class="v">${val(k.a_pagar, 'ki-out')}</div></button>
       </div>
+      ${(p.proximas_contas || []).length ? `<section class="card ki-larga" aria-label="Próximas contas"><div class="ki-lin"><b>Próximas contas</b><span class="fraco">depois deste mês</span></div>${p.proximas_contas.slice(0, 3).map((x) => `<div class="ki-ult"><span>${esc(x.nome)}<br><span class="d">vence ${esc(x.data.slice(8, 10) + '/' + x.data.slice(5, 7))} · em ${x.dias} dia(s)</span></span><span class="val ki-out">${brl(x.valor)}</span></div>`).join('')}</section>` : ''}
       <div style="display:grid;gap:12px">
         <section class="card" aria-label="Mês">
           <div class="ki-lin"><b>Gasto do mês</b><span class="fraco">${barraMes ? barraMes.pct + '% da renda' : ''}</span></div>

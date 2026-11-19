@@ -37,6 +37,8 @@
       const a = antes.kpis || {}; const d = depois.kpis || {};
       if (a.posso_hoje !== d.posso_hoje && d.posso_hoje != null) linhas.push(`Pode gastar hoje: ${brl(a.posso_hoje)} → <b>${brl(d.posso_hoje)}</b>`);
       if (a.a_pagar !== d.a_pagar) linhas.push(`A pagar: ${brl(a.a_pagar)} → ${brl(d.a_pagar)}`);
+      const soma = (p) => ((p && p.proximas_contas) || []).reduce((t, x) => t + (Number(x.valor) || 0), 0);
+      if (Math.abs(soma(antes) - soma(depois)) > 0.004) linhas.push(`Próximas contas: ${brl(soma(antes))} → <b>${brl(soma(depois))}</b>`);
       if (a.recebi !== d.recebi) linhas.push(`Recebi no mês: ${brl(a.recebi)} → ${brl(d.recebi)}`);
       const sa = antes.score && antes.score.total; const sd = depois.score && depois.score.total;
       if (sa !== sd && sd != null) linhas.push(`Score: ${sa == null ? '–' : sa} → <b>${sd}</b>`);
