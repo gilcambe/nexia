@@ -30,7 +30,7 @@ test('sem dados: lista vazia; STATUS do manual', () => {
 test('corte_marcar no servidor e botões na tela', () => {
   const s = ler('netlify/functions/prumo-lib/cortes.js');
   assert.match(s, /'corte_marcar'/); assert.match(s, /cortes_status/);
-  assert.match(ler('netlify/functions/prumo.js'), /prumo-lib\/cortes/);
+  assert.match(ler('netlify/functions/prumo-lib/extra.js'), /require\('\.\/cortes'\)/, 'ligado em agirExtra (prumo-lib/extra.js)');
   const t = ler('prumo/economizar.js');
   assert.match(t, /corte_marcar/); assert.match(t, /impacto_anual/);
 });

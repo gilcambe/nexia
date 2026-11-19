@@ -32,6 +32,6 @@ test('CSV brasileiro', () => {
 
 test('ação relatorio_anual e botão de baixar', () => {
   assert.match(ler('netlify/functions/prumo-lib/relatorios.js'), /'relatorio_anual'/);
-  assert.match(ler('netlify/functions/prumo.js'), /prumo-lib\/relatorios/);
+  assert.match(ler('netlify/functions/prumo-lib/extra.js'), /require\('\.\/relatorios'\)/, 'ligado em agirExtra (prumo-lib/extra.js)');
   assert.match(ler('prumo/ajuda.js'), /relatorio_anual/);
 });

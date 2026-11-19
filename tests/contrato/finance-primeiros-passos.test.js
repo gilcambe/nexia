@@ -29,7 +29,7 @@ test('próxima é a primeira não feita; tudo feito -> null', () => {
 test('ação onboarding_status ligada no servidor', () => {
   assert.equal(typeof ob.agirOnboarding, 'function');
   assert.match(ler('netlify/functions/prumo-lib/onboarding.js'), /'onboarding_status'/);
-  assert.match(ler('netlify/functions/prumo.js'), /prumo-lib\/onboarding/);
+  assert.match(ler('netlify/functions/prumo-lib/extra.js'), /require\('\.\/onboarding'\)/, 'ligado em agirExtra (prumo-lib/extra.js)');
 });
 
 test('Início mostra o card de primeiros passos', () => {
