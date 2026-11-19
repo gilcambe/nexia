@@ -85,6 +85,14 @@ async function montarPainel(c) {
   const cartaoAberto = reais.filter((l) => l.tipo === 'despesa' && l.vencimento && String(l.vencimento) > hoje);
   const faturasLidas = {};
   for (const l of cartaoAberto) { const v = String(l.vencimento).slice(0, 10); faturasLidas[v] = r2((faturasLidas[v] || 0) + (Number(l.valor) || 0)); }
+  // Dono 19/11: o print da fatura aberta (vence 06/12) gravava uma conta com data futura e ela sumia de todas as telas.
+  // Próximas contas = o que vence depois deste mês, em até 45 dias: contas lançadas com data futura e faturas lidas.
+  const ate45 = new Date(Date.parse(hoje + 'T00:00:00Z') + 45 * 86400000).toISOString().slice(0, 10);
+  const proximas_contas = [
+    ...prv.previstos(lancs, 'data', hoje).filter((l) => l.tipo === 'despesa' && !String(l.data).startsWith(mes) && String(l.data) <= ate45)
+      .map((l) => ({ data: String(l.data), nome: l.descricao || 'Conta', valor: Number(l.valor) || 0, origem: /fatura|cartao/i.test(String(l.documento || '') + String(l.categoria || '') + String(l.descricao || '')) ? 'fatura' : 'conta' })),
+    ...Object.entries(faturasLidas).filter(([v]) => !v.startsWith(mes) && v <= ate45).map(([v, x]) => ({ data: v, nome: 'Fatura do cartão', valor: x, origem: 'fatura' })),
+  ].map((x) => ({ ...x, dias: dias(hoje, x.data) })).sort((a, b) => a.data.localeCompare(b.data));
   const faturasMes = r2(Object.entries(faturasLidas).filter(([v]) => v.startsWith(mes)).reduce((t, [, x]) => t + x, 0));
   const a_pagar = r2((prev.a_pagar || 0) + faturas + fixasPend + faturasMes);
   const comprometido_cadastrado = fixas.length > 0 || cartaoAberto.length > 0 || cartoes.length > 0 || (prev.a_pagar || 0) > 0 || dividas.length > 0;
@@ -178,6 +186,7 @@ async function montarPainel(c) {
     alertas: alertas.slice(0, 3),
     credito: sc ? { biro: sc.biro, score: sc.score, data: sc.data || null } : null,
     ultimos,
+    proximas_contas,
   };
   // Fase 7: motor de decisões. Avisos urgentes primeiro, depois as dicas; no máximo 3; "dispensar" vale 30 dias.
   const dispensados = (insS && insS.exists && (insS.data() || {}).dispensados) || {};
@@ -185,7 +194,7 @@ async function montarPainel(c) {
   const md = out.mes_detalhe || {};
   const ins = require('./insights').gerarInsights({
     hoje, tenho, gasto_mensal: gastoMensal, reserva_meses: gastoMensal > 0 && contas.length ? r2(guardado / gastoMensal) : null,
-    faturas: (md.a_pagar_itens || []).filter((x) => /fatura|cartao/.test(x.origem) && x.data).map((x) => ({ nome: x.nome, valor: x.valor, dias: dias(hoje, x.data) })),
+    faturas: [...(md.a_pagar_itens || []).filter((x) => /fatura|cartao/.test(x.origem) && x.data).map((x) => ({ nome: x.nome, valor: x.valor, dias: dias(hoje, x.data) })), ...proximas_contas.filter((x) => x.origem === 'fatura').map((x) => ({ nome: x.nome, valor: x.valor, dias: x.dias }))],
     dividas, pontos: require('./beneficios').resumoPontos(pontos, hoje).programas, mes_num: Number(mes.slice(5, 7)),
     categorias: (md.categorias || []).map((x) => ({ ...x })), investido: r2(carteira.filter((i) => i.tipo !== 'fgts').reduce((t, i) => t + (Number(i.valor) || 0), 0)), aporte_mensal: investeMes,
   });

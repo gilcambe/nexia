@@ -55,3 +55,14 @@ test('gasto lançado depois do saldo informado muda o Tenho; compra do cartão n
   assert.equal(r1.kpis.tenho, 2879.5);
   assert.equal(Math.round((r0.kpis.posso_mes - r1.kpis.posso_mes) * 100) / 100, 120.5);
 });
+
+test('fatura que vence no mês que vem aparece em Próximas contas (dono 19/11)', async () => {
+  const b = banco(); P.deps.db = () => b; P.deps.agora = () => new Date('2026-11-19T22:00:00Z');
+  const A = (x) => P.agir('u', x);
+  await A({ acao: 'doc_confirmar', lancamentos: [{ data: '2026-12-08', vencimento: '2026-12-08', descricao: 'Fatura cartão A', valor: 2500.4, tipo: 'despesa', categoria: 'compras' }] });
+  await A({ acao: 'doc_confirmar', lancamentos: [{ data: '2026-11-10', vencimento: '2026-12-12', descricao: 'Compra no cartão B', valor: 450.75, tipo: 'despesa', categoria: 'compras' }] });
+  const [, r] = await A({ acao: 'painel_resumo' });
+  const pc = r.proximas_contas.map((x) => [x.data, x.valor]);
+  assert.deepEqual(pc, [['2026-12-08', 2500.4], ['2026-12-12', 450.75]]);
+  assert.equal(r.proximas_contas[0].dias, 19);
+});

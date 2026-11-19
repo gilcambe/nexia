@@ -100,8 +100,29 @@
     tentar();
   }
 
-  async function abrirAba(nome) {
+  // Dono 19/11: "nenhuma tela tem voltar; o voltar do celular fecha o app". Cada tela entra no histórico do navegador:
+  // o voltar do celular (e o botão ← no topo) volta para a tela anterior; janelas abertas fecham primeiro.
+  const PRINCIPAIS = ['inicio', 'mes', 'patrimonio', 'beneficios'];
+  function marcarHistorico(nome, opts) {
+    if (opts && opts.historico) return;
+    try { const st = history.state; if (!st || st.aba !== nome) history.pushState({ aba: nome }, '', location.pathname + location.search); } catch { /* sem histórico */ }
+  }
+  function abertoPorCima() {
+    const f = document.querySelector('.kl-fundo'); if (f) { f.remove(); return true; }
+    const d = document.querySelector('dialog[open]'); if (d) { d.close(); return true; }
+    return false;
+  }
+  if (typeof window.addEventListener === 'function') window.addEventListener('popstate', (e) => {
+    if (abertoPorCima()) { try { history.pushState({ aba: atual }, '', location.pathname + location.search); } catch { /* segue */ } return; }
+    const nome = (e.state && e.state.aba) || 'inicio';
+    abrirAba(nome, { historico: true });
+  });
+  let atual = 'inicio';
+  async function abrirAba(nome, opts) {
     if (!ABAS.includes(nome)) nome = 'carteira';
+    marcarHistorico(nome, opts);
+    atual = nome;
+    const bv = $('voltar'); if (bv) bv.hidden = PRINCIPAIS.includes(nome);
     document.querySelectorAll('#abas button').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.aba === nome)));
     const btn = document.querySelector(`#abas button[data-aba="${nome}"]`);
     tituloAba.textContent = TITULO[nome] || (btn && btn.textContent ? btn.textContent.trim() : '');
@@ -223,6 +244,7 @@
     // Barra de baixo: 4 telas e o "+ Lançar" (folha que sobe com foto, PDF, extrato e digitar).
     document.querySelectorAll('#barra button[data-ir]').forEach((b) => { b.onclick = () => (b.dataset.ir === 'lancar' ? MB.abrirLancar() : abrirAba(b.dataset.ir)); });
     if ($('avatar')) $('avatar').onclick = () => abrirAba('perfil');
+    if ($('voltar')) $('voltar').onclick = () => { if (history.state && history.state.aba && history.length > 1) history.back(); else abrirAba('inicio'); };
     document.querySelectorAll('#abas button').forEach((b) => { b.onclick = () => abrirAba(b.dataset.aba); });
     document.querySelectorAll('.titulo-grupo').forEach((b) => { b.onclick = () => toggleGrupo(b); });
     // Menu curto (dono 19/11): "Mais telas" mostra o resto; fica lembrado neste aparelho.
@@ -281,7 +303,11 @@
               if (d[4]) { const bt = document.querySelector(d[4]); if (bt) bt.click(); } else inp.dispatchEvent(new Event('change'));
             };
           })();
-        } else abrirAba(ultima);
+        } else {
+          // O app sempre tem o Início embaixo no histórico: voltar de qualquer tela chega nele; do Início, sai.
+          try { history.replaceState({ aba: 'inicio' }, '', location.pathname + location.search); } catch { /* segue */ }
+          abrirAba(ultima, ultima === 'inicio' ? { historico: true } : undefined);
+        }
         // Redesign fase 7: os avisos (pontos vencendo etc.) agora ficam no "Atenção" do Início, no máximo 3; a faixa de cima saiu.
         void verAvisos;
       }

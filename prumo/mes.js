@@ -29,7 +29,8 @@
       <section class="card"><div style="display:flex;justify-content:space-between"><b>📅 A pagar até o fim do mês</b><b class="kh-out">${H.brl(m.a_pagar_total || 0)}</b></div>
         ${m.a_pagar_itens.length ? m.a_pagar_itens.map((x) => `<div class="kh-ag"><span>${dm(x.data)} · ${H.esc(x.nome)}${x.risco ? ' <b class="kh-neg">· falta saldo</b>' : ''}</span><span class="${x.risco ? 'kh-neg' : 'kh-out'}" style="font-weight:600;white-space:nowrap">${H.brl(x.valor)}</span></div>`).join('')
           : '<p class="sub" style="margin:8px 0 0">Nada a pagar cadastrado. Mande a fatura ou cadastre as contas fixas.</p>'}
-        ${(m.proximas_faturas || []).length ? `<div class="sub" style="margin-top:8px">Próximas faturas: ${m.proximas_faturas.map((f) => `${dm(f.vencimento)} ${H.brl(f.valor)}`).join(' · ')}</div>` : ''}</section>
+</section>
+      ${(p.proximas_contas || []).length ? `<section class="card"><b>🔜 Próximas contas (depois deste mês)</b>${p.proximas_contas.map((x) => `<div class="kh-ag"><span>${dm(x.data)} · ${H.esc(x.nome)} <span class="sub">em ${x.dias} dia(s)</span></span><span class="kh-out" style="font-weight:600;white-space:nowrap">${H.brl(x.valor)}</span></div>`).join('')}</section>` : ''}
       <section class="card kh-larga"><b>🛒 Gastos por categoria</b>
         ${m.categorias.length ? m.categorias.slice(0, 8).map((c) => `<div style="margin-top:10px"><div style="display:flex;justify-content:space-between;font-size:14px"><span>${H.esc(CAT[c.categoria] || c.categoria)} <span class="sub">${c.pct}%</span></span><span>${H.brl(c.valor)}</span></div>
           <div class="barra" style="height:8px;margin-top:4px"><i style="width:${c.pct}%;background:${c.acima_pct != null && c.acima_pct > 20 ? '#F5A623' : '#2F6BFF'}"></i></div>${c.media3 != null ? `<div class="sub">média de 3 meses: ${H.brl(c.media3)}</div>` : ''}</div>`).join('')

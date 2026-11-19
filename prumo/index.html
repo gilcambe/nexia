@@ -104,6 +104,9 @@
   nav.barra-abas button[aria-current="page"] svg { stroke:var(--verde2); }
   nav.barra-abas .lancar span.mais { width:48px; height:48px; border-radius:16px; background:var(--verde); color:#fff; display:grid; place-items:center; font-size:28px; line-height:1; margin-top:-18px; box-shadow:0 6px 18px #2f6bff55; }
   #avatar { width:40px; height:40px; border-radius:50%; padding:0; background:#1A2547; border:1px solid var(--borda); color:var(--texto); font-weight:700; font-size:15px; overflow:hidden; display:grid; place-items:center; }
+  #voltar { width:40px; height:40px; padding:0; display:grid; place-items:center; border-radius:12px; color:var(--texto); }
+  #voltar svg { width:24px; height:24px; }
+  #voltar:not([hidden]) + img { display:none; }
   #avatar img { width:100%; height:100%; object-fit:cover; }
   footer { display:none; }
 
@@ -133,6 +136,7 @@
 <div id="kf-novo-endereco" hidden style="background:#0f766e;color:#fff;padding:10px 14px;text-align:center;font:14px system-ui,sans-serif">Novo endereço: <a href="https://finance.kernex.com.br/" style="color:#fff;font-weight:700">finance.kernex.com.br</a></div>
 <script>try{if(location.hostname!=="finance.kernex.com.br"&&!/^(localhost|127.)/.test(location.hostname))document.getElementById("kf-novo-endereco").hidden=false}catch(e){}</script>
 <header>
+  <button id="voltar" type="button" aria-label="Voltar" title="Voltar" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 18l-6-6 6-6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
   <button id="btn-menu" type="button" aria-label="Menu" aria-expanded="false">
     <svg viewBox="0 0 24 24" aria-hidden="true"><line x1="4" y1="7" x2="20" y2="7" stroke="currentColor" stroke-width="2"/><line x1="4" y1="12" x2="20" y2="12" stroke="currentColor" stroke-width="2"/><line x1="4" y1="17" x2="20" y2="17" stroke="currentColor" stroke-width="2"/></svg>
   </button>
