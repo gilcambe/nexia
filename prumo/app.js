@@ -112,7 +112,7 @@
     const d = document.querySelector('dialog[open]'); if (d) { d.close(); return true; }
     return false;
   }
-  window.addEventListener('popstate', (e) => {
+  if (typeof window.addEventListener === 'function') window.addEventListener('popstate', (e) => {
     if (abertoPorCima()) { try { history.pushState({ aba: atual }, '', location.pathname + location.search); } catch { /* segue */ } return; }
     const nome = (e.state && e.state.aba) || 'inicio';
     abrirAba(nome, { historico: true });
