@@ -175,6 +175,8 @@ async function agirExtra(acao, body, c) {
   if (doc) return doc;
   const fin = await require('./financas').agirFin(acao, body, c);
   if (fin) return fin;
+  const cort = await require('./cortes').agirCorte(acao, body, c);
+  if (cort) return cort;
   const cart = await require('./cartoes').agirCartoes(acao, body, c);
   if (cart) return cart;
   const sau = await require('./saude').agirSaude(acao, body, c);

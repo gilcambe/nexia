@@ -3,6 +3,8 @@
 // Tudo é ponto para REVISAR (não acusação). Não prometemos economia nem renda.
 (function () {
   const MB = window.MB;
+  const STATUS = ['revisar', 'feito', 'ignorar', 'adiar'];
+  const STATUS_LABEL = { revisar: 'Revisar', feito: 'Feito', ignorar: 'Ignorar', adiar: 'Adiar' };
   const carregarUi = () => MB.ui ? Promise.resolve(MB.ui) : new Promise((ok, falha) => { const s = document.createElement('script'); s.src = '/prumo/ui.js'; s.onload = () => ok(MB.ui); s.onerror = falha; document.body.appendChild(s); });
 
   MB.telas.economizar = async (el) => {
@@ -27,5 +29,34 @@
       { nome: 'horas_semana', rotulo: 'Horas livres por semana', tipo: 'number', valor: o.perfil && o.perfil.horas_semana },
       { nome: 'capital', rotulo: 'Quanto pode investir (R$)', tipo: 'number', valor: o.perfil && o.perfil.capital },
     ], async (f) => { await MB.api('econ_perfil_salvar', { habilidades: f.habilidades, horas_semana: Number(f.horas_semana), capital: Number(f.capital || 0) }); MB.ui.ok('Perfil salvo.'); }, null);
+    // ------ acompanhamento de cortes de gasto ------
+    try {
+      const cortes = await MB.api('cortes_listar', { dados: { assinaturas: v.assinaturas || [], limites: [] } });
+      const lista = Array.isArray(cortes.itens) ? cortes.itens : [];
+      if (lista.length) {
+        const statusAtual = {};
+        try {
+          const gravados = await MB.api('cortes_listar', { dados: { assinaturas: [], limites: [] } });
+          // cortes_listar devolve oportunidades; status vem de cortes_status lido abaixo
+        } catch { /* ignora */ }
+        const bloco = `
+          <div class="card"><h3 style="margin:0 0 6px">✂️ Cortes de gasto (impacto anual)</h3>
+            ${lista.map((x) => `
+              <div class="item" style="border-bottom:1px solid #eee;padding:6px 0">
+                <div><div class="n">${esc(x.titulo)}</div><div class="fraco">${esc(x.evidencia)} · ${brl(x.mensal)}/mês · impacto ${brl(x.impacto_anual)}/ano · prioridade ${esc(x.prioridade)}</div></div>
+                <div class="v">${STATUS.map((s) => `<button class="btn btn-corte" data-id="${esc(x.id)}" data-status="${s}" style="margin:0 4px 4px 0;font-size:12px;padding:2px 8px">${STATUS_LABEL[s]}</button>`).join('')}</div>
+              </div>`).join('')}
+          </div>`;
+        el.insertAdjacentHTML('beforeend', bloco);
+        el.querySelectorAll('.btn-corte').forEach((b) => {
+          b.onclick = async () => {
+            const id = b.dataset.id; const status = b.dataset.status;
+            await MB.api('corte_marcar', { id, status });
+            MB.ui.ok('Status atualizado: ' + STATUS_LABEL[status]);
+          };
+        });
+      }
+    } catch { /* corte sem servidor ainda não bloqueia a tela */ }
   };
 })();
+
