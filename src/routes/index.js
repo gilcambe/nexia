@@ -1,6 +1,6 @@
 'use strict';
 
-const health = require('./health');
+const health = require('./health'); // handler health
 
 // Rotas da API. Cada linha liga um caminho ao handler que responde.
 

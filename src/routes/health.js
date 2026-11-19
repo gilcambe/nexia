@@ -2,7 +2,7 @@
 // Handler de saúde para ação=saude
 
 module.exports = function health(req, res) {
-  const acao = req.query && req.query.acao;
+  const acao = req.query && req.query.acao; // health check
   if (acao === 'saude') {
     return res.json({
       ok: true,
