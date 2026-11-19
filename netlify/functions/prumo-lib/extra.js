@@ -159,6 +159,8 @@ function pontosVencendo(itens, hojeISO) {
 async function agirExtra(acao, body, c) {
   const cot = await require('./cotacoes').agirCotacoes(acao, body, c); // #3304 cotação ao vivo
   if (cot) return cot;
+  const pai = await require('./painel').agirPainel(acao, body, c); // redesign fase 1: números da tela Início numa fonte só
+  if (pai) return pai;
   const pla = await require('./planejamento').agirPlanejamento(acao, body, c); // lê os dados certos para calendário, reserva e fim do mês
   if (pla) return pla;
   const cal = await require('./calendario').agirCalendario(acao, body, c);

@@ -81,5 +81,5 @@ test('PA10. abas Início e Documentos: no menu, no app e no service worker, com 
   for (const a of ['inicio', 'documentos', 'contas', 'cartoes', 'dividas', 'investimentos', 'economizar', 'metas', 'familia', 'impostos', 'alertas', 'assistente']) { assert.match(html, new RegExp(`data-aba="${a}"`)); assert.match(ler('app.js'), new RegExp(`'${a}'`)); assert.match(ler('sw.js'), new RegExp(`/prumo/${a}\\.js`)); assert.match(ler(`${a}.js`), new RegExp(`MB\\.telas\\.${a} =`)); }
   assert.match(ler('documentos.js'), /doc_ler/);
   assert.match(ler('documentos.js'), /doc_confirmar/);
-  assert.match(ler('inicio.js'), /inicio_resumo/);
+  assert.match(ler('inicio.js'), /painel_resumo/); // redesign: Início lê a fonte única
 });

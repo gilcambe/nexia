@@ -10,9 +10,10 @@
 <link rel="apple-touch-icon" href="/prumo/icone-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <style>
-  :root { --fundo:#070d1c; --cartao:#0f1a33; --borda:#1c2b4d; --texto:#e8eefc; --fraco:#8ea3cc; --verde:#2f6bff; --verde2:#5b8dff; --ganho:#22c55e; --perda:#ef4444; --aviso:#f59e0b; }
+  /* Redesign (plano do dono, seção 15): fundo, card, azul = ação, verde = entrou, âmbar = atenção, vermelho = risco real. */
+  :root { --fundo:#0B1020; --cartao:#121B33; --borda:#1F2B4D; --texto:#E8ECF8; --fraco:#8B97B8; --verde:#2F6BFF; --verde2:#5B8DFF; --ganho:#2ECC71; --perda:#FF5A5F; --aviso:#F5A623; --perigo:#FF5A5F; --cinza:#5D6886; }
   * { box-sizing:border-box; }
-  html,body { margin:0; background:var(--fundo); color:var(--texto); font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; }
+  html,body { margin:0; background:var(--fundo); color:var(--texto); font:14px/1.45 Inter,Roboto,system-ui,-apple-system,"Segoe UI",sans-serif; }
   body { min-height:100vh; padding-bottom:env(safe-area-inset-bottom); }
   header { display:flex; align-items:center; gap:10px; padding:10px 16px; border-bottom:1px solid var(--borda); position:sticky; top:0; background:var(--fundo); z-index:5; }
   header img { width:28px; height:28px; }
@@ -93,6 +94,18 @@
   .dica h3 { margin:0 0 8px; } .dica ol { margin:0 0 16px; padding-left:20px; color:var(--texto); }
   .valor { transition:filter .15s; } body.privado .valor { filter:blur(7px); user-select:none; }
   [hidden] { display:none !important; }
+  /* Redesign fase 2: o menu lateral saiu. Barra de baixo com 5 abas; o resto fica no Perfil (avatar). */
+  nav.abas, #fundo-menu, #btn-menu { display:none !important; }
+  body { padding-bottom:calc(72px + env(safe-area-inset-bottom)); }
+  nav.barra-abas { position:fixed; left:0; right:0; bottom:0; z-index:8; display:grid; grid-template-columns:repeat(5,1fr); background:#0E1528; border-top:1px solid var(--borda); padding:4px 4px calc(4px + env(safe-area-inset-bottom)); max-width:720px; margin:0 auto; }
+  nav.barra-abas button { background:none; border:0; color:var(--fraco); font:inherit; font-size:11px; min-height:56px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; cursor:pointer; border-radius:12px; }
+  nav.barra-abas button svg { width:24px; height:24px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+  nav.barra-abas button[aria-current="page"] { color:var(--texto); font-weight:600; }
+  nav.barra-abas button[aria-current="page"] svg { stroke:var(--verde2); }
+  nav.barra-abas .lancar span.mais { width:48px; height:48px; border-radius:16px; background:var(--verde); color:#fff; display:grid; place-items:center; font-size:28px; line-height:1; margin-top:-18px; box-shadow:0 6px 18px #2f6bff55; }
+  #avatar { width:40px; height:40px; border-radius:50%; padding:0; background:#1A2547; border:1px solid var(--borda); color:var(--texto); font-weight:700; font-size:15px; overflow:hidden; display:grid; place-items:center; }
+  #avatar img { width:100%; height:100%; object-fit:cover; }
+  footer { display:none; }
 
   @media (max-width: 599px) {
     header h1 { display:none; }
@@ -110,15 +123,8 @@
       overflow-y: auto;
     }
     #btn-menu { display: none; }
-    main {
-      max-width: 1100px;
-      margin-left: 280px;
-    }
-    #conteudo {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 16px;
-    }
+    main { max-width: 1040px; }
+    nav.barra-abas { bottom:16px; border:1px solid var(--borda); border-radius:20px; max-width:560px; }
   }
 </style>
 </head>
@@ -134,7 +140,8 @@
   <h1>Kernex Finance</h1>
   <span id="titulo-aba">Início</span>
   <button id="instalar" class="instalar" type="button" hidden>📲<span class="rotulo">Instalar app</span></button>
-  <button id="olho" type="button" aria-pressed="false" title="Esconder valores">👁</button>
+  <button id="olho" type="button" aria-pressed="false" title="Esconder valores" aria-label="Esconder valores">👁</button>
+  <button id="avatar" type="button" aria-label="Perfil" title="Perfil" hidden>?</button>
   <button id="sair" type="button" hidden>Sair</button>
 </header>
 <div id="erro" class="faixa erro" role="alert" hidden></div>
@@ -217,6 +224,13 @@
     <button type="button" role="tab" data-aba="alertas" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0zM12 17l.5-6L12 7z"/></svg>Alertas</button>
     <button type="button" role="tab" data-aba="ajuda" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 2H5a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2zm-5 2v4h4V4z"/></svg>Ajuda</button>
   </div>
+</nav>
+<nav id="barra" class="barra-abas" aria-label="Telas principais" hidden>
+  <button type="button" data-ir="inicio" aria-current="page"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10l9-7 9 7v10a2 2 0 0 1-2 2h-4v-7H9v7H5a2 2 0 0 1-2-2z"/></svg>Início</button>
+  <button type="button" data-ir="mes"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg>Mês</button>
+  <button type="button" class="lancar" data-ir="lancar" aria-label="Lançar"><span class="mais" aria-hidden="true">+</span>Lançar</button>
+  <button type="button" data-ir="patrimonio"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 21h18M5 21V10l7-5 7 5v11M9 21v-6h6v6"/></svg>Patrimônio</button>
+  <button type="button" data-ir="beneficios"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12v9H4v-9M2 7h20v5H2zM12 21V7M12 7H8a2.5 2.5 0 1 1 0-5c3 0 4 5 4 5zM12 7h4a2.5 2.5 0 1 0 0-5c-3 0-4 5-4 5z"/></svg>Benefícios</button>
 </nav>
 <div id="fundo-menu" hidden></div>
 <div id="dica" class="dica" role="dialog" aria-modal="true" hidden><div>

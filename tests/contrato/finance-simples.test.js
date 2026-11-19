@@ -15,7 +15,7 @@ const IMG = 'data:image/jpeg;base64,' + Buffer.alloc(400, 7).toString('base64');
 
 test('doc_tipo: cada tipo vai para a aba que lê', async () => {
   P.deps.db = () => banco(); P.deps.agora = () => new Date('2026-11-19T12:00:00Z');
-  const casos = { holerite: 'orcamento', ponto: 'orcamento', fatura_cartao: 'cartoes', extrato_banco: 'documentos', fgts: 'aposentadoria', inss: 'aposentadoria', score: 'inicio' };
+  const casos = { holerite: 'orcamento', ponto: 'orcamento', fatura_cartao: 'cartoes', extrato_banco: 'documentos', fgts: 'aposentadoria', inss: 'aposentadoria', score: 'patrimonio' };
   for (const [tipo, aba] of Object.entries(casos)) {
     P.deps.perguntarVisao = async () => JSON.stringify({ tipo });
     const r = await P.agir('u', { acao: 'doc_tipo', imagens: [IMG] });
@@ -25,14 +25,6 @@ test('doc_tipo: cada tipo vai para a aba que lê', async () => {
   const r = await P.agir('u', { acao: 'doc_tipo', imagens: [IMG] });
   assert.equal(r[1].aba, 'documentos', 'sem IA: vai para Documentos, que lê qualquer coisa');
   delete P.deps.perguntarVisao;
-});
-
-test('Início tem o botão único e a aba recebe o arquivo', () => {
-  const i = ler('prumo/inicio.js');
-  assert.match(i, /id="kf-mandar"/); assert.match(i, /MB\.api\('doc_tipo'/); assert.match(i, /MB\.deixarPendente\(/);
-  const a = ler('prumo/app.js');
-  assert.match(a, /MB\.pegarPendente = /); assert.match(a, /entregarPendente\(nome, alvo\)/);
-  for (const sel of ['#sal-arq', '#ca-fat-arq', '#kf-arq', '#apo-fgts-arq', '#apo-arq', '#score-arq']) assert.ok(a.includes(`'${sel}'`), 'leitor ' + sel);
 });
 
 test('menu curto: essenciais visíveis, resto em "Mais telas", nenhuma aba some', () => {

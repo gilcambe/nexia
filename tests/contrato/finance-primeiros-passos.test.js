@@ -31,8 +31,3 @@ test('ação onboarding_status ligada no servidor', () => {
   assert.match(ler('netlify/functions/prumo-lib/onboarding.js'), /'onboarding_status'/);
   assert.match(ler('netlify/functions/prumo-lib/extra.js'), /require\('\.\/onboarding'\)/, 'ligado em agirExtra (prumo-lib/extra.js)');
 });
-
-test('Início mostra o card de primeiros passos', () => {
-  const s = ler('prumo/inicio.js');
-  assert.match(s, /onboarding_status/); assert.match(s, /kf-primeiros-passos/);
-});

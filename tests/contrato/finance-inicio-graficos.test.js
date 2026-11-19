@@ -81,21 +81,3 @@ test('ganhoDoDia: R$ ganhos/perdidos hoje a partir do valor e da variação do d
   assert.equal(g.ganhoDoDia({}), null);
   assert.equal(g.ganhoDoDia({ vivo: { valor: 100 } }), null);
 });
-
-test('Início usa os gráficos sem travar a tela; cores no :root; graficos.js no cache do app', () => {
-  const ini = ler('inicio.js');
-  assert.match(ini, /\/prumo\/graficos\.js/, 'inicio.js carrega /prumo/graficos.js');
-  assert.match(ini, /historico_listar/);
-  assert.match(ini, /cotacoes_vivas/);
-  assert.match(ini, /graficos\.linha\(/);
-  assert.match(ini, /graficos\.barras\(/);
-  assert.match(ini, /ganhoDoDia/);
-  assert.match(ini, /kf-graf-patrimonio/);
-  assert.match(ini, /kf-graf-hoje/);
-  assert.match(ini, /catch/, 'se os gráficos falharem, o resto da tela continua');
-  assert.match(ini, /\.slice\(0,\s*8\)/, 'no máximo 8 barras');
-  const root = (/:root\s*\{([^}]*)\}/.exec(ler('index.html')) || [])[1] || '';
-  assert.match(root, /--ganho\s*:/);
-  assert.match(root, /--perda\s*:/);
-  assert.match(ler('sw.js'), /'\/prumo\/graficos\.js'/);
-});

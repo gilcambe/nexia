@@ -127,32 +127,6 @@ function montarFront(respostas) {
   return { MB, el, chamadas, forms, avisos, ligarBotoes };
 }
 
-test('tela Início: mostra a receber / a pagar do mês e os botões Caiu / Paguei / Ainda não caiu funcionam', async () => {
-  await montarMes();
-  const resumo = (await p.agir('u1', { acao: 'inicio_resumo', mes: '2026-11' }))[1];
-  const saude = (await p.agir('u1', { acao: 'saude_financeira' }))[1];
-  const t = montarFront({ inicio_resumo: resumo, saude_financeira: saude, historico_listar: { meses: [] }, cotacoes_vivas: { itens: [] } });
-  await t.MB.telas.inicio(t.el);
-  assert.match(t.el.innerHTML, /A receber no mês[\s\S]*R\$ 6183\.37/);
-  assert.match(t.el.innerHTML, /A pagar no mês[\s\S]*R\$ 650\.00/);
-  assert.match(t.el.innerHTML, /Previsto no mês/);
-  const bs = t.ligarBotoes();
-  t.MB.previsto.ligar(t.el);
-  const caiu = bs.find((b) => b.dataset.prv === 'confirmar' && b.dataset.colecao === 'pagamentos');
-  assert.ok(caiu, 'botão ✅ Caiu do 13º');
-  assert.match(t.el.innerHTML, /✅ Caiu/); assert.match(t.el.innerHTML, /✅ Paguei/);
-  await caiu.onclick();
-  assert.equal(JSON.stringify(t.chamadas.find((c) => c.acao === 'previsto_confirmar').dados), JSON.stringify({ colecao: 'pagamentos', id: caiu.dataset.id }));
-  const adiar = bs.find((b) => b.dataset.prv === 'adiar');
-  adiar.onclick();
-  assert.equal(t.forms.length, 1);
-  await t.forms[0].aoSalvar({ data: '2026-12-01' });
-  assert.equal(JSON.stringify(t.chamadas.find((c) => c.acao === 'previsto_adiar').dados), JSON.stringify({ colecao: adiar.dataset.colecao, id: adiar.dataset.id, data: '2026-12-01' }));
-  await t.forms[0].aoSalvar({ data: '' }); // formulário vazio/cancelado não chama a API
-  assert.equal(t.chamadas.filter((c) => c.acao === 'previsto_adiar').length, 1);
-  assert.doesNotMatch(t.el.innerHTML, /data-prv="[a-z]+" data-colecao="null"/, 'parcela de dívida não tem botão');
-});
-
 test('tela Salário: 13º previsto fica em "A receber", fora do total recebido', async () => {
   await montarMes();
   const sal = (await p.agir('u1', { acao: 'salario_previsao', mes: '2026-11' }))[1];

@@ -12,7 +12,7 @@ const DESTINO = {
   extrato_banco: { aba: 'documentos', modo: 'doc', nome: 'extrato ou comprovante' },
   fgts: { aba: 'aposentadoria', modo: 'fgts', nome: 'saldo do FGTS' },
   inss: { aba: 'aposentadoria', modo: 'cnis', nome: 'extrato do INSS' },
-  score: { aba: 'inicio', modo: 'score', nome: 'score de crédito' },
+  score: { aba: 'patrimonio', modo: 'score', nome: 'score de crédito' },
   milhas: { aba: 'pontos', modo: 'milhas', nome: 'milhas e pontos' },
   divida: { aba: 'dividas', modo: 'divida', nome: 'dívida' },
   conta_saldo: { aba: 'contas', modo: 'conta', nome: 'saldo da conta' },
