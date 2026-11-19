@@ -4,6 +4,7 @@
 (function () {
   const MB = window.MB;
   const carregarUi = () => MB.ui ? Promise.resolve(MB.ui) : new Promise((ok, falha) => { const s = document.createElement('script'); s.src = '/prumo/ui.js'; s.onload = () => ok(MB.ui); s.onerror = falha; document.body.appendChild(s); });
+  const carregarDocs = () => MB.docLeitura ? Promise.resolve(MB.docLeitura) : new Promise((ok) => { const s = document.createElement('script'); s.src = '/prumo/documentos.js'; s.onload = () => ok(MB.docLeitura || null); s.onerror = () => ok(null); document.body.appendChild(s); });
   const carregarLeitura = () => MB.leitura ? Promise.resolve(MB.leitura) : new Promise((ok) => { const s = document.createElement('script'); s.src = '/prumo/leitura.js'; s.onload = () => ok(MB.leitura); s.onerror = () => ok(null); document.body.appendChild(s); });
   const MES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
   const nomeMes = (m) => MES[Number(m.slice(5)) - 1] + '/' + m.slice(2, 4);
@@ -13,10 +14,35 @@
     aba('cartoes');
     const [v, i] = await Promise.all([MB.api('cartao_visao'), MB.api('cartao_inteligencia')]);
     // Preencher por print/PDF da fatura: abre o formulário do cartão já preenchido; ao salvar, usa cartao_salvar (junta com o que o cartão já tinha).
+    // Fatura (dono 19/11: "não tem onde inserir o print da fatura"): print/foto/PDF -> compras lidas -> confere -> grava.
+    const ligarFatura = () => {
+      el.insertAdjacentHTML('afterbegin', `<div class="card" id="ca-fat"><h3 style="margin:0 0 4px">🧾 Fatura do cartão</h3>
+        <div class="fraco">Mande o print, foto ou PDF da fatura. Eu leio as compras, você confere e grava. Digitar continua na aba Gastos.</div>
+        <button class="btn" id="ca-fat-foto" type="button" style="margin-top:8px">📷 Print ou foto da fatura</button> <button class="btn sec" id="ca-fat-pdf" type="button" style="margin-top:8px">📄 PDF da fatura</button>
+        <input type="file" id="ca-fat-arq" accept="image/*" multiple hidden><div id="ca-fat-res"></div></div>`);
+      const arq = el.querySelector('#ca-fat-arq'); const res = el.querySelector('#ca-fat-res');
+      if (!arq || !res) return;
+      const escolher = (aceita) => { arq.accept = aceita; arq.value = ''; arq.click(); };
+      el.querySelector('#ca-fat-foto').onclick = () => escolher('image/*');
+      el.querySelector('#ca-fat-pdf').onclick = () => escolher('application/pdf,.pdf');
+      arq.onchange = async () => {
+        const arqs = [...(arq.files || [])];
+        if (!arqs.length) return;
+        if (arqs.length > 5) { res.innerHTML = '<div class="aviso-c">Envie no máximo 5 arquivos por vez.</div>'; return; }
+        res.innerHTML = '<div class="fraco">Lendo a fatura… pode levar até 2 minutos.</div>';
+        try {
+          const docs = await carregarDocs();
+          if (!docs) throw new Error('Não consegui abrir o leitor agora.');
+          const { r, cortou } = await docs.ler(arqs);
+          docs.mostrar(res, r, { brl, esc, ok }, () => MB.abrirAba('cartoes'));
+          if (cortou) res.insertAdjacentHTML('afterbegin', '<div class="aviso-c">Li as 5 primeiras páginas. Mande o resto em seguida.</div>');
+        } catch (e) { res.innerHTML = `<div class="aviso-c">${esc(e && e.message || 'Não consegui ler agora.')} Tente de novo com uma imagem mais nítida.</div>`; }
+      };
+    };
     const ligarLeitura = async () => {
       const lei = await carregarLeitura();
       if (!lei) return;
-      lei.botao(el, { id: 'ca-ler', rotulo: '📷 Preencher por print ou arquivo', ajuda: 'Mande o print ou PDF da fatura (ou da tela de limite do app do cartão). Eu não peço senha.', acao: 'cartao_print_ler',
+      lei.botao(el, { id: 'ca-ler', rotulo: '💳 Cadastrar cartão por print', ajuda: 'Para o limite, o fechamento e o vencimento: mande o print da tela de limite do app do cartão (ou da fatura). Eu não peço senha.', acao: 'cartao_print_ler',
         aoLer: (l) => {
           const k0 = l.cartao; const ja = v.cartoes.find((x) => String(x.nome).toLowerCase() === String(k0.nome).toLowerCase());
           if (k0.fatura_atual > 0) ok(`Fatura lida: ${brl(k0.fatura_atual)} (a fatura não é salva aqui; lance as compras na aba Gastos).`);
@@ -29,11 +55,11 @@
           ], (d) => MB.api('cartao_salvar', { ...(ja || {}), ...d, limite: Number(d.limite), dia_fechamento: Number(d.dia_fechamento), dia_vencimento: Number(d.dia_vencimento), id: ja && ja.id }), null);
         } });
     };
-    if (!v.cartoes.length) { el.innerHTML = '<div class="card fraco">Cadastre seu primeiro cartão: mande o print da fatura aqui embaixo ou use a aba Gastos, em "Meus cartões".</div>'; await ligarLeitura(); return; }
+    if (!v.cartoes.length) { el.innerHTML = '<div class="card fraco">Você ainda não tem cartão. Use "Cadastrar cartão por print" acima ou a aba Gastos, em "Meus cartões".</div>'; await ligarLeitura(); ligarFatura(); return; }
     el.innerHTML = `
       <div class="card"><div class="fraco">Limite comprometido (estimado)</div><div class="grande">${brl(v.total_comprometido)}</div>
         <div class="fraco">de ${brl(v.total_limite)} de limite · limite de cartão não é dinheiro</div></div>
-      ${v.cartoes.map((k) => `<div class="card" data-cartao="${esc(k.id)}"><div class="item" style="padding:0;border:0"><span class="n">${esc(k.nome)}${k.bandeira ? ' · ' + esc(k.bandeira) : ''}</span><span>${k.vence_em_dias <= 3 ? '🟠 ' : ''}vence dia ${k.dia_vencimento}</span></div>
+      ${v.cartoes.map((k) => `<div class="card" data-cartao="${esc(k.id)}"><div class="item" style="padding:0;border:0"><span class="n">${esc(k.nome)}${k.bandeira ? ' · ' + esc(k.bandeira) : ''}</span><span>${k.vence_em_dias <= 3 ? '🟠 ' : ''}vence dia ${k.dia_vencimento} <button type="button" class="btn sec mini" data-apagar-cartao="${esc(k.id)}" aria-label="Apagar cartão">🗑️</button></span></div>
         ${barra(k.pct || 0, k.pct > 80 ? '#ef4444' : '')}
         <div class="fraco">Comprometido ${brl(k.comprometido)} · disponível ${brl(k.disponivel)}${k.pct === null ? '' : ' · ' + String(k.pct).replace('.', ',') + '%'}</div>
         <div class="fraco" style="margin-top:8px">Próximas faturas</div>
@@ -51,7 +77,11 @@
       ${i.recorrentes.length ? `<div class="card"><h3 style="margin:0 0 6px">🔁 Compras recorrentes</h3>${i.recorrentes.map((r) => `<div class="item"><span class="n">${esc(r.estabelecimento)}</span><span>${brl(r.valor_medio)} · ${r.meses} meses</span></div>`).join('')}</div>` : ''}
       ${i.suspeitas.length ? `<div class="card"><h3 style="margin:0 0 6px">🔎 Cobranças para revisar</h3><div class="fraco">Não é acusação: só valem uma olhada.</div>${i.suspeitas.map((s) => `<div class="item"><div><div class="n">${esc(s.lancamento.descricao)}</div><div class="fraco">${esc(s.motivo)} · ${s.lancamento.data.slice(8, 10)}/${s.lancamento.data.slice(5, 7)}</div></div><span class="v">${brl(s.lancamento.valor)}</span></div>`).join('')}</div>` : ''}
       <div class="fraco" style="margin-top:8px">${esc(v.aviso)}</div>`;
-    await ligarLeitura();
+    await ligarLeitura(); ligarFatura(); // fatura fica no topo
+    el.querySelectorAll('[data-apagar-cartao]').forEach((b) => { b.onclick = async () => {
+      if (!confirm('Apagar este cartão? As compras lançadas continuam.')) return;
+      try { await MB.api('cartao_apagar', { id: b.dataset.apagarCartao }); ok('🗑️ Cartão apagado.'); MB.abrirAba('cartoes'); } catch { /* erro já mostrado */ }
+    }; });
     el.querySelector('#sim-ir').onclick = async () => {
       const res = el.querySelector('#sim-res');
       const valor = Number(el.querySelector('#sim-valor').value);
