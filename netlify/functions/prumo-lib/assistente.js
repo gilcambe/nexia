@@ -58,6 +58,13 @@ function responder(texto, d) {
   const t = sem(texto); const fonteMes = `lançamentos confirmados de ${d.mes}`;
   const r = (resposta, fonte, falta = []) => ({ resposta, fonte, atualizado_em: d.agoraIso, falta });
   let m;
+  // Fase 11 (#4013, manual seção 7): "quanto posso gastar até receber?" usa o MESMO cálculo do Início (servidor), nunca a IA.
+  if (d.tres && /posso gastar|dinheiro livre|quanto (eu )?posso|ate (eu )?receber|sobra (pra|para) gastar/.test(t)) {
+    const x = d.tres; const ate = x.ate ? `${x.ate.slice(8, 10)}/${x.ate.slice(5, 7)}` : 'o fim do mês';
+    if (x.tenho === null) return r('Ainda não sei: cadastre suas contas com o saldo de hoje na aba Contas.', 'contas', ['contas']);
+    return r(`Até ${ate} você pode gastar ${fmt(x.posso_gastar)}. Você tem ${fmt(x.tenho)} em conta e eu já descontei ${fmt(x.comprometido)} de contas e parcelas previstas${x.reserva > 0 ? ` e ${fmt(x.reserva)} da sua reserva mínima` : ''}.`,
+      'saldo das contas − contas previstas do mês − reserva (mesmo cálculo do Início)');
+  }
   if (/\bsaldo\b|\bdinheiro disponivel\b|^quanto (eu )?tenho( disponivel)?( hoje)?( em conta)?\??$/.test(t) && !/milha|ponto|investi|patrimonio/.test(t))
     return d.saldo === null ? r('Ainda não sei: você não cadastrou nenhuma conta.', 'contas', ['contas']) : r(`Você tem ${fmt(d.saldo)} disponíveis em conta (só reais; limite de cartão não conta).`, 'saldos das contas que você cadastrou');
   // "Quanto gastei este mês?" / "quanto gastei?" / "total de gastos": soma de todas as despesas do mês.
@@ -102,7 +109,7 @@ function responderInvest(texto, itens, r) {
   return resp(`Seus investimentos valem ${fmt(r.total)} agora (${r.variacao >= 0 ? '+' : '−'}${fmt(Math.abs(r.variacao))} desde o último print).`);
 }
 
-const AJUDA = 'Posso responder: "Quanto rendeu meu MXRF11?", "Quanto recebo de dividendos?", "Algum alerta na carteira?", "Quanto gastei este mês?", "Quanto tenho disponível?", "Quanto gastei com alimentação?", "Qual foi minha maior despesa?", "Quanto devo nos cartões?", "Qual o meu patrimônio?" e "Quanto tenho em milhas?". Também registro uma despesa ou crio um limite, sempre pedindo sua confirmação.';
+const AJUDA = 'Posso responder: "Quanto rendeu meu MXRF11?", "Quanto recebo de dividendos?", "Algum alerta na carteira?", "Quanto gastei este mês?", "Quanto tenho disponível?", "Quanto posso gastar até receber?", "Quanto gastei com alimentação?", "Qual foi minha maior despesa?", "Quanto devo nos cartões?", "Qual o meu patrimônio?" e "Quanto tenho em milhas?". Também registro uma despesa ou crio um limite, sempre pedindo sua confirmação.';
 
 async function agirAssistente(acao, body, c) {
   if (!['assistente_perguntar', 'assistente_confirmar'].includes(acao)) return null;
@@ -114,8 +121,15 @@ async function agirAssistente(acao, body, c) {
     if (cmd && cmd.erro) return [200, { tipo: 'recusa', resposta: cmd.erro }];
     if (cmd) return [200, { tipo: 'proposta', proposta: cmd, resposta: descreve(cmd), precisa_confirmar: true }];
     const mes = agoraIso.slice(0, 7);
-    const [lancs, contas, carteira, pontos, cts, gastos, dividas] = await Promise.all(['lancamentos', 'contas', 'carteira', 'pontos', 'cartoes', 'gastos', 'dividas'].map((n) => listar(base.collection(n))));
-    const cfgDiv = await base.collection('config').doc('dividas').get();
+    const prv = require('./previsto');
+    const [[lancsTodos, contas, carteira, pontos, cts, gastos, dividas, pagamentos], cfgDiv, cfgCaixa] = await Promise.all([
+      Promise.all(['lancamentos', 'contas', 'carteira', 'pontos', 'cartoes', 'gastos', 'dividas', 'pagamentos'].map((n) => listar(base.collection(n)))),
+      base.collection('config').doc('dividas').get(), base.collection('config').doc('caixa').get()]);
+    const hoje = prv.hojeDe(agoraIso);
+    // Futuro só conta quando acontece (dono 17/11); PJ fica fora dos totais pessoais, como no Início.
+    const lancs = prv.realizados(lancsTodos.filter((x) => x.perfil !== 'pj'), 'data', hoje);
+    const aPagar = prv.resumoPrevisto({ lancs: lancsTodos, pagamentos, dividas }, mes, hoje).a_pagar;
+    const reserva = (cfgCaixa && cfgCaixa.exists && cfgCaixa.data().reserva_minima) || 0;
     const dividaTotal = dividas.reduce((s, x) => s + Math.round(x.saldo * 100), 0) / 100;
     const doMes = lancs.filter((x) => String(x.data).startsWith(mes));
     const tot = totais(doMes);
@@ -129,7 +143,8 @@ async function agirAssistente(acao, body, c) {
       const rr = await cot.carteiraAoVivo(carteira, { fetch: (c.deps && c.deps.fetch) || ((...a) => fetch(...a)), agora: new Date(agoraIso), env: typeof process !== 'undefined' ? process.env : {} });
       return [200, { tipo: 'resposta', ...responderInvest(texto, carteira, rr) }];
     }
-    const out = responder(texto, { mes, agoraIso, saldo: sd.saldo, por_categoria: tot.por_categoria, qtd: doMes.length, maior: desp[0], comprometido, temCartao: cts.length > 0, patrimonio: Math.round((brl + inv - dividaTotal * 1) * 100) / 100, dividaTotal, dividasConhecidas: dividas.length > 0 || !!(cfgDiv && cfgDiv.exists && cfgDiv.data().sem_dividas),
+    const tres = fin.tresNumeros({ saldo: sd.saldo, a_pagar: aPagar, reserva, hoje });
+    const out = responder(texto, { mes, agoraIso, tres, saldo: sd.saldo, por_categoria: tot.por_categoria, qtd: doMes.length, maior: desp[0], comprometido, temCartao: cts.length > 0, patrimonio: Math.round((brl + inv - dividaTotal * 1) * 100) / 100, dividaTotal, dividasConhecidas: dividas.length > 0 || !!(cfgDiv && cfgDiv.exists && cfgDiv.data().sem_dividas),
       milhas: Math.round(pontos.reduce((s, p) => s + ((p.saldo || 0) / 1000) * (p.valor_milheiro || 0), 0) * 100) / 100, receitas: tot.receitas, despesas: tot.despesas });
     return [200, out ? { tipo: 'resposta', ...out } : { tipo: 'nao_entendi', resposta: 'Não entendi esse pedido e prefiro não chutar um número. ' + AJUDA }];
   }
