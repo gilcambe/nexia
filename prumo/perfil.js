@@ -12,6 +12,7 @@
       <section class="card kh-larga" style="display:flex;gap:12px;align-items:center"><div style="width:48px;height:48px;border-radius:50%;background:#1A2547;display:grid;place-items:center;font-weight:700;font-size:20px">${H.esc(String(u.displayName || u.email || '?').charAt(0).toUpperCase())}</div>
         <div><b>${H.esc(u.displayName || 'Você')}</b><div class="sub">${H.esc(u.email || '')}</div></div></section>
       <section class="card"><b>📋 Meus cadastros</b><div class="sub" style="margin-top:4px">Tudo que você cadastrou, de todas as telas. Dá para editar, apagar e desfazer.</div><button class="btn sec" id="kp-cad-btn" type="button">Ver meus cadastros</button><div id="kp-cad"></div></section>
+      <section class="card"><b>📎 Documentos enviados</b><div class="sub" style="margin-top:4px">Apagar um documento apaga também os lançamentos que vieram dele.</div><button class="btn sec" id="kp-lot-btn" type="button">Ver documentos</button><div id="kp-lot"></div></section>
       ${H.lista([
         ['documentos', '🧾', 'Documentos e lançamentos', 'Tudo que você mandou'],
         ['assistente', '💬', 'Assistente', 'Pergunte sobre o seu dinheiro'],
@@ -42,6 +43,17 @@
         try { const o = await MB.api('cadastro_apagar', { colecao: b.dataset.ap, id: b.dataset.id }); await desenhar(`🗑️ Apagado: ${H.esc(o.apagado.titulo)}`); } catch { /* erro já mostrado */ }
       }; });
     };
+    const lot = el.querySelector('#kp-lot');
+    const lotes = async (msg) => {
+      const r = await MB.api('lote_listar');
+      lot.innerHTML = (msg ? `<div class="aviso-c" style="margin-top:10px">${msg}</div>` : '') + (r.lotes.length ? r.lotes.map((x) => `<div class="item"><span>${H.esc(x.nome)}<br><span class="fraco">${x.qtd} lançamento(s) · ${dmy(String(x.criado_em).slice(0, 10))}</span></span><span class="v">${x.despesas ? '− ' + H.brl(x.despesas) : ''}${x.receitas ? ' + ' + H.brl(x.receitas) : ''} <button type="button" class="btn sec mini" data-lot="${H.esc(x.id)}" data-qtd="${x.qtd}" aria-label="Apagar documento">🗑️</button></span></div>`).join('')
+        : '<p class="fraco">Nenhum documento gravado ainda (os antigos, de antes desta versão, ficam só em Meus cadastros).</p>');
+      lot.querySelectorAll('[data-lot]').forEach((b) => { b.onclick = async () => {
+        if (!confirm(`Apagar este documento e os ${b.dataset.qtd} lançamento(s) que vieram dele? Os números do mês mudam.`)) return;
+        try { const o = await MB.api('lote_apagar', { id: b.dataset.lot }); await lotes(`🗑️ Documento apagado (${o.apagados} lançamento(s)).`); } catch { /* erro já mostrado */ }
+      }; });
+    };
+    el.querySelector('#kp-lot-btn').onclick = () => { if (lot.innerHTML) { lot.innerHTML = ''; return; } lotes('').catch(() => { lot.innerHTML = '<p class="fraco">Não consegui abrir agora.</p>'; }); };
     el.querySelector('#kp-cad-btn').onclick = () => { if (cad.innerHTML) { cad.innerHTML = ''; return; } desenhar('').catch(() => { cad.innerHTML = '<p class="fraco">Não consegui abrir agora.</p>'; }); };
   };
 })();

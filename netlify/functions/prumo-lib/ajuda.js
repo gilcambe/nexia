@@ -6,7 +6,7 @@
  * - Autorizar o suporte por um prazo (acesso excepcional), sempre registrado em auditoria.
  * - Limite de leituras de documento/print por mês, conforme o plano que o master define.
  */
-const COLECOES = ['carteira', 'cartoes', 'cofres', 'conexoes', 'config', 'contas', 'dividas', 'dividendos', 'gastos', 'historico', 'holerites',
+const COLECOES = ['lotes', 'carteira', 'cartoes', 'cofres', 'conexoes', 'config', 'contas', 'dividas', 'dividendos', 'gastos', 'historico', 'holerites',
   'lancamentos', 'limites', 'listas', 'milhas_compras', 'milhas_promos', 'objetivos', 'orcamento', 'pontos', 'mensagens', 'auditoria',
   'documentos', 'investimentos', 'familia', 'impostos', 'alertas', 'bancos', 'milhas', 'pagamentos', 'folhas_ponto', 'viagens', 'robos', 'robos_disparos', 'aposentadoria', 'scores', 'cortes_status', 'lixeira'];
 const PLANOS = { gratis: 60, pro: 600, master: Infinity };
