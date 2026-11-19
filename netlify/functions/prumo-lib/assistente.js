@@ -48,7 +48,7 @@ function parseComando(texto) {
     if (!(valor > 0) || !categoria) return { erro: 'Diga o valor e a categoria. Exemplo: "crie um limite de R$ 300 para lazer".' };
     return { tipo: 'criar_limite', valor, categoria };
   }
-  if (/\b(pague|pagar|transfira|transferir|resgate|resgatar|invista|investir|compre|comprar)\b/.test(t) && /\b(r\$|\d)/.test(t)) return { erro: 'Eu não faço pagamentos, transferências, resgates nem investimentos. Posso registrar uma despesa, criar um limite ou simular se a compra cabe.' };
+  if (/\b(pague|pagar|transfira|transferir|resgate|resgatar|invista|investir|compre|comprar)\b/.test(t) && /\b(r\$|\d)/.test(t) && !/(posso|da pra|consigo|devo) comprar|cabe no/.test(t)) return { erro: 'Eu não faço pagamentos, transferências, resgates nem investimentos. Posso registrar uma despesa, criar um limite ou simular se a compra cabe.' };
   return null;
 }
 const descreve = (p) => (p.tipo === 'registrar_despesa' ? `Registrar uma despesa de ${fmt(p.valor)} em ${NOME[p.categoria]} (${p.descricao}), com a data de hoje.` : `Criar o limite mensal de ${fmt(p.valor)} para ${NOME[p.categoria]}.`);
@@ -58,6 +58,24 @@ function responder(texto, d) {
   const t = sem(texto); const fonteMes = `lançamentos confirmados de ${d.mes}`;
   const r = (resposta, fonte, falta = []) => ({ resposta, fonte, atualizado_em: d.agoraIso, falta });
   let m;
+  // Redesign fase 7: "posso comprar X?" e "quanto posso gastar?" usam os MESMOS números do Início (painel_resumo),
+  // sempre citando os números usados. Não é recomendação: é a conta com os dados da pessoa.
+  if (d.painel && d.painel.kpis && d.painel.kpis.posso_mes != null) {
+    const k = d.painel.kpis; const dr = d.painel.dias_restantes || 1; const pm = String(d.painel.mes || ""); const fimMes = pm ? new Date(Date.UTC(Number(pm.slice(0, 4)), Number(pm.slice(5, 7)), 0)).toISOString().slice(8, 10) + "/" + pm.slice(5, 7) : "o fim do mês";
+    const usados = `Tenho ${fmt(k.tenho)} + falta receber ${fmt(k.falta_receber)} − a pagar ${fmt(k.a_pagar)} = ${fmt(k.posso_mes)} no mês (${dr} dia(s)).` + (k.estado === 'estimado' ? ' Estimado: faltam despesas fixas.' : '');
+    const mv = /(posso|da pra|consigo|devo) comprar|cabe no (meu )?bolso/.test(t) ? /(\d{1,3}(?:\.\d{3})+(?:,\d{1,2})?|\d+(?:,\d{1,2})?)\s*(mil)?/.exec(t.replace(/r\$\s*/g, '')) : null;
+    if (mv) {
+      const valor = Number(mv[1].replace(/\./g, '').replace(',', '.')) * (mv[2] ? 1000 : 1);
+      const depois = Math.round((k.posso_mes - valor) * 100) / 100;
+      const txt = depois >= 0
+        ? `Cabe: depois da compra de ${fmt(valor)} ainda sobram ${fmt(depois)} no mês (cerca de ${fmt(depois / dr)} por dia).`
+        : `Agora não cabe: faltariam ${fmt(-depois)} para fechar o mês. Vale esperar o próximo salário entrar.`;
+      return r(txt + ' Números usados: ' + usados, 'mesmo cálculo do Início');
+    }
+    if (/posso gastar|dinheiro livre|quanto (eu )?posso|ate (eu )?receber|sobra (pra|para) gastar/.test(t)) {
+      return r(`Hoje dá para gastar até ${fmt(k.posso_hoje)}. No mês, até ${fimMes}, ${fmt(k.posso_mes)}. Números usados: ${usados}`, 'mesmo cálculo do Início');
+    }
+  }
   // Fase 11 (#4013, manual seção 7): "quanto posso gastar até receber?" usa o MESMO cálculo do Início (servidor), nunca a IA.
   if (d.tres && /posso gastar|dinheiro livre|quanto (eu )?posso|ate (eu )?receber|sobra (pra|para) gastar/.test(t)) {
     const x = d.tres; const ate = x.ate ? `${x.ate.slice(8, 10)}/${x.ate.slice(5, 7)}` : 'o fim do mês';
@@ -144,7 +162,8 @@ async function agirAssistente(acao, body, c) {
       return [200, { tipo: 'resposta', ...responderInvest(texto, carteira, rr) }];
     }
     const tres = fin.tresNumeros({ saldo: sd.saldo, a_pagar: aPagar, reserva, hoje });
-    const out = responder(texto, { mes, agoraIso, tres, saldo: sd.saldo, por_categoria: tot.por_categoria, qtd: doMes.length, maior: desp[0], comprometido, temCartao: cts.length > 0, patrimonio: Math.round((brl + inv - dividaTotal * 1) * 100) / 100, dividaTotal, dividasConhecidas: dividas.length > 0 || !!(cfgDiv && cfgDiv.exists && cfgDiv.data().sem_dividas),
+    const painel = /posso|consigo|da pra|dá pra|devo comprar|cabe no|dinheiro livre|ate (eu )?receber|sobra/.test(sem(texto)) ? await require('./painel').montarPainel(c).catch(() => null) : null;
+    const out = responder(texto, { mes, agoraIso, tres, painel, saldo: sd.saldo, por_categoria: tot.por_categoria, qtd: doMes.length, maior: desp[0], comprometido, temCartao: cts.length > 0, patrimonio: Math.round((brl + inv - dividaTotal * 1) * 100) / 100, dividaTotal, dividasConhecidas: dividas.length > 0 || !!(cfgDiv && cfgDiv.exists && cfgDiv.data().sem_dividas),
       milhas: Math.round(pontos.reduce((s, p) => s + ((p.saldo || 0) / 1000) * (p.valor_milheiro || 0), 0) * 100) / 100, receitas: tot.receitas, despesas: tot.despesas });
     return [200, out ? { tipo: 'resposta', ...out } : { tipo: 'nao_entendi', resposta: 'Não entendi esse pedido e prefiro não chutar um número. ' + AJUDA }];
   }

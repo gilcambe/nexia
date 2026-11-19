@@ -32,13 +32,13 @@ async function montarPainel(c) {
   const prv = require('./previsto');
   const hoje = prv.hojeDe(agoraIso);
   const mes = hoje.slice(0, 7);
-  const [lancsTodos, contas, pagamentos, dividas, cartoes, gastos, carteira, pontos, scores, apos, orcS, cfgDiv, cfgSal, histS, sp] = await Promise.all([
+  const [lancsTodos, contas, pagamentos, dividas, cartoes, gastos, carteira, pontos, scores, apos, orcS, cfgDiv, cfgSal, histS, insS, sp] = await Promise.all([
     listar(base.collection('lancamentos')), listar(base.collection('contas')), listar(base.collection('pagamentos')),
     listar(base.collection('dividas')), listar(base.collection('cartoes')), listar(base.collection('gastos')),
     listar(base.collection('carteira')), listar(base.collection('pontos')), listar(base.collection('scores')).catch(() => []),
     listar(base.collection('aposentadoria')).catch(() => []), base.collection('orcamento').doc('atual').get(),
     base.collection('config').doc('dividas').get(), base.collection('config').doc('salario').get(),
-    base.collection('config').doc('score_hist').get(),
+    base.collection('config').doc('score_hist').get(), base.collection('config').doc('insights').get(),
     require('./salario').agirSalario('salario_previsao', { mes }, c).catch(() => null),
   ]);
   const sal = sp && sp[0] === 200 ? sp[1] : null;
@@ -143,7 +143,7 @@ async function montarPainel(c) {
   const ultimos = [...reais, ...pagsReais].slice().sort((a, b) => String(b.data).localeCompare(String(a.data))).slice(0, 5)
     .map((l) => ({ id: l.id, data: l.data, descricao: l.descricao, valor: l.valor, tipo: l.tipo, categoria: l.categoria || null }));
 
-  return {
+  const out = {
     hoje, mes, dias_restantes: dr,
     score, confianca: conf,
     kpis: { tenho, recebi, recebi_estimado: adEstimado, falta_receber, a_pagar, ...kpis, gasto_mes: despesasMes, renda: renda || null,
@@ -179,9 +179,30 @@ async function montarPainel(c) {
     credito: sc ? { biro: sc.biro, score: sc.score, data: sc.data || null } : null,
     ultimos,
   };
+  // Fase 7: motor de decisões. Avisos urgentes primeiro, depois as dicas; no máximo 3; "dispensar" vale 30 dias.
+  const dispensados = (insS && insS.exists && (insS.data() || {}).dispensados) || {};
+  const vivo = (id) => !dispensados[id] || dias(String(dispensados[id]).slice(0, 10), hoje) > 30;
+  const md = out.mes_detalhe || {};
+  const ins = require('./insights').gerarInsights({
+    hoje, tenho, gasto_mensal: gastoMensal, reserva_meses: gastoMensal > 0 && contas.length ? r2(guardado / gastoMensal) : null,
+    faturas: (md.a_pagar_itens || []).filter((x) => /fatura|cartao/.test(x.origem) && x.data).map((x) => ({ nome: x.nome, valor: x.valor, dias: dias(hoje, x.data) })),
+    dividas, pontos: require('./beneficios').resumoPontos(pontos, hoje).programas, mes_num: Number(mes.slice(5, 7)),
+    categorias: (md.categorias || []).map((x) => ({ ...x })), investido: r2(carteira.filter((i) => i.tipo !== 'fgts').reduce((t, i) => t + (Number(i.valor) || 0), 0)), aporte_mensal: investeMes,
+  });
+  const urgentes = alertas.filter((a) => !/^pontos-/.test(a.id));
+  out.alertas = [...urgentes, ...ins.map((x) => ({ id: x.id, nivel: x.nivel, texto: x.texto, dado: x.dado, aba: x.acao.aba, acao: x.acao.rotulo, dispensavel: true }))]
+    .filter((a) => vivo(a.id)).slice(0, 3);
+  return out;
 }
 
 async function agirPainel(acao, body, c) {
+  if (acao === 'insight_dispensar') {
+    const id = String(body.id || '').slice(0, 80); if (!id) return [400, { error: 'Diga qual dica dispensar.' }];
+    const ref = c.base.collection('config').doc('insights'); const sn = await ref.get();
+    const atual = (sn && sn.exists && (sn.data() || {}).dispensados) || {};
+    await ref.set({ dispensados: { ...atual, [id]: c.agoraIso } });
+    return [200, { ok: true }];
+  }
   if (acao !== 'painel_resumo') return null;
   return [200, await montarPainel(c)];
 }
