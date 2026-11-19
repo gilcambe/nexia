@@ -111,27 +111,6 @@ test('aba Carreira: erro da IA não derruba a tela (botão volta a ficar ativo)'
   assert.equal(b.disabled, false); assert.equal(t.recarregou(), 0);
 });
 
-test('Início: cartão "quanto ainda cai" aparece e o botão abre a aba Fluxo; sem fluxo_inicio o Início continua', async () => {
-  const inicio = {
-    mes: '2026-11', receitas: 0, despesas: 0, economia: 0, variacao_despesas_pct: null, por_categoria: {}, saldo_disponivel: 1000, alertas_limite: [], patrimonio: { liquido: 0 }, investimentos: 0, milhas_estimado: 0,
-    dividas: { registradas: false, sem: true }, vencimentos: [], lacunas: [], qtd_lancamentos: 0,
-    fluxo_inicio: { cai_este_mes: 1500, previsao_salario: 2400, contas_a_vencer: 900, motivo: null, alertas: [{ nome: '13º (1ª parcela)', em_dias: 10, data: '2026-11-30', valor: 2500, estimado: true, destino: { tipo: 'divida', texto: 'Pague a dívida mais cara primeiro: Banco X.' } }] },
-  };
-  const resp = { inicio_resumo: inicio, saude_financeira: { nota: null, indicadores: [], aviso: '', nota_mes_anterior: null }, historico_listar: { meses: [] }, cotacoes_vivas: { itens: [] } };
-  const t = montar(resp, ['fluxo-visao.js', 'inicio.js']);
-  await t.MB.telas.inicio(t.el);
-  const h = t.el.innerHTML;
-  assert.match(h, /Quanto ainda cai este mês[\s\S]*R\$ 1\.500,00/);
-  assert.match(h, /R\$ 2\.400,00 − contas a vencer R\$ 900,00/);
-  assert.match(h, /13º \(1ª parcela\) cai em 10 dia\(s\)[\s\S]*Sugestão: Pague a dívida mais cara/);
-  t.stubs['#kf-fluxo-ver'].onclick();
-  assert.deepEqual(t.abertas, ['fluxo']);
-  const sem = montar({ ...resp, inicio_resumo: { ...inicio, fluxo_inicio: null } }, ['fluxo-visao.js', 'inicio.js']);
-  await sem.MB.telas.inicio(sem.el);
-  assert.doesNotMatch(sem.el.innerHTML, /kf-fluxo/);
-  assert.match(sem.el.innerHTML, /Saldo disponível/);
-});
-
 test('abas novas estão ligadas: app.js, menu, sw.js (versão subiu) e arquivos existem', () => {
   assert.match(ler('app.js'), /'fluxo', 'carreira'/);
   const html = ler('index.html');

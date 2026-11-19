@@ -41,6 +41,7 @@
     };
     el.querySelector('#enviar').onclick = () => perguntar(el.querySelector('#pergunta').value);
     el.querySelector('#pergunta').onkeydown = (e) => { if (e.key === 'Enter') perguntar(e.target.value); };
+    if (MB.perguntaPendente) { const q = MB.perguntaPendente; MB.perguntaPendente = null; perguntar(q); } // veio do "Pergunte" do Início
     el.querySelectorAll('#sug button').forEach((b) => { b.onclick = () => perguntar(b.textContent); });
 
     el.querySelector('#pc-ir').onclick = async () => {

@@ -65,29 +65,3 @@ async function rodar(resumo) {
   await new Promise((r) => setTimeout(r, 50));
   return el.innerHTML;
 }
-
-test('Início: card dos três números no topo', async () => {
-  const html = await rodar({ ...BASE, tres_numeros: { tenho: 5000.1, comprometido: 1800.05, reserva: 500, posso_gastar: 2700.05, ate: '2026-11-30' } });
-  const i = html.indexOf('id="kf-tres-numeros"');
-  assert.ok(i >= 0, 'card #kf-tres-numeros');
-  const hero = html.indexOf('kf-hero');
-  assert.ok(hero < 0 || i < hero, 'fica antes do card de saldo (topo)');
-  const card = html.slice(i, i + 3000);
-  for (const t of ['Quanto tenho', 'Comprometido', 'Posso gastar']) assert.match(card, new RegExp(t), `mostra "${t}"`);
-  assert.match(card, /2700,05/, 'valor de posso gastar');
-  assert.match(card, /até 30\/11/, 'período "até DD/MM"');
-});
-
-test('Início sem contas: três números com "—" e convite, sem quebrar', async () => {
-  const html = await rodar({ ...BASE, saldo_disponivel: null, lacunas: ['contas'], tres_numeros: { tenho: null, comprometido: 300, reserva: 0, posso_gastar: null, ate: '2026-11-30' } });
-  const i = html.indexOf('id="kf-tres-numeros"');
-  assert.ok(i >= 0, 'card aparece mesmo sem contas');
-  const card = html.slice(i, i + 3000);
-  assert.match(card, /—/);
-  assert.match(card, /Contas/, 'convida a cadastrar contas');
-});
-
-test('Início com resposta antiga (sem tres_numeros) não quebra', async () => {
-  const html = await rodar(BASE);
-  assert.ok(html.length > 0);
-});

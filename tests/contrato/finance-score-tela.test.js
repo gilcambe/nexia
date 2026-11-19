@@ -61,66 +61,6 @@ function ambiente(respostasIA) {
 }
 const ARQ = (nome) => ({ name: nome });
 
-test('Início: cartão de score + saúde parcial com próximo passo, mesmo numa conta vazia', async () => {
-  const a = ambiente([]);
-  a.rodar('score.js'); a.rodar('inicio.js');
-  await a.MB.telas.inicio(a.el);
-  assert.match(a.el.innerHTML, /id="kf-saude"/);
-  assert.match(a.el.innerHTML, /Saúde financeira \(parcial\)/);
-  assert.match(a.el.innerHTML, /faltam 3 indicadores/);
-  assert.match(a.el.innerHTML, /👉 /, 'mostra o próximo passo');
-  assert.match(a.el.innerHTML, /id="score-cartao"/);
-  assert.match(a.el.innerHTML, /Ainda não tenho seu score/);
-  assert.match(a.el.innerHTML, /📷 Atualizar score/);
-  assert.ok(a.el.innerHTML.indexOf('id="kf-saude"') < a.el.innerHTML.indexOf('kf-hero'), 'saúde fica no topo');
-});
-
-test('Início: depois de salvar scores, mostra o último de cada birô, a faixa, a variação e 3 dicas', async () => {
-  const a = ambiente([]);
-  for (const [biro, score, data] of [['serasa', 600, '2026-10-01'], ['serasa', 650, '2026-11-01'], ['spc', 380, '2026-11-05']]) await p.agir('u1', { acao: 'score_salvar', biro, score, data });
-  a.rodar('score.js'); a.rodar('inicio.js');
-  await a.MB.telas.inicio(a.el);
-  const h = a.el.innerHTML;
-  assert.match(h, /Serasa[\s\S]*01\/11\/2026[\s\S]*▲ \+50 desde o anterior[\s\S]*650[\s\S]*bom/);
-  assert.match(h, /SPC[\s\S]*380[\s\S]*regular[\s\S]*faixa estimada/);
-  assert.doesNotMatch(h, /Boa Vista/);
-  assert.equal((h.match(/• /g) || []).length, 3, '3 dicas');
-});
-
-test('Início: "Atualizar score" lê o print (imagens juntas), abre o formulário preenchido e salva com score_salvar', async () => {
-  const a = ambiente([{ biro: 'serasa', score: 712, data: '2026-11-18' }, 'ilegível']);
-  a.rodar('score.js'); a.rodar('inicio.js');
-  await a.MB.telas.inicio(a.el);
-  const arq = a.els['#score-arq'];
-  a.els['#score-atualizar'].onclick();
-  assert.ok(arq.clicado, 'o botão abre o seletor de arquivo');
-  arq.files = [ARQ('a.png'), ARQ('b.pdf')];
-  await arq.onchange({ target: { files: arq.files } });
-  assert.deepEqual(a.chamadas.find((c) => c.acao === 'score_print_ler').dados.imagens, [IMG('a.png'), IMG('b.pdf')]);
-  assert.equal(a.avisos.length, 1, 'avisa quantos não deu para ler');
-  assert.equal(a.forms.length, 1, 'um formulário para o lido ok');
-  const f = a.forms[0];
-  assert.equal(f.titulo, 'Confira o score');
-  assert.equal(f.campos.find((c) => c.nome === 'score').valor, 712);
-  assert.equal(f.campos.find((c) => c.nome === 'data').valor, '2026-11-18');
-  assert.match(f.campos.find((c) => c.nome === 'biro').opcoes, /value="serasa" selected/);
-  await f.aoSalvar({ biro: 'serasa', score: '715', data: '2026-11-18' });
-  const salvo = a.chamadas.filter((c) => c.acao === 'score_salvar').pop();
-  assert.deepEqual(JSON.parse(JSON.stringify(salvo.dados)), { biro: 'serasa', score: 715, data: '2026-11-18' });
-  const lista = await p.agir('u1', { acao: 'score_listar' });
-  assert.equal(lista[1].por_biro.serasa.score, 715);
-});
-
-test('Início: "Digitar" abre formulário vazio; sem os botões desenhados nada quebra', async () => {
-  const a = ambiente([]);
-  a.rodar('score.js'); a.rodar('inicio.js');
-  await a.MB.telas.inicio(a.el);
-  a.els['#score-digitar'].onclick();
-  assert.equal(a.forms[0].titulo, 'Digite seu score');
-  const sem = { innerHTML: '', querySelector: () => null };
-  assert.doesNotThrow(() => a.MB.score.ligar(sem, { api: a.MB.api, pdf: a.MB.pdf, reduzir: a.MB.ui.reduzir, formulario: a.MB.ui.formulario, ok: a.MB.ui.ok }));
-});
-
 test('Contas: botão de print lê o saldo, abre o MESMO formulário preenchido e salva com conta_salvar (atualiza a conta que já existe)', async () => {
   const a = ambiente([{ nome: 'Nubank', instituicao: 'Nubank', saldo: 'R$ 2.500,10', tipo: 'corrente' }]);
   const existente = await p.agir('u1', { acao: 'conta_salvar', nome: 'Nubank', tipo: 'corrente', saldo: 100, moeda: 'BRL' });

@@ -14,11 +14,6 @@ test('tutorial: 4 passos, só exemplo, sem chamar o servidor', () => {
   const window = { MB: {} };
   vm.runInNewContext(s, { window, document: {}, localStorage: { getItem: () => null, setItem() {} } });
   assert.equal(window.MB.tutorial.PASSOS.length, 4);
-  assert.match(ler('inicio.js'), /id="kf-como"/);
+  assert.match(ler('perfil.js'), /id="kp-tut"/); // redesign: "Como usar" mora no Perfil
   assert.match(ler('sw.js'), /'\/prumo\/tutorial\.js'/);
-});
-
-test('Início avisa conta que vence em até 3 dias', () => {
-  const i = ler('inicio.js');
-  assert.match(i, /vence hoje/); assert.match(i, /'vence em ' \+ n/);
 });

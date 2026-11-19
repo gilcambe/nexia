@@ -4,7 +4,12 @@
 (function () {
   'use strict';
   const $ = (id) => document.getElementById(id);
-  const ABAS = ['inicio', 'documentos', 'contas', 'cartoes', 'dividas', 'investimentos', 'economizar', 'metas', 'familia', 'impostos', 'alertas', 'conexoes', 'assistente', 'carteira', 'gastos', 'compras', 'objetivos', 'orcamento', 'consultor', 'pontos', 'viagens', 'ajuda', 'mercado', 'robos', 'aposentadoria', 'fluxo', 'carreira'];
+  const ABAS = ['inicio', 'documentos', 'contas', 'cartoes', 'dividas', 'investimentos', 'economizar', 'metas', 'familia', 'impostos', 'alertas', 'conexoes', 'assistente', 'carteira', 'gastos', 'compras', 'objetivos', 'orcamento', 'consultor', 'pontos', 'viagens', 'ajuda', 'mercado', 'robos', 'aposentadoria', 'fluxo', 'carreira', 'mes', 'patrimonio', 'beneficios', 'perfil'];
+  // Redesign fase 2: cada tela antiga "mora" numa das 5 abas de baixo (a aba fica acesa) ou no Perfil.
+  const CASA = { inicio: 'inicio', mes: 'mes', orcamento: 'mes', contas: 'mes', cartoes: 'mes', gastos: 'mes', compras: 'mes', fluxo: 'mes', documentos: 'mes', carreira: 'mes', conexoes: 'mes',
+    patrimonio: 'patrimonio', investimentos: 'patrimonio', carteira: 'patrimonio', mercado: 'patrimonio', robos: 'patrimonio', dividas: 'patrimonio', aposentadoria: 'patrimonio', objetivos: 'patrimonio', metas: 'patrimonio',
+    beneficios: 'beneficios', pontos: 'beneficios', viagens: 'beneficios' };
+  const TITULO = { inicio: 'Início', mes: 'Mês', patrimonio: 'Patrimônio e futuro', beneficios: 'Benefícios', perfil: 'Perfil' };
   const btnMenu = $('btn-menu');
   const navAbas = $('abas');
   const fundoMenu = $('fundo-menu');
@@ -99,7 +104,9 @@
     if (!ABAS.includes(nome)) nome = 'carteira';
     document.querySelectorAll('#abas button').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.aba === nome)));
     const btn = document.querySelector(`#abas button[data-aba="${nome}"]`);
-    if (btn && btn.textContent) tituloAba.textContent = btn.textContent.trim();
+    tituloAba.textContent = TITULO[nome] || (btn && btn.textContent ? btn.textContent.trim() : '');
+    document.querySelectorAll('#barra button[data-ir]').forEach((b) => { if (b.dataset.ir === (CASA[nome] || '')) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
+    window.scrollTo(0, 0);
     try { localStorage.setItem('prumo-aba', nome); } catch { /* sem armazenamento */ }
     const grupo = btn && btn.closest('.grupo');
     if (grupo) {
@@ -165,13 +172,16 @@
     $('tela-entrar').hidden = logado;
     $('tela-app').hidden = !logado;
     $('abas').hidden = !logado;
-    $('sair').hidden = !logado;
+    $('sair').hidden = true; // "Sair" mora no Perfil (redesign)
+    if ($('barra')) $('barra').hidden = !logado;
+    if ($('avatar')) $('avatar').hidden = !logado;
     if (!logado) $('aviso').hidden = true;
     if (!logado) fecharMenu();
   }
 
   // Junta no MB que já existe (cache-api.js e outros scripts carregados antes guardam funções nele).
   window.MB = Object.assign(window.MB || {}, { api, usuario: () => usuario, telas: window.MB && window.MB.telas ? window.MB.telas : {}, abrirAba, mostrarErro });
+  MB.abrirLancar = async () => { const ok = MB.lancar || await carregarScript('lancar'); if (ok && MB.lancar) MB.lancar.abrir(); else mostrarErro('Não consegui abrir o Lançar. Feche e abra o app.'); };
 
   // Mostra o motivo real do erro de login (código do Firebase) para ficar fácil de corrigir.
   function msgLogin(e) {
@@ -208,6 +218,10 @@
     };
     auth.getRedirectResult().catch((e) => mostrarErro(msgLogin(e)));
     $('sair').onclick = () => auth.signOut();
+    MB.sair = () => auth.signOut();
+    // Barra de baixo: 4 telas e o "+ Lançar" (folha que sobe com foto, PDF, extrato e digitar).
+    document.querySelectorAll('#barra button[data-ir]').forEach((b) => { b.onclick = () => (b.dataset.ir === 'lancar' ? MB.abrirLancar() : abrirAba(b.dataset.ir)); });
+    if ($('avatar')) $('avatar').onclick = () => abrirAba('perfil');
     document.querySelectorAll('#abas button').forEach((b) => { b.onclick = () => abrirAba(b.dataset.aba); });
     document.querySelectorAll('.titulo-grupo').forEach((b) => { b.onclick = () => toggleGrupo(b); });
     // Menu curto (dono 19/11): "Mais telas" mostra o resto; fica lembrado neste aparelho.
@@ -222,6 +236,8 @@
     document.getElementById('fechar-menu').onclick = fecharMenu;
     auth.onAuthStateChanged((u) => {
       usuario = u;
+      const av = $('avatar');
+      if (av && u) { const ini = String(u.displayName || u.email || '?').trim().charAt(0).toUpperCase(); av.textContent = ini; if (u.photoURL) { const im = document.createElement('img'); im.alt = ''; im.referrerPolicy = 'no-referrer'; im.src = u.photoURL; im.onerror = () => { av.textContent = ini; }; av.textContent = ''; av.appendChild(im); } }
       if (window.MB.api && typeof window.MB.api.limpar === 'function') window.MB.api.limpar();
       mostrar(!!u);
       if (u) {

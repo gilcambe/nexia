@@ -31,29 +31,6 @@ function montar(lentoMs) {
   return { MB, el, chamadas };
 }
 
-test('Início aparece sem esperar score, gráfico e cotação lentos; eles entram depois', async () => {
-  const t = montar(4000);
-  const t0 = Date.now();
-  await t.MB.telas.inicio(t.el);
-  assert.ok(Date.now() - t0 < 2500, `abriu em ${Date.now() - t0} ms (tem que ser < 2,5 s)`);
-  assert.match(t.el.innerHTML, /id="kf-saude"/, 'o principal já está na tela');
-  assert.match(t.el.innerHTML, /id="kf-score"/);
-  await new Promise((r) => setTimeout(r, 4300));
-  assert.match(t.el['#kf-score'].innerHTML, /cartao-score/, 'score entra quando chega');
-  assert.match(t.el['#kf-patrim-corpo'].innerHTML, /linha/, 'gráfico entra quando chega');
-  for (const a of ['score_listar', 'historico_listar', 'cotacoes_vivas']) {
-    const c = t.chamadas.find((x) => x.acao === a);
-    assert.ok(c && c.opts && c.opts.silencioso, `${a} é silenciosa (sem faixa vermelha)`);
-  }
-});
-
-test('opcional rápido entra junto, sem "Carregando…"', async () => {
-  const t = montar(10);
-  await t.MB.telas.inicio(t.el);
-  assert.match(t.el.innerHTML, /cartao-score/);
-  assert.match(t.el.innerHTML, /id="linha"/);
-});
-
 test('app e cache repassam o silencioso; cotacoes_vivas nunca dá 500', async () => {
   assert.match(ler('app.js'), /async function api\(acao, dados, opts\)/);
   assert.match(ler('app.js'), /opts && opts\.silencioso/);

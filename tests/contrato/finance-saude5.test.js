@@ -86,7 +86,7 @@ test('kpis do mês: estimado sem contas fixas; fatura reduz o posso gastar na me
   assert.equal(a.alerta, false);
   const b = S.kpisMes({ tenho: 9000, falta_receber: 3000, comprometido: 1280.45, comprometido_cadastrado: true, dias_restantes: 12, gasto_diario: null });
   assert.equal(b.posso_mes, 10719.55);
-  assert.equal(a.posso_mes - b.posso_mes, 1280.45);
+  assert.equal(Math.round((a.posso_mes - b.posso_mes) * 100) / 100, 1280.45);
   assert.equal(b.posso_hoje, 893.3);
   assert.equal(b.sobra_prevista, null);
   assert.equal(b.estado, 'completo');

@@ -1,0 +1,47 @@
+'use strict';
+// Redesign: Perfil (no avatar). Meus cadastros (ver, editar, apagar, desfazer), documentos, ajuda, preferências e Sair.
+// Ações que apagam ficam só aqui.
+(function () {
+  const MB = window.MB;
+  const carregar = () => MB.hub ? Promise.resolve(MB.hub) : new Promise((ok, falha) => { const s = document.createElement('script'); s.src = '/prumo/hubs.js'; s.onload = () => ok(MB.hub); s.onerror = falha; document.body.appendChild(s); });
+  const dmy = (d) => (d && /^\d{4}-\d{2}/.test(d) ? (d.length >= 10 ? `${d.slice(8, 10)}/${d.slice(5, 7)}/${d.slice(0, 4)}` : `${d.slice(5, 7)}/${d.slice(0, 4)}`) : '');
+  MB.telas.perfil = async (el) => {
+    const H = await carregar(); const U = await H.ui(); U.aba('perfil');
+    const u = (MB.usuario && MB.usuario()) || {};
+    el.innerHTML = `<div class="kh">
+      <section class="card kh-larga" style="display:flex;gap:12px;align-items:center"><div style="width:48px;height:48px;border-radius:50%;background:#1A2547;display:grid;place-items:center;font-weight:700;font-size:20px">${H.esc(String(u.displayName || u.email || '?').charAt(0).toUpperCase())}</div>
+        <div><b>${H.esc(u.displayName || 'Você')}</b><div class="sub">${H.esc(u.email || '')}</div></div></section>
+      <section class="card"><b>📋 Meus cadastros</b><div class="sub" style="margin-top:4px">Tudo que você cadastrou, de todas as telas. Dá para editar, apagar e desfazer.</div><button class="btn sec" id="kp-cad-btn" type="button">Ver meus cadastros</button><div id="kp-cad"></div></section>
+      ${H.lista([
+        ['documentos', '🧾', 'Documentos e lançamentos', 'Tudo que você mandou'],
+        ['assistente', '💬', 'Assistente', 'Pergunte sobre o seu dinheiro'],
+        ['consultor', '🧠', 'Consultor', 'Análise do mês'],
+        ['conexoes', '🔗', 'Bancos', 'Importar extrato sem senha'],
+        ['familia', '👨‍👩‍👧', 'Família', 'Dividir com quem mora com você'],
+        ['alertas', '🔔', 'Alertas', 'O que avisar e quando'],
+        ['ajuda', '❓', 'Ajuda', 'Perguntas comuns'],
+      ])}
+      <section class="card"><b>Como usar</b><div class="sub" style="margin-top:4px">Um passo a passo de 1 minuto, com exemplo.</div><button class="btn sec" id="kp-tut" type="button">Ver o passo a passo</button></section>
+      <section class="card"><b>🔒 Privacidade</b><div class="sub" style="margin-top:4px">Seus dados são só seus. O app nunca pede senha de banco nem de programa de pontos. O 👁 lá em cima esconde todos os valores.</div></section>
+      <button class="btn sec kh-larga" id="kp-sair" type="button" style="color:#FF5A5F;border-color:#5a2730">Sair da conta</button>
+    </div>`;
+    H.ligar(el);
+    el.querySelector('#kp-sair').onclick = () => { if (confirm('Sair da sua conta neste aparelho?')) MB.sair(); };
+    el.querySelector('#kp-tut').onclick = () => { const s = document.createElement('script'); s.src = '/prumo/tutorial.js'; s.onload = () => MB.tutorial && MB.tutorial.abrir(); if (MB.tutorial) MB.tutorial.abrir(); else document.body.appendChild(s); };
+    const cad = el.querySelector('#kp-cad');
+    const desenhar = async (msg) => {
+      const r = await MB.api('cadastros_listar');
+      cad.innerHTML = `${msg ? `<div class="aviso-c" style="margin-top:10px">${msg}</div>` : ''}${r.pode_desfazer ? '<button class="btn sec mini" id="kp-desfazer" type="button">↩️ Desfazer o último apagado</button>' : ''}`
+        + (r.grupos.length ? r.grupos.map((g) => `<div style="margin-top:12px"><b>${H.esc(g.nome)}</b>${g.itens.map((x) => `<div class="item"><span>${H.esc(x.titulo)} <span class="fraco">${dmy(x.data)}</span></span><span class="v">${x.valor === null ? '' : H.brl(x.valor)} <button type="button" class="btn sec mini" data-ed="${H.esc(g.aba)}" aria-label="Editar">✏️</button> <button type="button" class="btn sec mini" data-ap="${H.esc(g.colecao)}" data-id="${H.esc(x.id)}" aria-label="Apagar">🗑️</button></span></div>`).join('')}</div>`).join('')
+          : '<p class="fraco">Você ainda não cadastrou nada. Toque em "+ Lançar" lá embaixo.</p>');
+      const d = cad.querySelector('#kp-desfazer');
+      if (d) d.onclick = async () => { try { const o = await MB.api('desfazer'); await desenhar(`↩️ Voltou: ${H.esc(o.devolvido.titulo)}`); } catch { /* erro já mostrado */ } };
+      cad.querySelectorAll('[data-ed]').forEach((b) => { b.onclick = () => MB.abrirAba(b.dataset.ed === 'inicio' ? 'patrimonio' : b.dataset.ed); });
+      cad.querySelectorAll('[data-ap]').forEach((b) => { b.onclick = async () => {
+        if (!confirm('Apagar este item? Os números que vêm dele também mudam. Dá para desfazer logo em seguida.')) return;
+        try { const o = await MB.api('cadastro_apagar', { colecao: b.dataset.ap, id: b.dataset.id }); await desenhar(`🗑️ Apagado: ${H.esc(o.apagado.titulo)}`); } catch { /* erro já mostrado */ }
+      }; });
+    };
+    el.querySelector('#kp-cad-btn').onclick = () => { if (cad.innerHTML) { cad.innerHTML = ''; return; } desenhar('').catch(() => { cad.innerHTML = '<p class="fraco">Não consegui abrir agora.</p>'; }); };
+  };
+})();

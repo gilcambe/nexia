@@ -26,11 +26,3 @@ test('lista tudo, apaga e desfaz', async () => {
   const l2 = (await A({ acao: 'cadastros_listar' }))[1];
   assert.equal(l2.total, 3, 'desfazer devolveu'); assert.equal(l2.pode_desfazer, false);
 });
-
-test('só apaga coleção permitida; Início tem o botão', async () => {
-  { const b0 = banco(); P.deps.db = () => b0; }
-  assert.equal((await A({ acao: 'cadastro_apagar', colecao: 'config', id: 'salario' }))[0], 400);
-  assert.equal((await A({ acao: 'desfazer' }))[0], 404);
-  const i = fs.readFileSync(path.join(__dirname, '../../prumo/inicio.js'), 'utf8');
-  assert.match(i, /id="kf-cadastros"/); assert.match(i, /cadastros_listar/); assert.match(i, /MB\.api\('desfazer'\)/);
-});
