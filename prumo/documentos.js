@@ -21,9 +21,11 @@
     const itensPrev = futuros.map((l) => ({ tipo: l.tipo === 'receita' ? 'receber' : 'pagar', nome: l.descricao, data: l.data, valor: l.valor, colecao: 'lancamentos', id: l.id }));
     el.innerHTML = `
       <div class="card"><h3 style="margin:0 0 6px">📄 Enviar documento</h3>
-        <div class="fraco">Fatura, extrato, comprovante Pix, nota, boleto ou recibo: foto, print ou PDF (até 5 páginas por vez).</div>
+        <div class="fraco">Fatura, extrato, comprovante Pix, nota, boleto ou recibo: foto, print ou PDF (até 5 páginas por vez). Extrato do banco também em arquivo .ofx ou .csv (sem senha de banco).</div>
         <input type="file" id="kf-arq" accept="image/*" multiple style="margin-top:10px">
         <button class="btn sec mini" id="kf-pdf" type="button" style="margin-top:6px">📄 Escolher PDF</button>
+        <button class="btn sec mini" id="kf-ext-btn" type="button" style="margin-top:6px">🏦 Escolher extrato (.ofx/.csv)</button>
+        <input type="file" id="kf-ext" accept=".ofx,.csv" multiple hidden>
         <button class="btn" id="kf-ler" type="button" style="margin-top:10px">Ler documento</button></div>
       <div id="kf-res"></div>
       ${pv ? pv.cartao(itensPrev, 'Previsto (ainda não aconteceu)') : ''}
@@ -35,14 +37,35 @@
     const res = el.querySelector('#kf-res');
     const kfPdf = el.querySelector('#kf-pdf');
     if (kfPdf) kfPdf.onclick = () => { const a = el.querySelector('#kf-arq'); a.accept = 'application/pdf,.pdf'; a.value = ''; a.click(); };
+    const kfExt = el.querySelector('#kf-ext'); const kfExtBtn = el.querySelector('#kf-ext-btn');
+    if (kfExtBtn && kfExt) {
+      kfExtBtn.onclick = () => { kfExt.value = ''; kfExt.click(); };
+      kfExt.onchange = () => { const n = (kfExt.files || []).length; if (n) res.innerHTML = `<div class="fraco">${n} extrato(s) escolhido(s). Toque em "Ler documento".</div>`; };
+    }
     el.querySelector('#kf-ler').onclick = async (ev) => {
-      const arqs = [...el.querySelector('#kf-arq').files];
+      const arqs = [...el.querySelector('#kf-arq').files, ...((kfExt && kfExt.files) || [])];
       el.querySelector('#kf-arq').accept = 'image/*';
       if (!arqs.length) { res.innerHTML = '<div class="aviso-c">Escolha pelo menos uma foto, print ou PDF.</div>'; return; }
       if (arqs.length > 5) { res.innerHTML = '<div class="aviso-c">Envie no máximo 5 arquivos por vez.</div>'; return; }
       const btn = ev.currentTarget; btn.disabled = true; btn.textContent = 'Lendo… pode levar até 2 minutos';
       res.innerHTML = '';
       try {
+        // Fase 4 (#4013 / #3953): extrato .ofx/.csv vai como texto, sem passar pelo leitor de PDF/imagem.
+        const ehExtrato = (a) => /.(ofx|csv)$/i.test(String(a.name || ''));
+        const extratos = arqs.filter(ehExtrato);
+        if (extratos.length) {
+          if (extratos.length !== arqs.length) throw new Error('Mande o extrato (.ofx/.csv) separado das fotos e PDFs.');
+          const junto = { documento: 'extrato', imagens_lidas: 0, imagens_total: extratos.length, prontos: [], conferir: [], ja_lancados: 0, receitas: 0, despesas: 0 };
+          for (const a of extratos) {
+            const r = await MB.api('extrato_ler', { nome: a.name, conteudo: await a.text() });
+            junto.imagens_lidas += 1; junto.prontos.push(...(r.prontos || [])); junto.conferir.push(...(r.conferir || []));
+            junto.ja_lancados += r.ja_lancados || 0; junto.receitas += r.receitas || 0; junto.despesas += r.despesas || 0;
+          }
+          junto.receitas = Math.round(junto.receitas * 100) / 100; junto.despesas = Math.round(junto.despesas * 100) / 100;
+          mostrarLeitura(junto);
+          if (kfExt) kfExt.value = ''; // não mistura com a próxima leitura
+          return;
+        }
         const pdf = await carregarPdf();
         const { imagens, cortou } = await pdf.paraImagens(arqs, reduzir);
         const r = await MB.api('doc_ler', { imagens });

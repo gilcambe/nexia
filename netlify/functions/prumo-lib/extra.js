@@ -163,6 +163,8 @@ async function agirExtra(acao, body, c) {
   if (sal) return sal;
   const conf = await require('./conferencia').agirConferencia(acao, body, c); // fase 6 #4013: holerite x ponto
   if (conf) return conf;
+  const ext = await require('./extrato').agirExtrato(acao, body, c); // fase 4 #4013 / #3953: extrato OFX/CSV
+  if (ext) return ext;
   const onb = await require('./onboarding').agirOnboarding(acao, body, c); // fase 3 #4013
   if (onb) return onb;
   const cor = await require('./cortes').agirCortes(acao, body, c); // fase 9 #4013
