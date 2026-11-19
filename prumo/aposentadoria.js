@@ -23,23 +23,31 @@
     const p = estado.perfil;
 
     el.innerHTML = `
-      <div class="card"><h3 style="margin:0 0 6px">Aposentadoria e FGTS</h3>
-        <div class="fraco">Tudo aqui é estimativa com as regras de 2026. Eu nunca peço sua senha do gov.br: o dado entra por digitação, PDF ou print.</div>
-        <div class="linha" style="margin-top:10px">
-          <button class="btn" type="button" id="apo-perfil">${p ? '✍️ Editar meus dados' : '✍️ Informar meus dados'}</button>
-          <button class="btn sec" type="button" id="apo-cnis">📷 Ler CNIS (print)</button>
-          <button class="btn sec" type="button" id="apo-cnis-pdf">📄 CNIS em PDF</button>
-          <button class="btn sec" type="button" id="apo-fgts-btn">💰 FGTS</button>
-          <button class="btn sec" type="button" id="apo-fgts-print">📷 Saldo do FGTS por print</button>
+      <div class="card" id="apo-frase">${A.frase(v.inss, v.fgts)}</div>
+      <div class="card">
+        <button class="btn" type="button" id="apo-cnis-pdf">📄 Mandar extrato do INSS (CNIS)</button>
+        <button class="btn sec" type="button" id="apo-perfil" style="margin-top:6px">${p ? '✏️ Editar meus dados' : '✍️ Digitar meus dados'}</button>
+        ${p || v.fgts ? '<button class="btn sec" type="button" id="apo-apagar" style="margin-top:6px">🗑️ Apagar dados da aposentadoria</button>' : ''}
+        <details style="margin-top:8px"><summary class="fraco">Mais opções</summary>
+        <div class="linha" style="margin-top:8px">
+          <button class="btn sec" type="button" id="apo-cnis">📷 CNIS por print</button>
+          <button class="btn sec" type="button" id="apo-fgts-btn">💰 Editar FGTS</button>
+          <button class="btn sec" type="button" id="apo-fgts-print">📷 FGTS por print</button>
           <button class="btn sec" type="button" id="apo-imovel">🏠 FGTS no imóvel</button>
           <button class="btn sec" type="button" id="apo-prev-btn">🏦 Simular previdência</button>
           <button class="btn sec" type="button" id="apo-guardar-btn">🎯 Quanto guardar</button>
         </div>
+        <div class="fraco" style="margin-top:6px">Tudo aqui é estimativa com as regras de 2026. Eu nunca peço sua senha do gov.br.</div></details>
         <input type="file" id="apo-arq" accept="image/*" multiple hidden>
         <input type="file" id="apo-fgts-arq" accept="image/*" multiple hidden>
         <div id="apo-alertas"></div>
         ${(v.faltando || []).map((f) => `<div class="aviso-c">${A.esc(f)}</div>`).join('')}</div>
-      ${A.cartaoInss(v.inss)}${A.cartaoFgts(v.fgts)}${A.cartaoPrev(estado.prev)}${A.cartaoGuardar(v.quanto_guardar)}`;
+      <details class="card"><summary><b>Ver os detalhes (regras, FGTS, previdência)</b></summary>
+      ${A.cartaoInss(v.inss)}${A.cartaoFgts(v.fgts)}${A.cartaoPrev(estado.prev)}${A.cartaoGuardar(v.quanto_guardar)}</details>`;
+    // Dono 19/11: "não deixa eu apagar". Apaga o que a pessoa escolher (dados do INSS e/ou FGTS).
+    const apg = el.querySelector('#apo-apagar');
+    if (apg) apg.onclick = () => formulario('Apagar dados da aposentadoria', [{ nome: 'parte', rotulo: 'O que apagar?', opcoes: '<option value="perfil">Meus dados do INSS (nascimento, tempo, média)</option><option value="fgts">Saldo do FGTS</option><option value="tudo">Tudo</option>' }],
+      async (d) => { if (!confirm('Apagar mesmo? Não dá para desfazer.')) throw new Error('cancelado'); for (const x of d.parte === 'tudo' ? ['perfil', 'fgts'] : [d.parte]) await MB.api('apos_apagar', { parte: x }); ok('🗑️ Apagado.'); });
 
     const salvarPerfil = (base, extra) => formulario('Confira seus dados', A.camposPerfil(base), (d) => MB.api('apos_perfil_salvar', A.corpoPerfil(d, extra)).then(() => ok('✅ Dados salvos.')));
     el.querySelector('#apo-perfil').onclick = () => salvarPerfil(p, null);

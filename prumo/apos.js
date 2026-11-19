@@ -12,6 +12,17 @@
   const lista = (itens) => (itens && itens.length ? `<ul class="fraco" style="margin:6px 0 0;padding-left:18px">${itens.map((i) => `<li>${esc(i)}</li>`).join('')}</ul>` : '');
 
   // ---------- INSS ----------
+  // Dono 19/11: "aposentadoria em uma frase". Só o essencial; o resto fica em "Ver os detalhes".
+  function frase(inss, fgts) {
+    const f = fgts ? `<div class="fraco" style="margin-top:6px">FGTS: ${brl(fgts.saldo)} hoje.</div>` : '';
+    if (!inss) return `<b>Aposentadoria</b><p>Mande o extrato do INSS (CNIS) e eu calculo quando e quanto você vai receber.</p>${f}`;
+    const r = inss.regras.find((x) => x.id === inss.melhor) || inss.regras[0];
+    if (!r || !r.cumpre_em) return `<b>Aposentadoria</b><p>Com os dados de hoje, nenhuma regra fecha nos próximos anos. Confira seus dados.</p>${f}`;
+    const quando = r.ja_cumpre ? 'Você já pode se aposentar' : `Você pode se aposentar em <b>${dataBr(r.cumpre_em)}</b>, com ${esc(String(Math.floor(Number(r.idade_na_data))))} anos`;
+    const valor = r.beneficio != null ? `, recebendo cerca de <b>${brl(r.beneficio)}</b> por mês` : '';
+    const media = inss.perfil && inss.perfil.media_salarial ? `<div class="fraco" style="margin-top:6px">Sua média de salários (corrigida): ${brl(inss.perfil.media_salarial)}.</div>` : '';
+    return `<b>Aposentadoria</b><p style="margin:6px 0 0">${quando}${valor}.</p><div class="fraco">Regra: ${esc(r.nome)} (estimativa).</div>${media}${f}`;
+  }
   function cartaoInss(inss) {
     if (!inss) return '<div class="card" id="apo-inss"><h3 style="margin:0 0 6px">INSS: quando e quanto</h3><p class="fraco">Informe seus dados ou leia o extrato do CNIS para ver as regras.</p></div>';
     const linhas = inss.regras.map((r) => {
@@ -169,5 +180,5 @@
     return { saldo_devedor: Number(d.saldo_devedor), prazo_meses: Number(d.prazo_meses), taxa_ano: Number(d.taxa_ano || 0) };
   }
 
-  MB.apos = { esc, brl, dataBr, anosMeses, cartaoInss, cartaoFgts, cartaoPrev, cartaoGuardar, camposPerfil, corpoPerfil, camposFgts, corpoFgts, camposPrev, corpoPrev, camposGuardar, corpoGuardar, camposImovel, corpoImovel };
+  MB.apos = { frase, esc, brl, dataBr, anosMeses, cartaoInss, cartaoFgts, cartaoPrev, cartaoGuardar, camposPerfil, corpoPerfil, camposFgts, corpoFgts, camposPrev, corpoPrev, camposGuardar, corpoGuardar, camposImovel, corpoImovel };
 })();

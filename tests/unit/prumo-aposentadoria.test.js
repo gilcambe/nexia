@@ -94,9 +94,9 @@ test('CNIS: períodos que se sobrepõem contam uma vez; vínculo aberto vai até
 });
 
 test('média das contribuições: ignora antes de 07/1994 e limita ao teto', () => {
-  const r = A.mediaDasContribuicoes([{ competencia: '1994-06', valor: 9999 }, { competencia: '2020-01', valor: 2000 }, { competencia: '2020-02', valor: 4000 }, { competencia: '2020-03', valor: 20000 }]);
+  const r = A.mediaDasContribuicoes([{ competencia: '1994-06', valor: 9999 }, { competencia: '2020-01', valor: 2000 }, { competencia: '2020-02', valor: 4000 }, { competencia: '2020-03', valor: 20000 }], 2020); // ano de hoje = 2020: sem correção, só o teto
   perto(r.media, (2000 + 4000 + 8475.55) / 3, 0.01);
-  assert.ok(r.alertas.some((a) => /SUPOSIÇÃO/.test(a)));
+  assert.ok(r.alertas.some((a) => /Estimativa: cada contribuição foi corrigida/.test(a))); // dono 19/11: média corrigida pela inflação
 });
 
 test('FGTS: tabela oficial do saque-aniversário', () => {
@@ -259,7 +259,7 @@ test('apos_cnis_ler: lê cada imagem, junta as páginas, calcula tempo e média,
   const res = r[1].resumo;
   assert.equal(res.vinculos.length, 3, 'B repetido não duplica');
   assert.equal(res.tc_total_meses, 148); assert.equal(res.tc_2019_meses, 64);
-  assert.equal(res.media_salarial, 3000); assert.equal(res.contribuicoes_lidas, 2);
+  assert.ok(res.media_salarial > 3000, 'corrigida pela inflação (dono 19/11)'); assert.equal(res.contribuicoes_lidas, 2);
   assert.ok(res.alertas.length >= 2);
   assert.equal([...banco.dados.keys()].some((k) => k.includes('aposentadoria')), false, 'só salva depois da conferência');
   assert.equal((await agir({ acao: 'apos_cnis_ler', imagens: [] }))[0], 400);
