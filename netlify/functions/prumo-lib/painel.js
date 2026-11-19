@@ -62,7 +62,11 @@ async function montarPainel(c) {
   // --- Recebi no mês: entradas que já caíram (lançamentos + pagamentos do Salário que não vieram de lançamento) ---
   const recebiLanc = soma(doMes.filter((l) => l.tipo === 'receita'), (l) => l.valor);
   const recebiPag = sal ? soma((sal.recebidos || []).filter((p) => p.origem !== 'lancamento'), (p) => p.liquido) : 0;
-  const recebi = r2(recebiLanc + recebiPag);
+  // Sem o adiantamento lançado, a previsão do Salário supõe que ele já caiu (dia 15): entra no Recebi como estimado,
+  // senão o "Falta receber" desconta um dinheiro que não aparece em lugar nenhum.
+  const ad = sal && sal.previsao && sal.previsao.adiantamento;
+  const adEstimado = ad && ad.automatico && ad.status === 'caiu' ? r2(ad.valor) : 0;
+  const recebi = r2(recebiLanc + recebiPag + adEstimado);
 
   // --- Falta receber: a previsão do Salário (líquido - adiantamento) ou o que está marcado como "a receber" ---
   const prev = prv.resumoPrevisto({ lancs: lancsTodos, pagamentos, dividas }, mes, hoje);
@@ -137,8 +141,8 @@ async function montarPainel(c) {
   return {
     hoje, mes, dias_restantes: dr,
     score, confianca: conf,
-    kpis: { tenho, recebi, falta_receber, a_pagar, ...kpis, gasto_mes: despesasMes, renda: renda || null,
-      origem: { tenho: !contas.length ? 'sem contas' : 'saldo das contas' + (marco ? ' informado em ' + marco.slice(8, 10) + '/' + marco.slice(5, 7) : '') + (movLanc.length + movPag.length ? ' + ' + (movLanc.length + movPag.length) + ' lançamento(s) depois' : ''), renda: sal && sal.previsao ? 'previsão do salário' : 'entradas lançadas', a_pagar: comprometido_cadastrado ? 'contas, faturas e fixas cadastradas' : 'nada cadastrado' } },
+    kpis: { tenho, recebi, recebi_estimado: adEstimado, falta_receber, a_pagar, ...kpis, gasto_mes: despesasMes, renda: renda || null,
+      origem: { tenho: !contas.length ? 'sem contas' : 'saldo das contas' + (marco ? ' informado em ' + marco.slice(8, 10) + '/' + marco.slice(5, 7) : '') + (movLanc.length + movPag.length ? ' + ' + (movLanc.length + movPag.length) + ' lançamento(s) depois' : ''), renda: (sal && sal.previsao ? 'previsão do salário' : 'entradas lançadas') + (adEstimado ? ' (adiantamento do dia 15 estimado, não lançado)' : ''), a_pagar: comprometido_cadastrado ? 'contas, faturas e fixas cadastradas' : 'nada cadastrado' } },
     barra_mes: renda > 0 ? { gasto: despesasMes, renda, pct: Math.min(100, Math.round((despesasMes / renda) * 100)) } : null,
     alertas: alertas.slice(0, 3),
     credito: sc ? { biro: sc.biro, score: sc.score, data: sc.data || null } : null,

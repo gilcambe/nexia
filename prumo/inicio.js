@@ -81,7 +81,7 @@
       </section>
       <div class="ki-kpis ki-larga">
         <button class="card" type="button" data-como="tenho"><div class="r">Tenho</div><div class="v">${val(k.tenho, '')}</div></button>
-        <button class="card" type="button" data-como="recebi"><div class="r">Recebi</div><div class="v">${val(k.recebi, 'ki-in')}</div></button>
+        <button class="card" type="button" data-como="recebi"><div class="r">Recebi</div><div class="v">${val(k.recebi, 'ki-in')}</div>${k.recebi_estimado ? '<div class="r" style="font-size:10px">com adiantamento estimado</div>' : ''}</button>
         <button class="card" type="button" data-como="pagar"><div class="r">A pagar</div><div class="v">${val(k.a_pagar, 'ki-out')}</div></button>
       </div>
       <div style="display:grid;gap:12px">

@@ -182,19 +182,21 @@ async function agirDoc(acao, body, c) {
       }
       const r = conciliar(normais);
       let gravados = 0; let jaExistiam = 0;
+      const lote = 'lt' + novoId(); const doLote = []; // redesign fase 3: apagar o documento apaga o que veio dele
       for (const l of r.confirmados) {
         const id = idDe(l);
         if (existentes.has(id)) { jaExistiam++; continue; }
         existentes.add(id);
-        await col.doc(id).set({ ...l, status: prv.statusInicial(l.data, hoje), origem: 'documento', criado_em: agoraIso });
-        gravados++;
+        await col.doc(id).set({ ...l, status: prv.statusInicial(l.data, hoje), origem: 'documento', criado_em: agoraIso, lote });
+        doLote.push(l); gravados++;
       }
       for (const l of forcados) {
         const { forcar, ...limpo } = l;
-        await col.doc(idDe(l) + '-' + novoId()).set({ ...limpo, status: prv.statusInicial(limpo.data, hoje), origem: 'documento', revisado: true, criado_em: agoraIso });
-        gravados++;
+        await col.doc(idDe(l) + '-' + novoId()).set({ ...limpo, status: prv.statusInicial(limpo.data, hoje), origem: 'documento', revisado: true, criado_em: agoraIso, lote });
+        doLote.push(limpo); gravados++;
       }
-      return [200, { ok: true, gravados, ja_existiam: jaExistiam, para_conferir: r.conferir.length, rejeitados }];
+      if (doLote.length) await require('./lotes').registrar(base, { id: lote, nome: body.nome, agoraIso, itens: doLote });
+      return [200, { ok: true, gravados, ja_existiam: jaExistiam, para_conferir: r.conferir.length, rejeitados, lote: doLote.length ? lote : null }];
     }
     case 'lanc_listar': {
       const mes = texto(body.mes, 7);

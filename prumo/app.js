@@ -290,7 +290,7 @@
   // Redesign fase 3: depois de gravar qualquer coisa que mexe nos números, um aviso mostra o que mudou
   // ("Pode gastar hoje: R$ X → R$ Y"). O "antes" é o último painel lido; as telas pegam um logo ao abrir.
   const apiCache = MB.criarCacheApi(api);
-  const MUDA = new Set(['doc_confirmar', 'pagamento_salvar', 'cartao_salvar', 'conta_salvar', 'divida_salvar', 'gasto_salvar', 'orcamento_salvar', 'carteira_salvar', 'fgts_salvar', 'previsto_confirmar', 'previsto_adiar', 'lanc_editar', 'lanc_apagar', 'cadastro_apagar', 'desfazer', 'salario_config', 'ponto_salvar', 'invest_dividendo_salvar', 'pontos_salvar', 'score_salvar', 'conta_apagar', 'cartao_apagar', 'divida_apagar', 'pagamento_apagar']);
+  const MUDA = new Set(['doc_confirmar', 'pagamento_salvar', 'cartao_salvar', 'conta_salvar', 'divida_salvar', 'gasto_salvar', 'orcamento_salvar', 'carteira_salvar', 'fgts_salvar', 'previsto_confirmar', 'previsto_adiar', 'lanc_editar', 'lanc_apagar', 'cadastro_apagar', 'desfazer', 'salario_config', 'ponto_salvar', 'invest_dividendo_salvar', 'pontos_salvar', 'score_salvar', 'conta_apagar', 'cartao_apagar', 'divida_apagar', 'pagamento_apagar', 'lote_apagar']);
   let ultimoPainel = null; let avisoMudou = null;
   const apiAviso = async (acao, dados, opts) => {
     const r = await apiCache(acao, dados, opts);
