@@ -53,3 +53,51 @@ test('Documentos: escolher o print já lê', async () => {
   assert.ok(chamadas.includes('doc_ler'), 'leu sem outro toque');
   assert.match(s('#kf-res').innerHTML, /PIX MERCADO/);
 });
+
+// ---------- Servidor: adiantamento e 13º mandados por print (viram lançamento) ----------
+const P = require('../../netlify/functions/prumo.js');
+function bancoFalso() {
+  const dados = new Map();
+  const col = (caminho) => ({
+    doc: (id) => ({
+      collection: (n) => col(`${caminho}/${id}/${n}`),
+      set: async (v) => { dados.set(`${caminho}/${id}`, v); },
+      delete: async () => { dados.delete(`${caminho}/${id}`); },
+      get: async () => { const v = dados.get(`${caminho}/${id}`); return { exists: !!v, data: () => v }; },
+    }),
+    get: async () => ({ docs: [...dados.entries()].filter(([k]) => k.startsWith(caminho + '/') && !k.slice(caminho.length + 1).includes('/')).map(([k, v]) => ({ id: k.split('/').pop(), data: () => v })) }),
+    where: () => col(caminho), orderBy: () => col(caminho), limit: () => col(caminho),
+  });
+  return { collection: col, dados };
+}
+async function cenario() {
+  const banco = bancoFalso(); P.deps.db = () => banco; P.deps.agora = () => new Date('2026-11-19T12:00:00Z');
+  const A = (b) => P.agir('u1', b);
+  await A({ acao: 'conta_salvar', nome: 'Conta', tipo: 'corrente', saldo: 4200 });
+  await A({ acao: 'salario_config', salario_base: 9500 });
+  await A({ acao: 'doc_confirmar', lancamentos: [
+    { data: '2026-11-15', descricao: 'Adiantamento salarial', valor: 3800, tipo: 'receita', categoria: 'outros' },
+    { data: '2026-12-20', descricao: '13o salario 2a parcela', valor: 3900, tipo: 'receita', categoria: 'outros' }] });
+  return A;
+}
+test('adiantamento lançado por print desconta igual no Salário e no Início', async () => {
+  const A = await cenario();
+  const s = (await A({ acao: 'salario_previsao', mes: '2026-11' }))[1];
+  assert.equal(s.previsao.adiantamento.valor, 3800, 'usa o adiantamento real, não o automático');
+  assert.equal(s.previsao.adiantamento.automatico, false);
+  const ini = (await A({ acao: 'inicio_resumo' }))[1];
+  assert.ok(ini.fluxo_inicio, 'Início tem o quanto ainda cai');
+  assert.equal(JSON.stringify(ini.fluxo_inicio).includes(String(s.previsao.a_receber).replace('.', '.')), true, `Início usa o mesmo a receber do Salário (${s.previsao.a_receber})`);
+});
+test('13º com data futura aparece no Início (próximos meses) e no fluxo com o valor digitado', async () => {
+  const A = await cenario();
+  const ini = (await A({ acao: 'inicio_resumo' }))[1];
+  assert.ok((ini.proximos || []).some((x) => x.valor === 3900 && x.data === '2026-12-20'), 'próximos meses mostram o 13º');
+  const f = JSON.stringify((await A({ acao: 'fluxo_visao' }))[1]);
+  assert.ok(f.includes('13o salario 2a parcela'), 'fluxo mostra o 13º digitado');
+});
+test('Documentos: botões grandes, sem o campo cru de arquivo', () => {
+  const d = ler('documentos.js');
+  assert.match(d, /id="kf-arq" accept="image\/\*" multiple hidden/);
+  assert.match(d, /id="kf-foto"/);
+});

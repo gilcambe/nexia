@@ -39,7 +39,8 @@ async function carregar(c) {
     listar(base.collection('dividas')), listar(base.collection('contas')), listar(base.collection('lancamentos')), listar(base.collection('objetivos')),
     c.listarCarteira(),
   ]);
-  return { cfg, carreira, orc: { fixas: [], guardar: [], limites: {}, renda_extra: 0, ...orcDoc }, pagamentos, pontos, cartoes: cartoesL, gastos, dividas, contas, lancs: previsto.realizados(lancs.filter((x) => x.perfil !== 'pj'), 'data', previsto.hojeDe(c.agoraIso)), objetivos, carteira };
+  return { cfg, carreira, orc: { fixas: [], guardar: [], limites: {}, renda_extra: 0, ...orcDoc }, pagamentos, pontos, cartoes: cartoesL, gastos, dividas, contas, lancs: previsto.realizados(lancs.filter((x) => x.perfil !== 'pj'), 'data', previsto.hojeDe(c.agoraIso)),
+    futuros: previsto.previstos(lancs.filter((x) => x.perfil !== 'pj'), 'data', previsto.hojeDe(c.agoraIso)), objetivos, carteira };
 }
 
 // ---------- salário ----------
@@ -54,6 +55,13 @@ function previsaoMes(d, mes, recebidosExtra) {
   if (!(cfg.salario_base > 0)) return null;
   const pf = cfg.perfil || {};
   let recebidos = [...d.pagamentos.filter((p) => p.mes === mes), ...(recebidosExtra || [])];
+  // Dono 19/11: adiantamento mandado por print na aba Documentos é LANÇAMENTO; conta igual ao do Salário (não usa o automático).
+  if (!recebidos.some((p) => p.tipo === 'adiantamento')) {
+    const ad = [...(d.lancs || []), ...(d.futuros || [])].find((l) => l.tipo === 'receita' && String(l.data).startsWith(mes)
+      && /adiant/.test(String(l.descricao || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase())
+      && !/13|decimo/.test(String(l.descricao || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()));
+    if (ad) recebidos = [...recebidos, { tipo: 'adiantamento', liquido: Number(ad.valor) || 0 }];
+  }
   // Mesma regra do Salário: sem adiantamento lançado, entra o automático (% do base, padrão 50%).
   if (!recebidos.some((p) => p.tipo === 'adiantamento')) recebidos = [...recebidos, { tipo: 'adiantamento', liquido: adiantamentoAuto(cfg) }];
   const ponto = d.pontos.find((p) => p.id === mes) || {};
@@ -80,6 +88,10 @@ function eventos(d, hoje, dias) {
   const out = [];
   const add = (data, tipo, categoria, nome, valor, estimado) => { if (dentro(data) && valor > 0) out.push({ data, tipo, categoria, nome, valor: r2(valor), estimado: !!estimado }); };
   const cfg = d.cfg || {};
+  // Dono 19/11: o que a pessoa lançou com data futura (13º, aluguel do dia 28) entra no fluxo com o valor dela, sem estimativa.
+  const futuros = d.futuros || [];
+  for (const l of futuros) if (l.tipo === 'receita' || l.tipo === 'despesa') add(String(l.data), l.tipo === 'receita' ? 'entrada' : 'saida', 'lancamento', l.descricao, Number(l.valor) || 0, false);
+  const tipo13 = (l) => { const n = String(l.descricao || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase(); if (l.tipo !== 'receita' || !/13|decimo/.test(n)) return null; return /2|segunda/.test(n.replace(/13/g, '')) ? 'decimo_terceiro_2' : 'decimo_terceiro_1'; };
   const NOMES = { mensal: 'Salário do mês', adiantamento: 'Adiantamento', decimo_terceiro_1: '13º (1ª parcela)', decimo_terceiro_2: '13º (2ª parcela)', ferias: 'Férias', plr: 'PLR', outro: 'Outro recebimento' };
   const CATEG = { mensal: 'salario', adiantamento: 'adiantamento', decimo_terceiro_1: '13o', decimo_terceiro_2: '13o', ferias: 'ferias', plr: 'plr', outro: 'outro' };
 
@@ -93,7 +105,7 @@ function eventos(d, hoje, dias) {
     const mesHoje = mesDe(hoje);
     for (let m = somarMes(mesHoje, -1); m <= mesDe(fim); m = somarMes(m, 1)) {
       const doMes = d.pagamentos.filter((p) => p.mes === m);
-      const temAd = doMes.some((p) => p.tipo === 'adiantamento');
+      const temAd = doMes.some((p) => p.tipo === 'adiantamento') || [...(d.lancs || []), ...(d.futuros || [])].some((l) => l.tipo === 'receita' && String(l.data).startsWith(m) && /adiant/i.test(String(l.descricao || '')) && !/13|d[eé]cimo/i.test(String(l.descricao || '')));
       const pfc = cfg.perfil || {};
       if (pAd && !temAd) add(dataNoMes(somarMes(m, pAd.deslocamento), pAd.dia), 'entrada', 'adiantamento', NOMES.adiantamento, pAd.valor, true);
       else if (!temAd) add(dataNoMes(m, pfc.dia_adiantamento || 15), 'entrada', 'adiantamento', NOMES.adiantamento, adiantamentoAuto(cfg), true);
@@ -107,7 +119,8 @@ function eventos(d, hoje, dias) {
     const dec = decimoTerceiro(cfg.salario_base, cfg.dependentes);
     for (const ano of [Number(hoje.slice(0, 4)), Number(hoje.slice(0, 4)) + 1]) {
       const reg = d.pagamentos.filter((p) => String(p.mes).startsWith(String(ano)));
-      const p1 = reg.find((p) => p.tipo === 'decimo_terceiro_1'); const p2 = reg.find((p) => p.tipo === 'decimo_terceiro_2');
+      const lanc13 = futuros.filter((l) => String(l.data).startsWith(String(ano))).map((l) => ({ tipo: tipo13(l), liquido: Number(l.valor) || 0 })).filter((x) => x.tipo);
+      const p1 = reg.find((p) => p.tipo === 'decimo_terceiro_1') || lanc13.find((p) => p.tipo === 'decimo_terceiro_1'); const p2 = reg.find((p) => p.tipo === 'decimo_terceiro_2') || lanc13.find((p) => p.tipo === 'decimo_terceiro_2');
       // SUPOSIÇÃO: datas-limite legais (1ª parcela até 30/11, 2ª até 20/12); a empresa pode pagar antes.
       if (!p1) add(`${ano}-11-30`, 'entrada', '13o', NOMES.decimo_terceiro_1, dec.primeira, true);
       if (!p2) add(`${ano}-12-20`, 'entrada', '13o', NOMES.decimo_terceiro_2, p1 ? r2(dec.liquido - (Number(p1.liquido) || dec.primeira)) : dec.segunda, true);

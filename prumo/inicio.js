@@ -81,6 +81,7 @@
         <div class="card"><div class="fraco">A pagar no mês</div><div class="n verm">${brl(r.a_pagar || 0)}</div></div>
       </div>
       ${pv ? pv.cartao(r.previstos, 'Previsto no mês (ainda não aconteceu)') : ''}
+      ${pv && (r.proximos || []).length ? pv.cartao(r.proximos, 'Próximos meses (13º, contas futuras)') : ''}
       <div class="card kf-insight"><div class="fraco">💡 Resumo do mês</div><div>${esc(insight)}</div></div>
       <div class="card" id="kf-graf-patrimonio" style="margin-top:12px"><div class="fraco">Seu patrimônio</div><div id="kf-patrim-corpo">${gr ? gr.patrimSvg : gr === null ? '' : esperando}</div></div>
       <div class="card" id="kf-graf-hoje" style="margin-top:12px"><div class="fraco">Ganhos e perdas de hoje</div><div id="kf-hoje-corpo">${gr ? corpoHoje(gr) : gr === null ? '' : esperando}</div></div>
