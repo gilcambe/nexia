@@ -87,6 +87,7 @@ async function agirExtrato(acao, body, c) {
   const doc = require('./documentos');
   const existentes = new Set((await c.listar(c.base.collection('lancamentos'))).map((x) => x.id));
   const prontos = []; const conferir = []; let jaLancados = 0; const vistos = new Set();
+  const regras = await doc.lerRegras(c.base); // categorias que a pessoa já corrigiu
   for (const l of linhas) {
     const v = doc.normalizarLancamento({ data: l.data, descricao: l.descricao, valor: Number.isFinite(l.valor) ? Math.abs(l.valor) : l.valor,
       tipo: l.valor < 0 ? 'despesa' : 'receita', documento: 'extrato' }, { tipo_documento: 'extrato' });
@@ -95,6 +96,7 @@ async function agirExtrato(acao, body, c) {
     if (existentes.has(id)) { jaLancados++; continue; }
     if (vistos.has(id)) continue; // mesma linha repetida no arquivo
     vistos.add(id);
+    doc.aplicarRegras([v.item], regras);
     prontos.push(v.item);
   }
   const soma = (t) => r2(prontos.filter((x) => x.tipo === t).reduce((s, x) => s + x.valor, 0));

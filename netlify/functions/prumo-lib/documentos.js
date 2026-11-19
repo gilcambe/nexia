@@ -28,6 +28,17 @@ Regras:
 5. Conta de consumo (luz, água, gás, internet, telefone), boleto ou fatura AINDA A PAGAR: devolva UM lançamento "despesa" com o total a pagar, "data" = vencimento e "vencimento" preenchido. Nunca devolva lista vazia só porque ainda não foi paga.
 6. Não invente nada que não esteja legível. Se não houver lançamentos, devolva lista vazia.`;
 
+// Melhoria 8 (dono 19/11): categorias aprendidas. Quando a pessoa corrige a categoria de um lançamento, guardamos
+// "este estabelecimento = esta categoria" em config/categorias e usamos nos próximos documentos e extratos.
+const chaveCat = (l) => String((l && (l.estabelecimento || l.descricao)) || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/\d+/g, '').replace(/[^a-z]+/g, ' ').trim().slice(0, 40);
+async function lerRegras(base) { const s = await base.collection('config').doc('categorias').get(); return (s && s.exists && s.data() && s.data().regras) || {}; }
+function aplicarRegras(itens, regras) { for (const l of itens) { const r = regras[chaveCat(l)]; if (r && CATEGORIAS_KF.includes(r)) l.categoria = r; } return itens; }
+async function aprender(base, l, categoria) {
+  const k = chaveCat(l); if (!k || !CATEGORIAS_KF.includes(categoria)) return;
+  const regras = await lerRegras(base); regras[k] = categoria;
+  await base.collection('config').doc('categorias').set({ regras });
+}
+
 function valorLido(v) {
   if (typeof v === 'number') return v;
   let t = String(v == null ? '' : v).replace(/[^\d.,-]/g, '');
@@ -154,6 +165,7 @@ async function agirDoc(acao, body, c) {
       }
       const novos = []; let jaLancados = 0;
       for (const l of brutos) { if (existentes.has(idDe(l))) jaLancados++; else novos.push(l); }
+      aplicarRegras(novos, await lerRegras(base)); // categorias que a pessoa já corrigiu antes
       const r = conciliar(novos);
       return [200, { documento: tipos[0] || 'outro', imagens_lidas: lidos.filter(Boolean).length, imagens_total: lidos.length,
         prontos: r.confirmados, conferir: [...conferir, ...r.conferir], ja_lancados: jaLancados, receitas: r.receitas, despesas: r.despesas }];
@@ -204,6 +216,7 @@ async function agirDoc(acao, body, c) {
       const antigo = s0.data();
       const v = normalizarLancamento({ ...antigo, ...['descricao', 'valor', 'data', 'tipo', 'categoria'].reduce((o, k) => (body[k] !== undefined && body[k] !== '' ? { ...o, [k]: body[k] } : o), {}) }, { tipo_documento: antigo.documento });
       if (!v.ok) return [400, { error: 'Não deu para salvar: ' + v.motivo + '.' }];
+      if (body.categoria && body.categoria !== antigo.categoria) await aprender(base, v.item, body.categoria); // aprende a correção
       const novoId = idDe(v.item);
       await col.doc(novoId).set({ ...antigo, ...v.item, id: novoId, editado_em: agoraIso });
       if (novoId !== id) await col.doc(id).delete();
@@ -251,4 +264,4 @@ em_dias <= 7).sort((a, b) => a.em_dias - b.em_dias);
   }
 }
 
-module.exports = { agirDoc, lerComVisao, normalizarLancamento, idDe, LER_DOC, CATEGORIAS_KF, TIPOS_LANC };
+module.exports = { aplicarRegras, lerRegras, chaveCat, agirDoc, lerComVisao, normalizarLancamento, idDe, LER_DOC, CATEGORIAS_KF, TIPOS_LANC };

@@ -6,6 +6,7 @@
   const carregarPdf = () => MB.pdf ? Promise.resolve(MB.pdf) : new Promise((ok, falha) => { const s = document.createElement('script'); s.src = '/prumo/pdf.js'; s.onload = () => ok(MB.pdf); s.onerror = falha; document.body.appendChild(s); });
   const carregarUi = () => MB.ui ? Promise.resolve(MB.ui) : new Promise((ok, falha) => { const s = document.createElement('script'); s.src = '/prumo/ui.js'; s.onload = () => ok(MB.ui); s.onerror = falha; document.body.appendChild(s); });
   const carregarPrevisto = () => Promise.resolve(MB.previsto || null); // previsto.js vem no index.html; sem ele a tela segue sem a parte de previstos
+  const CAT = { alimentacao: 'Alimentação', moradia: 'Moradia', transporte: 'Transporte', saude: 'Saúde', educacao: 'Educação', familia: 'Família', lazer: 'Lazer', compras: 'Compras', assinaturas: 'Assinaturas', financeiro: 'Financeiro', impostos: 'Impostos', investimentos: 'Investimentos', renda: 'Renda', outros: 'Outros' };
   const TIPO = { despesa: 'Gasto', receita: 'Entrada', transferencia_propria: 'Transferência própria', pagamento_fatura: 'Pagamento de fatura' };
   const DOC = { fatura: 'Fatura de cartão', extrato: 'Extrato', comprovante: 'Comprovante', nota: 'Nota fiscal', boleto: 'Boleto', recibo: 'Recibo', conta: 'Conta de consumo', corretora: 'Extrato de corretora', milhas: 'Extrato de milhas', outro: 'Documento' };
 
@@ -82,6 +83,7 @@
         { nome: 'valor', rotulo: 'Valor (R$)', tipo: 'number', valor: l.valor },
         { nome: 'data', rotulo: 'Data', tipo: 'date', valor: l.data },
         { nome: 'tipo', rotulo: 'Tipo', opcoes: Object.entries(TIPO).map(([k, v]) => `<option value="${k}"${k === l.tipo ? ' selected' : ''}>${esc(v)}</option>`).join('') },
+        { nome: 'categoria', rotulo: 'Categoria (eu aprendo e uso nas próximas vezes)', opcoes: Object.entries(CAT).map(([k, v]) => `<option value="${k}"${k === l.categoria ? ' selected' : ''}>${esc(v)}</option>`).join('') },
       ], (d) => MB.api('lanc_editar', { id: l.id, ...d, valor: Number(d.valor) }).then(() => ok('✅ Lançamento salvo.')), () => MB.api('lanc_apagar', { id: l.id }));
     }; });
     el.querySelectorAll('[data-apagar]').forEach((b) => { b.onclick = async () => { if (!confirm('Apagar este lançamento?')) return; await MB.api('lanc_apagar', { id: b.dataset.apagar }); MB.abrirAba('documentos'); }; });
