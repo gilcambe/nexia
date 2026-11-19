@@ -72,8 +72,18 @@
       <div id="kf-res"></div>
       ${pv ? pv.cartao(itensPrev, 'Previsto (ainda não aconteceu)') : ''}
       <div class="card"><div class="fraco">Lançamentos de ${mes.slice(5)}/${mes.slice(0, 4)} · entradas ${brl(rec.receitas)} · gastos ${brl(rec.despesas)}${rec.a_receber || rec.a_pagar ? ' · a receber ' + brl(rec.a_receber) + ' · a pagar ' + brl(rec.a_pagar) : ''}</div>
-        ${passados.map((l) => `<div class="item"><div><div class="n">${esc(l.descricao)}${l.parcela ? ` <span class="fraco">${l.parcela}/${l.parcelas_total || '?'}</span>` : ''}</div><div class="fraco">${l.data.slice(8, 10)}/${l.data.slice(5, 7)} · ${esc(TIPO[l.tipo] || l.tipo)}${l.instituicao ? ' · ' + esc(l.instituicao) : ''}</div></div><div><span class="v ${l.tipo === 'receita' ? 'verde' : ''}">${brl(l.valor)}</span> <button class="btn perigo mini" data-apagar="${esc(l.id)}" type="button" aria-label="Apagar">✕</button></div></div>`).join('') || '<p class="fraco">Nenhum lançamento neste mês ainda.</p>'}</div>`;
+        ${passados.map((l) => `<div class="item"><div><div class="n">${esc(l.descricao)}${l.parcela ? ` <span class="fraco">${l.parcela}/${l.parcelas_total || '?'}</span>` : ''}</div><div class="fraco">${l.data.slice(8, 10)}/${l.data.slice(5, 7)} · ${esc(TIPO[l.tipo] || l.tipo)}${l.instituicao ? ' · ' + esc(l.instituicao) : ''}</div></div><div><span class="v ${l.tipo === 'receita' ? 'verde' : ''}">${brl(l.valor)}</span> <button class="btn sec mini" data-editar="${esc(l.id)}" type="button" aria-label="Editar">✏️</button> <button class="btn perigo mini" data-apagar="${esc(l.id)}" type="button" aria-label="Apagar">✕</button></div></div>`).join('') || '<p class="fraco">Nenhum lançamento neste mês ainda.</p>'}</div>`;
     if (pv) pv.ligar(el);
+    // Dono 19/11: editar qualquer lançamento (o formulário também tem Apagar).
+    el.querySelectorAll('[data-editar]').forEach((b) => { b.onclick = () => {
+      const l = rec.lancamentos.find((x) => x.id === b.dataset.editar); if (!l) return;
+      MB.ui.formulario('Editar lançamento', [
+        { nome: 'descricao', rotulo: 'Descrição', valor: l.descricao },
+        { nome: 'valor', rotulo: 'Valor (R$)', tipo: 'number', valor: l.valor },
+        { nome: 'data', rotulo: 'Data', tipo: 'date', valor: l.data },
+        { nome: 'tipo', rotulo: 'Tipo', opcoes: Object.entries(TIPO).map(([k, v]) => `<option value="${k}"${k === l.tipo ? ' selected' : ''}>${esc(v)}</option>`).join('') },
+      ], (d) => MB.api('lanc_editar', { id: l.id, ...d, valor: Number(d.valor) }).then(() => ok('✅ Lançamento salvo.')), () => MB.api('lanc_apagar', { id: l.id }));
+    }; });
     el.querySelectorAll('[data-apagar]').forEach((b) => { b.onclick = async () => { if (!confirm('Apagar este lançamento?')) return; await MB.api('lanc_apagar', { id: b.dataset.apagar }); MB.abrirAba('documentos'); }; });
 
     const res = el.querySelector('#kf-res');

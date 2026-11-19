@@ -72,7 +72,7 @@
     el.innerHTML = `
       <div class="card"><div class="fraco">Limite comprometido (estimado)</div><div class="grande">${brl(v.total_comprometido)}</div>
         <div class="fraco">de ${brl(v.total_limite)} de limite · limite de cartão não é dinheiro</div></div>
-      ${v.cartoes.map((k) => `<div class="card" data-cartao="${esc(k.id)}"><div class="item" style="padding:0;border:0"><span class="n">${esc(k.nome)}${k.bandeira ? ' · ' + esc(k.bandeira) : ''}</span><span>${k.vence_em_dias <= 3 ? '🟠 ' : ''}vence dia ${k.dia_vencimento} <button type="button" class="btn sec mini" data-apagar-cartao="${esc(k.id)}" aria-label="Apagar cartão">🗑️</button></span></div>
+      ${v.cartoes.map((k) => `<div class="card" data-cartao="${esc(k.id)}"><div class="item" style="padding:0;border:0"><span class="n">${esc(k.nome)}${k.bandeira ? ' · ' + esc(k.bandeira) : ''}</span><span>${k.vence_em_dias <= 3 ? '🟠 ' : ''}vence dia ${k.dia_vencimento} <button type="button" class="btn sec mini" data-editar-cartao="${esc(k.id)}" aria-label="Editar cartão">✏️</button> <button type="button" class="btn sec mini" data-apagar-cartao="${esc(k.id)}" aria-label="Apagar cartão">🗑️</button></span></div>
         ${barra(k.pct || 0, k.pct > 80 ? '#ef4444' : '')}
         <div class="fraco">Comprometido ${brl(k.comprometido)} · disponível ${brl(k.disponivel)}${k.pct === null ? '' : ' · ' + String(k.pct).replace('.', ',') + '%'}</div>
         <div class="fraco" style="margin-top:8px">Próximas faturas</div>
@@ -91,6 +91,15 @@
       ${i.suspeitas.length ? `<div class="card"><h3 style="margin:0 0 6px">🔎 Cobranças para revisar</h3><div class="fraco">Não é acusação: só valem uma olhada.</div>${i.suspeitas.map((s) => `<div class="item"><div><div class="n">${esc(s.lancamento.descricao)}</div><div class="fraco">${esc(s.motivo)} · ${s.lancamento.data.slice(8, 10)}/${s.lancamento.data.slice(5, 7)}</div></div><span class="v">${brl(s.lancamento.valor)}</span></div>`).join('')}</div>` : ''}
       <div class="fraco" style="margin-top:8px">${esc(v.aviso)}</div>`;
     await ligarLeitura(); ligarFatura(); // fatura fica no topo
+    el.querySelectorAll('[data-editar-cartao]').forEach((b) => { b.onclick = () => { // dono 19/11: editar o cartão
+      const k = v.cartoes.find((x) => x.id === b.dataset.editarCartao); if (!k) return;
+      formulario('Editar cartão', [
+        { nome: 'nome', rotulo: 'Nome do cartão', valor: k.nome },
+        { nome: 'limite', rotulo: 'Limite (R$)', tipo: 'number', valor: k.limite },
+        { nome: 'dia_fechamento', rotulo: 'Dia do fechamento (1 a 31)', tipo: 'number', valor: k.dia_fechamento },
+        { nome: 'dia_vencimento', rotulo: 'Dia do vencimento (1 a 31)', tipo: 'number', valor: k.dia_vencimento },
+      ], (d) => MB.api('cartao_salvar', { ...k, ...d, id: k.id, limite: Number(d.limite || 0), dia_fechamento: Number(d.dia_fechamento), dia_vencimento: Number(d.dia_vencimento) }), () => MB.api('cartao_apagar', { id: k.id }));
+    }; });
     el.querySelectorAll('[data-apagar-cartao]').forEach((b) => { b.onclick = async () => {
       if (!confirm('Apagar este cartão? As compras lançadas continuam.')) return;
       try { await MB.api('cartao_apagar', { id: b.dataset.apagarCartao }); ok('🗑️ Cartão apagado.'); MB.abrirAba('cartoes'); } catch { /* erro já mostrado */ }
