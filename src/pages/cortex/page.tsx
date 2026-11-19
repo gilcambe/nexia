@@ -104,7 +104,22 @@ export default function CortexPage() {
   }, [listar]);
   useEffect(() => { if (!authLoading && user) { const t = setTimeout(() => buscar(busca), busca ? 350 : 0); return () => clearTimeout(t); } }, [authLoading, user, busca, buscar]);
 
-  const abrir = (n: number) => { setAberto(n); setVista("chat"); setMenu(false); history.replaceState(null, "", n ? `#p${n}` : location.pathname); };
+  const abrir = (n: number, push = true) => { 
+    setAberto(n); 
+    setVista("chat"); 
+    setMenu(false); 
+    if (push) history.pushState({ aberto: n }, "", n ? `#p${n}` : location.pathname);
+    else history.replaceState({ aberto: n }, "", n ? `#p${n}` : location.pathname);
+  };
+  
+  useEffect(() => {
+    const handlePopState = (e: PopStateEvent) => {
+      if (e.state && typeof e.state.aberto !== 'undefined') setAberto(e.state.aberto);
+      else setAberto(Number(location.hash.replace("#p", "")) || 0);
+    };
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
   const ir = (v: Vista) => {
     if (v === "central") {
       navigate("/central");
