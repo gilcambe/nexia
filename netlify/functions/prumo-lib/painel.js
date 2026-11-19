@@ -81,8 +81,13 @@ async function montarPainel(c) {
   const diaHoje = Number(hoje.slice(8, 10));
   const fixas = Array.isArray(orc.fixas) ? orc.fixas : [];
   const fixasPend = soma(fixas.filter((f) => !f.dia || f.dia >= diaHoje), (f) => f.valor);
-  const a_pagar = r2((prev.a_pagar || 0) + faturas + fixasPend);
-  const comprometido_cadastrado = fixas.length > 0 || cartoes.length > 0 || (prev.a_pagar || 0) > 0 || dividas.length > 0;
+  // Compras do cartão lidas da fatura entram no A pagar pela data de VENCIMENTO da fatura (plano, tela Mês).
+  const cartaoAberto = reais.filter((l) => l.tipo === 'despesa' && l.vencimento && String(l.vencimento) > hoje);
+  const faturasLidas = {};
+  for (const l of cartaoAberto) { const v = String(l.vencimento).slice(0, 10); faturasLidas[v] = r2((faturasLidas[v] || 0) + (Number(l.valor) || 0)); }
+  const faturasMes = r2(Object.entries(faturasLidas).filter(([v]) => v.startsWith(mes)).reduce((t, [, x]) => t + x, 0));
+  const a_pagar = r2((prev.a_pagar || 0) + faturas + fixasPend + faturasMes);
+  const comprometido_cadastrado = fixas.length > 0 || cartaoAberto.length > 0 || cartoes.length > 0 || (prev.a_pagar || 0) > 0 || dividas.length > 0;
 
   // --- Gasto variável: média diária dos 3 meses completos antes deste ---
   const ult3 = [1, 2, 3].map((n) => mesAntes(mes, n));
@@ -143,6 +148,32 @@ async function montarPainel(c) {
     score, confianca: conf,
     kpis: { tenho, recebi, recebi_estimado: adEstimado, falta_receber, a_pagar, ...kpis, gasto_mes: despesasMes, renda: renda || null,
       origem: { tenho: !contas.length ? 'sem contas' : 'saldo das contas' + (marco ? ' informado em ' + marco.slice(8, 10) + '/' + marco.slice(5, 7) : '') + (movLanc.length + movPag.length ? ' + ' + (movLanc.length + movPag.length) + ' lançamento(s) depois' : ''), renda: (sal && sal.previsao ? 'previsão do salário' : 'entradas lançadas') + (adEstimado ? ' (adiantamento do dia 15 estimado, não lançado)' : ''), a_pagar: comprometido_cadastrado ? 'contas, faturas e fixas cadastradas' : 'nada cadastrado' } },
+    mes_detalhe: (() => {
+      // Agenda do que falta pagar no mês, em ordem de data; vermelho só se vence em até 3 dias e passa do saldo.
+      const itens = [
+        ...(prev.itens || []).filter((x) => x.tipo === 'pagar').map((x) => ({ data: x.data, nome: x.nome, valor: Number(x.valor) || 0, origem: x.origem })),
+        ...fixas.filter((x) => x.dia && x.dia >= diaHoje).map((x) => ({ data: mes + '-' + String(x.dia).padStart(2, '0'), nome: x.nome, valor: Number(x.valor) || 0, origem: 'fixa' })),
+        ...fixas.filter((x) => !x.dia).map((x) => ({ data: null, nome: x.nome, valor: Number(x.valor) || 0, origem: 'fixa' })),
+        ...Object.entries(faturasLidas).filter(([v]) => v.startsWith(mes)).map(([v, x]) => ({ data: v, nome: 'Fatura do cartão', valor: x, origem: 'fatura' })),
+        ...cartoes.map((k) => ({ k, v: k.fatura_atual > 0 ? Number(k.fatura_atual) : fatura(gastos, k.id, mes) || 0 })).filter((x) => x.v > 0).map((x) => ({ data: x.k.dia_vencimento ? mes + '-' + String(Math.min(28, x.k.dia_vencimento)).padStart(2, '0') : null, nome: 'Fatura ' + x.k.nome, valor: x.v, origem: 'cartao' })),
+      ].sort((a, b) => String(a.data || '9').localeCompare(String(b.data || '9')));
+      let acum = 0;
+      for (const x of itens) { acum += x.valor; x.risco = !!(x.data && dias(hoje, x.data) <= 3 && tenho != null && acum > tenho); }
+      // Gastos por categoria, com a média dos 3 meses anteriores; a dica é a categoria mais acima da média (> 120%).
+      const porCat = {};
+      for (const l of doMes.filter((x) => x.tipo === 'despesa')) { const k = l.categoria || 'outros'; porCat[k] = r2((porCat[k] || 0) + (Number(l.valor) || 0)); }
+      const media = {};
+      for (const l of desp3) { const k = l.categoria || 'outros'; media[k] = (media[k] || 0) + (Number(l.valor) || 0) / Math.max(1, mesesCom); }
+      const categorias = Object.entries(porCat).map(([k, v]) => ({ categoria: k, valor: v, pct: despesasMes > 0 ? Math.round((v / despesasMes) * 100) : 0, media3: media[k] ? r2(media[k]) : null, acima_pct: media[k] ? Math.round((v / media[k] - 1) * 100) : null })).sort((a, b) => b.valor - a.valor);
+      const alta = categorias.filter((x) => x.acima_pct != null && x.acima_pct > 20).sort((a, b) => b.acima_pct - a.acima_pct)[0];
+      const sp = sal && sal.previsao;
+      return {
+        entrou: recebi, falta_entrar: falta_receber, saiu: despesasMes,
+        salario: sp ? { liquido: sp.liquido, fonte: (sal.recebidos || []).some((p) => p.tipo === 'mensal') ? 'holerite' : 'estimativa', adiantamento: sp.adiantamento || null, data_salario: sp.data_salario || null } : null,
+        a_pagar_itens: itens, a_pagar_total: r2(itens.reduce((t, x) => t + x.valor, 0)), proximas_faturas: Object.entries(faturasLidas).filter(([v]) => !v.startsWith(mes)).map(([v, x]) => ({ vencimento: v, valor: x })),
+        categorias, dica: alta ? { categoria: alta.categoria, acima_pct: alta.acima_pct, texto: `${alta.categoria} está ${alta.acima_pct}% acima da média dos últimos 3 meses.` } : null,
+      };
+    })(),
     barra_mes: renda > 0 ? { gasto: despesasMes, renda, pct: Math.min(100, Math.round((despesasMes / renda) * 100)) } : null,
     alertas: alertas.slice(0, 3),
     credito: sc ? { biro: sc.biro, score: sc.score, data: sc.data || null } : null,
