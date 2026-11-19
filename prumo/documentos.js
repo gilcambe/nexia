@@ -62,11 +62,13 @@
     el.innerHTML = `
       <div class="card"><h3 style="margin:0 0 6px">📄 Enviar documento</h3>
         <div class="fraco">Fatura, extrato, comprovante Pix, nota, boleto ou recibo: foto, print ou PDF (até 5 páginas por vez). Extrato do banco também em arquivo .ofx ou .csv (sem senha de banco).</div>
-        <input type="file" id="kf-arq" accept="image/*" multiple style="margin-top:10px">
-        <button class="btn sec mini" id="kf-pdf" type="button" style="margin-top:6px">📄 Escolher PDF</button>
-        <button class="btn sec mini" id="kf-ext-btn" type="button" style="margin-top:6px">🏦 Escolher extrato (.ofx/.csv)</button>
+        <input type="file" id="kf-arq" accept="image/*" multiple hidden>
+        <button class="btn" id="kf-foto" type="button" style="margin-top:10px">📷 Print ou foto</button>
+        <button class="btn sec" id="kf-pdf" type="button" style="margin-top:6px">📄 PDF</button>
+        <button class="btn sec" id="kf-ext-btn" type="button" style="margin-top:6px">🏦 Extrato do banco em arquivo (.ofx/.csv)</button>
         <input type="file" id="kf-ext" accept=".ofx,.csv" multiple hidden>
-        <button class="btn" id="kf-ler" type="button" style="margin-top:10px">Ler documento</button></div>
+        <div class="fraco" style="margin-top:6px">Escolheu o arquivo, eu já começo a ler. Depois você confere e grava.</div>
+        <button class="btn sec mini" id="kf-ler" type="button" style="margin-top:6px" hidden>Ler de novo</button></div>
       <div id="kf-res"></div>
       ${pv ? pv.cartao(itensPrev, 'Previsto (ainda não aconteceu)') : ''}
       <div class="card"><div class="fraco">Lançamentos de ${mes.slice(5)}/${mes.slice(0, 4)} · entradas ${brl(rec.receitas)} · gastos ${brl(rec.despesas)}${rec.a_receber || rec.a_pagar ? ' · a receber ' + brl(rec.a_receber) + ' · a pagar ' + brl(rec.a_pagar) : ''}</div>
@@ -76,6 +78,8 @@
 
     const res = el.querySelector('#kf-res');
     const kfPdf = el.querySelector('#kf-pdf');
+    const kfFoto = el.querySelector('#kf-foto');
+    if (kfFoto) kfFoto.onclick = () => { const a = el.querySelector('#kf-arq'); a.accept = 'image/*'; a.value = ''; a.click(); };
     if (kfPdf) kfPdf.onclick = () => { const a = el.querySelector('#kf-arq'); a.accept = 'application/pdf,.pdf'; a.value = ''; a.click(); };
     const kfExt = el.querySelector('#kf-ext'); const kfExtBtn = el.querySelector('#kf-ext-btn');
     if (kfExtBtn && kfExt) {
@@ -90,7 +94,7 @@
       if (!arqs.length) { res.innerHTML = '<div class="aviso-c">Escolha pelo menos uma foto, print ou PDF.</div>'; return; }
       if (arqs.length > 5) { res.innerHTML = '<div class="aviso-c">Envie no máximo 5 arquivos por vez.</div>'; return; }
       const btn = (ev && ev.currentTarget) || el.querySelector('#kf-ler'); btn.disabled = true; btn.textContent = 'Lendo… pode levar até 2 minutos';
-      res.innerHTML = '';
+      res.innerHTML = '<div class="aviso-c">⏳ Lendo seu documento… pode levar até 2 minutos. Não feche a tela.</div>';
       try {
         // Fase 4 (#4013 / #3953): extrato .ofx/.csv vai como texto, sem passar pelo leitor de PDF/imagem.
         const ehExtrato = (a) => /.(ofx|csv)$/i.test(String(a.name || ''));
@@ -115,7 +119,7 @@
         if (cortou) res.insertAdjacentHTML('afterbegin', '<div class="aviso-c">Li as 5 primeiras páginas. Para o resto, mande de novo só as outras páginas.</div>');
       } catch (e) {
         res.innerHTML = `<div class="aviso-c">${esc(e && e.message || 'Não consegui ler agora.')} Tente de novo com uma foto mais nítida.</div>`;
-      } finally { btn.disabled = false; btn.textContent = 'Ler documento'; }
+      } finally { btn.disabled = false; btn.textContent = 'Ler de novo'; btn.hidden = false; }
     };
 
     function mostrarLeitura(r) { mostrarLeituraEm(res, r, { brl, esc, ok }, () => MB.abrirAba('documentos')); }

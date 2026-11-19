@@ -96,4 +96,20 @@ async function agirPrevisto(acao, body, c) {
   return [200, { ok: true, status: 'previsto', data: nova }];
 }
 
-module.exports = { agirPrevisto, hojeDe, statusInicial, statusDe, realizados, previstos, resumoPrevisto, CAMPO };
+/** Previstos DEPOIS deste mês (até 'dias' à frente): o 13º de dezembro, contas futuras. Dono 19/11: "coloquei o 13 e não aparece". */
+function proximos({ lancs, pagamentos }, hoje, dias = 120) {
+  const ate = new Date(Date.parse(hoje + 'T00:00:00Z') + dias * 86400000).toISOString().slice(0, 10);
+  const mesHoje = hoje.slice(0, 7);
+  const itens = [];
+  for (const l of previstos((lancs || []).filter((x) => x.perfil !== 'pj'), 'data', hoje)) {
+    const d = String(l.data); if (d.slice(0, 7) <= mesHoje || d > ate) continue;
+    if (l.tipo === 'receita' || l.tipo === 'despesa') itens.push({ tipo: l.tipo === 'receita' ? 'receber' : 'pagar', origem: 'lancamento', id: l.id, colecao: 'lancamentos', nome: l.descricao, data: d, valor: l.valor });
+  }
+  for (const p of previstos(pagamentos, 'data_pagamento', hoje)) {
+    const d = String(p.data_pagamento); if (d.slice(0, 7) <= mesHoje || d > ate) continue;
+    itens.push({ tipo: 'receber', origem: 'pagamento', id: p.id, colecao: 'pagamentos', nome: NOME_PAG[p.tipo] || p.empresa || 'Recebimento', data: d, valor: p.liquido });
+  }
+  return itens.sort((a, b) => a.data.localeCompare(b.data));
+}
+
+module.exports = { agirPrevisto, proximos, hojeDe, statusInicial, statusDe, realizados, previstos, resumoPrevisto, CAMPO };

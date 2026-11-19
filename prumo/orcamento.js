@@ -96,7 +96,7 @@
     if (linhaPonto && sal.ponto) linhaPonto.onclick = () => conferirPonto(sal.ponto, true);
     // Tocar num recebimento: editar ou apagar (tudo que sobe pode ser apagado).
     el.querySelectorAll('[data-pag]').forEach((n) => {
-      const p = (sal.recebidos || []).find((x) => x.id === n.dataset.pag);
+      const p = (sal.recebidos || []).find((x) => x.id === n.dataset.pag && x.origem !== 'lancamento'); // veio da aba Documentos: edita lá
       if (!p || !p.id) return;
       n.onclick = () => formulario('Recebimento', MB.salario.camposRecebimento(p, mesSel),
         (d) => MB.api('pagamento_salvar', { ...MB.salario.corpoPagamento(p, d), id: p.id }).then(() => { ok('✅ Recebimento salvo.'); recarregar(); }),

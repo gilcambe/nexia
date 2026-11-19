@@ -231,7 +231,7 @@ em_dias <= 7).sort((a, b) => a.em_dias - b.em_dias);
       return [200, { mes, receitas: doMes.receitas, despesas: doMes.despesas, economia: Math.round((doMes.receitas - doMes.despesas) * 100) / 100,
         despesas_mes_anterior: anterior.despesas, variacao_despesas_pct: pct(doMes.despesas, anterior.despesas), por_categoria: doMes.por_categoria,
         saldo_disponivel: sd.saldo, outras_moedas: sd.outras_moedas, limites: consumo, alertas_limite: consumo.filter((x) => x.status !== 'ok'),
-        dividas: resDiv, investimentos: Math.round(carteira.reduce((t, x) => t + Math.round((x.valor || 0) * 100), 0)) / 100, patrimonio: pat, milhas_estimado: milhas, vencimentos, fluxo_inicio, lacunas, a_receber: aReceberPagar.a_receber, a_pagar: aReceberPagar.a_pagar, previstos: aReceberPagar.itens, qtd_lancamentos: lancs.length,
+        dividas: resDiv, investimentos: Math.round(carteira.reduce((t, x) => t + Math.round((x.valor || 0) * 100), 0)) / 100, patrimonio: pat, milhas_estimado: milhas, vencimentos, fluxo_inicio, lacunas, a_receber: aReceberPagar.a_receber, a_pagar: aReceberPagar.a_pagar, previstos: aReceberPagar.itens, proximos: prv.proximos({ lancs: lancsTodos, pagamentos: pagamentosTodos }, hoje), qtd_lancamentos: lancs.length,
         tres_numeros: fin.tresNumeros({ saldo: sd.saldo, a_pagar: aReceberPagar.a_pagar, reserva, hoje }) }];
     }
     default: return null;
