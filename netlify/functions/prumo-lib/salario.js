@@ -200,7 +200,19 @@ async function agirSalario(acao, body, c) {
     case 'salario_previsao': {
       const mes = texto(body.mes, 7) || agoraIso.slice(0, 7);
       if (!MES.test(mes)) return [400, { error: 'O mês precisa estar no formato AAAA-MM.' }];
-      const [cfg, doMes, pontoDoc] = await Promise.all([lerConfig(), pagamentosDe(mes), base.collection('folhas_ponto').doc(mes).get()]);
+      const [cfg, doMes0, pontoDoc, lancs] = await Promise.all([lerConfig(), pagamentosDe(mes), base.collection('folhas_ponto').doc(mes).get(), c.listar(base.collection('lancamentos'))]);
+      // Dono 19/11 ("não desconta o adiantamento que já recebi"): adiantamento/13º mandados por print na aba Documentos viram
+      // LANÇAMENTO, não pagamento. Sem pagamento do mesmo tipo no mês, o lançamento de entrada com esse nome conta como ele.
+      const hojeIso = agoraIso.slice(0, 10);
+      const comoPag = (l, tipo) => ({ id: l.id, origem: 'lancamento', tipo, mes, data_pagamento: l.data, liquido: Number(l.valor) || 0, status: String(l.data) <= hojeIso ? 'realizado' : 'previsto' });
+      const extras = [];
+      for (const l of lancs) {
+        if (l.tipo !== 'receita' || l.perfil === 'pj' || !String(l.data).startsWith(mes)) continue;
+        const n = String(l.descricao || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+        const tipo = /adiant/.test(n) && !/13|decimo/.test(n) ? 'adiantamento' : /13|decimo/.test(n) ? (/2|segunda/.test(n.replace(/13/g, '')) ? 'decimo_terceiro_2' : 'decimo_terceiro_1') : null;
+        if (tipo && !doMes0.some((p) => p.tipo === tipo) && !extras.some((p) => p.tipo === tipo)) extras.push(comoPag(l, tipo));
+      }
+      const doMes = [...doMes0, ...extras];
       // Só o que JÁ caiu conta como recebido; o que tem data futura fica à parte, como "a receber".
       const recebidos = doMes.filter((p) => p.status === 'realizado');
       const a_receber = doMes.filter((p) => p.status === 'previsto');

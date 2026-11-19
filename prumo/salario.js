@@ -39,7 +39,7 @@
       if (/sal[aá]rio base/i.test(String(r.motivo || ''))) h += '<button type="button" class="btn sec" data-acao="salario-base">Informar salário base</button>';
     }
     // Data futura: fica à parte, não entra no total recebido.
-    const prev = (r.a_receber || []).map((x) => ({ tipo: 'receber', nome: nomeTipo(x.tipo), data: x.data_pagamento, valor: x.liquido, colecao: 'pagamentos', id: x.id }));
+    const prev = (r.a_receber || []).map((x) => ({ tipo: 'receber', nome: nomeTipo(x.tipo), data: x.data_pagamento, valor: x.liquido, colecao: x.origem === 'lancamento' ? 'lancamentos' : 'pagamentos', id: x.id }));
     if (prev.length && MB.previsto) h += '</div>' + MB.previsto.cartao(prev, 'A receber (ainda não caiu)');
     else return h + '</div>';
     return h;
