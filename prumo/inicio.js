@@ -78,6 +78,7 @@
       <details class="kf-mais" id="kf-mais"><summary class="btn sec" style="margin-top:4px">Ver mais detalhes</summary>
       <div class="card" id="kf-calendario" hidden></div>
       <div class="card" id="kf-reserva" hidden></div>
+      <div class="card" id="kf-divisao" hidden></div>
       ${r.alertas_limite.length ? r.alertas_limite.map((a) => `<div class="aviso-c">${a.status === 'estourado' ? '🔴' : '🟠'} <b>${esc(NOME_CAT[a.categoria] || a.categoria)}</b>: ${brl(a.gasto)} de ${brl(a.limite)} (${String(a.pct).replace('.', ',')}%)${a.status === 'estourado' ? ' — passou do limite' : ' — perto do limite'}.</div>`).join('') : ''}
       <details class="card kf-dobra" id="kf-saude"><summary><span class="fraco">Saúde financeira${sf.completa ? '' : ' (parcial)'}</span><span><b class="kf-num">${notaSaude === null ? '—' : notaSaude}</b>${notaSaude === null ? '' : '<span class="fraco" style="font-size:12px">/100</span>'}</span></summary>
         <div class="kf-dobra-corpo"><div class="fraco">${esc(sf.resumo || sf.aviso)}</div>
@@ -170,6 +171,14 @@
         kr.querySelector('#kf-reserva-aj').onclick = () => MB.ui.formulario('Reserva de emergência', [{ nome: 'meses', rotulo: 'Quantos meses de gastos guardar', tipo: 'number', valor: rv.meses }, { nome: 'aporte', rotulo: 'Quanto guardar por mês (R$)', tipo: 'number', valor: '' }],
           (d) => MB.api('reserva_salvar', { meses: Number(d.meses) || 6, aporte: d.aporte === '' ? null : Number(d.aporte) }));
       }
+    }).catch(() => {});
+    // Melhoria 7: divisão do salário (50% contas, 30% livre, 20% guardar), com o salário previsto do mês.
+    MB.api('divisao_salario', {}, { silencioso: true }).then((dv) => {
+      const kd = el.querySelector('#kf-divisao');
+      if (!kd || !dv || !dv.partes || !dv.partes.length) return;
+      const NOME = { necessidades: '🏠 Contas e necessidades', livre: '🎉 Livre para gastar', guardar: '💰 Guardar' };
+      kd.hidden = false;
+      kd.innerHTML = `<b>Como dividir o salário (${brl(dv.liquido)})</b>` + dv.partes.map((x) => `<div class="item"><span>${NOME[x.id] || esc(x.nome)} <span class="fraco">${Math.round(x.pct)}%</span></span><span class="v">${brl(x.valor)}</span></div>`).join('') + '<div class="fraco">Sugestão simples: primeiro as contas, depois guardar, o resto é livre.</div>';
     }).catch(() => {});
     const cadBtn = el.querySelector('#kf-cadastros'); const cad = el.querySelector('#kf-cad');
     const desenharCad = async (msg) => {
