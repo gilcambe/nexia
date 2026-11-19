@@ -159,6 +159,8 @@ function pontosVencendo(itens, hojeISO) {
 async function agirExtra(acao, body, c) {
   const cot = await require('./cotacoes').agirCotacoes(acao, body, c); // #3304 cotação ao vivo
   if (cot) return cot;
+  const fut = await require('./futuro').agirFuturo(acao, body, c); // redesign fase 5: Patrimônio e Futuro
+  if (fut) return fut;
   const lot = await require('./lotes').agirLotes(acao, body, c); // redesign fase 3: documento = lote
   if (lot) return lot;
   const pai = await require('./painel').agirPainel(acao, body, c); // redesign fase 1: números da tela Início numa fonte só
