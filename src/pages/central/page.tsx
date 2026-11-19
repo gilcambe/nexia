@@ -113,7 +113,7 @@ export default function CentralPage() {
 
   // 12/11: a Central nova (Casca) busca os próprios dados; os da antiga só carregam na antiga (antes quebravam a nova).
   useEffect(() => { if (!authLoading && user && antiga) conferir(); }, [authLoading, user, conferir, antiga]);
-  const ir = (a: Aba) => { setAba(a); history.replaceState(null, "", `#${a}`); window.scrollTo(0, 0); };
+  const ir = (a: Aba) => { setAba(a); history.pushState({ aba: a }, "", `#${a}`); window.scrollTo(0, 0); };\n  useEffect(() => {\n    const onPop = (e: PopStateEvent) => {\n      if (e.state?.aba) setAba(e.state.aba);\n      else if (location.hash) setAba(location.hash.slice(1) as Aba);\n      else setAba("inicio");\n    };\n    window.addEventListener("popstate", onPop);\n    return () => window.removeEventListener("popstate", onPop);\n  }, []);
   const avisos = useMemo(() => calcularAvisos(d), [d]);
 
   // Com a Central aberta, confere de novo a cada 5 minutos e avisa no aparelho quando algo novo fica vermelho.
