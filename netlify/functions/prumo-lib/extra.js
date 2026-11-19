@@ -163,6 +163,8 @@ async function agirExtra(acao, body, c) {
   if (sal) return sal;
   const conf = await require('./conferencia').agirConferencia(acao, body, c); // fase 6 #4013: holerite x ponto
   if (conf) return conf;
+  const ext = await require('./extrato').agirExtrato(acao, body, c); // fase 4 #4013 / #3953: extrato OFX/CSV
+  if (ext) return ext;
   const sco = await require('./score').agirScore(acao, body, c);
   if (sco) return sco;
   const lei = await require('./leitor').agirLeitor(acao, body, c);
