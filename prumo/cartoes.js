@@ -40,13 +40,13 @@
           const nomeK = f0 && (f0.instituicao || f0.conta_ou_cartao);
           if (f0 && nomeK && !v.cartoes.some((k) => String(k.nome).toLowerCase() === String(nomeK).toLowerCase())) {
             const venc = Number(String(f0.vencimento || f0.data || '').slice(8, 10)) || '';
-            res.insertAdjacentHTML('afterbegin', `<button class="btn" id="ca-fat-novo" type="button" style="margin-top:8px">💳 Cadastrar o cartão ${esc(nomeK)}${venc ? ' (vence dia ' + venc + ')' : ''}</button>`);
+            res.insertAdjacentHTML('afterbegin', `<button class="btn" id="ca-fat-novo" type="button" style="margin-top:8px">💳 Cadastrar o cartão ${esc(nomeK)}${venc ? ' (vence dia ' + venc + ')' : ''} e gravar a fatura</button>`);
             res.querySelector('#ca-fat-novo').onclick = () => formulario('Confira o cartão', [
               { nome: 'nome', rotulo: 'Nome do cartão', valor: nomeK },
               { nome: 'limite', rotulo: 'Limite (R$, se souber)', tipo: 'number', valor: '' },
               { nome: 'dia_fechamento', rotulo: 'Dia do fechamento (1 a 31)', tipo: 'number', valor: venc ? ((venc + 23) % 31) || 31 : '' },
               { nome: 'dia_vencimento', rotulo: 'Dia do vencimento (1 a 31)', tipo: 'number', valor: venc },
-            ], (d) => MB.api('cartao_salvar', { ...d, limite: Number(d.limite || 0), dia_fechamento: Number(d.dia_fechamento), dia_vencimento: Number(d.dia_vencimento) }).then(() => { ok('✅ Cartão cadastrado.'); MB.abrirAba('cartoes'); }), null);
+            ], (d) => MB.api('cartao_salvar', { ...d, limite: Number(d.limite || 0), dia_fechamento: Number(d.dia_fechamento), dia_vencimento: Number(d.dia_vencimento) }).then(() => MB.api('doc_confirmar', { lancamentos: r.prontos })).then((o) => ok(`✅ Cartão cadastrado e ${o.gravados} lançamento(s) da fatura gravado(s).`)), null);
           }
           if (cortou) res.insertAdjacentHTML('afterbegin', '<div class="aviso-c">Li as 5 primeiras páginas. Mande o resto em seguida.</div>');
         } catch (e) { res.innerHTML = `<div class="aviso-c">${esc(e && e.message || 'Não consegui ler agora.')} Tente de novo com uma imagem mais nítida.</div>`; }

@@ -72,6 +72,7 @@
         el.querySelector('#apo-alertas').innerHTML = (res.alertas || []).map((a) => `<div class="aviso-c">${A.esc(a)}</div>`).join('');
         if (!res.vinculos.length && !res.contribuicoes_lidas && !res.simulacao && !res.nascimento) return;
         const base = Object.assign({}, p || {}); if (res.tc_2019_meses > 0) base.tc_2019_meses = res.tc_2019_meses; if (res.tc_total_meses > 0) base.tc_total_meses = res.tc_total_meses; // zero não apaga o que já tinha
+        if ((base.tc_total_meses || 0) < (base.tc_2019_meses || 0)) base.tc_total_meses = base.tc_2019_meses; // simulação só traz até 2019: o total começa nele
         if (res.media_salarial != null) base.media_salarial = res.media_salarial;
         if (res.nascimento && !base.nascimento) base.nascimento = res.nascimento;
         salvarPerfil(base, { vinculos: res.vinculos });

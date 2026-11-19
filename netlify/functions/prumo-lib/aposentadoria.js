@@ -469,7 +469,7 @@ async function agirAposentadoria(acao, body, c) {
           const t = await perguntar(img, LER_CNIS);
           const j = t && c.extrairJson(t);
           if (!j) return { ok: false, erro: 'Não consegui ler esta imagem. Tente de novo ou digite os valores.' };
-          const nasc = /^d{4}-d{2}-d{2}$/.test(String(j.nascimento || '')) ? j.nascimento : null;
+          const nasc = /^\d{4}-\d{2}-\d{2}$/.test(String(j.nascimento || '')) ? j.nascimento : null;
           const m = (v) => { const n = Math.round(Number(v)); return Number.isFinite(n) && n > 0 && n < 900 ? n : null; };
           const sim = j.simulacao && typeof j.simulacao === 'object' ? { tc_2019_meses: m(j.simulacao.tc_2019_meses), tc_total_meses: m(j.simulacao.tc_total_meses) } : null;
           return { ok: true, nascimento: nasc, simulacao: sim, vinculos: limparVinculos(j.vinculos), contribuicoes: limparContribs(j.contribuicoes) };
