@@ -46,6 +46,7 @@
       ${MB.salario.cartao(sal)}
       <div class="linha" style="margin-bottom:12px"><button class="btn" id="sal-holerite">📷 Holerite (print ou foto)</button><button class="btn sec" id="sal-holerite-pdf">📄 Holerite em PDF</button><button class="btn sec" id="sal-ponto">🕒 Folha de ponto</button><button class="btn sec" id="sal-manual">✍️ Lançar à mão</button></div>
       <input type="file" id="sal-arq" accept="image/*" multiple hidden>
+      <div class="card" id="kf-conferencia" hidden></div>
       <div class="card" id="sal-hist"><b>📄 Holerites enviados</b><p class="fraco">Carregando…</p></div>
       <div class="card"><div class="item" style="padding-top:0"><b>Contas fixas</b><button class="btn sec mini" id="addf">+ Conta</button></div>
         ${(o.fixas || []).map((f, i) => `<div class="item" data-f="${i}"><span>${esc(f.nome)}${f.dia ? ` <span class="fraco">dia ${f.dia}</span>` : ''}</span><span class="v">${brl(f.valor)}</span></div>`).join('') || '<p class="fraco">Aluguel, luz, internet, escola…</p>'}</div>
@@ -141,6 +142,18 @@
       if (tipoJa) setTimeout(() => processar(comp, tipoJa === 'ponto' ? 'ponto' : 'holerite'), 0);
       else formulario(`Arquivo recebido (${comp.length})`, [{ nome: 'tipo', rotulo: 'O que é?', opcoes: '<option value="holerite">Holerite / contracheque</option><option value="ponto">Folha de ponto</option>' }],
         (d) => { setTimeout(() => processar(comp, d.tipo === 'ponto' ? 'ponto' : 'holerite'), 0); });
+    }
+    // Fase 6 (#4013): confere o holerite com o ponto. Carrega sem segurar a tela; sem dados, o card fica escondido.
+    const conf = el.querySelector('#kf-conferencia');
+    if (conf) {
+      MB.api('folha_conferir', {}, { silencioso: true }).then((r) => {
+        if (!r || r.vazio) return;
+        const mm = (m) => (m ? `${String(m).slice(5, 7)}/${String(m).slice(0, 4)}` : '');
+        conf.innerHTML = '<b>Holerite × ponto</b>' + `<p class="fraco">Holerite de ${esc(mm(r.mes_holerite))} conferido com o ponto de ${esc(mm(r.mes_ponto))}.</p>`
+          + (r.ok ? '<p>Tudo bate: as horas do ponto estão pagas no holerite.</p>'
+            : r.divergencias.map((d) => `<div class="item"><span>⚠️ ${esc(d.texto)}</span></div>`).join(''));
+        conf.hidden = false;
+      }).catch(() => {});
     }
     // Holerites enviados (todos os meses + sistema antigo), cada um com apagar. Carrega sem segurar a tela.
     const hist = el.querySelector('#sal-hist');

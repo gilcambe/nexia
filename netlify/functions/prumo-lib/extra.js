@@ -161,6 +161,8 @@ async function agirExtra(acao, body, c) {
   if (cot) return cot;
   const sal = await require('./salario').agirSalario(acao, body, c);
   if (sal) return sal;
+  const conf = await require('./conferencia').agirConferencia(acao, body, c); // fase 6 #4013: holerite x ponto
+  if (conf) return conf;
   const sco = await require('./score').agirScore(acao, body, c);
   if (sco) return sco;
   const lei = await require('./leitor').agirLeitor(acao, body, c);
