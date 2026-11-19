@@ -31,7 +31,7 @@ test('cores do design system no :root', () => {
 test('nenhuma tela antiga some: todas alcançáveis pelas abas novas', () => {
   const abas = JSON.parse(app.match(/const ABAS = (\[[^\]]*\])/)[1].replace(/'/g, '"'));
   const atalhos = new Set(['inicio', 'mes', 'patrimonio', 'beneficios', 'perfil']);
-  for (const f of ['mes.js', 'patrimonio.js', 'beneficios.js', 'perfil.js']) for (const m of ler(f).matchAll(/\['([a-z]+)', '/g)) atalhos.add(m[1]);
+  for (const f of ['mes.js', 'patrimonio.js', 'beneficios.js', 'perfil.js']) for (const m of ler(f).matchAll(/\['([a-z]+)', '|data-ir="([a-z]+)"/g)) atalhos.add(m[1] || m[2]);
   for (const a of abas) assert.ok(atalhos.has(a), `a tela "${a}" precisa de um atalho`);
   for (const f of ['mes', 'patrimonio', 'beneficios', 'perfil', 'lancar', 'raiox', 'hubs']) assert.ok(ler('sw.js').includes(`'/prumo/${f}.js'`), f + ' no cache do app');
 });
