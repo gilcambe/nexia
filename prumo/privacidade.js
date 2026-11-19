@@ -32,7 +32,8 @@
     const b = document.getElementById('olho');
     if (b) { b.setAttribute('aria-pressed', String(ligado)); b.textContent = ligado ? '🙈' : '👁'; }
   }
-  const alvo = document.getElementById('conteudo');
+  // Redesign: esconde TODOS os valores, também nos avisos, janelas e na folha do Lançar (não só no conteúdo da aba).
+  const alvo = document.getElementById('conteudo') ? document.body : null;
   if (alvo) {
     let esperando = false;
     new MutationObserver(() => { if (esperando) return; esperando = true; setTimeout(() => { esperando = false; varrer(alvo); }, 50); }).observe(alvo, { childList: true, subtree: true, characterData: false });

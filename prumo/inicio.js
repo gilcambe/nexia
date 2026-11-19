@@ -75,7 +75,7 @@
           <div class="ki-rot">Pode gastar hoje ${selo(k.estado)}</div>
           <div class="ki-hoje ${corHoje}">${hojeTxt}</div>
           <div class="ki-rot">${k.posso_mes == null ? 'Cadastre o saldo das suas contas para eu calcular.' : k.alerta ? `Faltam ${brl(Math.abs(k.posso_mes))} para fechar o mês.` : `${brl(k.posso_mes)} até dia ${ultimoDia}`}${k.estado === 'estimado' ? ' · faltam despesas fixas' : ''}</div>
-          ${variacao}${sc.estimado && total != null ? '<div class="ki-rot">Score estimado: faltam dados de alguns pilares.</div>' : ''}${credito}
+          ${total == null ? '<div class="ki-rot">O score aparece quando houver dados de 3 áreas (toque no anel).</div>' : ''}${variacao}${sc.estimado && total != null ? '<div class="ki-rot">Score estimado: faltam dados de alguns pilares.</div>' : ''}${credito}
           <button class="ki-como" type="button" data-como="hoje">Como calculamos?</button>
         </div>
       </section>

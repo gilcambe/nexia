@@ -41,6 +41,7 @@
       const sa = antes.score && antes.score.total; const sd = depois.score && depois.score.total;
       if (sa !== sd && sd != null) linhas.push(`Score: ${sa == null ? '–' : sa} → <b>${sd}</b>`);
     }
+    if (!linhas.length && antes && depois) linhas.push('Gravado. Os números deste mês não mudaram.');
     if (!linhas.length) return;
     const t = document.createElement('div'); t.className = 'kl-mudou'; t.setAttribute('role', 'status');
     t.innerHTML = '✅ ' + linhas.join('<br>');
@@ -116,8 +117,8 @@
       if (!(valor > 0)) { m.innerHTML = '<div class="aviso-c">Digite um valor maior que zero.</div>'; return; }
       const ok = folha.querySelector('#kl-ok'); ok.disabled = true; ok.textContent = 'Gravando…';
       try {
-        const antes = await antesP;
-        await MB.api('doc_confirmar', { lancamentos: [{ data: d.data || hojeLocal(), descricao: d.descricao, valor, tipo, categoria: d.categoria, documento: 'manual' }] });
+        const antes = (await antesP) || (MB.painelAgora && MB.painelAgora());
+        await MB.api('doc_confirmar', { lancamentos: [{ data: d.data || hojeLocal(), descricao: d.descricao, valor, tipo, categoria: d.categoria, documento: 'manual' }] }, { semAviso: true });
         fechar(f);
         await oQueMudou(antes, `${tipo === 'despesa' ? 'Gasto' : 'Entrada'} gravado: ${esc(d.descricao)} ${brl(valor)}`);
         const atual = (() => { try { return localStorage.getItem('prumo-aba') || 'inicio'; } catch { return 'inicio'; } })();
