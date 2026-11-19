@@ -159,6 +159,8 @@ function pontosVencendo(itens, hojeISO) {
 async function agirExtra(acao, body, c) {
   const cot = await require('./cotacoes').agirCotacoes(acao, body, c); // #3304 cotação ao vivo
   if (cot) return cot;
+  const cal = await require('./calendario').agirCalendario(acao, body, c);
+  if (cal) return cal;
   const sal = await require('./salario').agirSalario(acao, body, c);
   if (sal) return sal;
   const tip = await require('./tipo').agirTipo(acao, body, c); // dono 19/11: um botão só para qualquer documento
