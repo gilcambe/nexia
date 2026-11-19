@@ -42,9 +42,9 @@ test('com histórico e cotações, os dois gráficos aparecem desenhados', async
   assert.match(pat, /<polyline/, 'linha do patrimônio desenhada (use hist.meses)');
   const hoje = corte(html, 'kf-graf-hoje');
   assert.ok(hoje, 'card #kf-graf-hoje');
-  assert.equal((hoje.match(/data-sinal="/g) || []).length, 2, 'uma barra por ativo com cotação (use cot.itens)');
-  assert.match(hoje, /data-sinal="ganho"/);
-  assert.match(hoje, /data-sinal="perda"/);
+  // Dono 19/11: investimentos no GERAL, não um por item. O total do dia (use cot.itens) aparece num número só.
+  assert.equal((hoje.match(/data-sinal="/g) || []).length, 0, 'sem barra por item');
+  assert.match(hoje, /Todos os seus investimentos juntos/);
 });
 
 test('sem dados (listas vazias) ou API falhando: a tela abre e não quebra', async () => {
