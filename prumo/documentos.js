@@ -9,6 +9,46 @@
   const TIPO = { despesa: 'Gasto', receita: 'Entrada', transferencia_propria: 'Transferência própria', pagamento_fatura: 'Pagamento de fatura' };
   const DOC = { fatura: 'Fatura de cartão', extrato: 'Extrato', comprovante: 'Comprovante', nota: 'Nota fiscal', boleto: 'Boleto', recibo: 'Recibo', conta: 'Conta de consumo', corretora: 'Extrato de corretora', milhas: 'Extrato de milhas', outro: 'Documento' };
 
+  // Mostra o que foi lido e grava só o que a pessoa marcar. Usado por Documentos e pela fatura na aba Cartões.
+  function mostrarLeituraEm(res, r, ui, depois) {
+    const { brl, esc, ok } = ui;
+    const linhas = [
+      ...r.prontos.map((l) => ({ ...l, _conf: true, _incluir: true })),
+      ...r.conferir.map((l) => ({ ...l, _conf: false, _incluir: false })),
+    ];
+    const linha = (l, i) => `<div class="item" data-i="${i}" style="align-items:flex-start"><label style="display:flex;gap:8px;align-items:flex-start;flex:1;margin:0"><input type="checkbox" data-inc ${l._incluir ? 'checked' : ''} style="width:22px;min-height:22px;margin-top:4px"><span style="flex:1"><span class="n">${esc(l.descricao || l.estabelecimento || '(sem descrição)')}</span><br><span class="fraco">${esc(l.data || 'sem data')} · ${esc(TIPO[l.tipo] || l.tipo || 'tipo?')}${l.motivo ? ' · <b class="verm">' + esc(l.motivo) + '</b>' : ''}</span></span></label><input data-val inputmode="decimal" value="${esc(l.valor == null ? '' : l.valor)}" style="width:110px;min-height:40px" aria-label="Valor"></div>`;
+    res.innerHTML = `<div class="card"><h3 style="margin:0 0 4px">${esc(DOC[r.documento] || 'Documento')} lido</h3>
+      <div class="fraco">${r.imagens_lidas} de ${r.imagens_total} imagem(ns) lida(s)${r.ja_lancados ? ` · ${r.ja_lancados} já estavam lançados e foram ignorados` : ''}</div>
+      <div class="fraco" style="margin-top:6px">Prontos somam: entradas ${brl(r.receitas)} · gastos ${brl(r.despesas)}</div>
+      ${r.conferir.length ? `<div class="aviso-c" style="margin-top:10px">⚠️ ${r.conferir.length} item(ns) precisam da sua conferência. Eles NÃO entram na conta até você marcar.</div>` : ''}
+      <div id="kf-linhas">${linhas.length ? linhas.map(linha).join('') : '<p class="fraco">Não encontrei lançamentos neste documento.</p>'}</div>
+      ${linhas.length ? '<button class="btn" id="kf-grava" type="button" style="margin-top:12px">Confirmar e gravar marcados</button>' : ''}</div>`;
+    const g = res.querySelector('#kf-grava');
+    if (!g) return;
+    g.onclick = async () => {
+      const marcados = [...res.querySelectorAll('.item[data-i]')].filter((d) => d.querySelector('[data-inc]').checked).map((d) => {
+        const l = linhas[Number(d.dataset.i)];
+        const { _conf, _incluir, motivo, ...limpo } = l;
+        return { ...limpo, valor: d.querySelector('[data-val]').value, ...(l._conf ? {} : { forcar: true }) };
+      });
+      if (!marcados.length) { ok('Nenhum item marcado.'); return; }
+      g.disabled = true;
+      try {
+        const out = await MB.api('doc_confirmar', { lancamentos: marcados });
+        ok(`${out.gravados} lançamento(s) gravado(s)${out.ja_existiam ? ` · ${out.ja_existiam} já existiam` : ''}${out.rejeitados.length ? ` · ${out.rejeitados.length} recusado(s)` : ''}`);
+        depois();
+      } catch { g.disabled = false; }
+    };
+  }
+
+  async function lerArquivos(arqs) {
+    const { reduzir } = await carregarUi();
+    const pdf = await carregarPdf();
+    const { imagens, cortou } = await pdf.paraImagens(arqs, reduzir);
+    return { r: await MB.api('doc_ler', { imagens }), cortou };
+  }
+  MB.docLeitura = { mostrar: mostrarLeituraEm, ler: lerArquivos };
+
   MB.telas.documentos = async (el) => {
     const { brl, esc, reduzir, ok, aba } = await carregarUi();
     aba('documentos');
@@ -40,14 +80,16 @@
     const kfExt = el.querySelector('#kf-ext'); const kfExtBtn = el.querySelector('#kf-ext-btn');
     if (kfExtBtn && kfExt) {
       kfExtBtn.onclick = () => { kfExt.value = ''; kfExt.click(); };
-      kfExt.onchange = () => { const n = (kfExt.files || []).length; if (n) res.innerHTML = `<div class="fraco">${n} extrato(s) escolhido(s). Toque em "Ler documento".</div>`; };
+      kfExt.onchange = () => { if ((kfExt.files || []).length) el.querySelector('#kf-ler').click(); };
     }
+    const kfArq = el.querySelector('#kf-arq');
+    if (kfArq) kfArq.onchange = () => { if ((kfArq.files || []).length) el.querySelector('#kf-ler').click(); }; // escolher já lê
     el.querySelector('#kf-ler').onclick = async (ev) => {
       const arqs = [...el.querySelector('#kf-arq').files, ...((kfExt && kfExt.files) || [])];
       el.querySelector('#kf-arq').accept = 'image/*';
       if (!arqs.length) { res.innerHTML = '<div class="aviso-c">Escolha pelo menos uma foto, print ou PDF.</div>'; return; }
       if (arqs.length > 5) { res.innerHTML = '<div class="aviso-c">Envie no máximo 5 arquivos por vez.</div>'; return; }
-      const btn = ev.currentTarget; btn.disabled = true; btn.textContent = 'Lendo… pode levar até 2 minutos';
+      const btn = (ev && ev.currentTarget) || el.querySelector('#kf-ler'); btn.disabled = true; btn.textContent = 'Lendo… pode levar até 2 minutos';
       res.innerHTML = '';
       try {
         // Fase 4 (#4013 / #3953): extrato .ofx/.csv vai como texto, sem passar pelo leitor de PDF/imagem.
@@ -76,34 +118,6 @@
       } finally { btn.disabled = false; btn.textContent = 'Ler documento'; }
     };
 
-    function mostrarLeitura(r) {
-      const linhas = [
-        ...r.prontos.map((l) => ({ ...l, _conf: true, _incluir: true })),
-        ...r.conferir.map((l) => ({ ...l, _conf: false, _incluir: false })),
-      ];
-      const linha = (l, i) => `<div class="item" data-i="${i}" style="align-items:flex-start"><label style="display:flex;gap:8px;align-items:flex-start;flex:1;margin:0"><input type="checkbox" data-inc ${l._incluir ? 'checked' : ''} style="width:22px;min-height:22px;margin-top:4px"><span style="flex:1"><span class="n">${esc(l.descricao || l.estabelecimento || '(sem descrição)')}</span><br><span class="fraco">${esc(l.data || 'sem data')} · ${esc(TIPO[l.tipo] || l.tipo || 'tipo?')}${l.motivo ? ' · <b class="verm">' + esc(l.motivo) + '</b>' : ''}</span></span></label><input data-val inputmode="decimal" value="${esc(l.valor == null ? '' : l.valor)}" style="width:110px;min-height:40px" aria-label="Valor"></div>`;
-      res.innerHTML = `<div class="card"><h3 style="margin:0 0 4px">${esc(DOC[r.documento] || 'Documento')} lido</h3>
-        <div class="fraco">${r.imagens_lidas} de ${r.imagens_total} imagem(ns) lida(s)${r.ja_lancados ? ` · ${r.ja_lancados} já estavam lançados e foram ignorados` : ''}</div>
-        <div class="fraco" style="margin-top:6px">Prontos somam: entradas ${brl(r.receitas)} · gastos ${brl(r.despesas)}</div>
-        ${r.conferir.length ? `<div class="aviso-c" style="margin-top:10px">⚠️ ${r.conferir.length} item(ns) precisam da sua conferência. Eles NÃO entram na conta até você marcar.</div>` : ''}
-        <div id="kf-linhas">${linhas.length ? linhas.map(linha).join('') : '<p class="fraco">Não encontrei lançamentos neste documento.</p>'}</div>
-        ${linhas.length ? '<button class="btn" id="kf-grava" type="button" style="margin-top:12px">Confirmar e gravar marcados</button>' : ''}</div>`;
-      const g = res.querySelector('#kf-grava');
-      if (!g) return;
-      g.onclick = async () => {
-        const marcados = [...res.querySelectorAll('.item[data-i]')].filter((d) => d.querySelector('[data-inc]').checked).map((d) => {
-          const l = linhas[Number(d.dataset.i)];
-          const { _conf, _incluir, motivo, ...limpo } = l;
-          return { ...limpo, valor: d.querySelector('[data-val]').value, ...(l._conf ? {} : { forcar: true }) };
-        });
-        if (!marcados.length) { ok('Nenhum item marcado.'); return; }
-        g.disabled = true;
-        try {
-          const out = await MB.api('doc_confirmar', { lancamentos: marcados });
-          ok(`${out.gravados} lançamento(s) gravado(s)${out.ja_existiam ? ` · ${out.ja_existiam} já existiam` : ''}${out.rejeitados.length ? ` · ${out.rejeitados.length} recusado(s)` : ''}`);
-          MB.abrirAba('documentos');
-        } catch { g.disabled = false; }
-      };
-    }
+    function mostrarLeitura(r) { mostrarLeituraEm(res, r, { brl, esc, ok }, () => MB.abrirAba('documentos')); }
   };
 })();
