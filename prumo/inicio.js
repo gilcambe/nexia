@@ -33,7 +33,7 @@
     // Espera no máximo 1,2 s: se chegou, já entra junto; se não, entra quando chegar.
     const rapido = (p) => Promise.race([p, new Promise((ok) => setTimeout(() => ok(undefined), 1200))]);
     const [sc, gr] = await Promise.all([rapido(pScore), rapido(pGraf)]);
-    const corpoHoje = (g) => `${g.hojeHtml}<div class="n ${g.hojeTotal >= 0 ? 'verde' : 'verm'}" style="margin-top:6px">${brl(g.hojeTotal)}</div>`;
+    const corpoHoje = (g) => `<div class="n ${g.hojeTotal >= 0 ? 'verde' : 'verm'}" style="font-size:22px">${g.hojeTotal >= 0 ? '▲' : '▼'} ${brl(g.hojeTotal)}</div><div class="fraco">Todos os seus investimentos juntos, hoje.</div>`; // dono 19/11: geral, não item por item
     const esperando = '<p class="fraco">Carregando…</p>';
     const nome = (MB.usuario && MB.usuario() && MB.usuario().displayName || '').split(' ')[0];
     const hora = new Date().getHours();
@@ -48,30 +48,35 @@
     let fluxoHtml = '';
     try { const fv = r.fluxo_inicio && await carregarFluxo(); if (fv) fluxoHtml = fv.cartaoInicio(r.fluxo_inicio); } catch (e) { /* sem o cartão, o resto segue */ }
     const cats = Object.entries(r.por_categoria || {}).sort((a, b) => b[1] - a[1]);
+    const prox = [...(r.previstos || []), ...(r.proximos || [])].sort((a, b) => String(a.data).localeCompare(String(b.data))).slice(0, 4);
+    const dmy = (d) => `${String(d).slice(8, 10)}/${String(d).slice(5, 7)}`;
+    const proxHtml = prox.length ? `<div class="card" id="kf-proximos"><div class="fraco">Próximos</div>${prox.map((x) => `<div class="item"><span>${x.tipo === 'receber' ? '💰' : '🧾'} ${esc(x.nome)} <span class="fraco">${dmy(x.data)}</span></span><span class="n ${x.tipo === 'receber' ? 'verde' : 'verm'}">${brl(x.valor)}</span></div>`).join('')}</div>` : '';
     el.innerHTML = `
       <p class="fraco" style="margin:0 0 10px">${saudacao}${nome ? ', ' + esc(nome) : ''}</p>
-      <div class="card" id="kf-mandar"><h3 style="margin:0 0 4px">📷 Mandar documento</h3>
-        <div class="fraco">Holerite, ponto, fatura do cartão, extrato, comprovante, FGTS, INSS ou score. Eu descubro o que é e coloco no lugar certo. Você só confere.</div>
-        <button class="btn" id="kf-mandar-foto" type="button" style="margin-top:10px">📷 Print ou foto</button>
-        <button class="btn sec" id="kf-mandar-pdf" type="button" style="margin-top:6px">📄 PDF</button>
+      <div class="card" id="kf-mandar">
+        <button class="btn" id="kf-mandar-foto" type="button">📷 Mandar print ou foto</button>
+        <button class="btn sec" id="kf-mandar-pdf" type="button" style="margin-top:6px">📄 Mandar PDF</button>
+        <div class="fraco" style="margin-top:6px">Holerite, fatura, extrato, FGTS… eu leio e guardo no lugar certo.</div>
         <input type="file" id="kf-mandar-arq" accept="image/*" multiple hidden><div id="kf-mandar-res"></div></div>
+      ${r.tres_numeros ? `
+      <div class="card" id="kf-tres-numeros">
+        <div class="linha kf-tres" style="margin:0">
+          <div><div class="fraco">Quanto tenho</div><div class="n">${r.tres_numeros.tenho === null ? '—' : brl(r.tres_numeros.tenho)}</div></div>
+          <div><div class="fraco">Comprometido (contas a pagar)</div><div class="n verm">${r.tres_numeros.comprometido === null ? '—' : brl(r.tres_numeros.comprometido)}</div></div>
+          <div><div class="fraco">Posso gastar${r.tres_numeros.ate ? ' (' + fmtAte(r.tres_numeros.ate) + ')' : ''}</div><div class="n verde">${r.tres_numeros.posso_gastar === null ? '—' : brl(r.tres_numeros.posso_gastar)}</div></div>
+        </div>
+        ${r.tres_numeros.tenho === null ? '<div class="fraco" style="margin-top:8px">Cadastre suas contas na aba Contas. <button class="btn sec mini" id="kf-contas-btn" type="button" style="margin-top:4px">Ir para Contas</button></div>' : ''}
+      </div>` : ''}
+      ${proxHtml}
+      <div class="card" id="kf-primeiros-passos" hidden></div>
+      <details class="kf-mais" id="kf-mais"><summary class="btn sec" style="margin-top:4px">Ver mais detalhes</summary>
       ${r.alertas_limite.length ? r.alertas_limite.map((a) => `<div class="aviso-c">${a.status === 'estourado' ? '🔴' : '🟠'} <b>${esc(NOME_CAT[a.categoria] || a.categoria)}</b>: ${brl(a.gasto)} de ${brl(a.limite)} (${String(a.pct).replace('.', ',')}%)${a.status === 'estourado' ? ' — passou do limite' : ' — perto do limite'}.</div>`).join('') : ''}
       <details class="card kf-dobra" id="kf-saude"><summary><span class="fraco">Saúde financeira${sf.completa ? '' : ' (parcial)'}</span><span><b class="kf-num">${notaSaude === null ? '—' : notaSaude}</b>${notaSaude === null ? '' : '<span class="fraco" style="font-size:12px">/100</span>'}</span></summary>
         <div class="kf-dobra-corpo"><div class="fraco">${esc(sf.resumo || sf.aviso)}</div>
         ${sf.indicadores.map((x) => `<div style="margin:6px 0"><div class="item" style="padding:0;border:0"><span>${esc(x.nome)}</span><span class="fraco">${esc(x.texto)}</span></div>${barra(x.nota, x.nota < 40 ? '#ef4444' : x.nota < 70 ? '#f59e0b' : '')}</div>`).join('')}
         ${sf.completa ? '' : `<div class="aviso-c" style="margin:6px 0 0">👉 ${esc(sf.proximo_passo || 'Cadastre suas contas na aba Contas para começar.')}</div>`}
         <div class="fraco" style="margin-top:6px">${sf.completa ? esc(sf.aviso) + (sf.nota_mes_anterior !== null && sf.nota_mes_anterior !== undefined ? ' Mês anterior: ' + sf.nota_mes_anterior + '.' : '') : ''}</div></div></details>
-      <div class="card" id="kf-primeiros-passos" hidden></div>
       <div id="kf-score">${sc ? sc.html : ''}</div>
-      ${r.tres_numeros ? `
-      <div class="card" id="kf-tres-numeros">
-        <div class="linha kf-tres" style="margin:0">
-          <div><div class="fraco">Quanto tenho</div><div class="n">${r.tres_numeros.tenho === null ? '—' : brl(r.tres_numeros.tenho)}</div></div>
-          <div><div class="fraco">Comprometido</div><div class="n verm">${r.tres_numeros.comprometido === null ? '—' : brl(r.tres_numeros.comprometido)}</div></div>
-          <div><div class="fraco">Posso gastar${r.tres_numeros.ate ? ' (' + fmtAte(r.tres_numeros.ate) + ')' : ''}</div><div class="n verde">${r.tres_numeros.posso_gastar === null ? '—' : brl(r.tres_numeros.posso_gastar)}</div></div>
-        </div>
-        ${r.tres_numeros.tenho === null ? '<div class="fraco" style="margin-top:8px">Cadastre suas contas na aba Contas. <button class="btn sec mini" id="kf-contas-btn" type="button" style="margin-top:4px">Ir para Contas</button></div>' : ''}
-      </div>` : ''}
       <div class="card kf-hero"><div class="fraco">Saldo disponível</div><div class="grande">${r.saldo_disponivel === null ? '—' : brl(r.saldo_disponivel)}</div>
         <div class="fraco" style="margin-bottom:10px">${r.saldo_disponivel === null ? 'Cadastre suas contas na aba Contas.' : 'Dinheiro em conta, sem limite de cartão.'}</div>
         <div class="fraco">Patrimônio líquido</div><div class="n" style="font-size:22px">${brl(r.patrimonio.liquido)}</div>
@@ -96,7 +101,7 @@
       ${fluxoHtml}
       ${r.vencimentos.length ? `<div class="card" style="margin-top:12px"><div class="fraco">Próximos vencimentos de fatura</div>${r.vencimentos.map((v) => `<div class="item"><span class="n">💳 ${esc(v.cartao)}</span><span>${v.em_dias === 0 ? 'hoje' : 'em ' + v.em_dias + ' dia(s)'} · dia ${v.dia}</span></div>`).join('')}</div>` : ''}
       ${cats.length ? `<div class="card" style="margin-top:12px"><div class="fraco">Gastos por categoria</div>${cats.map(([k, v]) => `<div style="margin:6px 0"><div class="item" style="padding:0;border:0"><span>${esc(NOME_CAT[k] || k)}</span><span>${brl(v)}</span></div>${barra(r.despesas ? (v / r.despesas) * 100 : 0)}</div>`).join('')}</div>` : ''}
-      ${r.lacunas.length ? `<div class="card fraco" style="margin-top:12px">Para calcular saldo disponível e saúde financeira ainda faltam: ${r.lacunas.map((l) => esc(LACUNA[l] || l)).join(', ')}. Nada é estimado no lugar.</div>` : ''}`;
+      ${r.lacunas.length ? `<div class="card fraco" style="margin-top:12px">Para calcular saldo disponível e saúde financeira ainda faltam: ${r.lacunas.map((l) => esc(LACUNA[l] || l)).join(', ')}. Nada é estimado no lugar.</div>` : ''}      </details>`;
     if (pv) pv.ligar(el);
     const ligarScore = async (x) => { if (!x) return; try { x.m.ligar(el, { api: MB.api, pdf: await carregarScript('pdf', '/prumo/pdf.js'), reduzir: MB.ui.reduzir, formulario: MB.ui.formulario, ok: MB.ui.ok }); } catch (e) { /* sem leitura de print, o resto segue */ } };
     if (sc) await ligarScore(sc);
