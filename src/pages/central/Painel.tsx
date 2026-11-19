@@ -504,7 +504,7 @@ export default function Painel({ d, erros, avisos, ir, conferir, carregando, abr
             <Numero titulo="Uso do servidor hoje" icone="ia" cor="from-sky-500 to-blue-600" onClick={() => ir("sistema")}
               valor={usoServidor ? `${Math.round(usoServidor.pct || 0)}%` : null} sub={usoServidor ? `${usoServidor.nome} · ${usoServidor.usado} de ${usoServidor.limite}` : ""}
               pct={usoServidor ? usoServidor.pct : null} barra={usoServidor && (usoServidor.pct || 0) >= 80 ? "bg-amber-500" : "bg-sky-500"}
-              conta={usoServidor ? `${usoServidor.usado} de ${usoServidor.limite}` : ""} />}
+              conta={usoServidor ? `${usoServidor.usado} de ${usoServidor.limite}` : ""} />
             <Numero titulo="Alertas" icone="alerta" cor="from-orange-400 to-amber-500" onClick={() => abrirAlerta(null)}
               valor={d.saude ? avisos.length : null} sub={avisos.length ? "precisam de você" : "nada pendente"} />
           </div>
