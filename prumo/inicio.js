@@ -56,6 +56,7 @@
         ${sf.indicadores.map((x) => `<div style="margin:6px 0"><div class="item" style="padding:0;border:0"><span>${esc(x.nome)}</span><span class="fraco">${esc(x.texto)}</span></div>${barra(x.nota, x.nota < 40 ? '#ef4444' : x.nota < 70 ? '#f59e0b' : '')}</div>`).join('')}
         ${sf.completa ? '' : `<div class="aviso-c" style="margin:6px 0 0">👉 ${esc(sf.proximo_passo || 'Cadastre suas contas na aba Contas para começar.')}</div>`}
         <div class="fraco" style="margin-top:6px">${sf.completa ? esc(sf.aviso) + (sf.nota_mes_anterior !== null && sf.nota_mes_anterior !== undefined ? ' Mês anterior: ' + sf.nota_mes_anterior + '.' : '') : ''}</div></div></details>
+      <div class="card" id="kf-primeiros-passos" hidden></div>
       <div id="kf-score">${sc ? sc.html : ''}</div>
       ${r.tres_numeros ? `
       <div class="card" id="kf-tres-numeros">
@@ -99,6 +100,16 @@
       if (a) a.innerHTML = g ? g.patrimSvg : ''; if (b) b.innerHTML = g ? corpoHoje(g) : '<p class="fraco">Cotações indisponíveis agora.</p>';
     });
     el.querySelector('#kf-doc').onclick = () => MB.abrirAba('documentos');
+    // Fase 3 (#4013): primeiros passos. Só aparece enquanto falta etapa; o botão leva à aba da etapa.
+    const pp = el.querySelector('#kf-primeiros-passos');
+    if (pp) MB.api('onboarding_status', {}, { silencioso: true }).then((o) => {
+      if (!o || !o.proxima) return;
+      const e = o.etapas.find((x) => x.id === o.proxima);
+      pp.innerHTML = `<b>Primeiros passos (${o.feitas} de ${o.total})</b><p class="fraco" style="margin:4px 0">Próximo: ${esc(e.nome)}</p><button class="btn mini" type="button" id="kf-pp-ir">Fazer agora</button> <button class="btn sec mini" type="button" id="kf-pp-pular">Pular esta</button>`;
+      pp.hidden = false;
+      pp.querySelector('#kf-pp-ir').onclick = () => MB.abrirAba(e.aba);
+      pp.querySelector('#kf-pp-pular').onclick = async () => { try { await MB.api('onboarding_pular', { id: e.id }); MB.abrirAba('inicio'); } catch { /* erro já mostrado */ } };
+    }).catch(() => {});
     const bc = el.querySelector('#kf-contas-btn'); if (bc) bc.onclick = () => MB.abrirAba('contas');
     const bd = el.querySelector('#kf-div'); if (bd) bd.onclick = () => MB.abrirAba('dividas');
     const bf = el.querySelector('#kf-fluxo-ver'); if (bf) bf.onclick = () => MB.abrirAba('fluxo');

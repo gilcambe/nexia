@@ -69,6 +69,7 @@
         ${ate ? '<button class="btn sec" type="button" data-horas="0">Cancelar autorização</button>' : ''}</div>
       <div class="card"><h3 style="margin:0 0 6px">📦 Seus dados (LGPD)</h3>
         <button class="btn sec" id="aj-baixar" type="button">Baixar uma cópia de tudo</button>
+        <button class="btn sec" id="aj-relatorio" type="button">Baixar relatório do ano (planilha CSV)</button>
         <label style="margin-top:8px">Para apagar tudo, escreva APAGAR</label><input id="aj-conf" autocomplete="off">
         <button class="btn sec verm" id="aj-apagar" type="button">Apagar todos os meus dados</button></div>
       <div id="aj-msg" class="fraco"></div>
@@ -85,6 +86,15 @@
         a.href = URL.createObjectURL(new Blob([JSON.stringify(dados, null, 2)], { type: 'application/json' }));
         a.download = 'kernex-finance-meus-dados.json'; document.body.appendChild(a); a.click(); a.remove();
         msg('Cópia baixada.');
+      } catch (e) { msg(e.message); }
+    };
+    el.querySelector('#aj-relatorio').onclick = async () => {
+      try {
+        const r = await MB.api('relatorio_anual', { ano: new Date().getFullYear() });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(new Blob(['﻿' + r.csv], { type: 'text/csv;charset=utf-8' }));
+        a.download = `kernex-finance-relatorio-${r.ano}.csv`; document.body.appendChild(a); a.click(); a.remove();
+        msg(`Relatório de ${r.ano} baixado: receitas ${r.receitas.toFixed(2).replace('.', ',')}, despesas ${r.despesas.toFixed(2).replace('.', ',')}.`);
       } catch (e) { msg(e.message); }
     };
     el.querySelector('#aj-apagar').onclick = async () => {

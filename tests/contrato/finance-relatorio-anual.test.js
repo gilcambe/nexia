@@ -10,7 +10,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const raiz = path.join(__dirname, '../..');
-const ler = (f) => fs.readFileSync(path.join(raiz, f), 'utf8');H
+const ler = (f) => fs.readFileSync(path.join(raiz, f), 'utf8');
 const rel = require(path.join(raiz, 'netlify/functions/prumo-lib/relatorios.js'));
 const L = [{ data: '2026-01-05', tipo: 'receita', valor: 5000, categoria: 'Salário' }, { data: '2026-01-10', tipo: 'despesa', valor: 1200.5, categoria: 'Moradia' },
   { data: '2026-03-02', tipo: 'despesa', valor: 300, categoria: 'Mercado' }, { data: '2026-03-09', tipo: 'despesa', valor: 99.5, categoria: 'Moradia' },
