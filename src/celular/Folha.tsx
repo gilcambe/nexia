@@ -17,18 +17,19 @@ export function Folha({ titulo, fechar, acao, children }: { titulo: string; fech
   const fecharRef = useRef(fechar);
   fecharRef.current = fechar;
   const fechouPorVoltar = useRef(false);
-  const fechadoPorNaoVoltar = useRef(false);
   useEffect(() => {
     history.pushState({ folha: titulo }, "");
-    const voltar = () => fecharRef.current();
+    const voltar = () => {
+      fechouPorVoltar.current = true;
+      fecharRef.current();
+    };
     window.addEventListener("popstate", voltar);
     const rolagem = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => {
       window.removeEventListener("popstate", voltar);
       document.body.style.overflow = rolagem;
-      if (!fechouPorVoltar.current && !fechadoPorNaoVoltar.current) {
-        fechadoPorNaoVoltar.current = true;
+      if (!fechouPorVoltar.current) {
         history.back();
       }
     };
