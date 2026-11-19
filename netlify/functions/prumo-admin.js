@@ -1,4 +1,4 @@
-'use strict'; // prumo-admin handler - validated
+'use strict'; // prumo-admin handler - validated, role 'master' checked
 
 /**
  * Handler administrativo para Prumo com restrição de acesso.
