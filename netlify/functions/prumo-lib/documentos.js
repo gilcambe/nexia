@@ -187,8 +187,15 @@ async function agirDoc(acao, body, c) {
         const id = idDe(l);
         if (existentes.has(id)) { jaExistiam++; continue; }
         existentes.add(id);
-        await col.doc(id).set({ ...l, status: prv.statusInicial(l.data, hoje), origem: 'documento', criado_em: agoraIso, lote });
-        doLote.push(l); gravados++;
+        // Garantir que pagamentos de fatura ou gastos vinculados ao cartão tenham o cartão mapeado
+        const item = { ...l, status: prv.statusInicial(l.data, hoje), origem: 'documento', criado_em: agoraIso, lote };
+        if (item.conta_ou_cartao) {
+            const cartoes = await listar(base.collection('cartoes'));
+            const c = cartoes.find(k => sem(k.nome) === sem(item.conta_ou_cartao) || k.nome.includes(item.conta_ou_cartao));
+            if (c) item.cartao_id = c.id;
+        }
+        await col.doc(id).set(item);
+        doLote.push(item); gravados++;
       }
       for (const l of forcados) {
         const { forcar, ...limpo } = l;

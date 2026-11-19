@@ -1,6 +1,7 @@
 // Teste "humano" do Kernex Finance no navegador (celular), com Firebase, banco e IA falsos.
 // Fluxo: Início vazio -> enviar fatura -> conferir -> gravar -> Início com números -> modo privacidade.
-// Uso: node scripts/kernex-finance-teste-humano.js   (fotos em test-results/kernex-finance)
+// Uso: node scripts/kernex-finance-teste-humano.js
+// Testa a leitura de faturas Itaú e confere se os valores aparecem nas telas.
 const { chromium } = require('playwright');
 const fs = require('fs'); const path = require('path');
 const RAIZ = path.join(__dirname, '..');
