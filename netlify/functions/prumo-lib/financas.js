@@ -52,6 +52,17 @@ function consumoLimites(limites, porCategoria) {
   }).sort((a, b) => b.pct - a.pct);
 }
 
+function tresNumeros({ saldo, a_pagar, reserva, hoje } = {}) {
+  const tenho = saldo == null ? null : (typeof saldo === 'number' ? saldo : numero(saldo));
+  const comprometido = a_pagar == null ? 0 : Number(a_pagar);
+  const res = reserva == null ? 0 : Number(reserva);
+  const posso_gastar = tenho == null ? null : Math.max(0, Math.round((tenho - comprometido - res) * 100) / 100);
+  const hj = hoje || new Date(Date.now() - 3 * 3600 * 1000).toISOString().slice(0, 10);
+  const [ano, mes] = String(hj).slice(0, 7).split('-').map(Number);
+  const ate = (ano && mes) ? new Date(Date.UTC(ano, mes, 0)).toISOString().slice(0, 10) : '';
+  return { tenho, comprometido, reserva: res, posso_gastar, ate };
+}
+
 async function agirFin(acao, body, c) {
   if (!['conta_salvar', 'conta_listar', 'conta_apagar', 'limite_salvar', 'limite_listar', 'limite_apagar'].includes(acao)) return null;
   const { base, listar, salvar, apagar, agoraIso } = c;
@@ -86,4 +97,4 @@ async function agirFin(acao, body, c) {
   }
 }
 
-module.exports = { agirFin, validarConta, validarLimite, saldoDisponivel, consumoLimites, TIPOS_CONTA };
+module.exports = { agirFin, validarConta, validarLimite, saldoDisponivel, consumoLimites, TIPOS_CONTA, tresNumeros };

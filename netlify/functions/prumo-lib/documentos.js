@@ -208,7 +208,8 @@ async function agirDoc(acao, body, c) {
       const fin = require('./financas');
       // 17/11 (lento no celular do dono): tudo numa leva só; o fluxo começa junto e reusa as mesmas leituras.
       const pFluxo = require('./fluxo').carregar(c).catch(() => null);
-      const [lancsTodos, carteira, pontos, cartoes, contas, limites, dividas, pagamentosTodos, cfgDiv] = await Promise.all([listar(col), c.listarCarteira(), listar(base.collection('pontos')), listar(base.collection('cartoes')), listar(base.collection('contas')), listar(base.collection('limites')), listar(base.collection('dividas')), listar(base.collection('pagamentos')), base.collection('config').doc('dividas').get()]);
+      const [lancsTodos, carteira, pontos, cartoes, contas, limites, dividas, pagamentosTodos, cfgDiv, cfgCaixa] = await Promise.all([listar(col), c.listarCarteira(), listar(base.collection('pontos')), listar(base.collection('cartoes')), listar(base.collection('contas')), listar(base.collection('limites')), listar(base.collection('dividas')), listar(base.collection('pagamentos')), base.collection('config').doc('dividas').get(), base.collection('config').doc('caixa').get()]);
+      const reserva = (cfgCaixa && cfgCaixa.exists && cfgCaixa.data().reserva_minima) || 0;
       const lancs = prv.realizados(lancsTodos.filter((x) => x.perfil !== 'pj'), 'data', hoje); // PJ nunca entra nos totais pessoais; previsto (data futura) fica de fora
       const aReceberPagar = prv.resumoPrevisto({ lancs: lancsTodos, pagamentos: pagamentosTodos, dividas }, mes, hoje);
       const resDiv = require('./dividas').resumoDividas(dividas, !!(cfgDiv && cfgDiv.exists && cfgDiv.data().sem_dividas), doMesReceitas(lancs, mes));
@@ -219,7 +220,8 @@ async function agirDoc(acao, body, c) {
       const consumo = fin.consumoLimites(limites, doMes.por_categoria);
       const milhas = Math.round(pontos.reduce((s, p) => s + ((p.saldo || 0) / 1000) * (p.valor_milheiro || 0), 0) * 100) / 100;
       const dia = new Date(agoraIso).getUTCDate();
-      const vencimentos = cartoes.map((k) => ({ cartao: k.nome, dia: k.dia_vencimento, em_dias: (k.dia_vencimento - dia + 31) % 31 })).filter((v) => v.em_dias <= 7).sort((a, b) => a.em_dias - b.em_dias);
+      const vencimentos = cartoes.map((k) => ({ cartao: k.nome, dia: k.dia_vencimento, em_dias: (k.dia_vencimento - dia + 31) % 31 })).filter((v) => v.
+em_dias <= 7).sort((a, b) => a.em_dias - b.em_dias);
       let fluxo_inicio = null;
       try { const dadosFluxo = await pFluxo; if (dadosFluxo) fluxo_inicio = require('./fluxo').resumoInicio(dadosFluxo, agoraIso.slice(0, 10)); } catch { fluxo_inicio = null; } // cartão "quanto ainda cai" (carreira)
       const lacunas = [];
@@ -229,7 +231,8 @@ async function agirDoc(acao, body, c) {
       return [200, { mes, receitas: doMes.receitas, despesas: doMes.despesas, economia: Math.round((doMes.receitas - doMes.despesas) * 100) / 100,
         despesas_mes_anterior: anterior.despesas, variacao_despesas_pct: pct(doMes.despesas, anterior.despesas), por_categoria: doMes.por_categoria,
         saldo_disponivel: sd.saldo, outras_moedas: sd.outras_moedas, limites: consumo, alertas_limite: consumo.filter((x) => x.status !== 'ok'),
-        dividas: resDiv, investimentos: Math.round(carteira.reduce((t, x) => t + Math.round((x.valor || 0) * 100), 0)) / 100, patrimonio: pat, milhas_estimado: milhas, vencimentos, fluxo_inicio, lacunas, a_receber: aReceberPagar.a_receber, a_pagar: aReceberPagar.a_pagar, previstos: aReceberPagar.itens, qtd_lancamentos: lancs.length }];
+        dividas: resDiv, investimentos: Math.round(carteira.reduce((t, x) => t + Math.round((x.valor || 0) * 100), 0)) / 100, patrimonio: pat, milhas_estimado: milhas, vencimentos, fluxo_inicio, lacunas, a_receber: aReceberPagar.a_receber, a_pagar: aReceberPagar.a_pagar, previstos: aReceberPagar.itens, qtd_lancamentos: lancs.length,
+        tres_numeros: fin.tresNumeros({ saldo: sd.saldo, a_pagar: aReceberPagar.a_pagar, reserva, hoje }) }];
     }
     default: return null;
   }
