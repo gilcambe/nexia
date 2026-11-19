@@ -69,6 +69,7 @@
       </div>` : ''}
       ${proxHtml}
       <div class="card" id="kf-primeiros-passos" hidden></div>
+      <button class="btn sec" id="kf-cadastros" type="button">📋 Meus cadastros: ver, editar ou apagar</button><div id="kf-cad"></div>
       <details class="kf-mais" id="kf-mais"><summary class="btn sec" style="margin-top:4px">Ver mais detalhes</summary>
       ${r.alertas_limite.length ? r.alertas_limite.map((a) => `<div class="aviso-c">${a.status === 'estourado' ? '🔴' : '🟠'} <b>${esc(NOME_CAT[a.categoria] || a.categoria)}</b>: ${brl(a.gasto)} de ${brl(a.limite)} (${String(a.pct).replace('.', ',')}%)${a.status === 'estourado' ? ' — passou do limite' : ' — perto do limite'}.</div>`).join('') : ''}
       <details class="card kf-dobra" id="kf-saude"><summary><span class="fraco">Saúde financeira${sf.completa ? '' : ' (parcial)'}</span><span><b class="kf-num">${notaSaude === null ? '—' : notaSaude}</b>${notaSaude === null ? '' : '<span class="fraco" style="font-size:12px">/100</span>'}</span></summary>
@@ -142,6 +143,23 @@
         } catch (e) { mRes.innerHTML = `<div class="aviso-c">${esc(e && e.message || 'Não consegui ler agora.')} Tente de novo.</div>`; }
       };
     }
+    // Dono 19/11 ("não deixa apagar, editar... nada"): tudo que a pessoa cadastrou, de todas as telas, num lugar só.
+    const cadBtn = el.querySelector('#kf-cadastros'); const cad = el.querySelector('#kf-cad');
+    const desenharCad = async (msg) => {
+      const r = await MB.api('cadastros_listar');
+      const dmy = (d) => (d && /^d{4}-d{2}/.test(d) ? (d.length >= 10 ? `${d.slice(8, 10)}/${d.slice(5, 7)}/${d.slice(0, 4)}` : `${d.slice(5, 7)}/${d.slice(0, 4)}`) : '');
+      cad.innerHTML = `<div class="card">${msg ? `<div class="aviso-c">${msg}</div>` : ''}${r.pode_desfazer ? '<button class="btn sec mini" id="kf-desfazer" type="button">↩️ Desfazer o último apagado</button>' : ''}`
+        + (r.grupos.length ? r.grupos.map((g) => `<div style="margin-top:10px"><b>${esc(g.nome)}</b>${g.itens.map((x) => `<div class="item"><span>${esc(x.titulo)} <span class="fraco">${dmy(x.data)}</span></span><span class="v">${x.valor === null ? '' : brl(x.valor)} <button type="button" class="btn sec mini" data-cad-ed="${esc(g.aba)}" aria-label="Editar">✏️</button> <button type="button" class="btn sec mini" data-cad-ap="${esc(g.colecao)}" data-id="${esc(x.id)}" aria-label="Apagar">🗑️</button></span></div>`).join('')}</div>`).join('')
+          : '<p class="fraco">Você ainda não cadastrou nada. Use "Mandar print ou foto" lá em cima.</p>') + '</div>';
+      const d = cad.querySelector('#kf-desfazer');
+      if (d) d.onclick = async () => { try { const o = await MB.api('desfazer'); await desenharCad(`↩️ Voltou: ${esc(o.devolvido.titulo)}`); } catch { /* erro já mostrado */ } };
+      cad.querySelectorAll('[data-cad-ed]').forEach((b) => { b.onclick = () => MB.abrirAba(b.dataset.cadEd); });
+      cad.querySelectorAll('[data-cad-ap]').forEach((b) => { b.onclick = async () => {
+        if (!confirm('Apagar este item? Dá para desfazer logo em seguida.')) return;
+        try { const o = await MB.api('cadastro_apagar', { colecao: b.dataset.cadAp, id: b.dataset.id }); await desenharCad(`🗑️ Apagado: ${esc(o.apagado.titulo)}`); } catch { /* erro já mostrado */ }
+      }; });
+    };
+    if (cadBtn && cad) cadBtn.onclick = () => { if (cad.innerHTML) { cad.innerHTML = ''; return; } desenharCad('').catch(() => { cad.innerHTML = '<p class="fraco">Não consegui abrir agora.</p>'; }); };
     const bc = el.querySelector('#kf-contas-btn'); if (bc) bc.onclick = () => MB.abrirAba('contas');
     const bd = el.querySelector('#kf-div'); if (bd) bd.onclick = () => MB.abrirAba('dividas');
     const bf = el.querySelector('#kf-fluxo-ver'); if (bf) bf.onclick = () => MB.abrirAba('fluxo');
