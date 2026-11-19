@@ -19,3 +19,4 @@
 - Reverter commit: `git revert <sha>` ou abrir PR de reversão.
 
 <!-- fim -->
+
