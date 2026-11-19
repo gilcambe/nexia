@@ -159,6 +159,8 @@ function pontosVencendo(itens, hojeISO) {
 async function agirExtra(acao, body, c) {
   const cot = await require('./cotacoes').agirCotacoes(acao, body, c); // #3304 cotação ao vivo
   if (cot) return cot;
+  const rel = await require('./relatorios').agirRelatorios(acao, body, c);
+  if (rel) return rel;
   const sal = await require('./salario').agirSalario(acao, body, c);
   if (sal) return sal;
   const conf = await require('./conferencia').agirConferencia(acao, body, c); // fase 6 #4013: holerite x ponto
