@@ -4,7 +4,7 @@
 // lancs = [{ data: 'AAAA-MM-DD', tipo: 'receita'|'despesa', valor, categoria, perfil? }]; perfil 'pj' fica de fora.
 // relatorioAnual -> { ano, meses: 12 x { mes, receitas, despesas, saldo }, receitas, despesas, saldo, por_categoria: { cat: total despesas } }.
 // paraCSV(linhas: objetos) -> texto com ';', cabeçalho das chaves, número com vírgula decimal, aspas quando há ';' ou aspas.
-// Ação 'relatorio_anual' { ano } (ligada em prumo.js). Na tela de ajuda (prumo/ajuda.js) botão para baixar o CSV do ano.
+// Ação 'relatorio_anual' { ano } (ligada em agirExtra, prumo-lib/extra.js). Na tela de ajuda (prumo/ajuda.js) botão para baixar o CSV do ano.
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');

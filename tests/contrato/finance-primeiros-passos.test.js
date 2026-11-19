@@ -1,7 +1,7 @@
 'use strict';
 // Contrato (épico #4013, fase 3; manual seção 2): onboarding em etapas.
 // netlify/functions/prumo-lib/onboarding.js exporta etapas(d) e agirOnboarding(acao, ctx) com a ação 'onboarding_status'
-// (ligada em netlify/functions/prumo.js). d = { salario, jornada, contas, cartoes, fixas, importacoes } (números ou booleanos).
+// (ligada em agirExtra, prumo-lib/extra.js). d = { salario, jornada, contas, cartoes, fixas, importacoes } (números ou booleanos).
 // etapas(d) -> { etapas: [{ id, nome, feito, aba }] nesta ordem, proxima: id da 1ª não feita ou null, feitas, total: 6 }.
 // prumo/inicio.js: card id="kf-primeiros-passos" com a próxima etapa e botão para a aba dela; some quando proxima = null.
 const test = require('node:test');
