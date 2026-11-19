@@ -247,6 +247,7 @@ function createHandler(deps = {}) {
           });
         }
         const resultado = await apagarDadosUsuario(db, targetUid);
+        console.log(`[prumo-backup] Ação de exclusão LGPD concluída para uid: ${targetUid}`);
         return res(200, { ok: true, acao: 'delete', resultado });
       }
 
