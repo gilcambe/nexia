@@ -175,6 +175,8 @@ async function agirExtra(acao, body, c) {
   if (rel) return rel;
   const sco = await require('./score').agirScore(acao, body, c);
   if (sco) return sco;
+  const divisao = await require('./divisao').agirDivisao(acao, body, c);
+  if (divisao) return divisao;
   const lei = await require('./leitor').agirLeitor(acao, body, c);
   if (lei) return lei;
   const apo = await require('./aposentadoria').agirAposentadoria(acao, body, c);
