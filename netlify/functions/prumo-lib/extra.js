@@ -177,6 +177,8 @@ async function agirExtra(acao, body, c) {
   if (sco) return sco;
   const lei = await require('./leitor').agirLeitor(acao, body, c);
   if (lei) return lei;
+  const res = await require('./reserva').agirReserva(acao, body, c);
+  if (res) return res;
   const apo = await require('./aposentadoria').agirAposentadoria(acao, body, c);
   if (apo) return apo;
   const robo = await require('./robos').agirRobos(acao, body, c);
