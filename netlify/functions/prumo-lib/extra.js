@@ -6,6 +6,8 @@
  */
 const MES = /^\d{4}-\d{2}$/;
 const DATA = /^\d{4}-\d{2}-\d{2}$/;
+const ob = require('./onboarding');
+// P1.5: folha (base, rubricas) e banco de horas. Só adicionado (nada removido).
 const CATEGORIAS = ['mercado', 'casa', 'transporte', 'saude', 'lazer', 'educacao', 'restaurante', 'assinaturas', 'outros'];
 const AVISO_LEGAL = 'Isto não é recomendação oficial de investimento; confira com um profissional certificado.';
 const texto = (v, max) => (typeof v === 'string' ? v.trim().slice(0, max) : '');

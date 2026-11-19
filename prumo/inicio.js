@@ -93,5 +93,28 @@
     const bf = el.querySelector('#kf-fluxo-ver'); if (bf) bf.onclick = () => MB.abrirAba('fluxo');
     el.querySelector('#kf-ia').onclick = () => MB.abrirAba('assistente');
     el.querySelector('#kf-posso').onclick = () => MB.abrirAba('assistente');
+
+    // Primeiros passos (onboarding em etapas): card com a proxima etapa; some quando tudo feito.
+    try {
+      const ob = await MB.api('onboarding_status', {}, { silencioso: true });
+      const etapas = ob && ob.etapas ? ob.etapas : null;
+      const proximo = ob && ob.proxima ? ob.proxima : null;
+      const card = el.querySelector('#kf-primeiros-passos');
+      if (!proximo) {
+        if (card) card.remove();
+      } else {
+        const etapa = (etapas || []).find((e) => e.id === proximo) || {};
+        const html = `
+          <div class="card kf-primeiros-passos" id="kf-primeiros-passos">
+            <div class="fraco">Primeiros passos</div>
+            <div class="n">${esc(etapa.nome || proximo)}</div>
+            <button class="btn sec mini" id="kf-primeiros-passos-vai" type="button" style="margin-top:8px">Ir para ${esc(etapa.aba || proximo)}</button>
+          </div>`;
+        if (card) card.outerHTML = html;
+        else el.insertAdjacentHTML('beforeend', html);
+        const b = el.querySelector('#kf-primeiros-passos-vai');
+        if (b) b.onclick = () => MB.abrirAba(etapa.aba || proximo);
+      }
+    } catch (e) { /* sem onboarding, o restante da tela segue */ }
   };
 })();
