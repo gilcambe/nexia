@@ -69,12 +69,16 @@
           <div><div class="fraco">Posso gastar${r.tres_numeros.ate ? ' (' + fmtAte(r.tres_numeros.ate) + ')' : ''}</div><div class="n verde">${r.tres_numeros.posso_gastar === null ? '—' : brl(r.tres_numeros.posso_gastar)}</div></div>
         </div>
         ${r.tres_numeros.tenho === null ? '<div class="fraco" style="margin-top:8px">Cadastre suas contas na aba Contas. <button class="btn sec mini" id="kf-contas-btn" type="button" style="margin-top:4px">Ir para Contas</button></div>' : ''}
+        <div class="fraco" id="kf-hoje-pode" style="margin-top:8px"></div>
       </div>` : ''}
       ${proxHtml}
       <div class="card" id="kf-primeiros-passos" hidden></div>
       <button class="btn sec mini" id="kf-como" type="button">❓ Como usar (1 minuto)</button>
       <button class="btn sec" id="kf-cadastros" type="button">📋 Meus cadastros: ver, editar ou apagar</button><div id="kf-cad"></div>
       <details class="kf-mais" id="kf-mais"><summary class="btn sec" style="margin-top:4px">Ver mais detalhes</summary>
+      <div class="card" id="kf-calendario" hidden></div>
+      <div class="card" id="kf-reserva" hidden></div>
+      <div class="card" id="kf-divisao" hidden></div>
       ${r.alertas_limite.length ? r.alertas_limite.map((a) => `<div class="aviso-c">${a.status === 'estourado' ? '🔴' : '🟠'} <b>${esc(NOME_CAT[a.categoria] || a.categoria)}</b>: ${brl(a.gasto)} de ${brl(a.limite)} (${String(a.pct).replace('.', ',')}%)${a.status === 'estourado' ? ' — passou do limite' : ' — perto do limite'}.</div>`).join('') : ''}
       <details class="card kf-dobra" id="kf-saude"><summary><span class="fraco">Saúde financeira${sf.completa ? '' : ' (parcial)'}</span><span><b class="kf-num">${notaSaude === null ? '—' : notaSaude}</b>${notaSaude === null ? '' : '<span class="fraco" style="font-size:12px">/100</span>'}</span></summary>
         <div class="kf-dobra-corpo"><div class="fraco">${esc(sf.resumo || sf.aviso)}</div>
@@ -150,7 +154,32 @@
     // Dono 19/11 ("não deixa apagar, editar... nada"): tudo que a pessoa cadastrou, de todas as telas, num lugar só.
     const tut = () => carregarScript('tutorial', '/prumo/tutorial.js');
     const como = el.querySelector('#kf-como'); if (como) como.onclick = () => tut().then((m) => m && m.abrir());
-    tut().then((m) => { if (m && m.primeiraVez() && !(r.qtd_lancamentos > 0)) m.abrir(); }).catch(() => {}); // 1ª vez e conta vazia: mostra sozinho
+    tut().then((m) => { if (m && m.primeiraVez() && !(r.qtd_lancamentos > 0) && document.body.contains(el) && !document.querySelector('dialog[open]')) m.abrir(); }).catch(() => {}); // 1ª vez e conta vazia: mostra sozinho
+    // Melhorias 6, 10, 14 e 17 (dono 19/11): uma leitura só, sem segurar a tela.
+    const NOMEP = { adiantamento: 'Adiantamento', mensal: 'Salário', decimo_terceiro_1: '13º (1ª parcela)', decimo_terceiro_2: '13º (2ª parcela)', ferias: 'Férias', plr: 'PLR', outro: 'Recebimento' };
+    MB.api('planejar_mes', {}, { silencioso: true }).then((pl) => {
+      if (!pl) return;
+      const hp = el.querySelector('#kf-hoje-pode'); const fm = pl.fim_mes;
+      if (hp && fm && fm.pode_hoje !== null) hp.innerHTML = `Hoje dá para gastar até <b class="verde">${brl(fm.pode_hoje)}</b>. No fim do mês deve sobrar <b>${brl(fm.saldo_fim)}</b>.`;
+      const kc = el.querySelector('#kf-calendario');
+      if (kc && pl.calendario.length) { kc.hidden = false; kc.innerHTML = '<b>📅 Calendário do mês</b>' + pl.calendario.map((x) => `<div class="item"><span>${x.data.slice(8, 10)}/${x.data.slice(5, 7)} · ${esc(x.origem === 'pagamento' ? (NOMEP[x.nome] || x.nome) : x.nome)}</span><span class="n ${x.tipo === 'entrada' ? 'verde' : 'verm'}">${x.tipo === 'entrada' ? '+' : '−'} ${brl(x.valor)}</span></div>`).join(''); }
+      const kr = el.querySelector('#kf-reserva'); const rv = pl.reserva;
+      if (kr && rv && rv.alvo > 0) {
+        kr.hidden = false;
+        kr.innerHTML = `<b>🛟 Reserva de emergência</b><div class="fraco">Meta: ${rv.meses} meses do que você gasta (${brl(rv.alvo)}). Guardado na poupança: ${brl(rv.guardado)} (${rv.pct}%).</div>${barra(rv.pct)}`
+          + `<div class="fraco">${rv.falta > 0 ? `Falta ${brl(rv.falta)}${rv.meses_para_completar ? `: guardando o combinado, completa em ${rv.meses_para_completar} meses` : ''}.` : '✅ Reserva completa.'}</div><button class="btn sec mini" id="kf-reserva-aj" type="button">Ajustar meta</button>`;
+        kr.querySelector('#kf-reserva-aj').onclick = () => MB.ui.formulario('Reserva de emergência', [{ nome: 'meses', rotulo: 'Quantos meses de gastos guardar', tipo: 'number', valor: rv.meses }, { nome: 'aporte', rotulo: 'Quanto guardar por mês (R$)', tipo: 'number', valor: '' }],
+          (d) => MB.api('reserva_salvar', { meses: Number(d.meses) || 6, aporte: d.aporte === '' ? null : Number(d.aporte) }));
+      }
+    }).catch(() => {});
+    // Melhoria 7: divisão do salário (50% contas, 30% livre, 20% guardar), com o salário previsto do mês.
+    MB.api('divisao_salario', {}, { silencioso: true }).then((dv) => {
+      const kd = el.querySelector('#kf-divisao');
+      if (!kd || !dv || !dv.partes || !dv.partes.length) return;
+      const NOME = { necessidades: '🏠 Contas e necessidades', livre: '🎉 Livre para gastar', guardar: '💰 Guardar' };
+      kd.hidden = false;
+      kd.innerHTML = `<b>Como dividir o salário (${brl(dv.liquido)})</b>` + dv.partes.map((x) => `<div class="item"><span>${NOME[x.id] || esc(x.nome)} <span class="fraco">${Math.round(x.pct)}%</span></span><span class="v">${brl(x.valor)}</span></div>`).join('') + '<div class="fraco">Sugestão simples: primeiro as contas, depois guardar, o resto é livre.</div>';
+    }).catch(() => {});
     const cadBtn = el.querySelector('#kf-cadastros'); const cad = el.querySelector('#kf-cad');
     const desenharCad = async (msg) => {
       const r = await MB.api('cadastros_listar');
