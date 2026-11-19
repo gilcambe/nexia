@@ -223,7 +223,15 @@ function tempoDosVinculos(vinculos, hojeStr) {
 }
 
 /** Média das contribuições lidas (de 07/1994 em diante), cada uma limitada ao teto. SUPOSIÇÃO: sem correção monetária. */
-function mediaDasContribuicoes(contribs) {
+// Dono 19/11: "não está mostrando o valor correto de média". Valor antigo (ex.: 2004) entrava SEM correção e puxava a média para baixo.
+// INPC aproximado de cada ano (%); corrige cada contribuição até hoje. É estimativa: o INSS usa o índice mês a mês.
+const INPC = { 1994: 20, 1995: 22, 1996: 9.1, 1997: 4.3, 1998: 2.5, 1999: 8.4, 2000: 5.3, 2001: 9.4, 2002: 14.7, 2003: 10.4, 2004: 6.1, 2005: 5.0, 2006: 2.8, 2007: 5.2, 2008: 6.5, 2009: 4.1, 2010: 6.5, 2011: 6.1, 2012: 6.2, 2013: 5.6, 2014: 6.2, 2015: 11.3, 2016: 6.6, 2017: 2.1, 2018: 3.4, 2019: 4.5, 2020: 5.4, 2021: 10.2, 2022: 5.9, 2023: 3.7, 2024: 4.8, 2025: 4.5 };
+function fatorCorrecao(competencia, anoHoje) {
+  let f = 1;
+  for (let a = Number(String(competencia).slice(0, 4)); a < anoHoje; a++) f *= 1 + (INPC[a] || 4.5) / 100;
+  return f;
+}
+function mediaDasContribuicoes(contribs, anoHoje = new Date().getUTCFullYear()) {
   const vals = [];
   const alertas = [];
   let abaixo = 0;
@@ -232,11 +240,12 @@ function mediaDasContribuicoes(contribs) {
     const v = num(c.valor);
     if (!Number.isFinite(v) || v <= 0) continue;
     if (c.competencia >= '2019-11' && v < PISO && c.competencia >= '2026-01') abaixo++;
-    vals.push(Math.min(v, TETO));
+    vals.push(Math.min(v * fatorCorrecao(c.competencia, anoHoje), TETO)); // corrigido e limitado ao teto
   }
   if (abaixo) alertas.push(`${abaixo} mês(es) de 2026 com contribuição abaixo do salário mínimo: podem não contar. Veja no Meu INSS como complementar.`);
   if (!vals.length) return { media: null, alertas };
-  alertas.push('SUPOSIÇÃO: a média das contribuições lidas está SEM correção monetária; o INSS corrige os valores antigos, então o número real tende a ser maior.');
+  alertas.push('Estimativa: cada contribuição foi corrigida pela inflação (INPC aproximado) até hoje. O INSS confirma o valor exato.');
+  if (vals.length < 12) alertas.push(`Li só ${vals.length} mês(es) de contribuição. Mande o CNIS completo (todas as páginas) ou toque em Editar e digite a média.`);
   return { media: din(vals.reduce((s, v) => s + v, 0) / vals.length), alertas };
 }
 
@@ -432,7 +441,7 @@ function limparContribs(lista) {
 const sim = (v) => v === true || v === 'true' || v === 1 || v === '1' || v === 'sim';
 
 async function agirAposentadoria(acao, body, c) {
-  if (!['apos_perfil_salvar', 'apos_visao', 'apos_cnis_ler', 'fgts_salvar', 'prev_simular'].includes(acao)) return null;
+  if (!['apos_perfil_salvar', 'apos_visao', 'apos_cnis_ler', 'fgts_salvar', 'prev_simular', 'apos_apagar'].includes(acao)) return null;
   const { base, agoraIso } = c;
   const hoje = agoraIso.slice(0, 10);
   const lerDoc = async (id) => { const s = await base.collection('aposentadoria').doc(id).get(); return s.exists ? s.data() || {} : {}; };
@@ -460,6 +469,11 @@ async function agirAposentadoria(acao, body, c) {
       return [200, { ok: true, perfil }];
     }
 
+    case 'apos_apagar': { // dono 19/11: "não deixa eu apagar". parte = 'perfil' (dados do INSS) ou 'fgts'
+      if (!['perfil', 'fgts'].includes(body.parte)) return [400, { error: 'Diga o que apagar: perfil ou fgts.' }];
+      await base.collection('aposentadoria').doc(body.parte).delete();
+      return [200, { ok: true, apagado: body.parte }];
+    }
     case 'apos_cnis_ler': {
       const im = c.lerImagens(body.imagens, { pdf: true });
       if (!im.ok) return [400, { error: im.erro }];
@@ -482,7 +496,7 @@ async function agirAposentadoria(acao, body, c) {
         for (const x of l.contribuicoes) contribs.set(x.competencia, x);
       }
       const t = tempoDosVinculos(vinculos, hoje);
-      const md = mediaDasContribuicoes([...contribs.values()]);
+      const md = mediaDasContribuicoes([...contribs.values()], Number(String(hoje).slice(0, 4)));
       // Dono 19/11: simulação do INSS e data de nascimento também entram (antes a simulação não dava nada).
       const okL = lidos.filter((x) => x.ok);
       const nascimento = (okL.find((x) => x.nascimento) || {}).nascimento || null;
