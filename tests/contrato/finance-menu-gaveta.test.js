@@ -26,7 +26,8 @@ const semMedia = css.replace(/@media[^{]*\{(?:[^{}]*\{[^}]*\})*[^{}]*\}/g, '');
 const decl = (re) => [...semMedia.matchAll(/([^{}]+)\{([^}]*)\}/g)].filter((r) => r[1].split(',').some((s) => re.test(s.trim()))).map((r) => r[2]).join(';');
 const zi = (d) => { const m = /z-index\s*:\s*(\d+)/.exec(d); return m ? Number(m[1]) : null; };
 const nav = (/<nav id="abas"[\s\S]*?<\/nav>/.exec(html) || [''])[0];
-const GRUPOS = { visao: ['inicio', 'assistente', 'consultor'], dia: ['contas', 'cartoes', 'gastos', 'compras', 'orcamento', 'dividas', 'economizar'], invest: ['investimentos', 'carteira', 'pontos'], planos: ['metas', 'objetivos', 'familia'], docs: ['documentos', 'impostos'], ajustes: ['conexoes', 'alertas', 'ajuda'] };
+// 18/11: grupos do manual CFO Pessoal (tests/contrato/finance-menu-manual.test.js, épico #4013).
+const GRUPOS = { visao: ['inicio'], salario: ['orcamento', 'carreira'], contas: ['contas', 'gastos', 'compras', 'documentos', 'conexoes'], cartoes: ['cartoes'], orcamento: ['metas', 'objetivos'], fluxo: ['fluxo'], dividas: ['dividas'], patrimonio: ['investimentos', 'carteira', 'mercado', 'robos', 'pontos', 'viagens', 'aposentadoria'], economia: ['economizar', 'impostos'], assistente: ['assistente', 'consultor'], config: ['familia', 'alertas', 'ajuda'] };
 
 test('#fundo-menu cobre a tela, escurece e fica entre a página e a gaveta', () => {
   const f = decl(/^#fundo-menu$/);
