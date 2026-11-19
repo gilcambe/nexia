@@ -163,6 +163,8 @@ async function agirExtra(acao, body, c) {
   if (sal) return sal;
   const tip = await require('./tipo').agirTipo(acao, body, c); // dono 19/11: um botão só para qualquer documento
   if (tip) return tip;
+  const cad = await require('./cadastros').agirCadastros(acao, body, c); // dono 19/11: ver, apagar e desfazer tudo num lugar
+  if (cad) return cad;
   const conf = await require('./conferencia').agirConferencia(acao, body, c); // fase 6 #4013: holerite x ponto
   if (conf) return conf;
   const ext = await require('./extrato').agirExtrato(acao, body, c); // fase 4 #4013 / #3953: extrato OFX/CSV
