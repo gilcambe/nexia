@@ -50,6 +50,11 @@
     const cats = Object.entries(r.por_categoria || {}).sort((a, b) => b[1] - a[1]);
     el.innerHTML = `
       <p class="fraco" style="margin:0 0 10px">${saudacao}${nome ? ', ' + esc(nome) : ''}</p>
+      <div class="card" id="kf-mandar"><h3 style="margin:0 0 4px">📷 Mandar documento</h3>
+        <div class="fraco">Holerite, ponto, fatura do cartão, extrato, comprovante, FGTS, INSS ou score. Eu descubro o que é e coloco no lugar certo. Você só confere.</div>
+        <button class="btn" id="kf-mandar-foto" type="button" style="margin-top:10px">📷 Print ou foto</button>
+        <button class="btn sec" id="kf-mandar-pdf" type="button" style="margin-top:6px">📄 PDF</button>
+        <input type="file" id="kf-mandar-arq" accept="image/*" multiple hidden><div id="kf-mandar-res"></div></div>
       ${r.alertas_limite.length ? r.alertas_limite.map((a) => `<div class="aviso-c">${a.status === 'estourado' ? '🔴' : '🟠'} <b>${esc(NOME_CAT[a.categoria] || a.categoria)}</b>: ${brl(a.gasto)} de ${brl(a.limite)} (${String(a.pct).replace('.', ',')}%)${a.status === 'estourado' ? ' — passou do limite' : ' — perto do limite'}.</div>`).join('') : ''}
       <details class="card kf-dobra" id="kf-saude"><summary><span class="fraco">Saúde financeira${sf.completa ? '' : ' (parcial)'}</span><span><b class="kf-num">${notaSaude === null ? '—' : notaSaude}</b>${notaSaude === null ? '' : '<span class="fraco" style="font-size:12px">/100</span>'}</span></summary>
         <div class="kf-dobra-corpo"><div class="fraco">${esc(sf.resumo || sf.aviso)}</div>
@@ -110,6 +115,27 @@
       pp.querySelector('#kf-pp-ir').onclick = () => MB.abrirAba(e.aba);
       pp.querySelector('#kf-pp-pular').onclick = async () => { try { await MB.api('onboarding_pular', { id: e.id }); MB.abrirAba('inicio'); } catch { /* erro já mostrado */ } };
     }).catch(() => {});
+    // Dono 19/11 ("simplifique ao máximo"): um botão só. A IA diz que documento é; a aba certa abre e já lê.
+    const mArq = el.querySelector('#kf-mandar-arq'); const mRes = el.querySelector('#kf-mandar-res');
+    if (mArq && mRes) {
+      const escolher = (aceita) => { mArq.accept = aceita; mArq.value = ''; mArq.click(); };
+      el.querySelector('#kf-mandar-foto').onclick = () => escolher('image/*');
+      el.querySelector('#kf-mandar-pdf').onclick = () => escolher('application/pdf,.pdf');
+      mArq.onchange = async (ev) => {
+        const arqs = [...((ev && ev.target && ev.target.files) || mArq.files || [])].slice(0, 5);
+        if (!arqs.length) return;
+        mRes.innerHTML = '<div class="aviso-c">⏳ Vendo que documento é…</div>';
+        try {
+          const pdf = await carregarScript('pdf', '/prumo/pdf.js');
+          const { imagens } = await pdf.paraImagens(arqs.slice(0, 1), MB.ui.reduzir);
+          const r = await MB.api('doc_tipo', { imagens });
+          mRes.innerHTML = `<div class="aviso-c">✅ Entendi: ${esc(r.nome)}. Abrindo para você conferir…</div>`;
+          if (r.aba === 'inicio') { MB.deixarPendente('inicio', r.modo, arqs); MB.abrirAba('inicio'); return; }
+          MB.deixarPendente(r.aba, r.modo, arqs);
+          MB.abrirAba(r.aba);
+        } catch (e) { mRes.innerHTML = `<div class="aviso-c">${esc(e && e.message || 'Não consegui ler agora.')} Tente de novo.</div>`; }
+      };
+    }
     const bc = el.querySelector('#kf-contas-btn'); if (bc) bc.onclick = () => MB.abrirAba('contas');
     const bd = el.querySelector('#kf-div'); if (bd) bd.onclick = () => MB.abrirAba('dividas');
     const bf = el.querySelector('#kf-fluxo-ver'); if (bf) bf.onclick = () => MB.abrirAba('fluxo');

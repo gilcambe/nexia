@@ -83,9 +83,9 @@
       kfExt.onchange = () => { if ((kfExt.files || []).length) el.querySelector('#kf-ler').click(); };
     }
     const kfArq = el.querySelector('#kf-arq');
-    if (kfArq) kfArq.onchange = () => { if ((kfArq.files || []).length) el.querySelector('#kf-ler').click(); }; // escolher já lê
-    el.querySelector('#kf-ler').onclick = async (ev) => {
-      const arqs = [...el.querySelector('#kf-arq').files, ...((kfExt && kfExt.files) || [])];
+    if (kfArq) kfArq.onchange = (ev) => { const fs = [...((ev && ev.target && ev.target.files) || kfArq.files || [])]; if (fs.length) el.querySelector('#kf-ler').onclick(null, fs); }; // escolher já lê
+    el.querySelector('#kf-ler').onclick = async (ev, forcados) => {
+      const arqs = forcados || [...el.querySelector('#kf-arq').files, ...((kfExt && kfExt.files) || [])];
       el.querySelector('#kf-arq').accept = 'image/*';
       if (!arqs.length) { res.innerHTML = '<div class="aviso-c">Escolha pelo menos uma foto, print ou PDF.</div>'; return; }
       if (arqs.length > 5) { res.innerHTML = '<div class="aviso-c">Envie no máximo 5 arquivos por vez.</div>'; return; }

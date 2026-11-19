@@ -75,6 +75,26 @@
     return carregados[nome];
   }
 
+  // Dono 19/11 ("simplifique"): o botão único "Mandar documento" do Início deixa o arquivo aqui e abre a aba certa;
+  // a aba pega o arquivo uma vez só (pegarPendente) e já começa a ler. Expira em 2 minutos.
+  let pendente = null;
+  MB.deixarPendente = (aba, modo, arquivos) => { pendente = { aba, modo, arquivos: [...arquivos], em: Date.now() }; };
+  MB.pegarPendente = (aba) => { const p = pendente; if (!p || p.aba !== aba || Date.now() - p.em > 120000) return null; pendente = null; return p; };
+
+  // Entrega o documento do botão único ao leitor da aba (o mesmo que a pessoa usaria tocando no botão de lá).
+  const LEITOR = { holerite: '#sal-arq', ponto: '#sal-arq', fatura: '#ca-fat-arq', doc: '#kf-arq', fgts: '#apo-fgts-arq', cnis: '#apo-arq', score: '#score-arq', milhas: '#pp-arq', divida: '#dv-ler-arq', conta: '#ct-ler-arq' };
+  function entregarPendente(nome, alvo) {
+    const p = MB.pegarPendente(nome);
+    if (!p) return;
+    let n = 0;
+    const tentar = () => { // o card do score, por exemplo, aparece um pouco depois da aba
+      const inp = alvo.querySelector(LEITOR[p.modo] || '#kf-arq');
+      if (inp && typeof inp.onchange === 'function') { inp.onchange({ target: { files: p.arquivos }, modo: p.modo }); return; }
+      if (++n < 25) setTimeout(tentar, 300);
+    };
+    tentar();
+  }
+
   async function abrirAba(nome) {
     if (!ABAS.includes(nome)) nome = 'carteira';
     document.querySelectorAll('#abas button').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.aba === nome)));
@@ -85,6 +105,7 @@
     if (grupo) {
       grupo.hidden = false;
       const t = grupo.previousElementSibling;
+      if (t && t.hasAttribute('data-mais')) document.body.classList.add('ver-tudo');
       if (t && t.classList.contains('titulo-grupo')) t.setAttribute('aria-expanded', 'true');
     }
     fecharMenu();
@@ -104,6 +125,7 @@
       if (vez !== abrindo) return;
       if (!alvo.textContent.trim() && !alvo.querySelector('img,svg,canvas,input,button')) throw Object.assign(new Error('A aba abriu vazia.'), { mostrar: true });
       const aviso = el.querySelector(':scope > .em-breve'); if (aviso) aviso.remove();
+      entregarPendente(nome, alvo);
     } catch (e) {
       if (vez !== abrindo) return;
       // Nunca deixa a aba em branco: mostra o motivo e um botão para tentar de novo.
@@ -188,6 +210,12 @@
     $('sair').onclick = () => auth.signOut();
     document.querySelectorAll('#abas button').forEach((b) => { b.onclick = () => abrirAba(b.dataset.aba); });
     document.querySelectorAll('.titulo-grupo').forEach((b) => { b.onclick = () => toggleGrupo(b); });
+    // Menu curto (dono 19/11): "Mais telas" mostra o resto; fica lembrado neste aparelho.
+    const vm = document.getElementById('ver-mais');
+    const mostrarTudo = (sim) => { document.body.classList.toggle('ver-tudo', sim); if (vm) { vm.setAttribute('aria-expanded', String(sim)); vm.textContent = sim ? '➖ Menos telas' : '➕ Mais telas'; } };
+    let tudo = false; try { tudo = localStorage.getItem('kf-ver-tudo') === '1'; } catch { tudo = false; }
+    mostrarTudo(tudo);
+    if (vm) vm.onclick = () => { tudo = !tudo; mostrarTudo(tudo); try { localStorage.setItem('kf-ver-tudo', tudo ? '1' : '0'); } catch { /* sem guardar */ } };
     if (btnMenu) btnMenu.onclick = () => { if (navAbas.classList.contains('aberto')) fecharMenu(); else abrirMenu(); };
     if (fundoMenu) fundoMenu.onclick = fecharMenu;
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape') fecharMenu(); });

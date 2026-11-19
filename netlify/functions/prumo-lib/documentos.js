@@ -113,7 +113,7 @@ async function lerComVisao(imagens, deps) {
   // Sem o Workers AI, documentos davam 503 quando o Gemini estava sem cota e a NVIDIA demorava.
   const ler = (img) => {
     // PDF inteiro (18/11): o leitor único manda ao Gemini (lê PDF, várias páginas) e à Cloudflare (PDF → texto).
-    if (img && img.mime === 'application/pdf') {
+    if (deps.perguntarVisao || (img && img.mime === 'application/pdf')) { // perguntarVisao injetado = teste com documentos reais
       const perguntar = deps.perguntarVisao || ((im, s) => require('./visao').perguntarVisao(deps, im, s, { maxTokens: 8192, totalMs: 140000, porIaMs: 90000 }));
       return Promise.resolve(perguntar(img, LER_DOC)).then((t) => { const j = t && extrairJson(t); return j && Array.isArray(j.lancamentos) ? j : null; }).catch(() => null);
     }

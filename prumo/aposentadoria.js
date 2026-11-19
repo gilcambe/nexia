@@ -56,8 +56,8 @@
     el.querySelector('#apo-cnis').onclick = () => { arqCnis.accept = 'image/*'; arqCnis.value = ''; arqCnis.click(); };
     const cnisPdf = el.querySelector('#apo-cnis-pdf');
     if (cnisPdf) cnisPdf.onclick = () => { arqCnis.accept = 'application/pdf,.pdf'; arqCnis.value = ''; arqCnis.click(); };
-    arqCnis.onchange = async () => {
-      const arquivos = [...arqCnis.files];
+    arqCnis.onchange = async (ev) => {
+      const arquivos = [...((ev && ev.target && ev.target.files) || arqCnis.files)];
       if (!arquivos.length) return;
       if (arquivos.length > 5) { ok('Envie no máximo 5 arquivos por vez.'); return; }
       try {
@@ -70,9 +70,10 @@
         if (cortou) ok('Li só as 5 primeiras páginas. Mande as outras depois.');
         const res = r.resumo;
         el.querySelector('#apo-alertas').innerHTML = (res.alertas || []).map((a) => `<div class="aviso-c">${A.esc(a)}</div>`).join('');
-        if (!res.vinculos.length && !res.contribuicoes_lidas) return;
-        const base = Object.assign({}, p || {}, { tc_2019_meses: res.tc_2019_meses, tc_total_meses: res.tc_total_meses });
+        if (!res.vinculos.length && !res.contribuicoes_lidas && !res.simulacao && !res.nascimento) return;
+        const base = Object.assign({}, p || {}); if (res.tc_2019_meses > 0) base.tc_2019_meses = res.tc_2019_meses; if (res.tc_total_meses > 0) base.tc_total_meses = res.tc_total_meses; // zero não apaga o que já tinha
         if (res.media_salarial != null) base.media_salarial = res.media_salarial;
+        if (res.nascimento && !base.nascimento) base.nascimento = res.nascimento;
         salvarPerfil(base, { vinculos: res.vinculos });
       } catch (e) { ok((e && e.message) || 'Não consegui ler agora.'); }
     };
@@ -80,8 +81,8 @@
     // Saldo do FGTS por print.
     const arqFgts = el.querySelector('#apo-fgts-arq');
     el.querySelector('#apo-fgts-print').onclick = () => arqFgts.click();
-    arqFgts.onchange = async () => {
-      const arquivos = [...arqFgts.files];
+    arqFgts.onchange = async (ev) => {
+      const arquivos = [...((ev && ev.target && ev.target.files) || arqFgts.files)];
       if (!arquivos.length) return;
       try {
         const pdf = await carregarPdf();
