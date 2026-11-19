@@ -9,6 +9,7 @@
   const carregarPrevisto = () => Promise.resolve(MB.previsto || null); // previsto.js vem no index.html; sem ele a tela segue sem a parte de previstos
   const carregarScript = (chave, src) => MB[chave] ? Promise.resolve(MB[chave]) : new Promise((ok) => { const s = document.createElement('script'); s.src = src; s.onload = () => ok(MB[chave]); s.onerror = () => ok(null); setTimeout(() => ok(MB[chave] || null), 4000); document.body.appendChild(s); });
   const LACUNA = { contas: 'suas contas bancárias', dividas: 'suas dívidas', lancamentos: 'lançamentos (envie uma fatura ou extrato)' };
+  const fmtAte = (d) => { if (!d) return ''; const p = String(d).split('-'); return p.length === 3 ? 'até ' + p[2] + '/' + p[1] : 'até ' + d; };
 
   MB.telas.inicio = async (el) => {
     const { brl, esc, barra, aba } = await carregarUi();
@@ -56,6 +57,15 @@
         ${sf.completa ? '' : `<div class="aviso-c" style="margin:6px 0 0">👉 ${esc(sf.proximo_passo || 'Cadastre suas contas na aba Contas para começar.')}</div>`}
         <div class="fraco" style="margin-top:6px">${sf.completa ? esc(sf.aviso) + (sf.nota_mes_anterior !== null && sf.nota_mes_anterior !== undefined ? ' Mês anterior: ' + sf.nota_mes_anterior + '.' : '') : ''}</div></div></details>
       <div id="kf-score">${sc ? sc.html : ''}</div>
+      ${r.tres_numeros ? `
+      <div class="card" id="kf-tres-numeros">
+        <div class="linha kf-tres" style="margin:0">
+          <div><div class="fraco">Quanto tenho</div><div class="n">${r.tres_numeros.tenho === null ? '—' : brl(r.tres_numeros.tenho)}</div></div>
+          <div><div class="fraco">Comprometido</div><div class="n verm">${r.tres_numeros.comprometido === null ? '—' : brl(r.tres_numeros.comprometido)}</div></div>
+          <div><div class="fraco">Posso gastar${r.tres_numeros.ate ? ' (' + fmtAte(r.tres_numeros.ate) + ')' : ''}</div><div class="n verde">${r.tres_numeros.posso_gastar === null ? '—' : brl(r.tres_numeros.posso_gastar)}</div></div>
+        </div>
+        ${r.tres_numeros.tenho === null ? '<div class="fraco" style="margin-top:8px">Cadastre suas contas na aba Contas. <button class="btn sec mini" id="kf-contas-btn" type="button" style="margin-top:4px">Ir para Contas</button></div>' : ''}
+      </div>` : ''}
       <div class="card kf-hero"><div class="fraco">Saldo disponível</div><div class="grande">${r.saldo_disponivel === null ? '—' : brl(r.saldo_disponivel)}</div>
         <div class="fraco" style="margin-bottom:10px">${r.saldo_disponivel === null ? 'Cadastre suas contas na aba Contas.' : 'Dinheiro em conta, sem limite de cartão.'}</div>
         <div class="fraco">Patrimônio líquido</div><div class="n" style="font-size:22px">${brl(r.patrimonio.liquido)}</div>
@@ -89,6 +99,7 @@
       if (a) a.innerHTML = g ? g.patrimSvg : ''; if (b) b.innerHTML = g ? corpoHoje(g) : '<p class="fraco">Cotações indisponíveis agora.</p>';
     });
     el.querySelector('#kf-doc').onclick = () => MB.abrirAba('documentos');
+    const bc = el.querySelector('#kf-contas-btn'); if (bc) bc.onclick = () => MB.abrirAba('contas');
     const bd = el.querySelector('#kf-div'); if (bd) bd.onclick = () => MB.abrirAba('dividas');
     const bf = el.querySelector('#kf-fluxo-ver'); if (bf) bf.onclick = () => MB.abrirAba('fluxo');
     el.querySelector('#kf-ia').onclick = () => MB.abrirAba('assistente');
