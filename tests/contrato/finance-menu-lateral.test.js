@@ -7,7 +7,7 @@
 //  - no celular, nav#abas é uma GAVETA à esquerda: escondida (transform: translateX(-100%)) e aberta com a classe
 //    .aberto (translateX(0)); por trás, um fundo escuro #fundo-menu que fecha ao tocar; nada de barra embaixo nem de
 //    rolagem de lado;
-//  - as abas ficam em GRUPOS com título (.titulo-grupo): "Visão geral", "Dia a dia", "Investimentos", "Planos",
+//  - as abas ficam em GRUPOS com título (.titulo-grupo): "Visão geral", ... "Patrimônio" ... "Configurações" (grupos do manual, #4014),
 //    "Documentos", "Ajustes"; cada botão com ícone em <svg> (sem emoji) e o nome;
 //  - abrir uma aba fecha a gaveta; Esc fecha; o topo mostra o nome da aba aberta (#titulo-aba);
 //  - no PC (≥ 1024px) o menu fica sempre aberto à esquerda e o #btn-menu some.
@@ -38,7 +38,7 @@ test('botão de menu no topo: #btn-menu com ícone ☰ em <svg>, aria-label="Men
 
 test('as 21 abas continuam, em grupos com título e com ícone em <svg> (sem emoji)', () => {
   for (const a of ABAS) assert.match(nav, new RegExp(`data-aba="${a}"`), `a aba ${a} continua no menu`);
-  for (const g of ['Visão geral', 'Dia a dia', 'Investimentos', 'Planos', 'Documentos', 'Ajustes']) {
+  for (const g of ['Visão geral', 'Salário e folha', 'Contas e transações', 'Cartões', 'Orçamento e metas', 'Fluxo de caixa', 'Dívidas', 'Patrimônio', 'Economia', 'Assistente IA', 'Configurações']) {
     assert.match(nav, new RegExp(`class="titulo-grupo"[^>]*>\\s*${g}\\s*<`), `grupo "${g}" com <p class="titulo-grupo">`);
   }
   const botoes = [...nav.matchAll(/<button[^>]*data-aba="(\w+)"[^>]*>([\s\S]*?)<\/button>/g)];
