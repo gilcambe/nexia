@@ -23,7 +23,7 @@
 //    - cada ativo num cartão com preço em R$, variação do dia em verde (sobe) ou vermelho (cai) e a fonte/hora; botão
 //      para tirar da lista;
 //    - atualiza sozinho a cada 30 s (setInterval) e devolve uma função que faz clearInterval ao sair da aba.
-// 3) Menu: aba nova data-aba="mercado" ("Mercado") no grupo Investimentos, com ícone <svg> de linha
+// 3) Menu: aba nova data-aba="mercado" ("Mercado") no grupo Patrimônio, com ícone <svg> de linha
 //    (fill="none" stroke="currentColor" ou pelo CSS do menu); 'mercado' em ABAS de prumo/app.js; '/prumo/mercado.js'
 //    em CASCA de prumo/sw.js.
 const test = require('node:test');
@@ -107,15 +107,15 @@ test('tela Mercado: busca, lista guardada, cores, atualiza a cada 30 s e para ao
   assert.match(m, /var\(--perda\)|class="verm"|verm/);
 });
 
-test('menu: aba Mercado no grupo Investimentos; app.js e sw.js sabem dela', () => {
+test('menu: aba Mercado no grupo Patrimônio; app.js e sw.js sabem dela', () => {
   const html = ler('index.html');
   const b = (/<button[^>]*data-aba="mercado"[^>]*>[\s\S]*?<\/button>/.exec(html) || [''])[0];
   assert.ok(b, 'botão data-aba="mercado" no menu');
   assert.match(b, /Mercado/);
   assert.match(b, /<svg[\s\S]*<\/svg>/);
   for (const t of b.matchAll(/<(path|circle|rect|line|polyline|polygon)\b[^>]*>/g)) assert.match(t[0], /\/>$/, 'forma fechada com "/>"');
-  const inv = html.indexOf('data-aba="investimentos"'); const pos = html.indexOf('data-aba="mercado"'); const prox = html.indexOf('data-aba="metas"');
-  assert.ok(inv < pos && pos < prox, 'Mercado fica no grupo Investimentos (antes de Planos)');
+  const inv = html.indexOf('data-aba="investimentos"'); const pos = html.indexOf('data-aba="mercado"'); const prox = html.indexOf('data-aba="economizar"');
+  assert.ok(inv < pos && pos < prox, 'Mercado fica no grupo Patrimônio (antes de Economia)');
   assert.match(ler('app.js'), /'mercado'/);
   assert.match(ler('sw.js'), /'\/prumo\/mercado\.js'/);
 });

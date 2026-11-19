@@ -22,7 +22,7 @@
 //      robos_salvar mandando o número no campo certo (valor para preço; desvio_pct para rebalancear; pct para os outros);
 //      o ticker some (hidden) para rebalancear e concentracao; um botão id="rb-checar" "Conferir agora" que chama
 //      robos_checar e mostra os disparos e as lacunas; e o histórico "Últimos avisos" (disparos de robos_listar).
-// 2) Menu: aba data-aba="robos" com o texto "Robôs", no grupo Investimentos (antes de Planos), com ícone <svg> de linha
+// 2) Menu: aba data-aba="robos" com o texto "Robôs", no grupo Patrimônio (antes de Economia), com ícone <svg> de linha
 //    (formas fechadas com "/>"); 'robos' em ABAS de prumo/app.js; '/prumo/robos.js' em CASCA de prumo/sw.js.
 const test = require('node:test');
 const assert = require('node:assert/strict');
@@ -71,15 +71,15 @@ test('tela: lista, formulário, conferir agora e histórico, usando a API certa'
   assert.match(t, /\.hidden\s*=/, 'esconde o ticker quando não precisa');
 });
 
-test('menu: aba Robôs no grupo Investimentos; app.js e sw.js sabem dela', () => {
+test('menu: aba Robôs no grupo Patrimônio; app.js e sw.js sabem dela', () => {
   const html = ler('index.html');
   const b = (/<button[^>]*data-aba="robos"[^>]*>[\s\S]*?<\/button>/.exec(html) || [''])[0];
   assert.ok(b, 'botão data-aba="robos"');
   assert.match(b, /Robôs/);
   assert.match(b, /<svg[\s\S]*<\/svg>/);
   for (const t of b.matchAll(/<(path|circle|rect|line|polyline|polygon)\b[^>]*>/g)) assert.match(t[0], /\/>$/, 'forma fechada com "/>"');
-  const inv = html.indexOf('data-aba="investimentos"'); const pos = html.indexOf('data-aba="robos"'); const prox = html.indexOf('data-aba="metas"');
-  assert.ok(inv < pos && pos < prox, 'Robôs fica no grupo Investimentos (antes de Planos)');
+  const inv = html.indexOf('data-aba="investimentos"'); const pos = html.indexOf('data-aba="robos"'); const prox = html.indexOf('data-aba="economizar"');
+  assert.ok(inv < pos && pos < prox, 'Robôs fica no grupo Patrimônio (antes de Economia)');
   assert.match(ler('app.js'), /'robos'/);
   assert.match(ler('sw.js'), /'\/prumo\/robos\.js'/);
 });
