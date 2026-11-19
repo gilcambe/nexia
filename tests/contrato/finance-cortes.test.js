@@ -11,7 +11,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const raiz = path.join(__dirname, '../..');
-const ler = (f) => fs.readFileSync(path.join(raiz, f), 'utf8');H
+const ler = (f) => fs.readFileSync(path.join(raiz, f), 'utf8');
 const ct = require(path.join(raiz, 'netlify/functions/prumo-lib/cortes.js'));
 
 test('assinaturas e limites viram oportunidades com impacto anual, ordenadas', () => {

@@ -165,6 +165,12 @@ async function agirExtra(acao, body, c) {
   if (conf) return conf;
   const ext = await require('./extrato').agirExtrato(acao, body, c); // fase 4 #4013 / #3953: extrato OFX/CSV
   if (ext) return ext;
+  const onb = await require('./onboarding').agirOnboarding(acao, body, c); // fase 3 #4013
+  if (onb) return onb;
+  const cor = await require('./cortes').agirCortes(acao, body, c); // fase 9 #4013
+  if (cor) return cor;
+  const rel = await require('./relatorios').agirRelatorios(acao, body, c); // fase 10 #4013
+  if (rel) return rel;
   const sco = await require('./score').agirScore(acao, body, c);
   if (sco) return sco;
   const lei = await require('./leitor').agirLeitor(acao, body, c);
