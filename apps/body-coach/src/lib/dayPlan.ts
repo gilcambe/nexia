@@ -176,6 +176,7 @@ export interface EntradaDoDia {
   enfase: Grupo[]; // grupos que o aluno quer priorizar
   estado: EstadoDoDia;
   variacao: number; // muda a escolha dos exercícios de uma sessão para outra
+  agora?: number; // instante usado no blocoAtual (testes: mesma data = mesmo treino)
 }
 
 export interface TreinoDoDia { sessao: Session; avisos: string[]; lesoes: Lesao[] }
@@ -259,7 +260,7 @@ export function montarTreinoDoDia(e: EntradaDoDia): TreinoDoDia {
   const equipOk = LOCAIS_TREINO[local] ?? null;
   const foco = focoDe(e.respostas);
   const rotina = String(e.respostas.lifestyle ?? '');
-  const semente = hash(`${String(e.respostas.name ?? '')}|${sexo}|${objetivos.join(',')}|${local}|${blocoAtual()}`) + e.variacao;
+  const semente = hash(`${String(e.respostas.name ?? '')}|${sexo}|${objetivos.join(',')}|${local}|${blocoAtual(e.agora)}`) + e.variacao;
   const mob = Array.isArray(e.respostas.mobility) ? (e.respostas.mobility as string[]) : [];
   const cadeirante = mob.includes('Cadeirante');
   const idoso = mob.includes('60 anos ou mais');
@@ -325,7 +326,21 @@ export function montarTreinoDoDia(e: EntradaDoDia): TreinoDoDia {
     const primeiros = [compostos[0] ?? isolados[0], segundo].filter((x, i, l): x is Exercicio => !!x && l.indexOf(x) === i);
     const ordem = [...primeiros, ...compostos.filter((x) => !primeiros.includes(x)), ...isolados.filter((x) => !primeiros.includes(x))];
     ordem.forEach((x, i) => posNoGrupo.set(x.id, i - (foco.includes(g) || e.enfase.includes(g) ? 1 : 0)));
-    escolhidos.push(...ordem.slice(0, quantos));
+    let escolhidosGrupo = ordem.slice(0, quantos);
+    // Favorito que serve para o grupo muscular do dia e não está em evitar entra sempre,
+    // ocupando a vaga do pior colocado do mesmo grupo (não fica só com +1 ponto).
+    for (const favId of favoritos) {
+      const fav = opcoes.find((x) => x.id === favId);
+      if (!fav || escolhidosGrupo.some((x) => x.id === favId)) continue;
+      let pior: { x: Exercicio; pi: number } | null = null;
+      for (const x of escolhidosGrupo) {
+        const pi = posNoGrupo.get(x.id) ?? 9;
+        if (!pior || pi > pior.pi) pior = { x, pi };
+      }
+      if (pior) escolhidosGrupo = escolhidosGrupo.map((x) => (x.id === pior.x.id ? fav : x));
+      else escolhidosGrupo.push(fav);
+    }
+    escolhidos.push(...escolhidosGrupo);
     sobras.push(ordem.slice(quantos));
   }
   // Sobrou tempo: completa com mais exercícios dos mesmos grupos, um grupo por vez (até 8 no total).
