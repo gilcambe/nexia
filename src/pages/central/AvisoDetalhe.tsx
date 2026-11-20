@@ -12,6 +12,20 @@ export default function AvisoDetalhe({ avisos, inicial, fechar, ir }: { avisos: 
   const [i, setI] = useState<number | null>(inicial);
   const [pedindo, setPedindo] = useState(false);
   const [msg, setMsg] = useState<{ ok: boolean; texto: string; link?: string } | null>(null);
+  
+  // Ao abrir, entra no histórico
+  useEffect(() => {
+    if (inicial !== undefined) {
+      history.pushState(null, "");
+      const fecharSeVoltar = () => fechar();
+      window.addEventListener("popstate", fecharSeVoltar);
+      return () => {
+        window.removeEventListener("popstate", fecharSeVoltar);
+        if (history.state !== null) history.back();
+      };
+    }
+  }, [inicial, fechar]);
+
   useEffect(() => { const esc = (e: KeyboardEvent) => e.key === "Escape" && fechar(); window.addEventListener("keydown", esc); return () => window.removeEventListener("keydown", esc); }, [fechar]);
   const a = i === null ? null : avisos[i];
 

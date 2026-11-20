@@ -113,7 +113,17 @@ export default function CentralPage() {
 
   // 12/11: a Central nova (Casca) busca os próprios dados; os da antiga só carregam na antiga (antes quebravam a nova).
   useEffect(() => { if (!authLoading && user && antiga) conferir(); }, [authLoading, user, conferir, antiga]);
-  const ir = (a: Aba) => { setAba(a); history.replaceState(null, "", `#${a}`); window.scrollTo(0, 0); };
+  
+  // Suporte a voltar no celular
+  useEffect(() => {
+    if (antiga) {
+      const aoVoltar = () => setAba((location.hash.slice(1) as Aba) || "inicio");
+      window.addEventListener("popstate", aoVoltar);
+      return () => window.removeEventListener("popstate", aoVoltar);
+    }
+  }, [antiga]);
+
+  const ir = (a: Aba) => { setAba(a); history.pushState(null, "", `#${a}`); window.scrollTo(0, 0); };
   const avisos = useMemo(() => calcularAvisos(d), [d]);
 
   // Com a Central aberta, confere de novo a cada 5 minutos e avisa no aparelho quando algo novo fica vermelho.
@@ -203,8 +213,8 @@ export default function CentralPage() {
       <div className="lg:pl-64">
         <header className="sticky top-0 z-10 bg-white/90 backdrop-blur border-b border-slate-200">
           <div className="flex items-center gap-3 px-4 lg:px-8 h-16">
-            {DO_MAIS.includes(aba) && (
-              <button className="lg:hidden p-2 -ml-2 text-indigo-600 cursor-pointer" onClick={() => ir("mais")} aria-label="Voltar para Mais" data-testid="central-voltar"><Icone nome="seta" className="w-5 h-5 rotate-180" /></button>
+            {(DO_MAIS.includes(aba) || (aba !== "inicio" && aba !== "mais")) && (
+              <button className="lg:hidden p-2 -ml-2 text-indigo-600 cursor-pointer" onClick={() => history.back()} aria-label="Voltar" data-testid="central-voltar"><Icone nome="seta" className="w-5 h-5 rotate-180" /></button>
             )}
             <div className="lg:hidden flex items-center gap-2 flex-1 min-w-0" data-testid="central-title">
               {aba === "inicio"
