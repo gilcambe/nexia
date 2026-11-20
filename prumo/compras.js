@@ -5,87 +5,32 @@
  * na notificação e no comentário de rota.
  */
 
-const fs = require('fs');
-const path = require('path');
+(function(window) {
+  'use strict';
 
-let comprasCache = null;
+  const MB = window.MB || (window.MB = {});
+  MB.telas = MB.telas || {};
 
-function carregarCompras() {
-  if (comprasCache) return comprasCache;
-  try {
-    const caminho = path.join(__dirname, 'dados-compras.json');
-    if (fs.existsSync(caminho)) {
-      comprasCache = JSON.parse(fs.readFileSync(caminho, 'utf8'));
-      return comprasCache;
+  MB.telas.compras = {
+    listar: function() {
+      const lista = [
+        { id: 1, nome: "Serviço Cloud Pro" },
+        { id: 2, nome: "Ferramenta IA Avançada" },
+        { id: 3, nome: "Hospedagem Web" }
+      ];
+      return lista.map(l => 'Kernex Finance: ' + l.nome);
+    },
+    abrirLista: function(lista) {
+      console.log("Abrindo: " + lista.nome);
+    },
+    vigiarLembretes: function(lista) {
+      if (typeof Notification !== "undefined" && Notification.permission === "granted") {
+        new Notification("Kernex Finance: " + lista.nome, {
+          icon: "/prumo/icone.svg",
+          body: "Faltam " + lista.itens.length + " itens na sua lista."
+        });
+      }
     }
-  } catch (e) {
-    // ignora e usa padrao
-  }
-  return [
-    { id: 1, nome: "Serviço Cloud Pro", valor: 150.00, vencimento: "2026-03-10", categoria: "Infraestrutura" },
-    { id: 2, nome: "Ferramenta IA Avançada", valor: 90.00, vencimento: "2026-03-15", categoria: "Software" },
-    { id: 3, nome: "Hospedagem Web", valor: 45.00, vencimento: "2026-03-20", categoria: "Infraestrutura" }
-  ];
-}
-
-/**
- * Lista todas as compras e formata a exibição.
- * @returns {Array<string>} Lista formatada de compras
- */
-function listarCompras() {
-  const listas = carregarCompras();
-  return listas.map(l => {
-    return 'Kernex Finance: ' + l.nome;
-  });
-}
-
-/**
- * Adiciona uma nova compra ou assinatura.
- * @param {Object} item 
- */
-function adicionarCompra(item) {
-  const listas = carregarCompras();
-  const novoId = listas.length > 0 ? Math.max(...listas.map(i => i.id || 0)) + 1 : 1;
-  const novoItem = {
-    id: novoId,
-    nome: item.nome || 'Novo Item',
-    valor: Number(item.valor) || 0,
-    vencimento: item.vencimento || new Date().toISOString().split('T')[0],
-    categoria: item.categoria || 'Geral'
   };
-  listas.push(novoItem);
-  comprasCache = listas;
-  salvarCompras(listas);
-  return novoItem;
-}
+})(typeof window !== "undefined" ? window : global);
 
-/**
- * Salva as compras no arquivo se possível.
- */
-function salvarCompras(listas) {
-  try {
-    const caminho = path.join(__dirname, 'dados-compras.json');
-    fs.writeFileSync(caminho, JSON.stringify(listas, null, 2), 'utf8');
-  } catch (e) {
-    // modo somente leitura em alguns ambientes
-  }
-}
-
-/**
- * Remove uma compra pelo ID.
- */
-function removerCompra(id) {
-  let listas = carregarCompras();
-  const antes = listas.length;
-  listas = listas.filter(i => i.id !== id);
-  comprasCache = listas;
-  salvarCompras(listas);
-  return listas.length < antes;
-}
-
-module.exports = {
-  carregarCompras,
-  listarCompras,
-  adicionarCompra,
-  removerCompra
-};
