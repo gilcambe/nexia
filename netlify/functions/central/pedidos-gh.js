@@ -18,7 +18,7 @@ function resumo(i) {
   return {
     ...i,
     ...et,
-    situacao: et.texto // Mantém para compatibilidade com a tela velha
+    situacao: et.texto
   };
 }
 
