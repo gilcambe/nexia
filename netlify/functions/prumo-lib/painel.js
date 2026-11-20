@@ -85,7 +85,9 @@ async function montarPainel(c) {
   const cartaoAberto = reais.filter((l) => l.tipo === 'despesa' && l.vencimento && String(l.vencimento) > hoje);
   const faturasLidas = {};
   for (const l of cartaoAberto) { const v = String(l.vencimento).slice(0, 10); faturasLidas[v] = r2((faturasLidas[v] || 0) + (Number(l.valor) || 0)); }
-  const faturasMes = r2(Object.entries(faturasLidas).filter(([v]) => v.startsWith(mes)).reduce((t, [, x]) => t + x, 0));
+  // Soma faturas deste mês ou do próximo (para não sumir quando virar o mês)
+  const mesSeguinte = mesAntes(mes, -1);
+  const faturasMes = r2(Object.entries(faturasLidas).filter(([v]) => v.startsWith(mes) || v.startsWith(mesSeguinte)).reduce((t, [, x]) => t + x, 0));
   const a_pagar = r2((prev.a_pagar || 0) + faturas + fixasPend + faturasMes);
   const comprometido_cadastrado = fixas.length > 0 || cartaoAberto.length > 0 || cartoes.length > 0 || (prev.a_pagar || 0) > 0 || dividas.length > 0;
 
