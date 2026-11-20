@@ -14,11 +14,11 @@ const texto = (v, n) => String(v == null ? '' : v).trim().slice(0, n);
 const novoId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 
 /** Conta uma leitura (doc_ler/ler_print) no mês; recusa se passou do limite do plano. */
-async function contarLeitura(base, agoraIso, n = 1) {
+async function contarLeitura(base, agoraIso, n = 1, master = false) {
   const mes = agoraIso.slice(0, 7);
   const [u, s] = await Promise.all([base.get(), base.collection('config').doc('uso').get()]);
   if (!u || !u.exists) await base.set({ plano: 'gratis', criado_em: agoraIso });
-  const plano = (u && u.exists && u.data() && u.data().plano) || 'gratis';
+  const plano = master ? 'master' : (u && u.exists && u.data() && u.data().plano) || 'gratis';
   const limite = PLANOS[plano] != null ? PLANOS[plano] : PLANOS.gratis;
   const atual = s && s.exists && s.data() && s.data().mes === mes ? Number(s.data().leituras) || 0 : 0;
   if (atual + n > limite) return { ok: false, plano, limite, usadas: atual };

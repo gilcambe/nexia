@@ -52,3 +52,11 @@ test('dono 20/11: duas faturas lidas de uma vez entram sozinhas no mês do venci
   assert.equal(dez.mes, '2026-12');
   assert.deepEqual(dez.itens.map((x) => x.valor).sort((a, c) => a - c), [200.2, 1000.1]);
 });
+
+test('dono 20/11: o administrador (master) não tem limite de leituras', async () => {
+  const aj = require('../../netlify/functions/prumo-lib/ajuda.js');
+  const b = banco(); const base = b.collection('prumo_users').doc('u');
+  await base.collection('config').doc('uso').set({ mes: '2026-11', leituras: 60 });
+  assert.equal((await aj.contarLeitura(base, '2026-11-20T12:00:00Z', 1)).ok, false);
+  assert.equal((await aj.contarLeitura(base, '2026-11-20T12:00:00Z', 1, true)).ok, true);
+});
