@@ -57,6 +57,7 @@ function createHandler(deps = {}) {
           return res(200, { uid: q.uid, mensagens: msgs.sort((a, b) => String(a.em).localeCompare(String(b.em))) });
         }
         // Novas rotas internas
+        // Novas rotas internas
         if (parte === 'users') {
           const lista = await listar(users);
           return res(200, { parte, lista: lista.map(u => ({ uid: u.id, plano: u.plano, criado_em: u.criado_em })) });
@@ -65,7 +66,6 @@ function createHandler(deps = {}) {
           return res(200, { parte, planos: PLANOS });
         }
         if (parte === 'usage') {
-          // Exemplo: consumo global IA (agregado)
           return res(200, { parte, consumo_total: 0, unidades: 'tokens' });
         }
         if (parte === 'ocr') {
