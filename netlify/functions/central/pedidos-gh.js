@@ -31,7 +31,6 @@ async function lista(estadoFiltro = 'todas') {
   const issues = await response.json();
   
   const processadas = issues.map(resumo);
-  const contagens = estadoTarefas(issues);
   
   if (estadoFiltro === 'todas') return processadas;
   
