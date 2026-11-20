@@ -155,17 +155,28 @@ async function agirDoc(acao, body, c) {
       const lidos = await lerComVisao(im.imagens, deps);
       if (!lidos.some(Boolean)) return [503, { error: 'Não consegui ler agora. Tente de novo com uma foto mais nítida.' }];
       const existentes = new Set((await listar(col)).map((x) => x.id));
-      const brutos = []; const conferir = []; const tipos = []; let fatura = null;
+      const brutos = []; const conferir = []; const tipos = []; let fatura = null; const faturas = [];
       for (const lido of lidos) {
         if (!lido) continue;
         tipos.push(texto(lido.tipo_documento, 30) || 'outro');
         // Dono 19/11: a fatura vence no mês seguinte; o total e o vencimento vão para o "A pagar" (fatura_gravar).
-        if (!fatura && /fatura/i.test(String(lido.tipo_documento || ''))) {
+        // Dono 20/11: "a fatura de dezembro não aparece no mês de dezembro". Cada fatura lida (dois cartões = duas) é
+        // gravada já na leitura como conta a pagar no vencimento; as compras sem vencimento herdam o da fatura.
+        let venFat = null;
+        if (/fatura/i.test(String(lido.tipo_documento || ''))) {
           const tot = valorLido(lido.total_documento); const ven = dataLida(lido.vencimento_documento) || (lido.lancamentos || []).map((x) => dataLida(x && x.vencimento)).filter(Boolean).sort().pop() || null;
-          if (Number.isFinite(tot) && tot > 0) fatura = { total: Math.round(Math.abs(tot) * 100) / 100, vencimento: ven, instituicao: texto(lido.instituicao, 60) || null };
+          venFat = ven;
+          const final = (lido.lancamentos || []).map((x) => String((x && x.conta_ou_cartao) || '').match(/\d{4}/)).find(Boolean);
+          const nome = [texto(lido.instituicao, 40), final ? 'final ' + final[0] : ''].filter(Boolean).join(' ') || null;
+          if (Number.isFinite(tot) && tot > 0) {
+            const fv = { total: Math.round(Math.abs(tot) * 100) / 100, vencimento: ven, instituicao: nome, gravada: false };
+            if (ven) { const g = await require('./faturas').agirFaturas('fatura_gravar', { nome: nome || 'Cartão', valor: fv.total, vencimento: ven }, c); fv.gravada = !!(g && g[0] === 200); }
+            faturas.push(fv); if (!fatura) fatura = { total: fv.total, vencimento: fv.vencimento, instituicao: fv.instituicao };
+          }
         }
         for (const b of (lido.lancamentos || []).slice(0, MAX_LANC)) {
           const v = normalizarLancamento(b, lido);
+          if (v.ok && venFat && !v.item.vencimento && v.item.tipo === 'despesa') v.item.vencimento = venFat;
           if (v.ok) brutos.push(v.item); else conferir.push({ ...b, motivo: v.motivo });
         }
       }
@@ -174,7 +185,7 @@ async function agirDoc(acao, body, c) {
       aplicarRegras(novos, await lerRegras(base)); // categorias que a pessoa já corrigiu antes
       const r = conciliar(novos);
       return [200, { documento: tipos[0] || 'outro', imagens_lidas: lidos.filter(Boolean).length, imagens_total: lidos.length,
-        prontos: r.confirmados, conferir: [...conferir, ...r.conferir], ja_lancados: jaLancados, receitas: r.receitas, despesas: r.despesas, fatura }];
+        prontos: r.confirmados, conferir: [...conferir, ...r.conferir], ja_lancados: jaLancados, receitas: r.receitas, despesas: r.despesas, fatura, faturas }];
     }
     case 'doc_confirmar': {
       const lista = Array.isArray(body.lancamentos) ? body.lancamentos.slice(0, MAX_LANC) : [];

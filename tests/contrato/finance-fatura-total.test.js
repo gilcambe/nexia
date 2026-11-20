@@ -32,3 +32,23 @@ test('doc_ler devolve o total e o vencimento da fatura', async () => {
   assert.equal(st, 200, JSON.stringify(r));
   assert.deepEqual(r.fatura, { total: 1234.56, vencimento: '2026-12-08', instituicao: 'Banco X' });
 });
+
+test('dono 20/11: duas faturas lidas de uma vez entram sozinhas no mês do vencimento', async () => {
+  const b = banco(); P.deps.db = () => b; P.deps.agora = () => new Date('2026-11-20T12:00:00Z');
+  const lidos = [
+    { tipo_documento: 'fatura', instituicao: 'Banco X', total_documento: '1.000,10', vencimento_documento: '2026-12-06', lancamentos: [{ data: '2026-11-03', descricao: 'Mercado', valor: 100, tipo: 'despesa', categoria: 'alimentacao', conta_ou_cartao: 'final 1111' }] },
+    { tipo_documento: 'fatura', instituicao: 'Banco X', total_documento: 200.2, vencimento_documento: '2026-12-10', lancamentos: [{ data: '2026-11-04', descricao: 'Farmácia', valor: 50, tipo: 'despesa', categoria: 'saude', conta_ou_cartao: 'final 2222' }] },
+  ];
+  let i = 0; P.deps.perguntarVisao = async () => JSON.stringify(lidos[i++]);
+  const img = (n) => 'data:image/png;base64,' + Buffer.from(String(n).repeat(200)).toString('base64');
+  const [st, r] = await P.agir('u', { acao: 'doc_ler', imagens: [img(1), img(2)] });
+  delete P.deps.perguntarVisao;
+  assert.equal(st, 200, JSON.stringify(r));
+  assert.equal(r.faturas.length, 2);
+  assert.ok(r.faturas.every((x) => x.gravada));
+  assert.ok(r.prontos.every((l) => /^2026-12-/.test(l.vencimento)), 'compras herdam o vencimento da fatura');
+  const [, p] = await P.agir('u', { acao: 'painel_resumo' });
+  const dez = p.proximos_meses[0];
+  assert.equal(dez.mes, '2026-12');
+  assert.deepEqual(dez.itens.map((x) => x.valor).sort((a, c) => a - c), [200.2, 1000.1]);
+});

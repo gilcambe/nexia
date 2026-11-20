@@ -26,7 +26,11 @@
       <div id="kf-linhas">${linhas.length ? linhas.map(linha).join('') : '<p class="fraco">Não encontrei lançamentos neste documento.</p>'}</div>
       ${linhas.length ? '<button class="btn" id="kf-grava" type="button" style="margin-top:12px">Confirmar e gravar marcados</button>' : ''}</div>`;
     // Dono 19-20/11: a fatura lida vira conta a pagar no vencimento (total da fatura), não só as compras.
-    if (r.fatura && r.fatura.total > 0) {
+    // Dono 20/11: duas faturas (dois cartões) numa leitura; o servidor já grava cada uma que tem vencimento.
+    const fats = Array.isArray(r.faturas) ? r.faturas : [];
+    if (fats.some((x) => x.gravada)) {
+      res.insertAdjacentHTML('afterbegin', `<div class="card" id="kf-fat-total" style="border-color:#2F6BFF">${fats.map((x) => { const d = x.vencimento ? x.vencimento.slice(8, 10) + '/' + x.vencimento.slice(5, 7) : ''; return x.gravada ? `<div><b>✅ Fatura ${esc(x.instituicao || '')}: ${brl(x.total)}, vence ${d}.</b></div>` : `<div><b>💳 Fatura ${esc(x.instituicao || '')}: ${brl(x.total)}</b> · não li o vencimento: use "Lançar fatura" na aba Mês.</div>`; }).join('')}<div class="fraco">Gravada(s) no A pagar e no mês do vencimento. Agora confira as compras abaixo.</div></div>`);
+    } else if (r.fatura && r.fatura.total > 0) {
       const fv = r.fatura; const dmv = fv.vencimento ? fv.vencimento.slice(8, 10) + '/' + fv.vencimento.slice(5, 7) : '';
       res.insertAdjacentHTML('afterbegin', `<div class="card" id="kf-fat-total" style="border-color:#2F6BFF"><b>💳 Fatura ${esc(fv.instituicao || '')}: ${brl(fv.total)}${dmv ? ', vence ' + dmv : ''}</b><div class="fraco">Grave o total para ele aparecer no "A pagar" e em "Próximos meses".</div><button class="btn" type="button" id="kf-fat-gravar" style="margin-top:8px">Gravar a fatura no A pagar</button></div>`);
       res.querySelector('#kf-fat-gravar').onclick = async (ev) => { // grava direto (o formulário recarregaria a tela e perderia a lista de compras)
