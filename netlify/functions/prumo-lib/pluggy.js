@@ -18,7 +18,7 @@ const ehMesmaTitularidade = (t) => /same ownership|mesma titularidade/i.test(Str
 
 function config(c) {
   const env = (c.deps && c.deps.env) || (typeof process !== 'undefined' ? process.env : {}) || {};
-  return { id: env.PLUGGY_CLIENT_ID, segredo: env.PLUGGY_CLIENT_SECRET, fetch: (c.deps && c.deps.fetch) || ((...a) => fetch(...a)) };
+  return { id: env.PLUGGY_CLIENT_ID || env.PLUGGY_CLIEND_ID, segredo: env.PLUGGY_CLIENT_SECRET, fetch: (c.deps && c.deps.fetch) || ((...a) => fetch(...a)) };
 }
 async function chamar(cfg, chave, caminho, opts = {}) {
   const r = await cfg.fetch(BASE + caminho, { method: opts.method || 'GET', headers: { 'content-type': 'application/json', ...(chave ? { 'X-API-KEY': chave } : {}) }, body: opts.body ? JSON.stringify(opts.body) : undefined });
