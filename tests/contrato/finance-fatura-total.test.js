@@ -60,3 +60,17 @@ test('dono 20/11: o administrador (master) não tem limite de leituras', async (
   assert.equal((await aj.contarLeitura(base, '2026-11-20T12:00:00Z', 1)).ok, false);
   assert.equal((await aj.contarLeitura(base, '2026-11-20T12:00:00Z', 1, true)).ok, true);
 });
+
+test('dono 20/11: print sem total e sem vencimento usa a soma e o dia do cartão cadastrado', async () => {
+  const b = banco(); P.deps.db = () => b; P.deps.agora = () => new Date('2026-11-20T12:00:00Z');
+  await b.collection('prumo_users').doc('u').collection('cartoes').doc('k1').set({ nome: 'Cartão final 1111', dia_vencimento: 6, limite: 1000 });
+  P.deps.perguntarVisao = async () => JSON.stringify({ tipo_documento: 'outro', instituicao: 'Banco X', total_documento: null, vencimento_documento: null,
+    lancamentos: [{ data: '2026-11-03', descricao: 'Mercado', valor: 100.5, tipo: 'despesa', categoria: 'alimentacao', conta_ou_cartao: 'final 1111' }, { data: '2026-11-04', descricao: 'Posto', valor: 50, tipo: 'despesa', categoria: 'transporte', conta_ou_cartao: 'final 1111' }] });
+  const img = 'data:image/png;base64,' + Buffer.from('z'.repeat(200)).toString('base64');
+  const [st, r] = await P.agir('u', { acao: 'doc_ler', imagens: [img] });
+  delete P.deps.perguntarVisao;
+  assert.equal(st, 200, JSON.stringify(r));
+  assert.deepEqual(r.faturas.map((x) => [x.total, x.vencimento, x.gravada]), [[150.5, '2026-12-06', true]]);
+  const [, p] = await P.agir('u', { acao: 'painel_resumo' });
+  assert.deepEqual(p.proximos_meses[0].itens.map((x) => x.valor), [150.5]);
+});

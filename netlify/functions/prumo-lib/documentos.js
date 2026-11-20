@@ -163,11 +163,24 @@ async function agirDoc(acao, body, c) {
         // Dono 20/11: "a fatura de dezembro não aparece no mês de dezembro". Cada fatura lida (dois cartões = duas) é
         // gravada já na leitura como conta a pagar no vencimento; as compras sem vencimento herdam o da fatura.
         let venFat = null;
-        if (/fatura/i.test(String(lido.tipo_documento || ''))) {
-          const tot = valorLido(lido.total_documento); const ven = dataLida(lido.vencimento_documento) || (lido.lancamentos || []).map((x) => dataLida(x && x.vencimento)).filter(Boolean).sort().pop() || null;
-          venFat = ven;
-          const final = (lido.lancamentos || []).map((x) => String((x && x.conta_ou_cartao) || '').match(/\d{4}/)).find(Boolean);
+        // Dono 20/11 (2ª vez): "cadastrei, mas ainda aparece zerado". A IA às vezes não marca o print como fatura, não
+        // acha o total ou o vencimento. Agora: cartão no texto também conta; sem total, soma as compras; sem vencimento,
+        // usa o dia de vencimento do cartão cadastrado (próxima data depois de hoje).
+        const itensLido = Array.isArray(lido.lancamentos) ? lido.lancamentos : [];
+        const temCartao = itensLido.some((x) => /cart|final|credit/i.test(String((x && x.conta_ou_cartao) || '')));
+        if (/fatura|cart/i.test(String(lido.tipo_documento || '')) || (temCartao && !/extrato|comprovante|boleto|conta|nota|recibo/i.test(String(lido.tipo_documento || '')))) {
+          const final = itensLido.map((x) => String((x && x.conta_ou_cartao) || '').match(/\d{4}/)).find(Boolean);
           const nome = [texto(lido.instituicao, 40), final ? 'final ' + final[0] : ''].filter(Boolean).join(' ') || null;
+          let ven = dataLida(lido.vencimento_documento) || itensLido.map((x) => dataLida(x && x.vencimento)).filter(Boolean).sort().pop() || null;
+          if (!ven) {
+            const cartoes = await listar(base.collection('cartoes'));
+            const k = cartoes.find((x) => final && String(x.final || x.nome || '').includes(final[0])) || (cartoes.length === 1 ? cartoes[0] : null);
+            const dia = k && Number(k.dia_vencimento);
+            if (dia >= 1 && dia <= 31) { const [a, m] = hoje.split('-').map(Number); let t = a * 12 + (m - 1); if (dia <= Number(hoje.slice(8, 10))) t++; ven = `${Math.floor(t / 12)}-${String((t % 12) + 1).padStart(2, '0')}-${String(Math.min(28, dia)).padStart(2, '0')}`; }
+          }
+          venFat = ven;
+          let tot = valorLido(lido.total_documento);
+          if (!(Number.isFinite(tot) && tot > 0)) tot = itensLido.reduce((s, x) => { const v = valorLido(x && x.valor); const t = String((x && x.tipo) || ''); return Number.isFinite(v) ? s + (/pagamento|receita|transfer/i.test(t) ? 0 : Math.abs(v)) : s; }, 0);
           if (Number.isFinite(tot) && tot > 0) {
             const fv = { total: Math.round(Math.abs(tot) * 100) / 100, vencimento: ven, instituicao: nome, gravada: false };
             if (ven) { const g = await require('./faturas').agirFaturas('fatura_gravar', { nome: nome || 'Cartão', valor: fv.total, vencimento: ven }, c); fv.gravada = !!(g && g[0] === 200); }
