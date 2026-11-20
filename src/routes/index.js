@@ -6,11 +6,11 @@ const health = require('./health'); // handler health
 
 
 module.exports = function (app) {
-  // Rota de saúde: GET /api/prumo?acao=saude
+    // Rota de saúde: GET /api/prumo?acao=saude
   app.get('/api/prumo', (req, res) => Promise.resolve(health(req, res)).catch((err) => {
-    console.error('[routes] erro não tratado em /api/prumo:', err && err.message ? err.message : err);
+    console.error('[routes] erro em /api/prumo:', err?.message || err);
     if (!res.headersSent) {
-      res.status(500).json({ ok: false, erro: 'Erro interno ao verificar a saúde.' });
+      res.status(500).json({ ok: false, erro: 'Erro interno na verificação de saúde.' });
     }
   }));
 };
