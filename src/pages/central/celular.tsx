@@ -36,7 +36,10 @@ export function Folha({ titulo, fechar, acao, children }: { titulo: string; fech
   const fechouPorVoltar = useRef(false);
   useEffect(() => {
     history.pushState({ folha: titulo }, "");
-    const voltar = () => fecharRef.current();
+    const voltar = () => {
+      fechouPorVoltar.current = true;
+      fecharRef.current();
+    };
     window.addEventListener("popstate", voltar);
     const rolagem = document.body.style.overflow;
     document.body.style.overflow = "hidden";
