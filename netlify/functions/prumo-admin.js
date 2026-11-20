@@ -56,6 +56,10 @@ function createHandler(deps = {}) {
           const msgs = await listar(users.doc(q.uid).collection('mensagens'));
           return res(200, { uid: q.uid, mensagens: msgs.sort((a, b) => String(a.em).localeCompare(String(b.em))) });
         }
+        // Novas rotas internas
+        if (['users', 'plans', 'usage', 'ocr', 'providers', 'errors', 'support', 'logs', 'availability'].includes(parte)) {
+          return res(200, { ok: true, section: parte, data: [] });
+        }
         return res(400, { error: 'Parte desconhecida.' });
       }
       const acao = String(body.acao || '');
