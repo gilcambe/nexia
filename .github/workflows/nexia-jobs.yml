@@ -66,6 +66,8 @@ jobs:
           MASTER_EMAIL: ${{ secrets.MASTER_EMAIL }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          PLUGGY_CLIENT_ID: ${{ secrets.PLUGGY_CLIENT_ID }}
+          PLUGGY_CLIENT_SECRET: ${{ secrets.PLUGGY_CLIENT_SECRET }}
           PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
           BREVO_API_KEY: ${{ secrets.BREVO_API_KEY1 || secrets.BREVO_API_KEY }}
           LEADS_NOTIFY_EMAIL: ${{ secrets.LEADS_NOTIFY_EMAIL }}

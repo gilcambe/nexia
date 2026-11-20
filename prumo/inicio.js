@@ -130,6 +130,8 @@
     const todos = el.querySelector('#ki-todos'); if (todos) todos.onclick = () => MB.abrirAba('documentos');
     const pri = el.querySelector('#ki-primeiro'); if (pri) pri.onclick = () => MB.abrirLancar();
     el.querySelector('#ki-perg').onsubmit = (e) => { e.preventDefault(); const q = String(new FormData(e.target).get('q') || '').trim(); MB.perguntaPendente = q || null; MB.abrirAba('assistente'); };
+    // Open Finance ligado: atualiza sozinho no máximo a cada 12 h, sem segurar a tela; se entrou algo, redesenha.
+    try { const ult = Number(localStorage.getItem('kf-pluggy-ult') || 0); if (localStorage.getItem('kf-pluggy') === '1' && Date.now() - ult > 12 * 3600000) { localStorage.setItem('kf-pluggy-ult', String(Date.now())); MB.api('pluggy_sincronizar', {}, { silencioso: true }).then((r) => { if (r && r.novos > 0 && document.body.contains(el)) MB.abrirAba('inicio'); }).catch(() => {}); } } catch { /* sem armazenamento */ }
     // Raio-X (cadastro aos poucos) carrega à parte e não segura a tela.
     if (!MB.raiox) { const s = document.createElement('script'); s.src = '/prumo/raiox.js'; s.onerror = () => {}; document.body.appendChild(s); }
   };
