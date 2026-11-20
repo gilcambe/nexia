@@ -28,8 +28,15 @@
     // Dono 19-20/11: a fatura lida vira conta a pagar no vencimento (total da fatura), não só as compras.
     // Dono 20/11: duas faturas (dois cartões) numa leitura; o servidor já grava cada uma que tem vencimento.
     const fats = Array.isArray(r.faturas) ? r.faturas : [];
-    if (fats.some((x) => x.gravada)) {
-      res.insertAdjacentHTML('afterbegin', `<div class="card" id="kf-fat-total" style="border-color:#2F6BFF">${fats.map((x) => { const d = x.vencimento ? x.vencimento.slice(8, 10) + '/' + x.vencimento.slice(5, 7) : ''; return x.gravada ? `<div><b>✅ Fatura ${esc(x.instituicao || '')}: ${brl(x.total)}, vence ${d}.</b></div>` : `<div><b>💳 Fatura ${esc(x.instituicao || '')}: ${brl(x.total)}</b> · não li o vencimento: use "Lançar fatura" na aba Mês.</div>`; }).join('')}<div class="fraco">Gravada(s) no A pagar e no mês do vencimento. Agora confira as compras abaixo.</div></div>`);
+    if (fats.length) {
+      // Sem vencimento lido: a pessoa digita a data aqui mesmo e grava (dono 20/11: "cadastrei, mas aparece zerado").
+      res.insertAdjacentHTML('afterbegin', `<div class="card" id="kf-fat-total" style="border-color:#2F6BFF">${fats.map((x, i) => { const d = x.vencimento ? x.vencimento.slice(8, 10) + '/' + x.vencimento.slice(5, 7) : ''; return x.gravada ? `<div><b>✅ Fatura ${esc(x.instituicao || '')}: ${brl(x.total)}, vence ${d}.</b></div>` : `<div data-fi="${i}" style="margin:6px 0"><b>💳 Fatura ${esc(x.instituicao || '')}: ${brl(x.total)}</b><div class="fraco">Não li o vencimento. Qual o dia?</div><input type="date" data-fv style="margin:4px 0"> <button class="btn" type="button" data-fg>Gravar no A pagar</button></div>`; }).join('')}<div class="fraco">A fatura entra no A pagar e no mês do vencimento. Confira as compras abaixo.</div></div>`);
+      res.querySelectorAll('[data-fi]').forEach((box) => { box.querySelector('[data-fg]').onclick = async (ev) => {
+        const x = fats[Number(box.dataset.fi)]; const v = box.querySelector('[data-fv]').value;
+        if (!v) { ok('Escolha o dia do vencimento.'); return; }
+        ev.currentTarget.disabled = true;
+        try { await MB.api('fatura_gravar', { nome: x.instituicao || 'Cartão', valor: x.total, vencimento: v }); box.innerHTML = `<b>✅ Fatura ${esc(x.instituicao || '')}: ${brl(x.total)}, vence ${v.slice(8, 10)}/${v.slice(5, 7)}.</b>`; } catch { ev.currentTarget.disabled = false; }
+      }; });
     } else if (r.fatura && r.fatura.total > 0) {
       const fv = r.fatura; const dmv = fv.vencimento ? fv.vencimento.slice(8, 10) + '/' + fv.vencimento.slice(5, 7) : '';
       res.insertAdjacentHTML('afterbegin', `<div class="card" id="kf-fat-total" style="border-color:#2F6BFF"><b>💳 Fatura ${esc(fv.instituicao || '')}: ${brl(fv.total)}${dmv ? ', vence ' + dmv : ''}</b><div class="fraco">Grave o total para ele aparecer no "A pagar" e em "Próximos meses".</div><button class="btn" type="button" id="kf-fat-gravar" style="margin-top:8px">Gravar a fatura no A pagar</button></div>`);
