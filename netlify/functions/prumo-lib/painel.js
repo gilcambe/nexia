@@ -82,7 +82,10 @@ async function montarPainel(c) {
   const fixas = Array.isArray(orc.fixas) ? orc.fixas : [];
   const fixasPend = soma(fixas.filter((f) => !f.dia || f.dia >= diaHoje), (f) => f.valor);
   // Compras do cartão lidas da fatura entram no A pagar pela data de VENCIMENTO da fatura (plano, tela Mês).
-  const cartaoAberto = reais.filter((l) => l.tipo === 'despesa' && l.vencimento && String(l.vencimento) > hoje);
+  // O total da fatura (fatura_gravar, categoria 'fatura') vale mais que a soma das compras lidas do mesmo vencimento.
+  const ehFatura = (l) => l.categoria === 'fatura';
+  const vencComTotal = new Set(lancs.filter(ehFatura).map((l) => String(l.vencimento || l.data).slice(0, 10)));
+  const cartaoAberto = reais.filter((l) => l.tipo === 'despesa' && !ehFatura(l) && l.vencimento && String(l.vencimento) > hoje && !vencComTotal.has(String(l.vencimento).slice(0, 10)));
   const faturasLidas = {};
   for (const l of cartaoAberto) { const v = String(l.vencimento).slice(0, 10); faturasLidas[v] = r2((faturasLidas[v] || 0) + (Number(l.valor) || 0)); }
   // Dono 19/11: o print da fatura aberta (vence 06/12) gravava uma conta com data futura e ela sumia de todas as telas.
@@ -99,14 +102,14 @@ async function montarPainel(c) {
 
   // --- Gasto variável: média diária dos 3 meses completos antes deste ---
   const ult3 = [1, 2, 3].map((n) => mesAntes(mes, n));
-  const desp3 = reais.filter((l) => l.tipo === 'despesa' && ult3.includes(String(l.data).slice(0, 7)));
+  const desp3 = reais.filter((l) => l.tipo === 'despesa' && !ehFatura(l) && ult3.includes(String(l.data).slice(0, 7)));
   const mesesCom = new Set(desp3.map((l) => String(l.data).slice(0, 7))).size;
   const gastoMensal = mesesCom ? r2(soma(desp3, (l) => l.valor) / mesesCom) : null;
   const gasto_diario = gastoMensal != null ? r2(gastoMensal / 30) : null;
 
   const dr = S.diasRestantes(hoje);
   const kpis = S.kpisMes({ tenho, falta_receber, comprometido: a_pagar, comprometido_cadastrado, dias_restantes: dr, gasto_diario });
-  const despesasMes = soma(doMes.filter((l) => l.tipo === 'despesa'), (l) => l.valor);
+  const despesasMes = soma(doMes.filter((l) => l.tipo === 'despesa' && !ehFatura(l)), (l) => l.valor); // pagar a fatura não é gasto novo
 
   // --- Score ---
   const semDiv = !!(cfgDiv && cfgDiv.exists && (cfgDiv.data() || {}).sem_dividas);
@@ -169,7 +172,7 @@ async function montarPainel(c) {
       for (const x of itens) { acum += x.valor; x.risco = !!(x.data && dias(hoje, x.data) <= 3 && tenho != null && acum > tenho); }
       // Gastos por categoria, com a média dos 3 meses anteriores; a dica é a categoria mais acima da média (> 120%).
       const porCat = {};
-      for (const l of doMes.filter((x) => x.tipo === 'despesa')) { const k = l.categoria || 'outros'; porCat[k] = r2((porCat[k] || 0) + (Number(l.valor) || 0)); }
+      for (const l of doMes.filter((x) => x.tipo === 'despesa' && !ehFatura(x))) { const k = l.categoria || 'outros'; porCat[k] = r2((porCat[k] || 0) + (Number(l.valor) || 0)); }
       const media = {};
       for (const l of desp3) { const k = l.categoria || 'outros'; media[k] = (media[k] || 0) + (Number(l.valor) || 0) / Math.max(1, mesesCom); }
       const categorias = Object.entries(porCat).map(([k, v]) => ({ categoria: k, valor: v, pct: despesasMes > 0 ? Math.round((v / despesasMes) * 100) : 0, media3: media[k] ? r2(media[k]) : null, acima_pct: media[k] ? Math.round((v / media[k] - 1) * 100) : null })).sort((a, b) => b.valor - a.valor);

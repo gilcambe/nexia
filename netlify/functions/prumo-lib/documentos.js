@@ -19,14 +19,15 @@ const novoId = () => Date.now().toString(36) + Math.random().toString(36).slice(
 
 const LER_DOC = `Você lê documentos financeiros brasileiros (foto, print ou PDF renderizado): fatura de cartão, extrato bancário, comprovante Pix/TED, nota ou cupom fiscal, boleto, recibo, conta de consumo, extrato de corretora ou de milhas.
 Devolva SOMENTE um JSON, sem texto fora dele:
-{"tipo_documento":"fatura|extrato|comprovante|nota|boleto|recibo|conta|corretora|milhas|outro","instituicao":"banco ou loja","total_documento":número ou null,"lancamentos":[{"data":"AAAA-MM-DD","data_processamento":"AAAA-MM-DD ou null","descricao":"texto","estabelecimento":"nome","valor":número positivo,"moeda":"BRL","categoria":"uma de: ${CATEGORIAS_KF.join(', ')}","subcategoria":"texto curto ou null","conta_ou_cartao":"final 1234 ou nome","parcela":número ou null,"parcelas_total":número ou null,"vencimento":"AAAA-MM-DD ou null","tipo":"despesa|receita|transferencia_propria|pagamento_fatura","confianca":número de 0 a 1}]}
+{"tipo_documento":"fatura|extrato|comprovante|nota|boleto|recibo|conta|corretora|milhas|outro","instituicao":"banco ou loja","total_documento":número ou null,"vencimento_documento":"AAAA-MM-DD ou null","lancamentos":[{"data":"AAAA-MM-DD","data_processamento":"AAAA-MM-DD ou null","descricao":"texto","estabelecimento":"nome","valor":número positivo,"moeda":"BRL","categoria":"uma de: ${CATEGORIAS_KF.join(', ')}","subcategoria":"texto curto ou null","conta_ou_cartao":"final 1234 ou nome","parcela":número ou null,"parcelas_total":número ou null,"vencimento":"AAAA-MM-DD ou null","tipo":"despesa|receita|transferencia_propria|pagamento_fatura","confianca":número de 0 a 1}]}
 Regras:
 1. "valor" é sempre positivo; o sentido está em "tipo". Compra, débito, boleto pago e saque são "despesa". Salário, Pix recebido, rendimento e reembolso são "receita".
 2. Pagamento da fatura do cartão é "pagamento_fatura". Transferência entre contas da própria pessoa (mesmo nome/titularidade, "minha poupança") é "transferencia_propria". Pix ou TED enviado para OUTRA pessoa ou empresa é "despesa". Nenhum dos dois é despesa nem receita.
 3. Números com ponto decimal (R$ 1.234,56 vira 1234.56). Datas como AAAA-MM-DD; se faltar o ano, use o ano do documento.
 4. "confianca" baixa (menos de 0.8) quando o texto estiver borrado, cortado ou você estiver adivinhando.
 5. Conta de consumo (luz, água, gás, internet, telefone), boleto ou fatura AINDA A PAGAR: devolva UM lançamento "despesa" com o total a pagar, "data" = vencimento e "vencimento" preenchido. Nunca devolva lista vazia só porque ainda não foi paga.
-6. Não invente nada que não esteja legível. Se não houver lançamentos, devolva lista vazia.`;
+6. Não invente nada que não esteja legível. Se não houver lançamentos, devolva lista vazia.
+7. Fatura de cartão (inclusive tela "fatura aberta" do app do banco): "total_documento" = total da fatura atual a pagar e "vencimento_documento" = data de vencimento dela. Valores de outros meses (anteriores ou futuros) não são o total.`;
 
 // Melhoria 8 (dono 19/11): categorias aprendidas. Quando a pessoa corrige a categoria de um lançamento, guardamos
 // "este estabelecimento = esta categoria" em config/categorias e usamos nos próximos documentos e extratos.
@@ -154,10 +155,15 @@ async function agirDoc(acao, body, c) {
       const lidos = await lerComVisao(im.imagens, deps);
       if (!lidos.some(Boolean)) return [503, { error: 'Não consegui ler agora. Tente de novo com uma foto mais nítida.' }];
       const existentes = new Set((await listar(col)).map((x) => x.id));
-      const brutos = []; const conferir = []; const tipos = [];
+      const brutos = []; const conferir = []; const tipos = []; let fatura = null;
       for (const lido of lidos) {
         if (!lido) continue;
         tipos.push(texto(lido.tipo_documento, 30) || 'outro');
+        // Dono 19/11: a fatura vence no mês seguinte; o total e o vencimento vão para o "A pagar" (fatura_gravar).
+        if (!fatura && /fatura/i.test(String(lido.tipo_documento || ''))) {
+          const tot = valorLido(lido.total_documento); const ven = dataLida(lido.vencimento_documento) || (lido.lancamentos || []).map((x) => dataLida(x && x.vencimento)).filter(Boolean).sort().pop() || null;
+          if (Number.isFinite(tot) && tot > 0) fatura = { total: Math.round(Math.abs(tot) * 100) / 100, vencimento: ven, instituicao: texto(lido.instituicao, 60) || null };
+        }
         for (const b of (lido.lancamentos || []).slice(0, MAX_LANC)) {
           const v = normalizarLancamento(b, lido);
           if (v.ok) brutos.push(v.item); else conferir.push({ ...b, motivo: v.motivo });
@@ -168,7 +174,7 @@ async function agirDoc(acao, body, c) {
       aplicarRegras(novos, await lerRegras(base)); // categorias que a pessoa já corrigiu antes
       const r = conciliar(novos);
       return [200, { documento: tipos[0] || 'outro', imagens_lidas: lidos.filter(Boolean).length, imagens_total: lidos.length,
-        prontos: r.confirmados, conferir: [...conferir, ...r.conferir], ja_lancados: jaLancados, receitas: r.receitas, despesas: r.despesas }];
+        prontos: r.confirmados, conferir: [...conferir, ...r.conferir], ja_lancados: jaLancados, receitas: r.receitas, despesas: r.despesas, fatura }];
     }
     case 'doc_confirmar': {
       const lista = Array.isArray(body.lancamentos) ? body.lancamentos.slice(0, MAX_LANC) : [];

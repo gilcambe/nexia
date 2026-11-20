@@ -29,6 +29,7 @@
       <section class="card"><div style="display:flex;justify-content:space-between"><b>📅 A pagar até o fim do mês</b><b class="kh-out">${H.brl(m.a_pagar_total || 0)}</b></div>
         ${m.a_pagar_itens.length ? m.a_pagar_itens.map((x) => `<div class="kh-ag"><span>${dm(x.data)} · ${H.esc(x.nome)}${x.risco ? ' <b class="kh-neg">· falta saldo</b>' : ''}</span><span class="${x.risco ? 'kh-neg' : 'kh-out'}" style="font-weight:600;white-space:nowrap">${H.brl(x.valor)}</span></div>`).join('')
           : '<p class="sub" style="margin:8px 0 0">Nada a pagar cadastrado. Mande a fatura ou cadastre as contas fixas.</p>'}
+        <button class="btn sec" type="button" id="km-fatura">＋ Lançar fatura do cartão</button>
 </section>
       ${(p.proximos_meses || []).length ? `<section class="card kh-larga" id="km-prox"><b>🔜 Próximos meses</b><div class="sub" style="margin-top:2px">Faturas, parcelas, contas fixas e contas já lançadas. Toque no mês.</div><div id="km-chips" style="display:flex;gap:6px;overflow-x:auto;margin:10px 0 4px;padding-bottom:4px">${p.proximos_meses.map((x, i) => `<button type="button" class="chip" data-m="${i}" aria-pressed="${i === 0}" style="white-space:nowrap;border:1px solid var(--borda);color:var(--texto);${i === 0 ? 'background:#2F6BFF' : ''}">${MESES[Number(x.mes.slice(5, 7)) - 1].slice(0, 3)} · ${H.brl(x.total)}</button>`).join('')}</div><div id="km-lista"></div></section>` : ''}
       <section class="card kh-larga"><b>🛒 Gastos por categoria</b>
@@ -48,6 +49,11 @@
       ])}
     </div>`;
     H.ligar(el);
+    el.querySelector('#km-fatura').onclick = () => U.formulario('Lançar fatura do cartão', [
+      { nome: 'nome', rotulo: 'Cartão (ex.: Itaú Uniclass)', valor: '' },
+      { nome: 'valor', rotulo: 'Total da fatura (R$)', tipo: 'number', valor: '' },
+      { nome: 'vencimento', rotulo: 'Vencimento', tipo: 'date', valor: '' },
+    ], (d) => MB.api('fatura_gravar', { nome: d.nome, valor: Number(d.valor), vencimento: d.vencimento }));
     // Próximos meses: um mês por vez (chips), com a lista do que vai sair.
     const pm = p.proximos_meses || []; const lst = el.querySelector('#km-lista');
     const ver = (i) => { const x = pm[i]; if (!x || !lst) return; el.querySelectorAll('#km-chips .chip').forEach((b) => { const on = Number(b.dataset.m) === i; b.setAttribute('aria-pressed', String(on)); b.style.background = on ? '#2F6BFF' : ''; });
