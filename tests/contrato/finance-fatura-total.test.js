@@ -74,3 +74,42 @@ test('dono 20/11: print sem total e sem vencimento usa a soma e o dia do cartão
   const [, p] = await P.agir('u', { acao: 'painel_resumo' });
   assert.deepEqual(p.proximos_meses[0].itens.map((x) => x.valor), [150.5]);
 });
+
+test('dono 20/11: print sem ano (IA chuta o ano passado) cai no mês certo e no cartão certo', async () => {
+  const b = banco(); P.deps.db = () => b; P.deps.agora = () => new Date('2026-11-20T19:00:00Z');
+  const u = b.collection('prumo_users').doc('u');
+  await u.collection('cartoes').doc('kv').set({ nome: 'CARTAO VISA X', dia_vencimento: 6, dia_fechamento: 30, limite: 5000 });
+  await u.collection('cartoes').doc('km').set({ nome: 'CARTAO MASTER X', dia_vencimento: 10, dia_fechamento: 3, limite: 5000 });
+  await u.collection('lancamentos').doc('fat-2025-12-06-banco-x').set({ data: '2025-12-06', vencimento: '2025-12-06', descricao: 'Fatura Banco X', valor: 1000.1, tipo: 'despesa', categoria: 'fatura', status: 'realizado' });
+  const lidos = [
+    { tipo_documento: 'fatura', instituicao: 'Banco X', total_documento: 1000.1, vencimento_documento: '2025-12-06', lancamentos: [{ data: '2025-11-14', descricao: 'Loja', valor: 1000.1, tipo: 'despesa', categoria: 'compras' }] },
+    { tipo_documento: 'fatura', instituicao: 'Banco X', total_documento: 200.2, vencimento_documento: '2025-12-10', lancamentos: [{ data: '2025-11-15', descricao: 'Posto', valor: 200.2, tipo: 'despesa', categoria: 'transporte' }] },
+  ];
+  let i = 0; P.deps.perguntarVisao = async () => JSON.stringify(lidos[i++]);
+  const img = (n) => 'data:image/png;base64,' + Buffer.from(String(n).repeat(200)).toString('base64');
+  const [st, r] = await P.agir('u', { acao: 'doc_ler', imagens: [img(3), img(4)] });
+  delete P.deps.perguntarVisao;
+  assert.equal(st, 200, JSON.stringify(r));
+  assert.deepEqual(r.faturas.map((x) => [x.vencimento, x.cartao_id, x.gravada]), [['2026-12-06', 'kv', true], ['2026-12-10', 'km', true]]);
+  assert.ok(r.prontos.every((l) => l.data.startsWith('2026-11')), 'compras no ano certo');
+  const [, p] = await P.agir('u', { acao: 'painel_resumo' });
+  assert.deepEqual(p.proximos_meses[0].itens.map((x) => x.valor).sort((a, c) => a - c), [200.2, 1000.1]);
+  assert.equal((await u.collection('lancamentos').doc('fat-2025-12-06-banco-x').get()).exists, false, 'a do ano errado sai');
+  const [, cv] = await P.agir('u', { acao: 'cartao_visao' });
+  const dez = (id) => cv.cartoes.find((k) => k.id === id).proximas.find((x) => x.mes === '2026-12').valor;
+  assert.equal(dez('kv'), 1000.1); assert.equal(dez('km'), 200.2);
+});
+
+test('dono 20/11: fatura de um cartão que não existe cadastra o cartão sozinho', async () => {
+  const b = banco(); P.deps.db = () => b; P.deps.agora = () => new Date('2026-11-20T19:00:00Z');
+  P.deps.perguntarVisao = async () => JSON.stringify({ tipo_documento: 'fatura', instituicao: 'Banco Y', cartao_nome: 'Gold', limite_documento: '8.000,00', total_documento: 300, vencimento_documento: '2026-12-15',
+    lancamentos: [{ data: '2026-11-10', descricao: 'Loja', valor: 300, tipo: 'despesa', categoria: 'compras', conta_ou_cartao: 'final 4321' }] });
+  const img = 'data:image/png;base64,' + Buffer.from('w'.repeat(200)).toString('base64');
+  const [st, r] = await P.agir('u', { acao: 'doc_ler', imagens: [img] });
+  delete P.deps.perguntarVisao;
+  assert.equal(st, 200, JSON.stringify(r));
+  const [, cl] = await P.agir('u', { acao: 'cartao_listar' });
+  assert.equal(cl.cartoes.length, 1);
+  assert.deepEqual([cl.cartoes[0].dia_vencimento, cl.cartoes[0].limite, cl.cartoes[0].final], [15, 8000, '4321']);
+  assert.equal(r.faturas[0].cartao_novo, true);
+});

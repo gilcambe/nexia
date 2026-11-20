@@ -19,7 +19,7 @@ const novoId = () => Date.now().toString(36) + Math.random().toString(36).slice(
 
 const LER_DOC = `Você lê documentos financeiros brasileiros (foto, print ou PDF renderizado): fatura de cartão, extrato bancário, comprovante Pix/TED, nota ou cupom fiscal, boleto, recibo, conta de consumo, extrato de corretora ou de milhas.
 Devolva SOMENTE um JSON, sem texto fora dele:
-{"tipo_documento":"fatura|extrato|comprovante|nota|boleto|recibo|conta|corretora|milhas|outro","instituicao":"banco ou loja","total_documento":número ou null,"vencimento_documento":"AAAA-MM-DD ou null","lancamentos":[{"data":"AAAA-MM-DD","data_processamento":"AAAA-MM-DD ou null","descricao":"texto","estabelecimento":"nome","valor":número positivo,"moeda":"BRL","categoria":"uma de: ${CATEGORIAS_KF.join(', ')}","subcategoria":"texto curto ou null","conta_ou_cartao":"final 1234 ou nome","parcela":número ou null,"parcelas_total":número ou null,"vencimento":"AAAA-MM-DD ou null","tipo":"despesa|receita|transferencia_propria|pagamento_fatura","confianca":número de 0 a 1}]}
+{"tipo_documento":"fatura|extrato|comprovante|nota|boleto|recibo|conta|corretora|milhas|outro","instituicao":"banco ou loja","cartao_nome":"nome do cartão como aparece (ex.: Black Visa) ou null","limite_documento":número (limite total do cartão) ou null,"total_documento":número ou null,"vencimento_documento":"AAAA-MM-DD ou null","lancamentos":[{"data":"AAAA-MM-DD","data_processamento":"AAAA-MM-DD ou null","descricao":"texto","estabelecimento":"nome","valor":número positivo,"moeda":"BRL","categoria":"uma de: ${CATEGORIAS_KF.join(', ')}","subcategoria":"texto curto ou null","conta_ou_cartao":"final 1234 ou nome","parcela":número ou null,"parcelas_total":número ou null,"vencimento":"AAAA-MM-DD ou null","tipo":"despesa|receita|transferencia_propria|pagamento_fatura","confianca":número de 0 a 1}]}
 Regras:
 1. "valor" é sempre positivo; o sentido está em "tipo". Compra, débito, boleto pago e saque são "despesa". Salário, Pix recebido, rendimento e reembolso são "receita".
 2. Pagamento da fatura do cartão é "pagamento_fatura". Transferência entre contas da própria pessoa (mesmo nome/titularidade, "minha poupança") é "transferencia_propria". Pix ou TED enviado para OUTRA pessoa ou empresa é "despesa". Nenhum dos dois é despesa nem receita.
@@ -54,6 +54,36 @@ function dataLida(v) {
   const m = /^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/.exec(t);
   if (!m) return '';
   return `${m[3].length === 2 ? '20' + m[3] : m[3]}-${m[2].padStart(2, '0')}-${m[1].padStart(2, '0')}`;
+}
+/** Qual cartão cadastrado é o da fatura: final dos 4 dígitos > dia de vencimento (único) > palavras do nome. */
+function acharCartao(cartoes, { final, ven, nome }) {
+  if (!cartoes || !cartoes.length) return null;
+  if (final) { const k = cartoes.find((x) => String(x.final || '') === final || String(x.nome || '').includes(final)); if (k) return k; }
+  const n = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+  const pal = n(nome).split(/[^a-z0-9]+/).filter((w) => w.length >= 3);
+  if (ven) {
+    const dia = Number(ven.slice(8, 10));
+    const doDia = cartoes.filter((x) => Number(x.dia_vencimento) === dia);
+    if (doDia.length === 1) return doDia[0];
+    if (doDia.length > 1) { const k = doDia.find((x) => pal.some((w) => n(x.nome).includes(w))); if (k) return k; }
+  }
+  const pontos = cartoes.map((x) => ({ x, p: pal.filter((w) => !/^(itau|banco|cartao|credito|fatura)$/.test(w) && n(x.nome).includes(w)).length })).sort((a, b) => b.p - a.p);
+  return pontos[0] && pontos[0].p > 0 ? pontos[0].x : null;
+}
+/** Fatura com ano chutado errado (print sem ano): devolve { velho } e corrige as datas do lido no lugar; senão null. */
+function ajusteDeAno(lido, hoje) {
+  if (!lido || !/fatura|cart/i.test(String(lido.tipo_documento || '') + JSON.stringify((lido.lancamentos || []).map((x) => x && x.conta_ou_cartao)))) return null;
+  const ven = dataLida(lido.vencimento_documento) || (lido.lancamentos || []).map((x) => dataLida(x && x.vencimento)).filter(Boolean).sort().pop() || '';
+  if (!ven) return null;
+  const dias = (a, b) => (Date.parse(a + 'T00:00:00Z') - Date.parse(b + 'T00:00:00Z')) / 86400000;
+  if (dias(ven, hoje) >= -40) return null;
+  let k = 0;
+  for (let n = 1; n <= 2; n++) { const d = String(Number(ven.slice(0, 4)) + n) + ven.slice(4); if (dias(d, hoje) >= -40 && dias(d, hoje) <= 70) { k = n; break; } }
+  if (!k) return null;
+  const mais = (v) => { const d = dataLida(v); return d ? String(Number(d.slice(0, 4)) + k) + d.slice(4) : v; };
+  lido.vencimento_documento = mais(ven);
+  for (const x of lido.lancamentos || []) if (x && typeof x === 'object') { for (const c of ['data', 'data_processamento', 'vencimento']) if (x[c]) x[c] = mais(x[c]); }
+  return { velho: ven };
 }
 const APELIDO_TIPO = [[/pagamento.*fatura|fatura.*pag/i, 'pagamento_fatura'], [/propria|mesma titular|entre contas/i, 'transferencia_propria'],
   [/receita|entrada|credito|crédito|recebid|sal[aá]rio|rendimento|reembolso/i, 'receita'], [/despesa|saida|saída|debito|débito|compra|pagamento|saque/i, 'despesa']];
@@ -163,6 +193,13 @@ async function agirDoc(acao, body, c) {
         // Dono 20/11: "a fatura de dezembro não aparece no mês de dezembro". Cada fatura lida (dois cartões = duas) é
         // gravada já na leitura como conta a pagar no vencimento; as compras sem vencimento herdam o da fatura.
         let venFat = null;
+        // Dono 20/11 (3ª vez): o print diz só "vence 06/12"; a IA chutou 2025 e a fatura caiu no ano passado.
+        // Se o vencimento lido ficou bem no passado e um ano depois cai perto de hoje, corrige o ano do documento todo.
+        const anoErrado = ajusteDeAno(lido, hoje);
+        if (anoErrado) {
+          const velho = anoErrado.velho; const lixo = (await listar(col)).filter((x) => x.categoria === 'fatura' && String(x.vencimento || x.data) === velho);
+          for (const x of lixo) await col.doc(x.id).delete(); // a fatura gravada no ano errado sai
+        }
         // Dono 20/11 (2ª vez): "cadastrei, mas ainda aparece zerado". A IA às vezes não marca o print como fatura, não
         // acha o total ou o vencimento. Agora: cartão no texto também conta; sem total, soma as compras; sem vencimento,
         // usa o dia de vencimento do cartão cadastrado (próxima data depois de hoje).
@@ -172,18 +209,30 @@ async function agirDoc(acao, body, c) {
           const final = itensLido.map((x) => String((x && x.conta_ou_cartao) || '').match(/\d{4}/)).find(Boolean);
           const nome = [texto(lido.instituicao, 40), final ? 'final ' + final[0] : ''].filter(Boolean).join(' ') || null;
           let ven = dataLida(lido.vencimento_documento) || itensLido.map((x) => dataLida(x && x.vencimento)).filter(Boolean).sort().pop() || null;
+          // Dono 20/11: "o cartão já deveria cadastrar sozinho". Liga a fatura ao cartão: pelo final, pelo dia de
+          // vencimento ou pelo nome; se não houver nenhum, cadastra o cartão com o que a fatura mostra.
+          const cartoes = await listar(base.collection('cartoes'));
+          const k = acharCartao(cartoes, { final: final && final[0], ven, nome: `${texto(lido.cartao_nome, 60)} ${texto(lido.instituicao, 60)}` });
           if (!ven) {
-            const cartoes = await listar(base.collection('cartoes'));
-            const k = cartoes.find((x) => final && String(x.final || x.nome || '').includes(final[0])) || (cartoes.length === 1 ? cartoes[0] : null);
             const dia = k && Number(k.dia_vencimento);
             if (dia >= 1 && dia <= 31) { const [a, m] = hoje.split('-').map(Number); let t = a * 12 + (m - 1); if (dia <= Number(hoje.slice(8, 10))) t++; ven = `${Math.floor(t / 12)}-${String((t % 12) + 1).padStart(2, '0')}-${String(Math.min(28, dia)).padStart(2, '0')}`; }
           }
           venFat = ven;
+          let cartao = k;
+          if (!cartao && ven) {
+            const dv = Number(ven.slice(8, 10)); const lim = valorLido(lido.limite_documento);
+            const nomeK = (texto(lido.cartao_nome, 40) ? [texto(lido.cartao_nome, 40), texto(lido.instituicao, 20)].join(' ') : nome || 'Cartão').trim().slice(0, 60);
+            const idK = 'kc-' + nomeK.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40);
+            cartao = { id: idK, nome: nomeK, limite: Number.isFinite(lim) && lim > 0 ? Math.round(lim * 100) / 100 : 0, dia_vencimento: dv, dia_fechamento: ((dv + 23) % 31) + 1, programa_pontos: null, final: final ? final[0] : null, origem: 'leitura', criado_em: agoraIso };
+            const { id: _i, ...dadosK } = cartao; await base.collection('cartoes').doc(idK).set(dadosK); cartoes.push(cartao);
+          } else if (cartao && !(Number(cartao.limite) > 0) && valorLido(lido.limite_documento) > 0) {
+            const { id: idC, ...resto } = cartao; await base.collection('cartoes').doc(idC).set({ ...resto, limite: Math.round(valorLido(lido.limite_documento) * 100) / 100 });
+          }
           let tot = valorLido(lido.total_documento);
           if (!(Number.isFinite(tot) && tot > 0)) tot = itensLido.reduce((s, x) => { const v = valorLido(x && x.valor); const t = String((x && x.tipo) || ''); return Number.isFinite(v) ? s + (/pagamento|receita|transfer/i.test(t) ? 0 : Math.abs(v)) : s; }, 0);
           if (Number.isFinite(tot) && tot > 0) {
-            const fv = { total: Math.round(Math.abs(tot) * 100) / 100, vencimento: ven, instituicao: nome, gravada: false };
-            if (ven) { const g = await require('./faturas').agirFaturas('fatura_gravar', { nome: nome || 'Cartão', valor: fv.total, vencimento: ven }, c); fv.gravada = !!(g && g[0] === 200); }
+            const fv = { total: Math.round(Math.abs(tot) * 100) / 100, vencimento: ven, instituicao: cartao ? cartao.nome : nome, cartao_id: cartao ? cartao.id : null, cartao_novo: !!(cartao && !k), gravada: false };
+            if (ven) { const g = await require('./faturas').agirFaturas('fatura_gravar', { nome: fv.instituicao || 'Cartão', valor: fv.total, vencimento: ven, cartao_id: fv.cartao_id }, c); fv.gravada = !!(g && g[0] === 200); }
             faturas.push(fv); if (!fatura) fatura = { total: fv.total, vencimento: fv.vencimento, instituicao: fv.instituicao };
           }
         }
