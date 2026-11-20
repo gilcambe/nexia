@@ -122,13 +122,20 @@ async function agirCartoes(acao, body, c) {
   const { base, listar, agoraIso } = c;
   const mesRef = texto(body.mes, 7) || agoraIso.slice(0, 7);
   if (!MES.test(mesRef)) return [400, { error: 'O mês precisa estar no formato AAAA-MM.' }];
-  const [cartoes, gastos] = await Promise.all([listar(base.collection('cartoes')), listar(base.collection('gastos'))]);
+  const [cartoes, gastos, lancs] = await Promise.all([listar(base.collection('cartoes')), listar(base.collection('gastos')), listar(base.collection('lancamentos')).catch(() => [])]);
+  // Dono 20/11: a fatura lida (total gravado no vencimento) aparece nas Próximas faturas do cartão dela.
+  const fatLida = (id, mes) => reais(lancs.filter((l) => l.categoria === 'fatura' && l.cartao_id === id && String(l.vencimento || l.data).startsWith(mes)).reduce((s, l) => s + cent(l.valor), 0));
+  const comFatura = (id, lista) => lista.map((x) => ({ ...x, valor: Math.max(x.valor, fatLida(id, x.mes)) }));
   switch (acao) {
     case 'cartao_visao': {
       const dia = new Date(agoraIso).getUTCDate();
-      const lista = cartoes.map((k) => ({ ...k, ...limiteDoCartao(k, gastos, mesRef), fatura_mes: faturaDoMes(gastos, k.id, mesRef),
-        proximas: previsaoFaturas(gastos, k.id, mesRef, 6), vence_em_dias: (k.dia_vencimento - dia + 31) % 31,
-        retorno: retornoPct(k), anuidade_analise: k.anuidade ? custoBeneficioAnuidade(k, Number(body.gasto_anual) || faturaDoMes(gastos, k.id, mesRef) * 12) : null }));
+      const lista = cartoes.map((k) => {
+        const lim = limiteDoCartao(k, gastos, mesRef); const prox = comFatura(k.id, previsaoFaturas(gastos, k.id, mesRef, 6));
+        const comp = Math.max(lim.comprometido, reais(prox.reduce((s, x) => s + cent(x.valor), 0)));
+        return { ...k, ...lim, comprometido: comp, disponivel: reais(cent(lim.limite) - cent(comp)), pct: lim.limite > 0 ? Math.round((cent(comp) / cent(lim.limite)) * 1000) / 10 : null,
+          fatura_mes: Math.max(faturaDoMes(gastos, k.id, mesRef), fatLida(k.id, mesRef)), proximas: prox, vence_em_dias: (k.dia_vencimento - dia + 31) % 31,
+          retorno: retornoPct(k), anuidade_analise: k.anuidade ? custoBeneficioAnuidade(k, Number(body.gasto_anual) || faturaDoMes(gastos, k.id, mesRef) * 12) : null };
+      });
       return [200, { mes: mesRef, cartoes: lista, total_comprometido: reais(lista.reduce((s, k) => s + cent(k.comprometido), 0)), total_limite: reais(lista.reduce((s, k) => s + cent(k.limite || 0), 0)), melhor: melhorCartao(cartoes), aviso: 'Comprometido é estimado: soma as parcelas do mês em diante, sem saber o que já foi pago. Limite de cartão não é dinheiro.' }];
     }
     case 'cartao_simular': {

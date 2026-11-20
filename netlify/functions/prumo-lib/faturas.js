@@ -17,8 +17,13 @@ async function agirFaturas(acao, body, c) {
   const nome = String(body.nome || 'Cartão').trim().slice(0, 60) || 'Cartão';
   const id = `fat-${venc}-${slug(nome)}`;
   const hoje = require('./previsto').hojeDe(agoraIso);
+  const cartaoId = String(body.cartao_id || '').slice(0, 80) || null;
+  if (cartaoId) { // a mesma fatura gravada antes sem cartão (outro nome) é trocada por esta
+    const col = base.collection('lancamentos');
+    for (const x of await c.listar(col)) if (x.categoria === 'fatura' && x.id !== id && String(x.vencimento || x.data) === venc && (!x.cartao_id || x.cartao_id === cartaoId)) await col.doc(x.id).delete();
+  }
   await base.collection('lancamentos').doc(id).set({ data: venc, vencimento: venc, descricao: `Fatura ${nome}`, estabelecimento: nome, valor: r2(valor), tipo: 'despesa', categoria: 'fatura',
-    documento: 'fatura_total', status: require('./previsto').statusInicial(venc, hoje), origem: 'fatura', criado_em: agoraIso });
+    documento: 'fatura_total', cartao_id: cartaoId, status: require('./previsto').statusInicial(venc, hoje), origem: 'fatura', criado_em: agoraIso });
   return [200, { ok: true, id }];
 }
 
