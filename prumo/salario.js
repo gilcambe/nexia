@@ -18,7 +18,7 @@
     const rec = r.recebidos || [];
     let h = `<div class="card" id="sal-cartao"><b>Recebimentos de ${m ? `${m[2]}/${m[1]}` : esc(r.mes)}</b>`;
     h += rec.length
-      ? rec.map((x) => `<div class="item" data-pag="${esc(x.id || '')}" style="cursor:pointer"><span>${esc(nomeTipo(x.tipo))} <span class="fraco">${esc(dm(x.data_pagamento))} ✏️</span></span><span class="v">${brl(x.liquido)}</span></div>`).join('') + linha('<b>Total recebido</b>', brl(r.total_recebido))
+      ? rec.map((x) => `<div class="item" data-pag="${esc(x.id || '')}"><span>${esc(nomeTipo(x.tipo))} <span class="fraco">${esc(dm(x.data_pagamento))}</span></span><span class="v" style="display:flex;align-items:center;gap:8px">${brl(x.liquido)} <button type="button" class="btn sec mini" data-acao="salario-editar" data-id="${esc(x.id || '')}" title="Editar">✏️</button><button type="button" class="btn sec mini" data-acao="salario-remover" data-id="${esc(x.id || '')}" title="Remover">🗑</button></span></div>`).join('') + linha('<b>Total recebido</b>', brl(r.total_recebido))
       : '<p class="fraco">Nenhum recebimento lançado neste mês.</p>';
     const pt = r.ponto;
     if (pt) {
