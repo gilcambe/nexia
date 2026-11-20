@@ -18,5 +18,5 @@
 - Verificar saúde: `curl -sS -o /dev/null -w "%{http_code}\n" https://nexia.cba.studio/api/prumo`
 - Reverter commit: `git revert <sha>` ou abrir PR de reversão.
 
-<!-- Documento atualizado em 2026-11-14 -->
+<!-- Documento atualizado em 2026-11-14 (confirmado) -->
 
