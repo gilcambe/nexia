@@ -5,7 +5,7 @@
   const MB = window.MB;
   if (MB.hub) return;
   const st = document.createElement('style');
-  st.textContent = `.kh{display:grid;gap:12px}.kh .card{margin:0;border-radius:16px;padding:16px}
+  st.textContent = `.kh{display:grid;gap:12px;grid-template-columns:minmax(0,1fr)}.kh>*{min-width:0}.kh .card{margin:0;border-radius:16px;padding:16px}
 .kh h2{margin:0;font-size:18px;font-weight:600}.kh .sub{color:var(--fraco);font-size:12px}
 .kh-kpis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.kh-kpis .card{padding:12px}
 .kh-kpis .r{font-size:12px;color:var(--fraco)}.kh-kpis .v{font-size:18px;font-weight:700;font-variant-numeric:tabular-nums}
@@ -15,7 +15,7 @@
 .kh-it b{display:block;font-size:15px;font-weight:600}.kh-it span{color:var(--fraco);font-size:12px}.kh-it::after{content:'›';margin-left:auto;color:var(--fraco);font-size:22px}
 .kh-zero{color:#5D6886}.kh-in{color:#2ECC71}.kh-out{color:#F5A623}.kh-neg{color:#FF5A5F}
 .kh-ag{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid var(--borda);font-size:14px}.kh-ag:last-child{border:0}
-@media(min-width:900px){.kh{grid-template-columns:1fr 1fr;align-items:start}.kh>.kh-larga{grid-column:1/-1}.kh-kpis{grid-template-columns:repeat(4,minmax(0,1fr))}}`;
+@media(min-width:900px){.kh{grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:start}.kh>.kh-larga{grid-column:1/-1}.kh-kpis{grid-template-columns:repeat(4,minmax(0,1fr))}}`;
   if (document.head) document.head.appendChild(st);
   const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const brl = (v) => (Number(v) || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });

@@ -53,7 +53,7 @@ async function montarPainel(c) {
   const saldoBase = require('./financas').saldoDisponivel(contas).saldo;
   const marco = contas.map((k) => String(k.atualizado_em || '')).filter(Boolean).sort().pop() || '';
   const depois = (quando, data) => marco && String(quando || '') > marco && String(data || '') >= marco.slice(0, 10) && String(data || '') <= hoje;
-  const doCartao = (l) => /fatura|cartao/i.test(String(l.documento || '') + ' ' + String(l.categoria || ''));
+  const doCartao = (l) => l.meio === 'vale' || /fatura|cartao/i.test(String(l.documento || '') + ' ' + String(l.categoria || ''));
   const movLanc = reais.filter((l) => depois(l.criado_em || l.editado_em, l.data) && !doCartao(l));
   const movPag = pagamentos.filter((p) => depois(p.atualizado_em || p.criado_em, p.data_pagamento) && p.status !== 'previsto');
   const ajuste = r2(soma(movLanc.filter((l) => l.tipo === 'receita'), (l) => l.valor) - soma(movLanc.filter((l) => l.tipo === 'despesa'), (l) => l.valor) + soma(movPag, (p) => p.liquido));
@@ -187,6 +187,9 @@ async function montarPainel(c) {
     credito: sc ? { biro: sc.biro, score: sc.score, data: sc.data || null } : null,
     ultimos,
     proximas_contas,
+    proximos_meses: require('./meses').proximosMeses({ hoje, meses: 6, dividas, fixas,
+      futuros: prv.previstos(lancs, 'data', hoje).filter((l) => l.tipo === 'despesa'),
+      faturas: Object.entries(faturasLidas).map(([v, x]) => ({ vencimento: v, valor: x })) }),
   };
   // Fase 7: motor de decisões. Avisos urgentes primeiro, depois as dicas; no máximo 3; "dispensar" vale 30 dias.
   const dispensados = (insS && insS.exists && (insS.data() || {}).dispensados) || {};

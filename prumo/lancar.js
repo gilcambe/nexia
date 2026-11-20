@@ -65,6 +65,7 @@
         <button type="button" class="kl-op" data-o="pdf"><i>📄</i><b>PDF</b><span>Fatura, holerite, INSS, FGTS</span></button>
         <button type="button" class="kl-op" data-o="extrato"><i>🏦</i><b>Extrato do banco</b><span>Arquivo .ofx ou .csv</span></button>
         <button type="button" class="kl-op" data-o="digitar"><i>✍️</i><b>Digitar rápido</b><span>Um gasto ou uma entrada</span></button>
+        <button type="button" class="kl-op" data-o="vale" style="grid-column:1/-1;min-height:60px"><i>🍽️</i><b>Gasto no vale refeição</b><span>Ticket, VR, Alelo, Sodexo</span></button>
       </div>
       <input type="file" id="kl-arq" multiple hidden><div class="kl-msg" id="kl-msg"></div></div>`;
     document.body.appendChild(f);
@@ -78,6 +79,7 @@
     f.querySelector('[data-o=pdf]').onclick = () => { modo = 'pdf'; escolher('application/pdf,.pdf'); };
     f.querySelector('[data-o=extrato]').onclick = () => { modo = 'extrato'; escolher('.ofx,.csv'); };
     f.querySelector('[data-o=digitar]').onclick = () => digitar(f, antesP);
+    f.querySelector('[data-o=vale]').onclick = () => { fechar(f); MB.abrirAba('beneficios'); };
     arq.onchange = async (ev) => {
       const arqs = [...((ev && ev.target && ev.target.files) || arq.files || [])].slice(0, 5);
       if (!arqs.length) return;
