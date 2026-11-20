@@ -43,7 +43,7 @@ function estadoTarefa(issue, agora = Date.now(), cfg = { minutosParada: 30, maxT
 
   const m = motivoDe(issue);
   let motivo = m.texto;
-  if (estado === 'travada' && !ls.includes('cortex-travado') && (cortexRodando || aguardandoIa) && diffMin > cfg.minutosParada) {
+  if (estado === 'travada' && !ls.includes('cortex-travado') && (cortexRodando || aguardandoIa)) {
     motivo = `Sem atividade há ${Math.round(diffMin)} min. A IA pode ter parado.`;
   }
 
