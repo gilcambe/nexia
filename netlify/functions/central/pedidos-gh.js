@@ -5,7 +5,7 @@
 const REPO = 'gilcambe/nexia';
 const API = 'https://api.github.com';
 
-const { estadoTarefa } = require('./estado-tarefas');
+const { estadoTarefa, estadoTarefas } = require('./estado-tarefas');
 
 const nomes = (i) => (i.labels || []).map((l) => l.name || l);
 const tentativas = (i) => {
@@ -31,6 +31,7 @@ async function lista(estadoFiltro = 'todas') {
   const issues = await response.json();
   
   const processadas = issues.map(resumo);
+  const contagens = estadoTarefas(issues);
   
   if (estadoFiltro === 'todas') return processadas;
   
