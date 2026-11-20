@@ -36,11 +36,10 @@ async function lista(estadoFiltro = 'todas') {
   if (estadoFiltro === 'todas') return processadas;
   
   return processadas.filter(i => {
-    const e = estadoTarefa(i);
-    if (estadoFiltro === 'andamento') return e.estado === 'andamento';
-    if (estadoFiltro === 'travadas') return e.estado === 'travada';
-    if (estadoFiltro === 'concluidas') return e.estado === 'concluida';
-    if (estadoFiltro === 'precisa') return e.precisaVoce;
+    if (estadoFiltro === 'andamento') return i.estado === 'andamento';
+    if (estadoFiltro === 'travadas') return i.estado === 'travada';
+    if (estadoFiltro === 'concluidas') return i.estado === 'concluida';
+    if (estadoFiltro === 'precisa') return i.precisaVoce;
     return true;
   });
 }
