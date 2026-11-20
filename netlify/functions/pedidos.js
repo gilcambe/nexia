@@ -31,6 +31,12 @@ function createHandler(deps = {}) {
         const qs = event.queryStringParameters || {};
         if (qs.deploy) return res(200, await require('./central/pedidos-publicar').situacao(p.gh));
         if (qs.n) return res(200, await p.detalhe(qs.n));
+        if (qs.ias) {
+          const { iasAgora, carregar } = require('./central/ias-agora');
+          const data = await carregar(p.gh, process.env);
+          const { resumoDia } = require('./central/ias-agora'); // Ajuste conforme export
+          return res(200, { ias: iasAgora(data), resumo: resumoDia(data.itens, iasAgora(data)) });
+        }
         return res(200, await p.lista({ q: qs.q, estado: qs.estado, pagina: qs.pagina }));
       }
       let b = {};
