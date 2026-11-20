@@ -131,10 +131,9 @@ export default function Painel({ d, erros, avisos, ir, conferir, carregando, abr
   // #3446: o servidor já calcula qual cota está mais pesada hoje (maior porcentagem).
   // Sem esse dado (versão antiga do servidor), cai no cálculo local, como antes.
   const maiorCota = cotas.slice().sort((a, b) => (b.pct || 0) - (a.pct || 0))[0];
-  // Cartão "Uso do servidor hoje": mostra a porcentagem de leituras do Firestore, que o servidor
-  // já expõe em d.cotas.usoServidor (lib/cotas.js, usoServidorHoje). Sem esse dado (versão antiga
-  // do servidor ou leituras não medidas), cai no maior uso do dia.
-  const usoServidor = d.cotas?.usoServidor || maiorCota;
+  // Uso do servidor hoje: mostra a porcentagem do servidor, que o servidor
+  // já expõe em d.cotas.usoServidor (lib/cotas.js, usoServidorHoje).
+  const usoServidor = d.cotas?.usoServidor;
   const usoIa = (d.clientes?.usoIa?.porProvedor || []).filter((p) => p.usado > 0);
   const totalIa = usoIa.reduce((s, p) => s + p.usado, 0);
   const forn = d.empresa?.fornecedores || [];
@@ -506,7 +505,6 @@ export default function Painel({ d, erros, avisos, ir, conferir, carregando, abr
               valor={usoServidor ? `${Math.round(usoServidor.pct || 0)}%` : null} sub={usoServidor ? `${usoServidor.nome} · ${usoServidor.usado} de ${usoServidor.limite}` : ""}
               pct={usoServidor ? usoServidor.pct : null} barra={usoServidor && (usoServidor.pct || 0) >= 80 ? "bg-amber-500" : "bg-sky-500"}
               conta={usoServidor ? `${usoServidor.usado} de ${usoServidor.limite}` : ""} />
-            {/* O cartão "Cota de IA" foi unificado neste ("Uso do servidor hoje") para não haver dois cards com o mesmo número. */}
             <Numero titulo="Alertas" icone="alerta" cor="from-orange-400 to-amber-500" onClick={() => abrirAlerta(null)}
               valor={d.saude ? avisos.length : null} sub={avisos.length ? "precisam de você" : "nada pendente"} />
           </div>
