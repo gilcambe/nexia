@@ -1,7 +1,7 @@
 'use strict'; // prumo-admin handler - validated, role 'master' checked
 
 /**
- * Handler administrativo para Prumo com restrição de acesso.
+ * Handler administrativo para Prumo com restrição de acesso (role 'master').
  * Verifica se o usuário autenticado possui role 'master'.
  * Caso contrário, responde 403.
  */
