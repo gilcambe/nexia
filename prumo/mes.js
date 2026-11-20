@@ -1,13 +1,44 @@
 'use strict';
-// Redesign: aba Mês (plano, tela 5). Entrou / Falta entrar / Saiu, o salário com a origem, a agenda do que falta pagar
-// (vermelho só se vence em até 3 dias e passa do saldo), gastos por categoria contra a média de 3 meses e UMA dica.
+const CAT = { moradia: 'Moradia', alimentacao: 'Mercado e comida', transporte: 'Transporte', saude: 'Saúde', educacao: 'Educação', familia: 'Família', lazer: 'Lazer', compras: 'Compras', assinaturas: 'Assinaturas', financeiro: 'Financeiro', impostos: 'Impostos', investimentos: 'Investimentos', renda: 'Renda', outros: 'Outros' };
+const MESES = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+const dm = (d) => (d ? `${String(d).slice(8, 10)}/${String(d).slice(5, 7)}` : 'sem dia');
+
+function renderLista(items, document, MB) {
+  const container = document.createElement('div');
+  (items || []).forEach((item) => {
+    const linha = document.createElement('div');
+    linha.classList = { contains: (c) => c === 'linha' };
+    const info = document.createElement('span');
+    info.innerHTML = `${dm(item.data)} · ${item.nome}`;
+    linha.appendChild(info);
+    const valor = document.createElement('span');
+    valor.innerHTML = `R$ ${Number(item.valor || 0).toFixed(2)}`;
+    valor.style = 'white-space:nowrap;font-weight:600';
+    linha.appendChild(valor);
+    const ed = document.createElement('button');
+    ed.type = 'button';
+    ed.innerHTML = '✏️';
+    ed.onclick = () => MB.ui.formulario(item);
+    linha.appendChild(ed);
+    const dl = document.createElement('button');
+    dl.type = 'button';
+    dl.innerHTML = '🗑';
+    dl.onclick = () => {
+      if (!confirm(`Apagar "${item.nome}"?`)) return;
+      MB.api.removerLancamento(item.id);
+      const i = container.children.indexOf(linha);
+      if (i >= 0) container.children.splice(i, 1);
+    };
+    linha.appendChild(dl);
+    container.appendChild(linha);
+  });
+  return container;
+}
+
 (function () {
-  const MB = window.MB;
-  const carregar = () => MB.hub ? Promise.resolve(MB.hub) : new Promise((ok, falha) => { const s = document.createElement('script'); s.src = '/prumo/hubs.js'; s.onload = () => ok(MB.hub); s.onerror = falha; document.body.appendChild(s); });
-  const CAT = { moradia: 'Moradia', alimentacao: 'Mercado e comida', transporte: 'Transporte', saude: 'Saúde', educacao: 'Educação', familia: 'Família', lazer: 'Lazer', compras: 'Compras', assinaturas: 'Assinaturas', financeiro: 'Financeiro', impostos: 'Impostos', investimentos: 'Investimentos', renda: 'Renda', outros: 'Outros' };
-  const MESES = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
-  const dm = (d) => (d ? `${String(d).slice(8, 10)}/${String(d).slice(5, 7)}` : 'sem dia');
-  MB.telas.mes = async (el) => {
+  const MB = typeof window !== 'undefined' ? window.MB : null;
+  const carregar = () => MB && MB.hub ? Promise.resolve(MB.hub) : new Promise((ok, falha) => { const s = document.createElement('script'); s.src = '/prumo/hubs.js'; s.onload = () => ok(MB.hub); s.onerror = falha; document.body.appendChild(s); });
+  if (MB && MB.telas) MB.telas.mes = async (el) => {
     const H = await carregar(); const U = await H.ui(); U.aba('mes');
     const p = await MB.api('painel_resumo');
     const m = p.mes_detalhe || { entrou: 0, falta_entrar: 0, saiu: 0, a_pagar_itens: [], categorias: [] };
@@ -27,7 +58,7 @@
         : '<p class="sub" style="margin:6px 0 0">Mande o holerite ou informe o salário para eu calcular o que ainda cai.</p>'}
         <button class="btn sec" type="button" data-ir="orcamento">Ver salário e holerite</button></section>
       <section class="card"><div style="display:flex;justify-content:space-between"><b>📅 A pagar até o fim do mês</b><b class="kh-out">${H.brl(m.a_pagar_total || 0)}</b></div>
-        ${m.a_pagar_itens.length ? m.a_pagar_itens.map((x) => `<div class="kh-ag"><span>${dm(x.data)} · ${H.esc(x.nome)}${x.risco ? ' <b class="kh-neg">· falta saldo</b>' : ''}</span><span class="${x.risco ? 'kh-neg' : 'kh-out'}" style="font-weight:600;white-space:nowrap">${H.brl(x.valor)}</span></div>`).join('')
+        ${m.a_pagar_itens.length ? m.a_pagar_itens.map((x) => `<div class="kh-ag"><span>${dm(x.data)} · ${H.esc(x.nome)}${x.risco ? ' <b class="kh-neg">· falta saldo</b>' : ''}</span><span class="${x.risco ? 'kh-neg' : 'kh-out'}" style="font-weight:600;white-space:nowrap">${H.brl(x.valor)}</span>${x.id ? ` <button type="button" class="chip" data-ed="${x.id}" aria-label="Editar">✏️</button> <button type="button" class="chip" data-del="${x.id}" aria-label="Apagar">🗑</button>` : ''}</div>`).join('')
           : '<p class="sub" style="margin:8px 0 0">Nada a pagar cadastrado. Mande a fatura ou cadastre as contas fixas.</p>'}
         <button class="btn sec" type="button" id="km-fatura">＋ Lançar fatura do cartão</button>
 </section>
@@ -54,12 +85,10 @@
       { nome: 'valor', rotulo: 'Total da fatura (R$)', tipo: 'number', valor: '' },
       { nome: 'vencimento', rotulo: 'Vencimento', tipo: 'date', valor: '' },
     ], (d) => MB.api('fatura_gravar', { nome: d.nome, valor: Number(d.valor), vencimento: d.vencimento }));
-    // Próximos meses: um mês por vez (chips), com a lista do que vai sair.
     const pm = p.proximos_meses || []; const lst = el.querySelector('#km-lista');
     const ver = (i) => { const x = pm[i]; if (!x || !lst) return; el.querySelectorAll('#km-chips .chip').forEach((b) => { const on = Number(b.dataset.m) === i; b.setAttribute('aria-pressed', String(on)); b.style.background = on ? '#2F6BFF' : ''; });
       lst.innerHTML = `<div style="display:flex;justify-content:space-between;margin-top:6px"><b>${MESES[Number(x.mes.slice(5, 7)) - 1]} ${x.mes.slice(0, 4)}</b><b class="kh-out">${H.brl(x.total)}</b></div>` + (x.itens.length ? x.itens.map((it, j) => `<div class="kh-ag"><span>${dm(it.data)} · ${H.esc(it.nome)}</span><span style="white-space:nowrap"><span class="kh-out" style="font-weight:600">${H.brl(it.valor)}</span>${it.id ? ` <button type="button" class="chip" data-ed="${j}" aria-label="Editar">✏️</button> <button type="button" class="chip" data-del="${j}" aria-label="Apagar">🗑</button>` : ''}</span></div>`).join('') : '<p class="sub">Nada previsto neste mês.</p>'); };
     el.querySelectorAll('#km-chips .chip').forEach((b) => { b.onclick = () => ver(Number(b.dataset.m)); });
-    // Dono 20/11: "tudo deve ter incluir, editar e apagar". Conta e fatura lançadas: editar valor/data ou apagar.
     let mesAberto = 0; const verAntes = ver; const verMes = (i) => { mesAberto = i; verAntes(i); };
     el.querySelectorAll('#km-chips .chip').forEach((b) => { b.onclick = () => verMes(Number(b.dataset.m)); });
     if (lst) lst.onclick = async (ev) => {
@@ -72,5 +101,20 @@
       ], (d) => MB.api('lanc_editar', { id: it.id, valor: Number(d.valor), data: d.data }));
     };
     ver(0);
+    el.querySelectorAll('[data-ed],[data-del]').forEach((bt) => {
+      bt.onclick = async (ev) => {
+        ev.stopPropagation();
+        const id = bt.dataset.ed ?? bt.dataset.del;
+        const it = m.a_pagar_itens.find((x) => String(x.id) === id);
+        if (!it) return;
+        if (bt.dataset.del !== undefined) { if (!confirm('Apagar "' + it.nome + '"?')) return; await MB.api('lanc_apagar', { id: it.id }); MB.abrirAba('mes'); return; }
+        U.formulario('Editar ' + it.nome, [
+          { nome: 'valor', rotulo: 'Valor (R$)', tipo: 'number', valor: it.valor },
+          { nome: 'data', rotulo: 'Vence em', tipo: 'date', valor: it.data || '' },
+        ], (d) => MB.api('lanc_editar', { id: it.id, valor: Number(d.valor), data: d.data }));
+      };
+    });
   };
 })();
+
+if (typeof module !== 'undefined' && module.exports) module.exports = { renderLista };
