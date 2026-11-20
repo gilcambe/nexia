@@ -18,7 +18,7 @@
         <div class="fraco" style="margin-top:4px">Fatura de cartão em dia não entra aqui; só o que você cadastrar.</div></div>
       <button class="btn" id="nova-div" type="button">+ Dívida</button>
       ${!d.dividas.length ? `<button class="btn sec" id="sem-div" type="button" style="margin-top:8px">${d.sem_dividas ? 'Desfazer: voltei a ter dívida' : 'Não tenho dívidas'}</button>` : ''}
-      ${d.dividas.length ? `<div class="card" style="margin-top:12px">${d.dividas.map((x) => `<div class="item" data-id="${esc(x.id)}"><div><div class="n">${esc(x.credor)}</div><div class="fraco">${esc(d.tipos[x.tipo] || x.tipo)} · juros ${pct(x.juros_mes)}% ao mês${x.cet_ano ? ' · CET ' + pct(x.cet_ano) + '% ao ano' : ''}${x.parcela ? ' · parcela ' + brl(x.parcela) : ''}</div></div><div style="text-align:right"><div class="v verm">${brl(x.saldo)}</div><button class="btn sec mini" data-reneg="${esc(x.id)}" type="button">Renegociar</button></div></div>`).join('')}</div>
+      ${d.dividas.length ? `<div class="card" style="margin-top:12px">${d.dividas.map((x) => `<div class="item" data-id="${esc(x.id)}"><div><div class="n">${esc(x.credor)}</div><div class="fraco">${esc(d.tipos[x.tipo] || x.tipo)} · juros ${pct(x.juros_mes)}% ao mês${x.cet_ano ? ' · CET ' + pct(x.cet_ano) + '% ao ano' : ''}${x.parcela ? ' · parcela ' + brl(x.parcela) : ''}</div></div><div style="text-align:right"><div class="v verm">${brl(x.saldo)}</div><button class="btn sec mini" data-ed="${esc(x.id)}" type="button" aria-label="Editar">✏️</button> <button class="btn sec mini" data-del="${esc(x.id)}" type="button" aria-label="Apagar">🗑️</button><button class="btn sec mini" data-reneg="${esc(x.id)}" type="button">Renegociar</button></div></div>`).join('')}</div>
       <div class="card"><h3 style="margin:0 0 6px">🧮 Plano de quitação</h3>
         <div class="fraco">Compara pagar só o mínimo, avalanche (maior juros primeiro) e bola de neve (menor dívida primeiro).</div>
         <label>Extra por mês (R$)</label><input id="pl-extra" type="number" step="0.01" inputmode="decimal" placeholder="0">
@@ -41,9 +41,8 @@
       aoLer: (l) => { const d0 = l.divida; const ja = d.dividas.find((x) => d0.credor && String(x.credor).toLowerCase() === String(d0.credor).toLowerCase()); editar({ ...(ja || {}), ...d0, id: ja && ja.id }, true); } });
     const sem = el.querySelector('#sem-div');
     if (sem) sem.onclick = async () => { await MB.api('divida_nenhuma', { sem: !d.sem_dividas }); MB.abrirAba('dividas'); };
-    el.querySelectorAll('.item[data-id]').forEach((i) => {
-      i.onclick = () => editar(d.dividas.find((y) => y.id === i.dataset.id));
-    });
+    el.querySelectorAll('[data-ed]').forEach((b) => { b.onclick = (ev) => { ev.stopPropagation(); editar(d.dividas.find((y) => y.id === b.dataset.ed)); }; });
+    el.querySelectorAll('[data-del]').forEach((b) => { b.onclick = async (ev) => { ev.stopPropagation(); const x = d.dividas.find((y) => y.id === b.dataset.del); if (confirm('Apagar "' + x.credor + '"?')) { await MB.api('divida_apagar', { id: x.id }); MB.abrirAba('dividas'); } }; });
     el.querySelectorAll('[data-reneg]').forEach((b) => { b.onclick = (ev) => { ev.stopPropagation(); renegociar(d.dividas.find((y) => y.id === b.dataset.reneg)); }; });
 
     function renegociar(x) {
