@@ -39,6 +39,8 @@ function estadoTarefa(issue, agora = Date.now(), cfg = { minutosParada: 30, maxT
     if (ls.includes('jules-enviado') || ls.includes('cortex-jules')) ia = 'Jules';
     else if (ls.includes('reserva-tentou') || ls.includes('reserva-volta')) ia = 'IAs grátis';
     else if (ls.includes('vez-do-claude')) ia = 'Claude';
+  } else {
+    estado = 'fila';
   }
 
   const m = motivoDe(issue);
