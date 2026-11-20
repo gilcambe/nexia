@@ -24,6 +24,16 @@
       ${r.conferir.length ? `<div class="aviso-c" style="margin-top:10px">⚠️ ${r.conferir.length} item(ns) precisam da sua conferência. Eles NÃO entram na conta até você marcar.</div>` : ''}
       <div id="kf-linhas">${linhas.length ? linhas.map(linha).join('') : '<p class="fraco">Não encontrei lançamentos neste documento.</p>'}</div>
       ${linhas.length ? '<button class="btn" id="kf-grava" type="button" style="margin-top:12px">Confirmar e gravar marcados</button>' : ''}</div>`;
+    // Dono 19-20/11: a fatura lida vira conta a pagar no vencimento (total da fatura), não só as compras.
+    if (r.fatura && r.fatura.total > 0) {
+      const fv = r.fatura; const dmv = fv.vencimento ? fv.vencimento.slice(8, 10) + '/' + fv.vencimento.slice(5, 7) : '';
+      res.insertAdjacentHTML('afterbegin', `<div class="card" id="kf-fat-total" style="border-color:#2F6BFF"><b>💳 Fatura ${esc(fv.instituicao || '')}: ${brl(fv.total)}${dmv ? ', vence ' + dmv : ''}</b><div class="fraco">Grave o total para ele aparecer no "A pagar" e em "Próximos meses".</div><button class="btn" type="button" id="kf-fat-gravar" style="margin-top:8px">Gravar a fatura no A pagar</button></div>`);
+      res.querySelector('#kf-fat-gravar').onclick = async (ev) => { // grava direto (o formulário recarregaria a tela e perderia a lista de compras)
+        if (!fv.vencimento) { ok('Não li o vencimento: use "Lançar fatura" na aba Mês.'); return; }
+        const bt = ev.currentTarget; bt.disabled = true;
+        try { await MB.api('fatura_gravar', { nome: fv.instituicao || 'Cartão', valor: fv.total, vencimento: fv.vencimento }); const c = res.querySelector('#kf-fat-total'); if (c) c.innerHTML = `<b>✅ Fatura de ${brl(fv.total)} gravada no A pagar (vence ${dmv}).</b><div class="fraco">Agora confira as compras abaixo.</div>`; } catch { bt.disabled = false; }
+      };
+    }
     const g = res.querySelector('#kf-grava');
     if (!g) return;
     g.onclick = async () => {
