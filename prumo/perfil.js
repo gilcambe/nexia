@@ -75,7 +75,11 @@
             onSuccess: async (dados) => { const item = (dados && (dados.item || dados)) || {}; await MB.api('pluggy_item_salvar', { itemId: item.id }); try { localStorage.setItem('kf-pluggy', '1'); } catch { /* segue */ } const r = await MB.api('pluggy_sincronizar').catch(() => null); desenharOF(r ? `✅ Banco conectado: ${r.novos} lançamento(s) entraram.` : '✅ Banco conectado.'); },
             onError: () => { desenharOF('Não deu para conectar agora. Tente de novo.'); } });
           w.init();
-        } catch { bt.disabled = false; bt.textContent = 'Conectar banco'; }
+        } catch (e) {
+          bt.disabled = false; bt.textContent = 'Conectar banco';
+          const d = e && e.dados; // diagnóstico sem a chave: em que passo falhou e o tamanho de cada chave
+          if (d && d.etapa) of.insertAdjacentHTML('afterbegin', `<div class="aviso-c">${H.esc(d.error || '')}<br><span class="sub">Diagnóstico: passo ${H.esc(d.etapa)}, erro ${H.esc(d.status)}, Client ID com ${H.esc(d.tamanho_id)} caracteres, Client Secret com ${H.esc(d.tamanho_segredo)}.</span></div>`);
+        }
       };
     };
     desenharOF('');
