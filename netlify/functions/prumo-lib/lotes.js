@@ -1,12 +1,18 @@
 'use strict';
 // Redesign fase 3 (QA do plano): cada documento gravado vira um LOTE; apagar o lote apaga os lançamentos que vieram dele.
 // O lote é criado por documentos.js (doc_confirmar) via registrar(); aqui ficam listar e apagar.
+const ORIGEM = { extrato: 'Extrato do banco', fatura: 'Fatura do cartão', fatura_cartao: 'Fatura do cartão', comprovante: 'Comprovante', nota: 'Nota fiscal', boleto: 'Boleto', recibo: 'Recibo', conta: 'Conta de consumo', manual: 'Digitado', vale: 'Vale refeição', openfinance: 'Open Finance' };
 const r2 = (n) => Math.round((Number(n) || 0) * 100) / 100;
 
 async function registrar(base, { id, nome, agoraIso, itens }) {
   const dm = `${agoraIso.slice(8, 10)}/${agoraIso.slice(5, 7)}`;
   const soma = (t) => r2(itens.filter((x) => x.tipo === t).reduce((s, x) => s + (Number(x.valor) || 0), 0));
-  const lote = { id, nome: (typeof nome === 'string' && nome.trim() ? nome.trim().slice(0, 80) : `Documento de ${dm}`), criado_em: agoraIso, qtd: itens.length, receitas: soma('receita'), despesas: soma('despesa') };
+  // Plano "sem Pluggy": cada importação mostra a origem, o período coberto e quando entrou.
+  const datas = itens.map((x) => String(x.data || '').slice(0, 10)).filter(Boolean).sort();
+  const conta = {}; for (const x of itens) { const k = String(x.documento || 'outro'); conta[k] = (conta[k] || 0) + 1; }
+  const doc = Object.entries(conta).sort((a, b) => b[1] - a[1])[0];
+  const origem = ORIGEM[doc ? doc[0] : ''] || 'Documento';
+  const lote = { id, nome: (typeof nome === 'string' && nome.trim() ? nome.trim().slice(0, 80) : `${origem} de ${dm}`), origem, de: datas[0] || null, ate: datas[datas.length - 1] || null, criado_em: agoraIso, qtd: itens.length, receitas: soma('receita'), despesas: soma('despesa') };
   await base.collection('lotes').doc(id).set(lote);
   return lote;
 }

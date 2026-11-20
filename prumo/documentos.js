@@ -21,6 +21,7 @@
     res.innerHTML = `<div class="card"><h3 style="margin:0 0 4px">${esc(DOC[r.documento] || 'Documento')} lido</h3>
       <div class="fraco">${r.imagens_lidas} de ${r.imagens_total} imagem(ns) lida(s)${r.ja_lancados ? ` · ${r.ja_lancados} já estavam lançados e foram ignorados` : ''}</div>
       <div class="fraco" style="margin-top:6px">Prontos somam: entradas ${brl(r.receitas)} · gastos ${brl(r.despesas)}</div>
+      ${(() => { const ds = linhas.map((l) => String(l.data || '').slice(0, 10)).filter((d) => /^\d{4}-/.test(d)).sort(); const dm = (d) => d.slice(8, 10) + '/' + d.slice(5, 7) + '/' + d.slice(0, 4); return `<div class="aviso-c" style="margin-top:8px;background:#14203F;border-color:#2F6BFF;color:var(--texto)">${ds.length ? `Período: ${dm(ds[0])} a ${dm(ds[ds.length - 1])}<br>` : ''}🆕 ${r.prontos.length} novo(s) · 🔁 ${r.ja_lancados || 0} já estavam no app (não entram de novo) · ⚠️ ${r.conferir.length} para conferir</div>`; })()}
       ${r.conferir.length ? `<div class="aviso-c" style="margin-top:10px">⚠️ ${r.conferir.length} item(ns) precisam da sua conferência. Eles NÃO entram na conta até você marcar.</div>` : ''}
       <div id="kf-linhas">${linhas.length ? linhas.map(linha).join('') : '<p class="fraco">Não encontrei lançamentos neste documento.</p>'}</div>
       ${linhas.length ? '<button class="btn" id="kf-grava" type="button" style="margin-top:12px">Confirmar e gravar marcados</button>' : ''}</div>`;
