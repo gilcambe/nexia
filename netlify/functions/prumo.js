@@ -507,7 +507,7 @@ async function gravarHistorico(base) {
   await base.collection('historico').doc(data).set({ data, ...fotoDoDia(itens) });
 }
 
-async function agir(uid, body) {
+async function agir(uid, body, quem = {}) {
   const db = deps.db();
   if (!db) return [503, { error: 'Banco fora do ar agora. Tente de novo em alguns minutos.' }];
   const base = db.collection('prumo_users').doc(uid);
@@ -525,7 +525,7 @@ async function agir(uid, body) {
   // 17/11 (lento no celular do dono): numa ação que só LÊ, a mesma coleção é lida uma vez só por chamada (o resumo do
   // Início e o fluxo liam as mesmas 9 coleções de novo; o Worker só abre 6 conexões por vez).
   const listarReq = LEITURA_MEMO.test(String(body.acao || '')) ? memoListar() : listar;
-  const ctx = { uid, base, listar: listarReq, listarCarteira: async () => semDuplicados(await listarReq(base.collection('carteira'))), salvar, apagar, deps, agoraIso, lerImagens, extrairJson, resumoMes, progressoObjetivos, resumoHistorico };
+  const ctx = { uid, master: !!quem.master, base, listar: listarReq, listarCarteira: async () => semDuplicados(await listarReq(base.collection('carteira'))), salvar, apagar, deps, agoraIso, lerImagens, extrairJson, resumoMes, progressoObjetivos, resumoHistorico };
   switch (body.acao) {
     case 'carteira_listar': return [200, { itens: (await listarCarteira(base)).sort((a, b) => String(a.nome).localeCompare(String(b.nome), 'pt-BR')) }];
     case 'carteira_salvar': {
@@ -588,7 +588,7 @@ async function agir(uid, body) {
       const im = lerImagens(body.imagens);
       if (!im.ok) return [400, { error: im.erro }];
       const aj = require('./prumo-lib/ajuda');
-      const lim = await aj.contarLeitura(base, agoraIso, im.imagens.length);
+      const lim = await aj.contarLeitura(base, agoraIso, im.imagens.length, !!quem.master);
       if (!lim.ok) return [429, { error: aj.msgLimite(lim) }];
       const r = await lerPrint(im.imagens, deps);
       return r ? [200, r] : [503, { error: 'Não consegui ler agora. Tente de novo ou digite os valores.' }];
@@ -627,7 +627,7 @@ exports.handler = async (event) => {
   let body;
   try { body = JSON.parse(event.body || '{}') || {}; } catch { return responder(event, 400, { error: 'Pedido inválido.' }); }
   try {
-    const [status, corpo] = await agir(auth.uid, body);
+    const [status, corpo] = await agir(auth.uid, body, { master: auth.role === 'master' }); // dono 20/11: o administrador não tem limite de leituras
     return responder(event, status, corpo);
   } catch (e) {
     console.error('[prumo] erro', body && body.acao, e && e.code);   // sem valores da pessoa
