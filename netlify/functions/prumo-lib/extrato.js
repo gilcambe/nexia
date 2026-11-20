@@ -15,13 +15,21 @@ function numero(v) {
   return Number(t);
 }
 
-/** "AAAA-MM-DD", "DD/MM/AAAA" ou "AAAAMMDD..." -> "AAAA-MM-DD"; data impossível -> ''. */
+/** "AAAA-MM-DD", "DD/MM/AAAA", "MM/DD'AA" ou "AAAAMMDD..." -> "AAAA-MM-DD"; data impossível -> ''. */
 function data(v) {
   const t = String(v == null ? '' : v).trim();
   let a, m, d;
-  let x = /^(\d{4})-(\d{2})-(\d{2})/.exec(t);
+  let x = /^(\d{4})[-/](\d{2})[-/](\d{2})/.exec(t);
   if (x) [, a, m, d] = x;
-  else if ((x = /^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/.exec(t))) { [, d, m, a] = x; if (a.length === 2) a = '20' + a; }
+  else if ((x = /^(\d{1,2})\s*\/\s*(\d{1,2})\s*'\s*(\d{2,4})$/.exec(t))) {
+    [, m, d, a] = x;
+    if (a.length === 2) a = '20' + a;
+  }
+  else if ((x = /^(\d{1,2})\s*[/.-]\s*(\d{1,2})\s*[/.-]\s*(\d{2,4})$/.exec(t))) {
+    [, d, m, a] = x;
+    if (a.length === 2) a = '20' + a;
+    if (Number(m) > 12 && Number(d) <= 12) { const tmp = d; d = m; m = tmp; }
+  }
   else if ((x = /^(\d{4})(\d{2})(\d{2})/.exec(t))) [, a, m, d] = x;
   else return '';
   const mm = Number(m), dd = Number(d);
@@ -74,16 +82,95 @@ function lerCSV(texto) {
   });
 }
 
+/** QIF (Quicken Interchange Format). */
+function lerQIF(texto) {
+  const out = [];
+  const linhas = String(texto || '').split(/\r?\n/);
+  let d = '', t = null, u = null, p = '', m = '';
+  const salva = () => {
+    const v = t !== null && !isNaN(t) ? t : u;
+    if (d || p || m || (v !== null && !isNaN(v))) {
+      out.push({
+        data: d || '',
+        valor: v !== null && Number.isFinite(v) ? r2(v) : NaN,
+        descricao: p || m || '',
+      });
+    }
+    d = ''; t = null; u = null; p = ''; m = '';
+  };
+  for (const l of linhas) {
+    const s = l.trim();
+    if (!s || s.startsWith('!')) continue;
+    if (s === '^') { salva(); continue; }
+    const code = s[0];
+    const val = s.slice(1).trim();
+    if (code === 'D') d = data(val);
+    else if (code === 'T') t = numero(val);
+    else if (code === 'U') u = numero(val);
+    else if (code === 'P') p = val;
+    else if (code === 'M') m = val;
+  }
+  salva();
+  return out;
+}
+
+/** CAMT.053 (XML ISO 20022). */
+function lerCAMT(texto) {
+  const out = [];
+  const blocos = String(texto || '').split(/<Ntry[>\s]/i).slice(1);
+  const unxml = (s) => String(s || '').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&apos;/g, "'").trim();
+  for (const b0 of blocos) {
+    const b = b0.split(/<\/Ntry>/i)[0];
+    const tag = (n) => {
+      const m = new RegExp(`<${n}(?:\\s+[^>]*)?>([\\s\\S]*?)<\\/${n}>`, 'i').exec(b)
+        || new RegExp(`<${n}(?:\\s+[^>]*)?>([^<\\r\\n]*)`, 'i').exec(b);
+      return m ? m[1].trim() : '';
+    };
+    const bookg = (/<BookgDt(?:\s+[^>]*)?>([\s\S]*?)<\/BookgDt>/i.exec(b) || [])[1];
+    const valdt = (/<ValDt(?:\s+[^>]*)?>([\s\S]*?)<\/ValDt>/i.exec(b) || [])[1];
+    const extraiDt = (bloco) => {
+      if (!bloco) return '';
+      const m = /<(?:Dt|DtTm)(?:\s+[^>]*)?>([^<]+)/i.exec(bloco);
+      return m ? m[1].trim() : '';
+    };
+    const dtRaw = extraiDt(bookg) || extraiDt(valdt) || tag('Dt') || tag('DtTm');
+    const dt = data(dtRaw);
+
+    const amt = numero(tag('Amt'));
+    const ind = tag('CdtDbtInd').toUpperCase();
+    let v = Number.isFinite(amt) ? Math.abs(amt) : NaN;
+    if (ind === 'DBIT') v = -v;
+
+    const desc = unxml(tag('Ustrd') || tag('AddtlNtryInf'));
+    const id = unxml(tag('AcctSvcrRef') || tag('NtryRef'));
+
+    out.push({
+      data: dt,
+      valor: Number.isFinite(v) ? r2(v) : NaN,
+      descricao: desc,
+      id_banco: id,
+    });
+  }
+  return out;
+}
+
 async function agirExtrato(acao, body, c) {
   if (acao !== 'extrato_ler') return null;
   const conteudo = typeof body.conteudo === 'string' ? body.conteudo : '';
   if (conteudo.length > MAX) return [400, { error: 'Arquivo grande demais. Exporte um período menor (até 2 MB).' }];
   const nome = sem(body.nome);
   const ehOFX = /\.ofx$/.test(nome) || /<OFX|OFXHEADER/i.test(conteudo.slice(0, 2000));
-  const ehCSV = !ehOFX && /\.csv$/.test(nome);
-  if (!ehOFX && !ehCSV) return [400, { error: 'Mande o extrato em arquivo .ofx ou .csv (o banco gera no app ou no site).' }];
-  const linhas = ehOFX ? lerOFX(conteudo) : lerCSV(conteudo);
-  if (!linhas.length) return [400, { error: 'Não achei lançamentos neste arquivo. Confira se é o extrato em OFX ou CSV.' }];
+  const ehQIF = !ehOFX && (/\.qif$/.test(nome) || /^!Type:/im.test(conteudo.slice(0, 500)));
+  const ehCAMT = !ehOFX && !ehQIF && (/\.xml$/.test(nome) || /camt\.053|<BkToCstmrStmt/i.test(conteudo.slice(0, 2000)));
+  const ehCSV = !ehOFX && !ehQIF && !ehCAMT && /\.csv$/.test(nome);
+  if (!ehOFX && !ehCSV && !ehQIF && !ehCAMT) {
+    return [400, { error: 'Mande o extrato em arquivo OFX, CSV, QIF ou CAMT (o banco gera no app ou no site).' }];
+  }
+  const linhas = ehOFX ? lerOFX(conteudo)
+    : ehQIF ? lerQIF(conteudo)
+    : ehCAMT ? lerCAMT(conteudo)
+    : lerCSV(conteudo);
+  if (!linhas.length) return [400, { error: 'Não achei lançamentos neste arquivo. Confira se é o extrato em OFX, CSV, QIF ou CAMT.' }];
   const doc = require('./documentos');
   const existentes = new Set((await c.listar(c.base.collection('lancamentos'))).map((x) => x.id));
   const prontos = []; const conferir = []; let jaLancados = 0; const vistos = new Set();
@@ -103,4 +190,4 @@ async function agirExtrato(acao, body, c) {
   return [200, { documento: 'extrato', imagens_lidas: 1, imagens_total: 1, prontos, conferir, ja_lancados: jaLancados, receitas: soma('receita'), despesas: soma('despesa') }];
 }
 
-module.exports = { lerOFX, lerCSV, agirExtrato };
+module.exports = { lerOFX, lerCSV, lerQIF, lerCAMT, agirExtrato };
