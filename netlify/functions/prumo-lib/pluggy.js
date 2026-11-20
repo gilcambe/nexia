@@ -19,7 +19,7 @@ const ehMesmaTitularidade = (t) => /same ownership|mesma titularidade/i.test(Str
 function config(c) {
   const env = (c.deps && c.deps.env) || (typeof process !== 'undefined' ? process.env : {}) || {};
   // Dono 20/11: chave colada com espaço/aspas/quebra de linha é recusada pela Pluggy; limpa antes de usar.
-  const limpa = (v) => String(v || '').replace(/^[s"'`]+|[s"'`]+$/g, '');
+  const limpa = (v) => String(v || '').replace(/^[\s"'`]+|[\s"'`]+$/g, '');
   return { id: limpa(env.PLUGGY_CLIENT_ID || env.PLUGGY_CLIEND_ID), segredo: limpa(env.PLUGGY_CLIENT_SECRET), fetch: (c.deps && c.deps.fetch) || ((...a) => fetch(...a)) };
 }
 async function chamar(cfg, chave, caminho, opts = {}) {
