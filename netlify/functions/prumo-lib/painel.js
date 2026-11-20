@@ -87,13 +87,15 @@ async function montarPainel(c) {
   const vencComTotal = new Set(lancs.filter(ehFatura).map((l) => String(l.vencimento || l.data).slice(0, 10)));
   const cartaoAberto = reais.filter((l) => l.tipo === 'despesa' && !ehFatura(l) && l.vencimento && String(l.vencimento) > hoje && !vencComTotal.has(String(l.vencimento).slice(0, 10)));
   const faturasLidas = {};
+  // Dono 20/11: "apareceu duplicado": o total lido como lançamento ("Fatura aberta...") no mesmo dia de uma fatura gravada não conta 2 vezes.
+  const totalRepetido = (l) => l.categoria !== 'fatura' && /fatura/i.test(String(l.descricao || '')) && vencComTotal.has(String(l.data).slice(0, 10));
   for (const l of cartaoAberto) { const v = String(l.vencimento).slice(0, 10); faturasLidas[v] = r2((faturasLidas[v] || 0) + (Number(l.valor) || 0)); }
   // Dono 19/11: o print da fatura aberta (vence 06/12) gravava uma conta com data futura e ela sumia de todas as telas.
   // Próximas contas = o que vence depois deste mês, em até 45 dias: contas lançadas com data futura e faturas lidas.
   const ate45 = new Date(Date.parse(hoje + 'T00:00:00Z') + 45 * 86400000).toISOString().slice(0, 10);
   const proximas_contas = [
-    ...prv.previstos(lancs, 'data', hoje).filter((l) => l.tipo === 'despesa' && !String(l.data).startsWith(mes) && String(l.data) <= ate45)
-      .map((l) => ({ data: String(l.data), nome: l.descricao || 'Conta', valor: Number(l.valor) || 0, origem: /fatura|cartao/i.test(String(l.documento || '') + String(l.categoria || '') + String(l.descricao || '')) ? 'fatura' : 'conta' })),
+    ...prv.previstos(lancs, 'data', hoje).filter((l) => l.tipo === 'despesa' && !totalRepetido(l) && !String(l.data).startsWith(mes) && String(l.data) <= ate45)
+      .map((l) => ({ id: l.id, data: String(l.data), nome: l.descricao || 'Conta', valor: Number(l.valor) || 0, origem: /fatura|cartao/i.test(String(l.documento || '') + String(l.categoria || '') + String(l.descricao || '')) ? 'fatura' : 'conta' })),
     ...Object.entries(faturasLidas).filter(([v]) => !v.startsWith(mes) && v <= ate45).map(([v, x]) => ({ data: v, nome: 'Fatura do cartão', valor: x, origem: 'fatura' })),
   ].map((x) => ({ ...x, dias: dias(hoje, x.data) })).sort((a, b) => a.data.localeCompare(b.data));
   const faturasMes = r2(Object.entries(faturasLidas).filter(([v]) => v.startsWith(mes)).reduce((t, [, x]) => t + x, 0));
@@ -191,7 +193,7 @@ async function montarPainel(c) {
     ultimos,
     proximas_contas,
     proximos_meses: require('./meses').proximosMeses({ hoje, meses: 6, dividas, fixas,
-      futuros: prv.previstos(lancs, 'data', hoje).filter((l) => l.tipo === 'despesa'),
+      futuros: prv.previstos(lancs, 'data', hoje).filter((l) => l.tipo === 'despesa' && !totalRepetido(l)),
       faturas: Object.entries(faturasLidas).map(([v, x]) => ({ vencimento: v, valor: x })) }),
   };
   // Fase 7: motor de decisões. Avisos urgentes primeiro, depois as dicas; no máximo 3; "dispensar" vale 30 dias.

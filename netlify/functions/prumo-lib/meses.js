@@ -18,7 +18,7 @@ function proximosMeses(d = {}) {
   for (let k = 1; k <= n; k++) {
     const mes = somarMes(atual, k);
     const itens = [];
-    for (const l of d.futuros || []) if (String(l.data).startsWith(mes)) itens.push({ data: String(l.data).slice(0, 10), nome: l.descricao || 'Conta', valor: r2(l.valor), origem: 'lancamento' });
+    for (const l of d.futuros || []) if (String(l.data).startsWith(mes)) itens.push({ data: String(l.data).slice(0, 10), nome: l.descricao || 'Conta', valor: r2(l.valor), origem: l.categoria === 'fatura' ? 'fatura' : 'lancamento', ...(l.id ? { id: l.id } : {}) });
     for (const f of d.faturas || []) if (String(f.vencimento).startsWith(mes)) itens.push({ data: String(f.vencimento).slice(0, 10), nome: f.descricao || 'Fatura do cartão', valor: r2(f.valor), origem: 'fatura' });
     for (const x of d.dividas || []) {
       const parcela = Number(x.parcela) || 0; const saldo = Number(x.saldo) || 0;
