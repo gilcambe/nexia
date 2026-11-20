@@ -14,6 +14,12 @@
   const navAbas = $('abas');
   const fundoMenu = $('fundo-menu');
   const tituloAba = $('titulo-aba');
+  const btnVoltar = document.createElement('button'); // Criado dinamicamente para o topo
+  btnVoltar.id = 'btn-voltar';
+  btnVoltar.hidden = true;
+  btnVoltar.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>';
+  btnVoltar.onclick = () => history.back();
+  document.querySelector('header').insertBefore(btnVoltar, document.querySelector('header img'));
   let usuario = null;
 
   function toggleGrupo(btn) {
@@ -100,8 +106,10 @@
     tentar();
   }
 
-  async function abrirAba(nome) {
+  async function abrirAba(nome, doHistorico = false) {
     if (!ABAS.includes(nome)) nome = 'carteira';
+    if (!doHistorico) history.pushState({ aba: nome }, '');
+    btnVoltar.hidden = (nome === 'inicio');
     document.querySelectorAll('#abas button').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.aba === nome)));
     const btn = document.querySelector(`#abas button[data-aba="${nome}"]`);
     tituloAba.textContent = TITULO[nome] || (btn && btn.textContent ? btn.textContent.trim() : '');
@@ -235,6 +243,9 @@
     if (fundoMenu) fundoMenu.onclick = fecharMenu;
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape') fecharMenu(); });
     document.getElementById('fechar-menu').onclick = fecharMenu;
+    window.addEventListener('popstate', (e) => {
+      if (e.state && e.state.aba) abrirAba(e.state.aba, true);
+    });
     auth.onAuthStateChanged((u) => {
       usuario = u;
       const av = $('avatar');
