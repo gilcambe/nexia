@@ -109,7 +109,7 @@
   async function abrirAba(nome, doHistorico = false) {
     if (!ABAS.includes(nome)) nome = 'carteira';
     if (!doHistorico) history.pushState({ aba: nome }, '');
-    btnVoltar.hidden = (nome === 'inicio');
+    btnVoltar.hidden = (nome === 'inicio' && !history.state?.folha);
     document.querySelectorAll('#abas button').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.aba === nome)));
     const btn = document.querySelector(`#abas button[data-aba="${nome}"]`);
     tituloAba.textContent = TITULO[nome] || (btn && btn.textContent ? btn.textContent.trim() : '');
@@ -245,6 +245,8 @@
     document.getElementById('fechar-menu').onclick = fecharMenu;
     window.addEventListener('popstate', (e) => {
       if (e.state && e.state.aba) abrirAba(e.state.aba, true);
+      else if (e.state && e.state.folha) btnVoltar.hidden = false;
+      else btnVoltar.hidden = true;
     });
     auth.onAuthStateChanged((u) => {
       usuario = u;
