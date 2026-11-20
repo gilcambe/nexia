@@ -18,7 +18,7 @@
         <div class="fraco" style="margin-top:4px">Fatura de cartão em dia não entra aqui; só o que você cadastrar.</div></div>
       <button class="btn" id="nova-div" type="button">+ Dívida</button>
       ${!d.dividas.length ? `<button class="btn sec" id="sem-div" type="button" style="margin-top:8px">${d.sem_dividas ? 'Desfazer: voltei a ter dívida' : 'Não tenho dívidas'}</button>` : ''}
-      ${d.dividas.length ? `<div class="card" style="margin-top:12px">${d.dividas.map((x) => `<div class="item" data-id="${esc(x.id)}"><div><div class="n">${esc(x.credor)}</div><div class="fraco">${esc(d.tipos[x.tipo] || x.tipo)} · juros ${pct(x.juros_mes)}% ao mês${x.cet_ano ? ' · CET ' + pct(x.cet_ano) + '% ao ano' : ''}${x.parcela ? ' · parcela ' + brl(x.parcela) : ''}</div></div><div style="text-align:right"><div class="v verm">${brl(x.saldo)}</div><button class="btn sec mini" data-reneg="${esc(x.id)}" type="button">Renegociar</button></div></div>`).join('')}</div>
+      ${d.dividas.length ? `<div class="card" style="margin-top:12px">${d.dividas.map((x) => `<div class="item" data-id="${esc(x.id)}" style="cursor:pointer"><div><div class="n">${esc(x.credor)}</div><div class="fraco">${esc(d.tipos[x.tipo] || x.tipo)} · juros ${pct(x.juros_mes)}% ao mês${x.cet_ano ? ' · CET ' + pct(x.cet_ano) + '% ao ano' : ''}${x.parcela ? ' · parcela ' + brl(x.parcela) : ''}</div></div><div style="text-align:right"><div class="v verm">${brl(x.saldo)}</div><div style="margin-top:6px;display:flex;gap:4px;justify-content:flex-end"><button class="btn sec mini" data-reneg="${esc(x.id)}" type="button">Renegociar</button><button type="button" class="chip" data-ed-div="${esc(x.id)}" aria-label="Editar">✏️</button><button type="button" class="chip" data-del-div="${esc(x.id)}" aria-label="Apagar">🗑</button></div></div></div>`).join('')}</div>
       <div class="card"><h3 style="margin:0 0 6px">🧮 Plano de quitação</h3>
         <div class="fraco">Compara pagar só o mínimo, avalanche (maior juros primeiro) e bola de neve (menor dívida primeiro).</div>
         <label>Extra por mês (R$)</label><input id="pl-extra" type="number" step="0.01" inputmode="decimal" placeholder="0">
@@ -33,8 +33,8 @@
       { nome: 'parcela', rotulo: 'Parcela mensal (R$)', tipo: 'number', valor: x && x.parcela },
       { nome: 'cet_ano', rotulo: 'CET por ano, % (opcional)', tipo: 'number', valor: x && x.cet_ano },
       { nome: 'dia_vencimento', rotulo: 'Dia do vencimento (opcional)', tipo: 'number', valor: x && x.dia_vencimento },
-    ], async (v) => { const o = { ...v, id: x && x.id }; for (const k of ['cet_ano', 'dia_vencimento']) if (v[k] === '') delete o[k]; await MB.api('divida_salvar', o); MB.ui.ok('Dívida salva.'); },
-    x ? async () => { await MB.api('divida_apagar', { id: x.id }); } : null);
+    ], async (v) => { const o = { ...v, id: x && x.id }; for (const k of ['cet_ano', 'dia_vencimento']) if (v[k] === '') delete o[k]; await MB.api('divida_salvar', o); MB.ui.ok('Dívida salva.'); MB.abrirAba('dividas'); },
+    x ? async () => { if (!confirm('Apagar esta dívida?')) return; await MB.api('divida_apagar', { id: x.id }); MB.abrirAba('dividas'); } : null);
     el.querySelector('#nova-div').onclick = () => editar(null);
     const lei = await carregarLeitura();
     if (lei) lei.botao(el, { id: 'dv-ler', rotulo: '📷 Preencher por print ou arquivo', ajuda: 'Mande o contrato, boleto ou print da dívida (foto ou PDF). Eu não peço senha.', acao: 'divida_print_ler',
@@ -42,7 +42,25 @@
     const sem = el.querySelector('#sem-div');
     if (sem) sem.onclick = async () => { await MB.api('divida_nenhuma', { sem: !d.sem_dividas }); MB.abrirAba('dividas'); };
     el.querySelectorAll('.item[data-id]').forEach((i) => {
-      i.onclick = () => editar(d.dividas.find((y) => y.id === i.dataset.id));
+      i.onclick = (ev) => {
+        if (ev.target.closest('[data-reneg],[data-ed-div],[data-del-div]')) return;
+        editar(d.dividas.find((y) => y.id === i.dataset.id));
+      };
+    });
+    el.querySelectorAll('[data-ed-div]').forEach((b) => {
+      b.onclick = (ev) => {
+        ev.stopPropagation();
+        editar(d.dividas.find((y) => y.id === b.dataset.edDiv));
+      };
+    });
+    el.querySelectorAll('[data-del-div]').forEach((b) => {
+      b.onclick = async (ev) => {
+        ev.stopPropagation();
+        const x = d.dividas.find((y) => y.id === b.dataset.delDiv);
+        if (!x || !confirm('Apagar "' + x.credor + '"?')) return;
+        await MB.api('divida_apagar', { id: x.id });
+        MB.abrirAba('dividas');
+      };
     });
     el.querySelectorAll('[data-reneg]').forEach((b) => { b.onclick = (ev) => { ev.stopPropagation(); renegociar(d.dividas.find((y) => y.id === b.dataset.reneg)); }; });
 
