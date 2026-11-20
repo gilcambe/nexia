@@ -159,6 +159,8 @@ function pontosVencendo(itens, hojeISO) {
 async function agirExtra(acao, body, c) {
   const cot = await require('./cotacoes').agirCotacoes(acao, body, c); // #3304 cotação ao vivo
   if (cot) return cot;
+  const val = await require('./vales').agirVales(acao, body, c); // dono 20/11: vale refeição/alimentação
+  if (val) return val;
   const ben = await require('./beneficios').agirBeneficios(acao, body, c); // redesign fase 6: Benefícios
   if (ben) return ben;
   const fut = await require('./futuro').agirFuturo(acao, body, c); // redesign fase 5: Patrimônio e Futuro

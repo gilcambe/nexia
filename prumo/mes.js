@@ -30,7 +30,7 @@
         ${m.a_pagar_itens.length ? m.a_pagar_itens.map((x) => `<div class="kh-ag"><span>${dm(x.data)} · ${H.esc(x.nome)}${x.risco ? ' <b class="kh-neg">· falta saldo</b>' : ''}</span><span class="${x.risco ? 'kh-neg' : 'kh-out'}" style="font-weight:600;white-space:nowrap">${H.brl(x.valor)}</span></div>`).join('')
           : '<p class="sub" style="margin:8px 0 0">Nada a pagar cadastrado. Mande a fatura ou cadastre as contas fixas.</p>'}
 </section>
-      ${(p.proximas_contas || []).length ? `<section class="card"><b>🔜 Próximas contas (depois deste mês)</b>${p.proximas_contas.map((x) => `<div class="kh-ag"><span>${dm(x.data)} · ${H.esc(x.nome)} <span class="sub">em ${x.dias} dia(s)</span></span><span class="kh-out" style="font-weight:600;white-space:nowrap">${H.brl(x.valor)}</span></div>`).join('')}</section>` : ''}
+      ${(p.proximos_meses || []).length ? `<section class="card kh-larga" id="km-prox"><b>🔜 Próximos meses</b><div class="sub" style="margin-top:2px">Faturas, parcelas, contas fixas e contas já lançadas. Toque no mês.</div><div id="km-chips" style="display:flex;gap:6px;overflow-x:auto;margin:10px 0 4px;padding-bottom:4px">${p.proximos_meses.map((x, i) => `<button type="button" class="chip" data-m="${i}" aria-pressed="${i === 0}" style="white-space:nowrap;border:1px solid var(--borda);color:var(--texto);${i === 0 ? 'background:#2F6BFF' : ''}">${MESES[Number(x.mes.slice(5, 7)) - 1].slice(0, 3)} · ${H.brl(x.total)}</button>`).join('')}</div><div id="km-lista"></div></section>` : ''}
       <section class="card kh-larga"><b>🛒 Gastos por categoria</b>
         ${m.categorias.length ? m.categorias.slice(0, 8).map((c) => `<div style="margin-top:10px"><div style="display:flex;justify-content:space-between;font-size:14px"><span>${H.esc(CAT[c.categoria] || c.categoria)} <span class="sub">${c.pct}%</span></span><span>${H.brl(c.valor)}</span></div>
           <div class="barra" style="height:8px;margin-top:4px"><i style="width:${c.pct}%;background:${c.acima_pct != null && c.acima_pct > 20 ? '#F5A623' : '#2F6BFF'}"></i></div>${c.media3 != null ? `<div class="sub">média de 3 meses: ${H.brl(c.media3)}</div>` : ''}</div>`).join('')
@@ -48,5 +48,11 @@
       ])}
     </div>`;
     H.ligar(el);
+    // Próximos meses: um mês por vez (chips), com a lista do que vai sair.
+    const pm = p.proximos_meses || []; const lst = el.querySelector('#km-lista');
+    const ver = (i) => { const x = pm[i]; if (!x || !lst) return; el.querySelectorAll('#km-chips .chip').forEach((b) => { const on = Number(b.dataset.m) === i; b.setAttribute('aria-pressed', String(on)); b.style.background = on ? '#2F6BFF' : ''; });
+      lst.innerHTML = `<div style="display:flex;justify-content:space-between;margin-top:6px"><b>${MESES[Number(x.mes.slice(5, 7)) - 1]} ${x.mes.slice(0, 4)}</b><b class="kh-out">${H.brl(x.total)}</b></div>` + (x.itens.length ? x.itens.map((it) => `<div class="kh-ag"><span>${dm(it.data)} · ${H.esc(it.nome)}</span><span class="kh-out" style="font-weight:600;white-space:nowrap">${H.brl(it.valor)}</span></div>`).join('') : '<p class="sub">Nada previsto neste mês.</p>'); };
+    el.querySelectorAll('#km-chips .chip').forEach((b) => { b.onclick = () => ver(Number(b.dataset.m)); });
+    ver(0);
   };
 })();

@@ -15,6 +15,7 @@ const GRUPOS = [
   { colecao: 'carteira', nome: 'Investimentos', aba: 'investimentos' },
   { colecao: 'dividendos', nome: 'Proventos', aba: 'investimentos' },
   { colecao: 'pontos', nome: 'Milhas e pontos', aba: 'pontos' },
+  { colecao: 'vales', nome: 'Vale refeição e alimentação', aba: 'beneficios' },
   { colecao: 'scores', nome: 'Score de crédito', aba: 'patrimonio' },
   { colecao: 'viagens', nome: 'Viagens', aba: 'viagens' },
   { colecao: 'aposentadoria', nome: 'Aposentadoria e FGTS', aba: 'aposentadoria' },
