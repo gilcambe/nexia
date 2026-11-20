@@ -41,7 +41,8 @@
   if (document.head) document.head.appendChild(st);
 
   MB.telas.inicio = async (el) => {
-    const { brl, esc, aba } = await carregarUi();
+    const UI = await carregarUi();
+    const { brl, esc, aba } = UI;
     aba('inicio');
     const p = await MB.api('painel_resumo');
     const k = p.kpis || {}; const sc = p.score || {}; const cf = p.confianca || { pct: 0, faltam: [] };
@@ -102,8 +103,10 @@
         ${p.alertas && p.alertas.length ? `<section class="card" aria-label="Atenção"><b>Atenção</b>${p.alertas.map((a) => `<div class="ki-alerta"><span class="p" style="background:${NIV[a.nivel] || '#5B8DFF'}"></span><div style="flex:1"><div>${esc(a.texto)}</div>${a.dado ? `<div class="ki-rot">${esc(a.dado)}</div>` : ''}<div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap"><button class="btn sec mini" type="button" style="margin-top:0" data-ir-aba="${esc(a.aba)}">${esc(a.acao || 'Ver')}</button>${a.dispensavel ? `<button class="btn sec mini" type="button" style="margin-top:0;color:var(--fraco)" data-dispensar="${esc(a.id)}">Dispensar</button>` : ''}</div></div></div>`).join('')}<div class="ki-rot" style="margin-top:8px">Apoio à decisão com os seus números. Não é consultoria financeira.</div></section>` : ''}
         <section class="card" aria-label="Pergunte"><b>Pergunte</b><form class="ki-perg" id="ki-perg" style="margin-top:8px"><input name="q" placeholder="Posso comprar um celular de R$ 1.500?" aria-label="Pergunta"><button type="submit">Perguntar</button></form></section>
         <section class="card" aria-label="Últimos lançamentos"><div class="ki-lin"><b>Últimos lançamentos</b>${p.ultimos.length ? '<button class="ki-como" id="ki-todos" type="button">Ver todos</button>' : ''}</div>
-          ${p.ultimos.length ? p.ultimos.map((l) => `<div class="ki-ult"><span>${esc(l.descricao)}<br><span class="d">${esc(String(l.data).slice(8, 10) + '/' + String(l.data).slice(5, 7))}</span></span><span class="val ${l.tipo === 'receita' ? 'ki-in' : ''}">${l.tipo === 'receita' ? '+' : '−'} ${brl(l.valor)}</span></div>`).join('')
+          <div id="ki-ultimos-lista">
+          ${p.ultimos.length ? p.ultimos.map((l, j) => `<div class="ki-ult"><span>${esc(l.descricao)}<br><span class="d">${esc(String(l.data).slice(8, 10) + '/' + String(l.data).slice(5, 7))}</span></span><span style="white-space:nowrap"><span class="val ${l.tipo === 'receita' ? 'ki-in' : ''}">${l.tipo === 'receita' ? '+' : '−'} ${brl(l.valor)}</span>${l.id ? ` <button type="button" class="chip" data-ed="${j}" aria-label="Editar">✏️</button> <button type="button" class="chip" data-del="${j}" aria-label="Apagar">🗑</button>` : ''}</span></div>`).join('')
             : '<div class="ki-vazio"><p>Nenhum lançamento ainda.</p><button class="btn" id="ki-primeiro" type="button">Mande sua primeira fatura</button></div>'}
+          </div>
         </section>
       </div>
     </div>`;
@@ -130,6 +133,27 @@
     const todos = el.querySelector('#ki-todos'); if (todos) todos.onclick = () => MB.abrirAba('documentos');
     const pri = el.querySelector('#ki-primeiro'); if (pri) pri.onclick = () => MB.abrirLancar();
     el.querySelector('#ki-perg').onsubmit = (e) => { e.preventDefault(); const q = String(new FormData(e.target).get('q') || '').trim(); MB.perguntaPendente = q || null; MB.abrirAba('assistente'); };
+
+    const ultListaEl = el.querySelector('#ki-ultimos-lista');
+    if (ultListaEl) {
+      ultListaEl.onclick = async (ev) => {
+        const bt = ev.target.closest('[data-ed],[data-del]');
+        if (!bt) return;
+        const it = (p.ultimos || [])[Number(bt.dataset.ed ?? bt.dataset.del)];
+        if (!it || !it.id) return;
+        if (bt.dataset.del !== undefined) {
+          if (!confirm('Apagar "' + it.descricao + '"?')) return;
+          await MB.api('lanc_apagar', { id: it.id });
+          MB.abrirAba('inicio');
+          return;
+        }
+        UI.formulario('Editar ' + it.descricao, [
+          { nome: 'valor', rotulo: 'Valor (R$)', tipo: 'number', valor: it.valor },
+          { nome: 'data', rotulo: 'Vence em', tipo: 'date', valor: it.data || '' },
+        ], (d) => MB.api('lanc_editar', { id: it.id, valor: Number(d.valor), data: d.data }));
+      };
+    }
+
     // Open Finance ligado: atualiza sozinho no máximo a cada 12 h, sem segurar a tela; se entrou algo, redesenha.
     try { const ult = Number(localStorage.getItem('kf-pluggy-ult') || 0); if (localStorage.getItem('kf-pluggy') === '1' && Date.now() - ult > 12 * 3600000) { localStorage.setItem('kf-pluggy-ult', String(Date.now())); MB.api('pluggy_sincronizar', {}, { silencioso: true }).then((r) => { if (r && r.novos > 0 && document.body.contains(el)) MB.abrirAba('inicio'); }).catch(() => {}); } } catch { /* sem armazenamento */ }
     // Raio-X (cadastro aos poucos) carrega à parte e não segura a tela.
