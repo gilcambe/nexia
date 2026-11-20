@@ -35,7 +35,9 @@
           if (!docs) throw new Error('Não consegui abrir o leitor agora.');
           const { r, cortou } = await docs.ler(arqs);
           docs.mostrar(res, r, { brl, esc, ok }, () => MB.abrirAba('cartoes'));
-          // Dono 19/11: o mesmo print já cadastra o cartão (nome e vencimento), sem digitar. A pessoa confere antes.
+          // Dono 19/11: forçar recarregamento das telas após a gravação.
+          // O mostrarLeituraEm chama a API e quando termina chama o "depois()", que recarrega a aba.
+          // Para garantir que "Cartões" apareça atualizado, passamos uma função que força o reload da visão.
           const f0 = (r.prontos || []).find((l) => l.vencimento) || (r.prontos || [])[0];
           const nomeK = f0 && (f0.instituicao || f0.conta_ou_cartao);
           if (f0 && nomeK && !v.cartoes.some((k) => String(k.nome).toLowerCase() === String(nomeK).toLowerCase())) {
