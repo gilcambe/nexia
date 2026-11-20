@@ -274,8 +274,7 @@ function createHandler(deps = {}) {
         em: new Date(now()).toISOString(),
         endpoints: [
           '/api/prumo-admin/export',
-          '/api/prumo-admin/delete',
-          '/api/prumo-admin/restaurar'
+          '/api/prumo-admin/delete'
         ]
       });
     } catch (err) {
