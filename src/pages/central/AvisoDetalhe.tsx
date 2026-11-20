@@ -16,12 +16,14 @@ export default function AvisoDetalhe({ avisos, inicial, fechar, ir }: { avisos: 
   // Ao abrir, entra no histórico
   useEffect(() => {
     if (inicial !== undefined) {
-      history.pushState(null, "");
-      const fecharSeVoltar = () => fechar();
+      history.pushState({ modal: true }, "");
+      const fecharSeVoltar = (e: PopStateEvent) => {
+        if (e.state?.modal) fechar();
+      };
       window.addEventListener("popstate", fecharSeVoltar);
       return () => {
         window.removeEventListener("popstate", fecharSeVoltar);
-        if (history.state !== null) history.back();
+        if (history.state?.modal) history.back();
       };
     }
   }, [inicial, fechar]);

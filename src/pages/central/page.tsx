@@ -116,14 +116,20 @@ export default function CentralPage() {
   
   // Suporte a voltar no celular
   useEffect(() => {
-    if (antiga) {
-      const aoVoltar = () => setAba((location.hash.slice(1) as Aba) || "inicio");
-      window.addEventListener("popstate", aoVoltar);
-      return () => window.removeEventListener("popstate", aoVoltar);
-    }
-  }, [antiga]);
+    const aoVoltar = () => {
+      const abaAtual = location.hash.slice(1) as Aba || "inicio";
+      setAba(abaAtual);
+      setAlerta(undefined);
+    };
+    window.addEventListener("popstate", aoVoltar);
+    return () => window.removeEventListener("popstate", aoVoltar);
+  }, []);
 
-  const ir = (a: Aba) => { setAba(a); history.pushState(null, "", `#${a}`); window.scrollTo(0, 0); };
+  const ir = (a: Aba) => { 
+    setAba(a); 
+    history.pushState(null, "", `#${a}`); 
+    window.scrollTo(0, 0); 
+  };
   const avisos = useMemo(() => calcularAvisos(d), [d]);
 
   // Com a Central aberta, confere de novo a cada 5 minutos e avisa no aparelho quando algo novo fica vermelho.

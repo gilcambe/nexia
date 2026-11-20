@@ -96,7 +96,15 @@ export default function Casca() {
     setGaveta(false);
     const u = new URL(location.href);
     u.searchParams.set("tela", id);
-    history.replaceState(null, "", u.toString());
+    history.pushState({ tela: id }, "", u.toString());
+  }, []);
+
+  useEffect(() => {
+    const aoVoltar = (e: PopStateEvent) => {
+      if (e.state?.tela) setTela(e.state.tela);
+    };
+    window.addEventListener("popstate", aoVoltar);
+    return () => window.removeEventListener("popstate", aoVoltar);
   }, []);
   useEffect(() => {
     const atalho = (e: KeyboardEvent) => {
