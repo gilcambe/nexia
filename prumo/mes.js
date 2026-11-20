@@ -57,8 +57,20 @@
     // Próximos meses: um mês por vez (chips), com a lista do que vai sair.
     const pm = p.proximos_meses || []; const lst = el.querySelector('#km-lista');
     const ver = (i) => { const x = pm[i]; if (!x || !lst) return; el.querySelectorAll('#km-chips .chip').forEach((b) => { const on = Number(b.dataset.m) === i; b.setAttribute('aria-pressed', String(on)); b.style.background = on ? '#2F6BFF' : ''; });
-      lst.innerHTML = `<div style="display:flex;justify-content:space-between;margin-top:6px"><b>${MESES[Number(x.mes.slice(5, 7)) - 1]} ${x.mes.slice(0, 4)}</b><b class="kh-out">${H.brl(x.total)}</b></div>` + (x.itens.length ? x.itens.map((it) => `<div class="kh-ag"><span>${dm(it.data)} · ${H.esc(it.nome)}</span><span class="kh-out" style="font-weight:600;white-space:nowrap">${H.brl(it.valor)}</span></div>`).join('') : '<p class="sub">Nada previsto neste mês.</p>'); };
+      lst.innerHTML = `<div style="display:flex;justify-content:space-between;margin-top:6px"><b>${MESES[Number(x.mes.slice(5, 7)) - 1]} ${x.mes.slice(0, 4)}</b><b class="kh-out">${H.brl(x.total)}</b></div>` + (x.itens.length ? x.itens.map((it, j) => `<div class="kh-ag"><span>${dm(it.data)} · ${H.esc(it.nome)}</span><span style="white-space:nowrap"><span class="kh-out" style="font-weight:600">${H.brl(it.valor)}</span>${it.id ? ` <button type="button" class="chip" data-ed="${j}" aria-label="Editar">✏️</button> <button type="button" class="chip" data-del="${j}" aria-label="Apagar">🗑</button>` : ''}</span></div>`).join('') : '<p class="sub">Nada previsto neste mês.</p>'); };
     el.querySelectorAll('#km-chips .chip').forEach((b) => { b.onclick = () => ver(Number(b.dataset.m)); });
+    // Dono 20/11: "tudo deve ter incluir, editar e apagar". Conta e fatura lançadas: editar valor/data ou apagar.
+    let mesAberto = 0; const verAntes = ver; const verMes = (i) => { mesAberto = i; verAntes(i); };
+    el.querySelectorAll('#km-chips .chip').forEach((b) => { b.onclick = () => verMes(Number(b.dataset.m)); });
+    if (lst) lst.onclick = async (ev) => {
+      const bt = ev.target.closest('[data-ed],[data-del]'); if (!bt) return;
+      const it = (pm[mesAberto] || { itens: [] }).itens[Number(bt.dataset.ed ?? bt.dataset.del)]; if (!it || !it.id) return;
+      if (bt.dataset.del !== undefined) { if (!confirm('Apagar "' + it.nome + '"?')) return; await MB.api('lanc_apagar', { id: it.id }); MB.abrirAba('mes'); return; }
+      U.formulario('Editar ' + it.nome, [
+        { nome: 'valor', rotulo: 'Valor (R$)', tipo: 'number', valor: it.valor },
+        { nome: 'data', rotulo: 'Vence em', tipo: 'date', valor: it.data || '' },
+      ], (d) => MB.api('lanc_editar', { id: it.id, valor: Number(d.valor), data: d.data }));
+    };
     ver(0);
   };
 })();

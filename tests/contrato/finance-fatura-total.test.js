@@ -113,3 +113,26 @@ test('dono 20/11: fatura de um cartão que não existe cadastra o cartão sozinh
   assert.deepEqual([cl.cartoes[0].dia_vencimento, cl.cartoes[0].limite, cl.cartoes[0].final], [15, 8000, '4321']);
   assert.equal(r.faturas[0].cartao_novo, true);
 });
+
+test('dono 20/11: fatura não aparece duplicada e dá para editar e apagar em Próximos meses', async () => {
+  const b = banco(); P.deps.db = () => b; P.deps.agora = () => new Date('2026-11-20T21:00:00Z');
+  const u = b.collection('prumo_users').doc('u');
+  // sobra de leitura antiga: o total como lançamento comum no mesmo dia
+  await u.collection('lancamentos').doc('velho').set({ data: '2026-12-06', descricao: 'Fatura aberta - Dezembro', valor: 999, tipo: 'despesa', categoria: 'outros', status: 'previsto' });
+  P.deps.perguntarVisao = async () => JSON.stringify({ tipo_documento: 'fatura', instituicao: 'Banco Z', total_documento: 999, vencimento_documento: '2026-12-06',
+    lancamentos: [{ data: '2026-12-06', descricao: 'Fatura aberta - Dezembro', valor: 999, tipo: 'despesa', categoria: 'outros' }, { data: '2026-11-10', descricao: 'Loja', valor: 999, tipo: 'despesa', categoria: 'compras' }] });
+  const img = 'data:image/png;base64,' + Buffer.from('v'.repeat(200)).toString('base64');
+  const [, r] = await P.agir('u', { acao: 'doc_ler', imagens: [img] });
+  delete P.deps.perguntarVisao;
+  assert.deepEqual(r.prontos.map((l) => l.descricao), ['Loja'], 'o total não vira lançamento');
+  let [, p] = await P.agir('u', { acao: 'painel_resumo' });
+  const dez = p.proximos_meses[0];
+  assert.equal(dez.itens.length, 1, JSON.stringify(dez.itens));
+  const id = dez.itens[0].id; assert.ok(id);
+  assert.equal((await P.agir('u', { acao: 'lanc_editar', id, valor: 950.5, data: '2026-12-06' }))[0], 200);
+  [, p] = await P.agir('u', { acao: 'painel_resumo' });
+  assert.deepEqual(p.proximos_meses[0].itens.map((x) => [x.data, x.valor, x.origem]), [['2026-12-06', 950.5, 'fatura']]);
+  assert.equal((await P.agir('u', { acao: 'lanc_apagar', id }))[0], 200);
+  [, p] = await P.agir('u', { acao: 'painel_resumo' });
+  assert.ok(!p.proximos_meses[0].itens.some((x) => x.id === id));
+});

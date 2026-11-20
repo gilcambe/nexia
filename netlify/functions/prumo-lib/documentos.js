@@ -192,7 +192,7 @@ async function agirDoc(acao, body, c) {
         // Dono 19/11: a fatura vence no mês seguinte; o total e o vencimento vão para o "A pagar" (fatura_gravar).
         // Dono 20/11: "a fatura de dezembro não aparece no mês de dezembro". Cada fatura lida (dois cartões = duas) é
         // gravada já na leitura como conta a pagar no vencimento; as compras sem vencimento herdam o da fatura.
-        let venFat = null;
+        let venFat = null; let totFat = null;
         // Dono 20/11 (3ª vez): o print diz só "vence 06/12"; a IA chutou 2025 e a fatura caiu no ano passado.
         // Se o vencimento lido ficou bem no passado e um ano depois cai perto de hoje, corrige o ano do documento todo.
         const anoErrado = ajusteDeAno(lido, hoje);
@@ -231,6 +231,7 @@ async function agirDoc(acao, body, c) {
           let tot = valorLido(lido.total_documento);
           if (!(Number.isFinite(tot) && tot > 0)) tot = itensLido.reduce((s, x) => { const v = valorLido(x && x.valor); const t = String((x && x.tipo) || ''); return Number.isFinite(v) ? s + (/pagamento|receita|transfer/i.test(t) ? 0 : Math.abs(v)) : s; }, 0);
           if (Number.isFinite(tot) && tot > 0) {
+            totFat = Math.round(Math.abs(tot) * 100) / 100;
             const fv = { total: Math.round(Math.abs(tot) * 100) / 100, vencimento: ven, instituicao: cartao ? cartao.nome : nome, cartao_id: cartao ? cartao.id : null, cartao_novo: !!(cartao && !k), gravada: false };
             if (ven) { const g = await require('./faturas').agirFaturas('fatura_gravar', { nome: fv.instituicao || 'Cartão', valor: fv.total, vencimento: ven, cartao_id: fv.cartao_id }, c); fv.gravada = !!(g && g[0] === 200); }
             faturas.push(fv); if (!fatura) fatura = { total: fv.total, vencimento: fv.vencimento, instituicao: fv.instituicao };
@@ -238,6 +239,8 @@ async function agirDoc(acao, body, c) {
         }
         for (const b of (lido.lancamentos || []).slice(0, MAX_LANC)) {
           const v = normalizarLancamento(b, lido);
+          // Dono 20/11: a IA também devolvia o TOTAL como um lançamento ("Fatura aberta - Dezembro"); ele já é a fatura gravada.
+          if (v.ok && totFat && /fatura/i.test(v.item.descricao) && Math.abs(v.item.valor - totFat) < 0.01) continue;
           if (v.ok && venFat && !v.item.vencimento && v.item.tipo === 'despesa') v.item.vencimento = venFat;
           if (v.ok) brutos.push(v.item); else conferir.push({ ...b, motivo: v.motivo });
         }
@@ -295,6 +298,12 @@ async function agirDoc(acao, body, c) {
       const s0 = await col.doc(id).get();
       if (!s0 || !s0.exists) return [404, { error: 'Esse lançamento já não existe.' }];
       const antigo = s0.data();
+      if (antigo.categoria === 'fatura') { // total da fatura: troca valor e vencimento no mesmo registro (dono 20/11: editar e apagar em tudo)
+        const valor = valorLido(body.valor); const data = dataLida(body.data) || antigo.data;
+        if (body.valor !== undefined && body.valor !== '' && !(valor > 0)) return [400, { error: 'Digite o valor da fatura.' }];
+        const nv = { ...antigo, valor: valor > 0 ? Math.round(valor * 100) / 100 : antigo.valor, data, vencimento: data, status: prv.statusInicial(data, hoje), editado_em: agoraIso };
+        await col.doc(id).set(nv); return [200, { ok: true, id }];
+      }
       const v = normalizarLancamento({ ...antigo, ...['descricao', 'valor', 'data', 'tipo', 'categoria'].reduce((o, k) => (body[k] !== undefined && body[k] !== '' ? { ...o, [k]: body[k] } : o), {}) }, { tipo_documento: antigo.documento });
       if (!v.ok) return [400, { error: 'Não deu para salvar: ' + v.motivo + '.' }];
       if (body.categoria && body.categoria !== antigo.categoria) await aprender(base, v.item, body.categoria); // aprende a correção
