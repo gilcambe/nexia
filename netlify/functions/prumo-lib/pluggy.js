@@ -18,14 +18,18 @@ const ehMesmaTitularidade = (t) => /same ownership|mesma titularidade/i.test(Str
 
 function config(c) {
   const env = (c.deps && c.deps.env) || (typeof process !== 'undefined' ? process.env : {}) || {};
-  return { id: env.PLUGGY_CLIENT_ID || env.PLUGGY_CLIEND_ID, segredo: env.PLUGGY_CLIENT_SECRET, fetch: (c.deps && c.deps.fetch) || ((...a) => fetch(...a)) };
+  // Dono 20/11: chave colada com espaço/aspas/quebra de linha é recusada pela Pluggy; limpa antes de usar.
+  const limpa = (v) => String(v || '').replace(/^[s"'`]+|[s"'`]+$/g, '');
+  return { id: limpa(env.PLUGGY_CLIENT_ID || env.PLUGGY_CLIEND_ID), segredo: limpa(env.PLUGGY_CLIENT_SECRET), fetch: (c.deps && c.deps.fetch) || ((...a) => fetch(...a)) };
 }
 async function chamar(cfg, chave, caminho, opts = {}) {
   const r = await cfg.fetch(BASE + caminho, { method: opts.method || 'GET', headers: { 'content-type': 'application/json', ...(chave ? { 'X-API-KEY': chave } : {}) }, body: opts.body ? JSON.stringify(opts.body) : undefined });
   if (!r.ok) throw Object.assign(new Error('Pluggy respondeu ' + r.status), { status: r.status });
   return r.json();
 }
-async function apiKey(cfg) { return (await chamar(cfg, null, '/auth', { method: 'POST', body: { clientId: cfg.id, clientSecret: cfg.segredo } })).apiKey; }
+async function apiKey(cfg) {
+  try { return (await chamar(cfg, null, '/auth', { method: 'POST', body: { clientId: cfg.id, clientSecret: cfg.segredo } })).apiKey; } catch (e) { e.etapa = 'auth'; throw e; }
+}
 
 /** Converte uma transação da Pluggy num lançamento do app (ou null se for transferência entre contas da pessoa). */
 function paraLancamento(t, conta, hoje, agoraIso) {
@@ -98,7 +102,12 @@ async function agirPluggy(acao, body, c) {
     await ref.set({ ...atual, itens, ultima_sync: agoraIso });
     return [200, { ok: true, novos, contas: contasPara.length, faturas: faturas.length }];
   } catch (e) {
-    return [502, { error: e.status === 401 || e.status === 403 ? 'As chaves da conexão com os bancos não foram aceitas. Confira no passo a passo do Perfil.' : 'Não consegui falar com o Open Finance agora. Tente de novo mais tarde.' }];
+    // Diz em qual passo falhou, sem nunca mostrar a chave: 'auth' = Client ID/Secret; outro = permissão da aplicação.
+    const negado = e.status === 400 || e.status === 401 || e.status === 403;
+    const msg = !negado ? 'Não consegui falar com o Open Finance agora. Tente de novo mais tarde.'
+      : e.etapa === 'auth' ? `A Pluggy não aceitou o Client ID e o Client Secret (erro ${e.status}). Confira se são da MESMA aplicação no dashboard.pluggy.ai e se foram colados sem espaço.`
+      : `A Pluggy aceitou as chaves, mas não liberou a conexão (erro ${e.status}). No dashboard.pluggy.ai, ative o conector MeuPluggy nessa aplicação.`;
+    return [502, { error: msg, etapa: e.etapa || acao, status: e.status || null, tamanho_id: cfg.id.length, tamanho_segredo: cfg.segredo.length }];
   }
 }
 

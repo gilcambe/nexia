@@ -61,7 +61,7 @@
     if (!r.ok) {
       const msg = j.error || 'Algo deu errado. Tente de novo.';
       avisar(msg);
-      const e = new Error(msg); e.status = r.status; throw e;
+      const e = new Error(msg); e.status = r.status; e.dados = j; throw e;
     }
     return j;
   }
