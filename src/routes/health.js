@@ -1,7 +1,6 @@
 'use strict';
 
 /**
-/**
  * Handler de saúde para /api/prumo?acao=saude
  */
 module.exports = function health(req, res) {

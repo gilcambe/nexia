@@ -13,4 +13,4 @@ module.exports = function (app) {
     }
   }));
 };
-// health route registration
+// Rota registrada com sucesso
