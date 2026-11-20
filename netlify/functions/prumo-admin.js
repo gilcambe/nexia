@@ -56,8 +56,7 @@ function createHandler(deps = {}) {
           const msgs = await listar(users.doc(q.uid).collection('mensagens'));
           return res(200, { uid: q.uid, mensagens: msgs.sort((a, b) => String(a.em).localeCompare(String(b.em))) });
         }
-        // Novas rotas internas
-        // Novas rotas internas
+        // Rotas administrativas internas (autenticação master validada acima)
         if (parte === 'users') {
           const lista = await listar(users);
           return res(200, { parte, lista: lista.map(u => ({ uid: u.id, plano: u.plano, criado_em: u.criado_em })) });
