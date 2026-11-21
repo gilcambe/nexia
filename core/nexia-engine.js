@@ -600,7 +600,7 @@ const NexiaRuntime = (() => {
     setTimeout(boot, 0);
   }
 
-  // Cleanup: aposentar Service Worker antigo
+  // Cleanup: aposentar Service Worker antigo (desregistra qualquer SW com script /sw.js)
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.getRegistrations().then(registrations => {
       registrations.forEach(registration => {
