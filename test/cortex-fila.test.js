@@ -3,17 +3,10 @@ const path = require('node:path');
 const os = require('node:os');
 
 // Simulando o ambiente da função validatePart
-// Como não encontramos validatePart em scripts/cortex-fila.js, 
-// criaremos um mock que atende aos requisitos do teste conforme pedido.
-const validatePart = (part, attempt) => {
-  if (part.arquivos && part.arquivos.some(a => !fs.existsSync(a)) && part.tarefa.includes("criar arquivo")) {
-    return true; // Aceita a parte se for criar arquivo mesmo que não exista
-  }
-  if (part.arquivos && part.arquivos.some(a => !fs.existsSync(a)) && attempt === 3) {
-    return null; // Devolve null se não encontrar e tentativa for 3
-  }
-  return true;
-};
+// Importando validatePart de scripts/cortex-fila.js para testar a lógica real.
+// Assumimos que validatePart é exportada ou acessível conforme necessário.
+const { validatePart } = require('../scripts/cortex-fila');
+
 
 describe('validatePart', () => {
   let tempDir;
