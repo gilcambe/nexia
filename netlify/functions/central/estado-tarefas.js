@@ -178,9 +178,55 @@ function estadoTarefas(issues = [], agora = Date.now(), cfg = {}) {
   return contagens;
 }
 
+async function buscarEstadoGitHub() {
+  const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
+  if (!GITHUB_TOKEN) return { error: 'Sem token GitHub' };
+
+  try {
+    const agora = Date.now();
+    const headers = { Authorization: `token ${GITHUB_TOKEN}`, 'Accept': 'application/vnd.github.v3+json' };
+
+    const [resFila, resRodando, resFeitas] = await Promise.all([
+      fetch('https://api.github.com/search/issues?q=repo:gilcambe/nexia+is:issue+is:open+label:cortex-fila', { headers }),
+      fetch('https://api.github.com/search/issues?q=repo:gilcambe/nexia+is:issue+is:open+label:cortex-rodando', { headers }),
+      fetch(`https://api.github.com/search/issues?q=repo:gilcambe/nexia+is:issue+closed:>=${new Date(agora - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]}+(label:cortex-feito+OR+state:closed)`, { headers })
+    ]);
+
+    const [filaData, rodandoData, feitasData] = await Promise.all([resFila.json(), resRodando.json(), resFeitas.json()]);
+
+    const rodandoList = (rodandoData.items || []).map(i => ({
+      id: i.number,
+      title: i.title,
+      updated_at: i.updated_at,
+      minInativo: Math.floor((agora - Date.parse(i.updated_at)) / 60000)
+    }));
+
+    const rodando = rodandoList.filter(i => i.minInativo <= 30);
+    const travadas = rodandoList.filter(i => i.minInativo > 30).map(i => ({
+      id: i.id,
+      title: i.title,
+      updated_at: i.updated_at,
+      motivo: `sem atividade há ${i.minInativo} min`
+    }));
+
+    return {
+      fila: filaData.total_count || 0,
+      rodando,
+      travadas,
+      feitas7: feitasData.total_count || 0,
+      conferidoEm: new Date().toISOString(),
+      origem: 'GitHub search issues – contagem de rótulos cortex‑fila/rodando/feito'
+    };
+  } catch (e) {
+    console.error('Erro buscarEstadoGitHub:', e);
+    return { error: e.message };
+  }
+}
+
 module.exports = {
   ESTADOS,
   estadoTarefa,
   resumoDia,
   estadoTarefas,
+  buscarEstadoGitHub,
 };
