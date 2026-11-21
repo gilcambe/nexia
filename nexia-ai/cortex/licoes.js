@@ -25,8 +25,10 @@ class LessonStore {
     await this.ensureInitialized();
     const lesson = { assinatura, causa, resolucao, issue, createdAt: new Date().toISOString() };
     this.lessons.push(lesson);
-    this.avoidCounts[assinatura] = (this.avoidCounts[assinatura] || 0) + 1;
-
+    
+    // O pedido solicita persistir tanto as 'lessons' quanto os 'avoidCounts' atualizados
+    // Embora o incrementAvoidCount não seja chamado aqui, garantimos a consistência inicial
+    // caso necessário no futuro. O método abaixo já salva ambos.
     await cofreInstance.salvar('lessons', this.lessons);
     await cofreInstance.salvar('avoidCounts', this.avoidCounts);
     await cofreInstance.sincronizar();
