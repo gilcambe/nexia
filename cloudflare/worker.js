@@ -59,5 +59,16 @@ export default {
       r => console.log('[saude-historico]', JSON.stringify(r)),
       e => console.error('[saude-historico]', e && e.message),
     ));
+    // Prumo Backup: varredura diária de integridade (rodada às 03:00 UTC).
+    if (new Date(at).getUTCHours() === 3 && new Date(at).getUTCMinutes() < 5) {
+      const prumoBackup = functions.getFunction('prumo-backup');
+      if (prumoBackup && typeof prumoBackup.executarBackupDiario === 'function') {
+        const db = require('./firebase-init').db;
+        ctx.waitUntil(prumoBackup.executarBackupDiario(db).then(
+          r => console.log('[prumo-backup-cron]', JSON.stringify(r)),
+          e => console.error('[prumo-backup-cron]', e && e.message),
+        ));
+      }
+    }
   },
 };

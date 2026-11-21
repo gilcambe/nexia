@@ -1,0 +1,8 @@
+# Netlify Scheduled Functions - Backup Diário Prumo (LGPD & Integridade)
+# Executa todo dia às 03:00 UTC (Cron job)
+
+[[functions]]
+  function = "prumo-backup"
+  schedule = "0 3 * * *"
+
+
