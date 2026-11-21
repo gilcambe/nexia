@@ -68,4 +68,4 @@ class LessonStore {
 /**
  * Instância exportada do LessonStore para gerenciamento de lições e persistência.
  */
-module.exports = { LessonStore };
+module.exports = { LessonStore, lessonStore: new LessonStore() };
