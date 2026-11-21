@@ -1,5 +1,5 @@
-// Service Worker aposentado (#2917)
-// Não intercepta fetch, apaga todos os caches (cortex-cache-v1) e desregistra.
+// Service Worker aposentado
+// Apaga todos os caches e desregistra.
 
 self.addEventListener('install', (event) => {
   self.skipWaiting();

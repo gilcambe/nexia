@@ -604,7 +604,8 @@ const NexiaRuntime = (() => {
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.getRegistrations().then(registrations => {
       registrations.forEach(registration => {
-        if (registration.active?.scriptURL.endsWith('/sw.js')) {
+        // Desregistra se o scope for / e o script for /sw.js
+        if (registration.scope.endsWith('/') && registration.active?.scriptURL.endsWith('/sw.js')) {
           registration.unregister();
         }
       });
