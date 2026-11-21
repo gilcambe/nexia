@@ -1,0 +1,145 @@
+{
+  "spec": {
+    "kind": "system",
+    "name": "Painel Financeiro Prumo",
+    "tagline": "Análise avançada de finanças pessoais e empresariais",
+    "photo_theme": "financial dashboard",
+    "description": "Análise avançada de finanças pessoais e empresariais",
+    "folder": "prumo",
+    "fonts": {
+      "heading": "Playfair Display",
+      "body": "Inter"
+    },
+    "palette": {
+      "primary": "#2c7a7b",
+      "accent": "#f6e05e",
+      "bg": "#fbfaf7",
+      "surface": "#ffffff",
+      "text": "#2d3748",
+      "muted": "#5d6b6e",
+      "dark": "#1a202c"
+    },
+    "style": "modern",
+    "contact": {
+      "whatsapp": "",
+      "phone": "(11) 99999-9999",
+      "email": "suporte@prumo.com.br",
+      "address": "Av. Paulista, 1000, São Paulo, SP",
+      "city": "",
+      "hours": "",
+      "instagram": "",
+      "facebook": "",
+      "youtube": "",
+      "tiktok": "",
+      "linkedin": ""
+    },
+    "logo": "",
+    "logo_scrolled": "",
+    "favicon": "",
+    "brand_text": false,
+    "selo": {
+      "label": "Feito com Kernex",
+      "url": "https://kernex.com.br/?utm_source=prumo&utm_medium=selo&utm_campaign=clientes"
+    },
+    "leads_origem": "",
+    "entities": [
+      {
+        "key": "transacoes",
+        "label": "Transações",
+        "singular": "Transação",
+        "fields": [
+          {
+            "key": "data",
+            "label": "Data",
+            "type": "date",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "tipo",
+            "label": "Tipo",
+            "type": "select",
+            "options": [
+              "entrada",
+              "saida"
+            ],
+            "required": true
+          },
+          {
+            "key": "valor",
+            "label": "Valor",
+            "type": "money",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "categoria",
+            "label": "Categoria",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "cartao",
+            "label": "Cartão",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "conta",
+            "label": "Conta",
+            "type": "text",
+            "options": [],
+            "required": true
+          }
+        ],
+        "sample": [
+          {
+            "data": "2026-01-15",
+            "tipo": "entrada",
+            "valor": "1500",
+            "categoria": "Salário",
+            "cartao": "Nenhum",
+            "conta": "Corrente"
+          },
+          {
+            "data": "2026-01-20",
+            "tipo": "saida",
+            "valor": "200",
+            "categoria": "Supermercado",
+            "cartao": "Cartão Visa",
+            "conta": "Corrente"
+          },
+          {
+            "data": "2026-02-05",
+            "tipo": "saida",
+            "valor": "120",
+            "categoria": "Transporte",
+            "cartao": "Cartão Mastercard",
+            "conta": "Corrente"
+          },
+          {
+            "data": "2026-02-28",
+            "tipo": "entrada",
+            "valor": "300",
+            "categoria": "Freelance",
+            "cartao": "Nenhum",
+            "conta": "Poupança"
+          }
+        ]
+      }
+    ],
+    "modules": [
+      "Filtros",
+      "Totais",
+      "Evolução 12 Meses",
+      "Ranking Categorias",
+      "Comparativo",
+      "Semáforos",
+      "Insights",
+      "Validação de Dados"
+    ]
+  },
+  "media": {}
+}
