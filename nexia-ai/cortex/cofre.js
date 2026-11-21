@@ -38,4 +38,3 @@ class Cofre {
 
 // Exportar instância única do Cofre
 module.exports = new Cofre();
-// Cofre para sincronizar dados em memória - Finalizado conforme pedido
