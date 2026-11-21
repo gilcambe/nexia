@@ -8,7 +8,7 @@ class LessonStore {
   constructor() {
     this.lessons = [];
     this.avoidCounts = {};
-    this.loadInitialState();
+    this.initialized = this.loadInitialState();
   }
 
   async loadInitialState() {
@@ -16,7 +16,12 @@ class LessonStore {
     this.avoidCounts = (await cofreInstance.recuperar('avoidCounts')) || {};
   }
 
+  async ensureInitialized() {
+    await this.initialized;
+  }
+
   async addLesson({ assinatura, causa, resolucao, issue }) {
+    await this.ensureInitialized();
     const lesson = { assinatura, causa, resolucao, issue, createdAt: new Date().toISOString() };
     this.lessons.push(lesson);
     this.avoidCounts[assinatura] = (this.avoidCounts[assinatura] || 0) + 1;
@@ -38,6 +43,7 @@ class LessonStore {
   }
 
   async incrementAvoidCount(assinatura) {
+    await this.ensureInitialized();
     this.avoidCounts[assinatura] = (this.avoidCounts[assinatura] || 0) + 1;
 
     await cofreInstance.salvar('avoidCounts', this.avoidCounts);
