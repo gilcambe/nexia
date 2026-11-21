@@ -1,5 +1,6 @@
 // #2917: aviso único "Tem atualização nova — toque para atualizar" para todos os apps (PWA).
 // Uso: <script src="/js/update-banner.js" defer></script>. Sem dependências. Grátis.
+// Versão atualizada: implementa auto-update a cada 30 min, visibilitychange e verificação de version.json.
 (function () {
   if (window.__kxUpdateBanner || !("serviceWorker" in navigator)) return;
   window.__kxUpdateBanner = true;
