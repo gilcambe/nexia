@@ -600,19 +600,20 @@ const NexiaRuntime = (() => {
     setTimeout(boot, 0);
   }
 
-  // Aposentar Service Worker antigo (desregistra qualquer SW com script /sw.js)
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.getRegistrations().then(registrations => {
-      registrations.forEach(registration => {
-        if (registration.scope.endsWith('/') && (registration.active?.scriptURL.endsWith('/sw.js') || registration.installing?.scriptURL.endsWith('/sw.js') || registration.waiting?.scriptURL.endsWith('/sw.js'))) {
-          registration.unregister();
-        }
-      });
-    });
-  }
-
   return { boot };
 })();
+
+// Aposentar Service Worker antigo (desregistra qualquer SW com script /sw.js)
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations().then(registrations => {
+    registrations.forEach(registration => {
+      const scriptURL = registration.active?.scriptURL || registration.installing?.scriptURL || registration.waiting?.scriptURL;
+      if (scriptURL && scriptURL.endsWith('/sw.js')) {
+        registration.unregister();
+      }
+    });
+  });
+}
 
 window.NexiaRuntime = NexiaRuntime;
 
