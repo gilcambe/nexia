@@ -13,8 +13,8 @@
     b.setAttribute("role", "status");
     b.style.cssText = "position:fixed;left:12px;right:12px;bottom:12px;z-index:2147483647;display:flex;align-items:center;gap:12px;" +
       "padding:12px 14px;border-radius:14px;background:#111827;color:#fff;font:15px/1.3 system-ui,sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.35);max-width:520px;margin:0 auto";
-    b.innerHTML = '<span style="flex:1">Tem atualização nova 🎉</span>' +
-      '<button type="button" style="border:0;border-radius:10px;padding:10px 14px;font:600 15px system-ui,sans-serif;background:#22c55e;color:#04210f;cursor:pointer">Toque para atualizar</button>' +
+    b.innerHTML = '<span style="flex:1">Tem atualização nova 🎉 — Toque para atualizar</span>' +
+      '<button type="button" style="border:0;border-radius:10px;padding:10px 14px;font:600 15px system-ui,sans-serif;background:#fff;color:#000;cursor:pointer">Atualizar</button>' +
       '<button type="button" aria-label="Fechar" style="border:0;background:none;color:#9ca3af;font-size:20px;cursor:pointer">×</button>';
     var bts = b.querySelectorAll("button");
     bts[0].onclick = function () {
@@ -48,4 +48,20 @@
     location.reload();
   });
   navigator.serviceWorker.ready.then(function () { return navigator.serviceWorker.getRegistration(); }).then(vigiar).catch(function () {});
+
+  // Extra: verificação opcional de /version.json se o SW não estiver ativo ou não cobrir
+  if (!navigator.serviceWorker.controller) {
+    fetch("/version.json?t=" + Date.now()).then(function(res) {
+      if (!res.ok) return;
+      return res.json();
+    }).then(function(data) {
+      if (!data || !data.version) return;
+      var chave = "kx_ver";
+      var atual = localStorage.getItem(chave);
+      if (atual && atual !== data.version) {
+        mostrar(null);
+      }
+      localStorage.setItem(chave, data.version);
+    }).catch(function() {});
+  }
 })();
