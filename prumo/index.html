@@ -1,256 +1,106 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Kernex Finance</title>
-<meta name="theme-color" content="#2f6bff">
-<link rel="manifest" href="/prumo/manifest.webmanifest">
-<link rel="icon" href="/prumo/icone.svg" type="image/svg+xml">
-<link rel="apple-touch-icon" href="/prumo/icone-192.png">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<style>
-  /* Redesign (plano do dono, seção 15): fundo, card, azul = ação, verde = entrou, âmbar = atenção, vermelho = risco real. */
-  :root { --fundo:#0B1020; --cartao:#121B33; --borda:#1F2B4D; --texto:#E8ECF8; --fraco:#8B97B8; --verde:#2F6BFF; --verde2:#5B8DFF; --ganho:#2ECC71; --perda:#FF5A5F; --aviso:#F5A623; --perigo:#FF5A5F; --cinza:#5D6886; }
-  * { box-sizing:border-box; }
-  html,body { margin:0; background:var(--fundo); color:var(--texto); font:14px/1.45 Inter,Roboto,system-ui,-apple-system,"Segoe UI",sans-serif; }
-  body { min-height:100vh; padding-bottom:env(safe-area-inset-bottom); }
-  header { display:flex; align-items:center; gap:10px; padding:10px 16px; border-bottom:1px solid var(--borda); position:sticky; top:0; background:var(--fundo); z-index:5; }
-  header img { width:28px; height:28px; }
-  header h1 { font-size:20px; margin:0; flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  header button { background:none; border:1px solid var(--borda); color:var(--fraco); border-radius:10px; padding:6px 10px; font-size:13px; }
-  #btn-menu { width:40px; height:40px; display:grid; place-items:center; padding:0; }
-  #btn-menu svg { width:24px; height:24px; }
-  .card.kf-hero { background:linear-gradient(135deg,#1e3f9e 0%,#0f1a33 70%); }
-  main { padding:16px; max-width:720px; margin:0 auto; }
-  .btn { display:block; width:100%; min-height:44px; border:0; border-radius:12px; background:var(--verde); color:#fff; font-size:15px; font-weight:500; letter-spacing:.01em; cursor:pointer; }
-  .btn:active { background:var(--verde2); }
-  .entrar { text-align:center; padding-top:12vh; }
-  .entrar img { width:96px; height:96px; }
-  .entrar p { color:var(--fraco); }
-  .faixa { margin:12px 16px 0; padding:12px 14px; border-radius:12px; font-size:15px; }
-  .faixa.erro { background:#3a1414; border:1px solid var(--perigo); }
-  .faixa.aviso { background:#33260c; border:1px solid var(--aviso); }
-  .em-breve { text-align:center; color:var(--fraco); padding:48px 16px; }
-  nav.abas {
-    position: fixed;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    width: 280px;
-    display: flex;
-    flex-direction: column;
-    overflow-y: auto;
-    transform: translateX(-100%);
-    background: var(--cartao);
-    border-top: 1px solid var(--borda);
-    z-index: 10;
-  }
-  #fundo-menu { position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:9; }
-  #fundo-menu[hidden] { display:none !important; }
-  nav.abas.aberto { transform: translateX(0); }
-  nav.abas button {
-    flex: 0 0 auto;
-    min-height: 56px;
-    background: none;
-    border: 0;
-    border-bottom: 1px solid var(--borda);
-    color: var(--fraco);
-    font-size: 14px;
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
-    gap: 10px;
-    padding: 0 16px;
-    text-align: left;
-    cursor: pointer;
-  }
-  nav.abas svg { width:22px; height:22px; flex:none; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
-  nav.abas button[aria-selected="true"] { color: var(--verde2); font-weight: 600; }
-  button.titulo-grupo {
-    margin: 0;
-    padding: 14px 16px 8px;
-    font-size: 12px;
-    font-weight: 600;
-    letter-spacing: 0.06em;
-    color: var(--fraco);
-    text-transform: uppercase;
-    border-bottom: 1px solid var(--borda);
-    background: none;
-    border: 0;
-    text-align: left;
-    width: 100%;
-    cursor: pointer;
-  }
-  button.titulo-grupo[aria-expanded="true"] { color: var(--texto); }
-  /* Dono 19/11 ("muitas abas"): menu curto; o resto fica em "Mais telas" (nada foi removido). */
-  body:not(.ver-tudo) [data-mais], body:not(.ver-tudo) [data-mais] + .grupo { display: none; }
-  button.ver-mais { display: block; width: 100%; text-align: left; background: none; border: 0; color: var(--fraco, #9aa4b2); font: inherit; padding: 14px 16px; cursor: pointer; }
-  footer { padding:6px 12px calc(6px + env(safe-area-inset-bottom)); text-align:center; font-size:12px; color:var(--fraco); background:var(--fundo); }
-  header .instalar { background:var(--verde); border-color:var(--verde); color:#fff; font-weight:600; }
-  .btn.sec { margin-top:10px; background:none; border:1px solid var(--borda); color:var(--verde2); }
-  .dica { position:fixed; inset:0; background:rgba(0,0,0,.7); display:flex; align-items:flex-end; z-index:20; }
-  .dica div { background:var(--cartao); border-top:1px solid var(--borda); border-radius:18px 18px 0 0; padding:20px 18px calc(20px + env(safe-area-inset-bottom)); width:100%; }
-  .dica h3 { margin:0 0 8px; } .dica ol { margin:0 0 16px; padding-left:20px; color:var(--texto); }
-  .valor { transition:filter .15s; } body.privado .valor { filter:blur(7px); user-select:none; }
-  [hidden] { display:none !important; }
-  /* Redesign fase 2: o menu lateral saiu. Barra de baixo com 5 abas; o resto fica no Perfil (avatar). */
-  nav.abas, #fundo-menu, #btn-menu { display:none !important; }
-  body { padding-bottom:calc(72px + env(safe-area-inset-bottom)); }
-  nav.barra-abas { position:fixed; left:0; right:0; bottom:0; z-index:8; display:grid; grid-template-columns:repeat(5,1fr); background:#0E1528; border-top:1px solid var(--borda); padding:4px 4px calc(4px + env(safe-area-inset-bottom)); max-width:720px; margin:0 auto; }
-  nav.barra-abas button { background:none; border:0; color:var(--fraco); font:inherit; font-size:11px; min-height:56px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; cursor:pointer; border-radius:12px; }
-  nav.barra-abas button svg { width:24px; height:24px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
-  nav.barra-abas button[aria-current="page"] { color:var(--texto); font-weight:600; }
-  nav.barra-abas button[aria-current="page"] svg { stroke:var(--verde2); }
-  nav.barra-abas .lancar span.mais { width:48px; height:48px; border-radius:16px; background:var(--verde); color:#fff; display:grid; place-items:center; font-size:28px; line-height:1; margin-top:-18px; box-shadow:0 6px 18px #2f6bff55; }
-  #avatar { width:40px; height:40px; border-radius:50%; padding:0; background:#1A2547; border:1px solid var(--borda); color:var(--texto); font-weight:700; font-size:15px; overflow:hidden; display:grid; place-items:center; }
-  #voltar { width:40px; height:40px; padding:0; display:grid; place-items:center; border-radius:12px; color:var(--texto); }
-  #voltar svg { width:24px; height:24px; }
-  #voltar:not([hidden]) + img { display:none; }
-  #avatar img { width:100%; height:100%; object-fit:cover; }
-  footer { display:none; }
-
-  @media (max-width: 599px) {
-    header h1 { display:none; }
-    #titulo-aba { flex:1; font-weight:600; font-size:16px; }
-    #instalar .rotulo { display:none; }
-  }
-  @media (min-width: 1024px) {
-    nav.abas {
-      transform: none;
-      position: fixed;
-      top: 0;
-      bottom: 0;
-      left: 0;
-      width: 280px;
-      overflow-y: auto;
-    }
-    #btn-menu { display: none; }
-    main { max-width: 1040px; }
-    nav.barra-abas { bottom:16px; border:1px solid var(--borda); border-radius:20px; max-width:560px; }
-  }
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Painel Financeiro Prumo — Análise avançada de finanças pessoais e empresariais</title>
+  <meta name="description" content="Análise avançada de finanças pessoais e empresariais">
+  <meta name="theme-color" content="#2c7a7b">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <script>try{if(localStorage.getItem('nexia-theme')==='dark')document.documentElement.dataset.theme='dark'}catch(e){}</script>
 </head>
 <body>
-<!-- #3556: no endereço antigo, avisa o novo (o antigo continua funcionando para quem instalou) -->
-<div id="kf-novo-endereco" hidden style="background:#0f766e;color:#fff;padding:10px 14px;text-align:center;font:14px system-ui,sans-serif">Novo endereço: <a href="https://finance.kernex.com.br/" style="color:#fff;font-weight:700">finance.kernex.com.br</a></div>
-<script>try{if(location.hostname!=="finance.kernex.com.br"&&!/^(localhost|127.)/.test(location.hostname))document.getElementById("kf-novo-endereco").hidden=false}catch(e){}</script>
-<header>
-  <button id="voltar" type="button" aria-label="Voltar" title="Voltar" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 18l-6-6 6-6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-  <button id="btn-menu" type="button" aria-label="Menu" aria-expanded="false">
-    <svg viewBox="0 0 24 24" aria-hidden="true"><line x1="4" y1="7" x2="20" y2="7" stroke="currentColor" stroke-width="2"/><line x1="4" y1="12" x2="20" y2="12" stroke="currentColor" stroke-width="2"/><line x1="4" y1="17" x2="20" y2="17" stroke="currentColor" stroke-width="2"/></svg>
-  </button>
-  <img src="/prumo/icone.svg" alt="">
-  <h1>Kernex Finance</h1>
-  <span id="titulo-aba">Início</span>
-  <button id="instalar" class="instalar" type="button" hidden>📲<span class="rotulo">Instalar app</span></button>
-  <button id="olho" type="button" aria-pressed="false" title="Esconder valores" aria-label="Esconder valores">👁</button>
-  <button id="avatar" type="button" aria-label="Perfil" title="Perfil" hidden>?</button>
-  <button id="sair" type="button" hidden>Sair</button>
-</header>
-<div id="erro" class="faixa erro" role="alert" hidden></div>
-<div id="aviso" class="faixa aviso" role="status" hidden></div>
+  <a class="skip" href="#conteudo">Pular para o conteúdo</a>
+  <div class="shell">
+    <aside class="sidebar" id="sidebar" aria-label="Menu do sistema">
+      <div class="sidebar__brand">
+        <span class="logo" aria-hidden="true">P</span>
+        <span>Painel Financeiro Prumo</span>
+      </div>
+      <nav class="sidebar__nav" aria-label="Seções">
+        <a href="#/painel" data-route="painel"><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18"/><path d="m7 15 4-4 3 3 5-6"/></svg><span>Painel</span></a>
+        <a href="#/transacoes" data-route="transacoes"><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg><span>Transações</span></a>
+      </nav>
+      <div class="sidebar__foot">
+        <p>Suporte: suporte@prumo.com.br</p>
+        <p>Dados salvos neste navegador.</p>
+      </div>
+    </aside>
+    <div class="backdrop" data-close-menu hidden></div>
+    <div class="main">
+      <header class="topbar">
+        <button class="icon-btn menu-btn" type="button" aria-label="Abrir menu" aria-expanded="false" aria-controls="sidebar"><svg class="i" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+        <div class="topbar__title">
+          <h1 id="view-title">Painel</h1>
+          <p id="view-sub">Análise avançada de finanças pessoais e empresariais</p>
+        </div>
+        <label class="search">
+          <span class="sr-only">Buscar</span>
+          <svg class="i" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          <input id="search" type="search" placeholder="Buscar..." autocomplete="off">
+        </label>
+        <button class="icon-btn" type="button" id="theme" aria-label="Alternar modo escuro"><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+      </header>
+      <main id="conteudo" class="content">
+        <section id="view-painel" class="view" aria-labelledby="view-title">
+          <div class="kpis" id="kpis"></div>
+          <div class="grid2">
+            <article class="card">
+              <header class="card__head"><h2 id="chart-title">Resumo</h2></header>
+              <div class="chart-box"><canvas id="chart" aria-label="Gráfico do resumo" role="img"></canvas></div>
+            </article>
+            <article class="card">
+              <header class="card__head"><h2>Últimos cadastros</h2></header>
+              <ul class="recent" id="recent"></ul>
+            </article>
+          </div>
+        </section>
+        <section id="view-entity" class="view" hidden>
+          <div class="toolbar">
+            <p class="count" id="count"></p>
+            <div class="toolbar__actions">
+              <button class="btn btn--ghost" type="button" id="export"><svg class="i" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg> Exportar CSV</button>
+              <button class="btn btn--primary" type="button" id="add"><svg class="i" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg> <span id="add-label">Novo</span></button>
+            </div>
+          </div>
+          <div class="card table-card">
+            <div class="table-wrap">
+              <table class="table">
+                <thead id="thead"></thead>
+                <tbody id="tbody"></tbody>
+              </table>
+            </div>
+            <div class="empty" id="empty" hidden>
+              <svg class="i" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.9 5.8L20 11l-6.1 2.2L12 19l-1.9-5.8L4 11l6.1-2.2z"/></svg>
+              <h2>Nada por aqui ainda</h2>
+              <p>Clique em “Adicionar” para fazer o primeiro cadastro.</p>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
 
-<section id="tela-entrar" class="entrar" hidden>
-  <main>
-    <img src="/prumo/icone.svg" alt="Kernex Finance">
-    <h2>Sua vida financeira inteira. Uma inteligência.</h2>
-    <p>Documentos, cartões, investimentos, milhas e objetivos num lugar só.</p>
-    <button id="entrar" class="btn" type="button" data-testid="prumo-entrar">Entrar com Google</button>
-    <button id="instalar2" class="btn sec" type="button" hidden>📲 Baixar o app no celular</button>
-  </main>
-</section>
+  <dialog class="modal" id="modal" aria-labelledby="modal-title">
+    <form id="form" novalidate>
+      <header class="modal__head">
+        <h2 id="modal-title">Novo</h2>
+        <button class="icon-btn" type="button" data-close aria-label="Fechar"><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+      </header>
+      <div class="modal__body" id="form-fields"></div>
+      <footer class="modal__foot">
+        <button class="btn btn--ghost" type="button" data-close>Cancelar</button>
+        <button class="btn btn--primary" type="submit">Salvar</button>
+      </footer>
+    </form>
+  </dialog>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-<main id="tela-app" hidden>
-  <div id="conteudo" aria-live="polite"></div>
-</main>
-
-<nav id="abas" class="abas" role="tablist" hidden>
-  <button type="button" id="fechar-menu" aria-label="Fechar menu"><svg viewBox="0 0 24 24" aria-hidden="true"><line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-  <button type="button" class="titulo-grupo" aria-expanded="false" data-grupo="visao">Visão geral</button>
-  <div class="grupo" id="grupo-visao" hidden>
-    <button type="button" role="tab" data-aba="inicio" aria-selected="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><circle cx="12" cy="13" r="1"/></svg>Início</button>
-  </div>
-  <button type="button" class="titulo-grupo" aria-expanded="false" data-grupo="salario">Salário e folha</button>
-  <div class="grupo" id="grupo-salario" hidden>
-    <button type="button" role="tab" data-aba="orcamento" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Salário</button>
-    <button type="button" role="tab" data-aba="carreira" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>Carreira e renda</button>
-  </div>
-  <button type="button" class="titulo-grupo" aria-expanded="false" data-grupo="contas">Contas e transações</button>
-  <div class="grupo" id="grupo-contas" hidden>
-    <button type="button" role="tab" data-aba="contas" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9v9h4V9zM17 12h4v7h-4zM17 5h4v4h-4zM3 5v4h4V5z"/></svg>Contas</button>
-    <button type="button" role="tab" data-aba="gastos" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 5v14H5V5l7-3 7 3zM7 10l3-3 3 3M7 16l3 3 3-3"/></svg>Gastos</button>
-    <button type="button" role="tab" data-aba="compras" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.8 5M7 13l-2.293 2.293M7 13l2.293 2.293M16 11v7a4 4 0 0 1-4 4H5a4 4 0 0 1-4-4V5a4 4 0 0 1 4-4h11a4 4 0 0 1 4 4v7"/></svg>Compras</button>
-    <button type="button" role="tab" data-aba="documentos" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Documentos</button>
-    <button type="button" role="tab" data-aba="conexoes" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.5 3.6V16h-4V3.6C8.579 4.36 7 6.197 7 8.5 7 10.761 8.761 12.5 11 12.5s4-1.739 4-4c0-2.303-1.579-4.14-3.5-4.9M21 12a9 9 0 1 1-9-9 9 9 0 0 1 9 9"/></svg>Bancos</button>
-  </div>
-  <button type="button" class="titulo-grupo" aria-expanded="false" data-grupo="cartoes">Cartões</button>
-  <div class="grupo" id="grupo-cartoes" hidden>
-    <button type="button" role="tab" data-aba="cartoes" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><rect width="20" height="12" x="2" y="6" rx="2" ry="2"/><line x1="4" y1="10" x2="20" y2="10"/><line x1="4" y1="14" x2="20" y2="14"/><line x1="10" y1="18" x2="10" y2="18"/></svg>Cartões</button>
-  </div>
-  <button type="button" class="ver-mais" id="ver-mais" aria-expanded="false">➕ Mais telas</button>
-  <button type="button" class="titulo-grupo" aria-expanded="false" data-grupo="orcamento" data-mais>Orçamento e metas</button>
-  <div class="grupo" id="grupo-orcamento" hidden>
-    <button type="button" role="tab" data-aba="metas" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>Metas</button>
-    <button type="button" role="tab" data-aba="objetivos" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg>Objetivos</button>
-  </div>
-  <button type="button" class="titulo-grupo" aria-expanded="false" data-grupo="fluxo" data-mais>Fluxo de caixa</button>
-  <div class="grupo" id="grupo-fluxo" hidden>
-    <button type="button" role="tab" data-aba="fluxo" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="3 17 9 11 13 15 21 7"/><polyline points="15 7 21 7 21 13"/></svg>Fluxo de caixa</button>
-  </div>
-  <button type="button" class="titulo-grupo" aria-expanded="false" data-grupo="dividas" data-mais>Dívidas</button>
-  <div class="grupo" id="grupo-dividas" hidden>
-    <button type="button" role="tab" data-aba="dividas" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Dívidas</button>
-  </div>
-  <button type="button" class="titulo-grupo" aria-expanded="false" data-grupo="patrimonio" data-mais>Patrimônio</button>
-  <div class="grupo" id="grupo-patrimonio" hidden>
-    <button type="button" role="tab" data-aba="investimentos" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>Investir</button>
-    <button type="button" role="tab" data-aba="carteira" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 4H3c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2z"/><polyline points="15 11 13 9 9 11"/></svg>Carteira</button>
-    <button type="button" role="tab" data-aba="mercado" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><line x1="3" y1="6" x2="21" y2="6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><line x1="3" y1="12" x2="21" y2="12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><line x1="3" y1="18" x2="12" y2="18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>Mercado</button>
-    <button type="button" role="tab" data-aba="robos" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h18M3 6h10M3 18h14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>Robôs</button>
-    <button type="button" role="tab" data-aba="pontos" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><circle cx="12" cy="10" r="1"/></svg>Milhas</button>
-    <button type="button" role="tab" data-aba="viagens" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 16l20-8-8 14-2-6z"/></svg>Viagens</button>
-    <button type="button" role="tab" data-aba="aposentadoria" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 8 14"/><path d="M4 21h16"/></svg>Aposentadoria e FGTS</button>
-  </div>
-  <button type="button" class="titulo-grupo" aria-expanded="false" data-grupo="economia" data-mais>Economia</button>
-  <div class="grupo" id="grupo-economia" hidden>
-    <button type="button" role="tab" data-aba="economizar" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2c6.48 0 12 5.48 12 12s-5.48 12-12 12S0 20.48 0 14 5.48 2 12 2zm0 2a4 4 0 1 0 0 8 4 4 0 0 0 0-8zm7 12h-4v4h4z"/></svg>Economizar</button>
-    <button type="button" role="tab" data-aba="impostos" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Impostos</button>
-  </div>
-  <button type="button" class="titulo-grupo" aria-expanded="false" data-grupo="assistente">Assistente IA</button>
-  <div class="grupo" id="grupo-assistente" hidden>
-    <button type="button" role="tab" data-aba="assistente" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 14a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm9-2a6 6 0 0 0-6-6 6 6 0 0 0-6 6 6 6 0 0 0 6 6 6 6 0 0 0 6-6z"/></svg>Assistente</button>
-    <button type="button" role="tab" data-aba="consultor" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>Consultor</button>
-  </div>
-  <button type="button" class="titulo-grupo" aria-expanded="false" data-grupo="config" data-mais>Configurações</button>
-  <div class="grupo" id="grupo-config" hidden>
-    <button type="button" role="tab" data-aba="familia" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Família</button>
-    <button type="button" role="tab" data-aba="alertas" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0zM12 17l.5-6L12 7z"/></svg>Alertas</button>
-    <button type="button" role="tab" data-aba="ajuda" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 2H5a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2zm-5 2v4h4V4z"/></svg>Ajuda</button>
-  </div>
-</nav>
-<nav id="barra" class="barra-abas" aria-label="Telas principais" hidden>
-  <button type="button" data-ir="inicio" aria-current="page"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10l9-7 9 7v10a2 2 0 0 1-2 2h-4v-7H9v7H5a2 2 0 0 1-2-2z"/></svg>Início</button>
-  <button type="button" data-ir="mes"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg>Mês</button>
-  <button type="button" class="lancar" data-ir="lancar" aria-label="Lançar"><span class="mais" aria-hidden="true">+</span>Lançar</button>
-  <button type="button" data-ir="patrimonio"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 21h18M5 21V10l7-5 7 5v11M9 21v-6h6v6"/></svg>Patrimônio</button>
-  <button type="button" data-ir="beneficios"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12v9H4v-9M2 7h20v5H2zM12 21V7M12 7H8a2.5 2.5 0 1 1 0-5c3 0 4 5 4 5zM12 7h4a2.5 2.5 0 1 0 0-5c-3 0-4 5-4 5z"/></svg>Benefícios</button>
-</nav>
-<div id="fundo-menu" hidden></div>
-<div id="dica" class="dica" role="dialog" aria-modal="true" hidden><div>
-  <h3>Instalar o Kernex Finance</h3>
-  <ol id="dica-passos"></ol>
-  <button id="dica-ok" class="btn" type="button">Entendi</button>
-</div></div>
-<footer>Seus dados são só seus. O app nunca pede senha de banco.</footer>
-
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-<script src="/prumo/abertura.js"></script>
-<script src="/prumo/cache-api.js"></script>
-<script src="/prumo/app.js"></script>
-<script src="/prumo/previsto.js"></script>
-<script src="/prumo/instalar.js"></script>
-<script src="/prumo/privacidade.js"></script>
+  <script type="application/json" id="app-config">{"key":"nexia-app:prumo","name":"Painel Financeiro Prumo","entities":[{"key":"transacoes","label":"Transações","singular":"Transação","fields":[{"key":"data","label":"Data","type":"date","options":[],"required":true},{"key":"tipo","label":"Tipo","type":"select","options":["entrada","saida"],"required":true},{"key":"valor","label":"Valor","type":"money","options":[],"required":true},{"key":"categoria","label":"Categoria","type":"text","options":[],"required":true},{"key":"cartao","label":"Cartão","type":"text","options":[],"required":true},{"key":"conta","label":"Conta","type":"text","options":[],"required":true}],"sample":[{"data":"2026-01-15","tipo":"entrada","valor":"1500","categoria":"Salário","cartao":"Nenhum","conta":"Corrente"},{"data":"2026-01-20","tipo":"saida","valor":"200","categoria":"Supermercado","cartao":"Cartão Visa","conta":"Corrente"},{"data":"2026-02-05","tipo":"saida","valor":"120","categoria":"Transporte","cartao":"Cartão Mastercard","conta":"Corrente"},{"data":"2026-02-28","tipo":"entrada","valor":"300","categoria":"Freelance","cartao":"Nenhum","conta":"Poupança"}]}]}</script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.js" defer></script>
+  <script src="app.js" defer></script>
 </body>
 </html>
