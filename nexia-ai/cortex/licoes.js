@@ -8,12 +8,21 @@ class LessonStore {
   constructor() {
     this.lessons = [];
     this.avoidCounts = {};
-    // Construtor síncrono que inicializa com dados vazios se necessário; a persistência é assíncrona
-    this.lessons = [];
-    this.avoidCounts = {};
+    this.initialized = this.loadInitialState();
+  }
+
+  async loadInitialState() {
+    this.lessons = (await cofreInstance.recuperar('lessons')) || [];
+    this.avoidCounts = (await cofreInstance.recuperar('avoidCounts')) || {};
+    return true;
+  }
+
+  async ensureInitialized() {
+    await this.initialized;
   }
 
   async addLesson({ assinatura, causa, resolucao, issue }) {
+    await this.ensureInitialized();
     const lesson = { assinatura, causa, resolucao, issue, createdAt: new Date().toISOString() };
     this.lessons.push(lesson);
     this.avoidCounts[assinatura] = (this.avoidCounts[assinatura] || 0) + 1;
@@ -35,6 +44,7 @@ class LessonStore {
   }
 
   async incrementAvoidCount(assinatura) {
+    await this.ensureInitialized();
     this.avoidCounts[assinatura] = (this.avoidCounts[assinatura] || 0) + 1;
 
     await cofreInstance.salvar('avoidCounts', this.avoidCounts);
@@ -52,4 +62,6 @@ class LessonStore {
   }
 }
 
-module.exports = { LessonStore };
+// Instância exportada do LessonStore
+module.exports = new LessonStore();
+// Lições do Cortex em CommonJS - Finalizado conforme pedido
