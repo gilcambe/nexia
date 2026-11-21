@@ -8,6 +8,12 @@ class LessonStore {
   constructor() {
     this.lessons = [];
     this.avoidCounts = {};
+    this.loadInitialState();
+  }
+
+  async loadInitialState() {
+    this.lessons = (await cofreInstance.recuperar('lessons')) || [];
+    this.avoidCounts = (await cofreInstance.recuperar('avoidCounts')) || {};
   }
 
   async addLesson({ assinatura, causa, resolucao, issue }) {
