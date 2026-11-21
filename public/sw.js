@@ -19,3 +19,5 @@ self.addEventListener('activate', (event) => {
     })()
   );
 });
+
+// fetch não é interceptado (não há addEventListener 'fetch')
