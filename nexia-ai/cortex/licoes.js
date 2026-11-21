@@ -62,4 +62,5 @@ class LessonStore {
   }
 }
 
+// Instância exportada do LessonStore
 module.exports = new LessonStore();
