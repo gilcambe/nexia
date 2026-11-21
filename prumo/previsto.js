@@ -17,6 +17,7 @@
     const botoes = x.colecao && x.id
       ? `<div class="linha" style="margin:4px 0 8px"><button type="button" class="btn mini" data-prv="confirmar" data-colecao="${esc(x.colecao)}" data-id="${esc(x.id)}">${receber ? '✅ Caiu' : '✅ Paguei'}</button>`
         + `<button type="button" class="btn sec mini" data-prv="adiar" data-colecao="${esc(x.colecao)}" data-id="${esc(x.id)}">${receber ? 'Ainda não caiu' : 'Ainda não paguei'}</button>`
+        + `<button type="button" class="btn sec mini" data-prv="editar" data-colecao="${esc(x.colecao)}" data-id="${esc(x.id)}" aria-label="Editar">✏️</button>`
         + `<button type="button" class="btn sec mini" data-prv="apagar" data-colecao="${esc(x.colecao)}" data-id="${esc(x.id)}" aria-label="Apagar">🗑️</button></div>`
       : '<div class="fraco" style="margin-bottom:6px">Estimativa pela parcela cadastrada.</div>';
     return `<div class="item"><span>${esc(x.nome)} <span class="fraco">${esc(dm(x.data))}</span></span><span class="v">${brl(x.valor)}</span></div>${botoes}`;
@@ -38,7 +39,10 @@
       const corpo = () => ({ colecao: b.dataset.colecao, id: b.dataset.id });
       if (b.dataset.prv === 'confirmar') {
         b.onclick = () => MB.api('previsto_confirmar', corpo()).then(() => { if (ui.ok) ui.ok('✅ Confirmado.'); if (ui.recarregar) ui.recarregar(); });
-      } else if (b.dataset.prv === 'apagar') { // dono 19/11: "não tem botão de apagar"
+      } else if (b.dataset.prv === 'editar') {
+        b.onclick = () => ui.formulario('Editar', [{ nome: 'nome', rotulo: 'Nome', tipo: 'text' }, { nome: 'valor', rotulo: 'Valor', tipo: 'number' }, { nome: 'data', rotulo: 'Data', tipo: 'date' }],
+          (d) => (d ? MB.api('previsto_editar', { ...corpo(), ...d }).then(() => { if (ui.ok) ui.ok('✏️ Editado.'); if (ui.recarregar) ui.recarregar(); }) : Promise.resolve()));
+      } else if (b.dataset.prv === 'apagar') {
         const acao = { lancamentos: 'lanc_apagar', pagamentos: 'pagamento_apagar' }[b.dataset.colecao];
         b.onclick = () => { if (!acao || !confirm('Apagar este item?')) return; MB.api(acao, { id: b.dataset.id }).then(() => { if (ui.ok) ui.ok('🗑️ Apagado.'); if (ui.recarregar) ui.recarregar(); }); };
       } else {
