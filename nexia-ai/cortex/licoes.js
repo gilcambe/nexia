@@ -8,12 +8,17 @@ class LessonStore {
   constructor() {
     this.lessons = [];
     this.avoidCounts = {};
-    this.initialized = this.loadInitialState();
+    this.initialized = null;
   }
 
   async loadInitialState() {
-    this.lessons = (await cofreInstance.recuperar('lessons')) || [];
-    this.avoidCounts = (await cofreInstance.recuperar('avoidCounts')) || {};
+    if (!this.initialized) {
+      this.initialized = (async () => {
+        this.lessons = (await cofreInstance.recuperar('lessons')) || [];
+        this.avoidCounts = (await cofreInstance.recuperar('avoidCounts')) || {};
+      })();
+    }
+    return this.initialized;
   }
 
   async ensureInitialized() {
@@ -61,4 +66,4 @@ class LessonStore {
   }
 }
 
-module.exports = { LessonStore };
+module.exports = new LessonStore();
