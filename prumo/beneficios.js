@@ -41,7 +41,8 @@
       { nome: 'dia_recarga', rotulo: 'Dia que cai (1 a 31)', tipo: 'number', valor: v ? v.dia_recarga : '' },
     ], (d) => MB.api('vale_salvar', { ...d, id: v ? v.id : undefined }), v ? () => MB.api('vale_apagar', { id: v.id }) : null);
     el.querySelector('#kb-vale-novo').onclick = () => formVale(null);
-    el.querySelectorAll('[data-ve]').forEach((b) => { b.onclick = () => formVale(vl.vales.find((x) => x.id === b.dataset.ve)); });\n    el.querySelectorAll('[data-vd]').forEach((b) => { b.onclick = () => { if (confirm('Tem certeza que deseja apagar este vale?')) MB.api('vale_apagar', { id: b.dataset.vd }).then(() => location.reload()); }; });
+    el.querySelectorAll('[data-ve]').forEach((b) => { b.onclick = () => formVale(vl.vales.find((x) => x.id === b.dataset.ve)); });
+    el.querySelectorAll('[data-vd]').forEach((b) => { b.onclick = () => { if (confirm('Tem certeza que deseja apagar este vale?')) MB.api('vale_apagar', { id: b.dataset.vd }).then(() => MB.telas.beneficios(el)); }; });
     el.querySelectorAll('[data-vg]').forEach((b) => { b.onclick = () => { const v = vl.vales.find((x) => x.id === b.dataset.vg);
       U.formulario('Gasto no ' + v.nome, [{ nome: 'valor', rotulo: 'Valor (R$)', tipo: 'number', valor: '' }, { nome: 'descricao', rotulo: 'O que foi', valor: 'Almoço' }, { nome: 'data', rotulo: 'Data', tipo: 'date', valor: U.hoje() }],
         (d) => MB.api('vale_gasto', { id: v.id, valor: Number(d.valor), descricao: d.descricao, data: d.data })); }; });
