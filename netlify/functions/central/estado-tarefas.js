@@ -28,7 +28,7 @@ function estadoTarefa(issue, agora = Date.now(), cfg = { minutosParada: 30, maxT
   const aguardandoIa = ls.includes('jules-enviado') || ls.includes('cortex-jules') || ls.includes('reserva-tentou') || ls.includes('reserva-volta') || ls.includes('vez-do-claude');
 
   if (issue.state === 'closed') {
-    estado = ls.includes('cortex-feito') || ls.includes('jules-feito') || issue.state_reason === 'completed' ? 'concluida' : 'falhou';
+    estado = ls.includes('cortex-feito') || ls.includes('jules-feito') ? 'concluida' : 'falhou';
   } else if (isTravada || (cortexRodando && diffMin > cfg.minutosParada) || (aguardandoIa && diffMin > cfg.minutosParada)) {
     estado = 'travada';
   } else if (cortexRodando) {
