@@ -1,5 +1,4 @@
-// Service Worker aposentado
-// Apaga todos os caches e desregistra.
+// Service Worker aposentado: apaga todos os caches e se desregistra.
 
 self.addEventListener('install', (event) => {
   self.skipWaiting();
@@ -8,16 +7,9 @@ self.addEventListener('install', (event) => {
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     (async () => {
-      try {
-        const cacheNames = await caches.keys();
-        await Promise.all(cacheNames.map(name => caches.delete(name)));
-      } catch (err) {}
-
-      try {
-        await self.registration.unregister();
-      } catch (err) {}
+      const cacheNames = await caches.keys();
+      await Promise.all(cacheNames.map(name => caches.delete(name)));
+      await self.registration.unregister();
     })()
   );
 });
-
-// fetch não é interceptado (não há addEventListener 'fetch')

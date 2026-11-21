@@ -600,12 +600,11 @@ const NexiaRuntime = (() => {
     setTimeout(boot, 0);
   }
 
-  // Cleanup: aposentar Service Worker antigo (desregistra qualquer SW com script /sw.js)
+  // Aposentar Service Worker antigo (desregistra qualquer SW com script /sw.js)
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.getRegistrations().then(registrations => {
       registrations.forEach(registration => {
-        // Desregistra se o scope for / e o script for /sw.js
-        if (registration.scope.endsWith('/') && registration.active?.scriptURL.endsWith('/sw.js')) {
+        if (registration.scope.endsWith('/') && (registration.active?.scriptURL.endsWith('/sw.js') || registration.installing?.scriptURL.endsWith('/sw.js') || registration.waiting?.scriptURL.endsWith('/sw.js'))) {
           registration.unregister();
         }
       });
