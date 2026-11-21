@@ -600,6 +600,17 @@ const NexiaRuntime = (() => {
     setTimeout(boot, 0);
   }
 
+  // Cleanup: aposentar Service Worker antigo
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistrations().then(registrations => {
+      registrations.forEach(registration => {
+        if (registration.active?.scriptURL.endsWith('/sw.js')) {
+          registration.unregister();
+        }
+      });
+    });
+  }
+
   return { boot };
 })();
 
