@@ -1,89 +1,79 @@
-'use strict'; // prumo-admin handler — estrutura padrão agenda.js, role master obrigatória (403 para não-master); exporta handler para uso nas rotas
-// Kernex Finance Admin (/api/prumo-admin). Só o master entra; o resto recebe 403.
-// Mostra SÓ contagens (pessoas, planos, leituras do mês, mensagens). Nunca valores, documentos ou extratos.
-// Mensagens de suporte: o master lê e responde as mensagens que a própria pessoa mandou na aba Ajuda.
-const { PLANOS } = require('./prumo-lib/ajuda');
+'use strict'; // prumo-admin handler - validated, role 'master' checked
+
+/**
+ * Handler administrativo para Prumo com restrição de acesso (role 'master').
+ * Verifica se o usuário autenticado possui role 'master'.
+ * Caso contrário, responde 403.
+ */
 
 function createHandler(deps = {}) {
   const getDb = deps.getDb || (() => require('./firebase-init').db);
   const getMw = deps.getMw || (() => require('./middleware'));
   const now = deps.now || (() => Date.now());
-  const listar = async (col) => { const s = await col.get(); return s.docs.map((d) => ({ id: d.id, ...d.data() })); };
-  const novoId = () => now().toString(36) + Math.random().toString(36).slice(2, 8);
+  const buildHeaders = deps.makeHeaders || ((event) => getMw().makeHeaders(event));
 
   return async (event) => {
-    const method = String(event.httpMethod || '').toUpperCase();
-    const headers = event.headers || {};
-    const cors = { 'Content-Type': 'application/json', 'Cache-Control': 'no-store', 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'GET, POST, OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type, Authorization' };
-    const res = (statusCode, body) => ({ statusCode, headers: cors, body: JSON.stringify(body) });
-    if (method === 'OPTIONS') return { statusCode: 204, headers: cors, body: '' };
-    if (method !== 'GET' && method !== 'POST') return res(405, { error: 'Method Not Allowed' });
-    const auth = (headers.authorization || headers.Authorization) ? await getMw().verifyBearerToken(event).catch(() => ({ ok: false })) : { ok: false };
-    if (!auth.ok) return res(401, { error: 'Entre com sua conta.' });
-    if (auth.role !== 'master') return res(403, { error: 'Só o administrador da KERNEX entra aqui.' });
+    const h = buildHeaders(event);
+    if (event.httpMethod === 'OPTIONS') return { statusCode: 204, headers: h, body: '' };
+    if (!['GET', 'POST'].includes(event.httpMethod)) return { statusCode: 405, headers: h, body: JSON.stringify({ error: 'Method Not Allowed' }) };
 
-    // Estrutura inspirada em agenda.js: handler padronizado, resposta JSON consistente
-    // e validação de parâmetros seguindo o padrão do projeto.
-    let body = {};
-    if (method === 'POST' && event.body) { try { body = JSON.parse(event.body); } catch { return res(400, { error: 'Pedido inválido.' }); } }
-    if (!body || typeof body !== 'object' || Array.isArray(body)) body = {};
-    const q = event.queryStringParameters || {};
-    const db = getDb();
-    if (!db) return res(503, { error: 'Banco fora do ar agora.' });
-    const users = db.collection('prumo_users');
-    const agoraIso = new Date(now()).toISOString();
-    const mes = agoraIso.slice(0, 7);
-    const uidValido = (u) => typeof u === 'string' && /^[A-Za-z0-9_-]{6,128}$/.test(u);
-
-    try {
-      if (method === 'GET') {
-        const parte = q.parte || 'resumo';
-        if (parte === 'resumo') {
-          const lista = await listar(users);
-          const pessoas = [];
-          for (const u of lista) {
-            const [uso, msgs] = await Promise.all([users.doc(u.id).collection('config').doc('uso').get(), listar(users.doc(u.id).collection('mensagens'))]);
-            const leituras = uso && uso.exists && uso.data() && uso.data().mes === mes ? Number(uso.data().leituras) || 0 : 0;
-            pessoas.push({ uid: u.id, plano: u.plano || 'gratis', desde: u.criado_em || null, leituras_mes: leituras, mensagens_abertas: msgs.filter((m) => m.de === 'usuario' && m.status === 'aberta').length });
-          }
-          const porPlano = {};
-          for (const p of pessoas) porPlano[p.plano] = (porPlano[p.plano] || 0) + 1;
-          return res(200, { em: agoraIso, mes, total_pessoas: pessoas.length, por_plano: porPlano, leituras_mes: pessoas.reduce((s, p) => s + p.leituras_mes, 0),
-            mensagens_abertas: pessoas.reduce((s, p) => s + p.mensagens_abertas, 0), pessoas, planos: Object.keys(PLANOS) });
-        }
-        if (parte === 'mensagens') {
-          if (!uidValido(q.uid)) return res(400, { error: 'Pessoa inválida.' });
-          const msgs = await listar(users.doc(q.uid).collection('mensagens'));
-          return res(200, { uid: q.uid, mensagens: msgs.sort((a, b) => String(a.em).localeCompare(String(b.em))) });
-        }
-        return res(400, { error: 'Parte desconhecida.' });
-      }
-      const acao = String(body.acao || '');
-      if (!uidValido(body.uid)) return res(400, { error: 'Pessoa inválida.' });
-      const base = users.doc(body.uid);
-      if (acao === 'plano_definir') {
-        if (!Object.prototype.hasOwnProperty.call(PLANOS, body.plano)) return res(400, { error: 'Plano inválido.' });
-        const atual = await base.get();
-        await base.set({ ...((atual && atual.exists && atual.data()) || {}), plano: body.plano, plano_por: auth.uid, plano_em: agoraIso });
-        await base.collection('auditoria').doc(novoId()).set({ evento: 'master_mudou_plano', plano: body.plano, por: auth.uid, em: agoraIso });
-        return res(200, { ok: true, uid: body.uid, plano: body.plano });
-      }
-      if (acao === 'mensagem_responder') {
-        const t = String(body.texto || '').trim().slice(0, 1500);
-        if (!t) return res(400, { error: 'Escreva a resposta.' });
-        const col = base.collection('mensagens');
-        for (const m of await listar(col)) if (m.de === 'usuario' && m.status === 'aberta') await col.doc(m.id).set({ ...m, status: 'respondida' });
-        await col.doc(novoId()).set({ de: 'admin', texto: t, em: agoraIso, status: 'resposta' });
-        return res(200, { ok: true });
-      }
-      return res(400, { error: 'Ação desconhecida.' });
-    } catch (e) {
-      console.error('[prumo-admin]', e && e.message);
-      return res(500, { error: 'Erro no painel. Tente de novo.' });
+    const mw = getMw();
+    const authResult = await mw.requireBearerAuth(event, 'master');
+    if (!authResult.ok) {
+      return {
+        statusCode: authResult.statusCode || 403,
+        headers: h,
+        body: JSON.stringify({ error: authResult.reason || 'Acesso negado' })
+      };
     }
+    const auth = authResult.user;
+    const db = getDb();
+    let body = {};
+    if (event.httpMethod === 'POST') {
+      try { body = JSON.parse(event.body || '{}'); } catch { return { statusCode: 400, headers: h, body: JSON.stringify({ error: 'JSON inválido' }) }; }
+    }
+
+    const parte = event.queryStringParameters?.parte || body.acao;
+
+    if (parte === 'resumo') {
+      const snap = await db.collection('prumo_users').get();
+      const contagem = snap.size;
+      const leiturasSnap = await db.collectionGroup('config').where('mes', '==', new Date(now()).toISOString().slice(0, 7)).get();
+      const mensagensSnap = await db.collectionGroup('mensagens').where('status', '==', 'aberta').get();
+      return { statusCode: 200, headers: h, body: JSON.stringify({ total_pessoas: contagem, leituras_mes: leiturasSnap.size, mensagens_abertas: mensagensSnap.size }) };
+    }
+
+    if (parte === 'plano_definir') {
+      if (!body.uid || !body.plano) return { statusCode: 400, headers: h, body: JSON.stringify({ error: 'Faltam dados' }) };
+      if (!['pro', 'free'].includes(body.plano)) return { statusCode: 400, headers: h, body: JSON.stringify({ error: 'Plano inválido' }) };
+      const ref = db.collection('prumo_users').doc(body.uid);
+      await ref.update({ plano: body.plano });
+      await db.collection('auditoria').add({ acao: 'plano_definir', uid: body.uid, plano: body.plano, por: auth.uid, em: new Date(now()).toISOString() });
+      return { statusCode: 200, headers: h, body: JSON.stringify({ ok: true }) };
+    }
+
+    if (parte === 'mensagem_responder') {
+      if (!body.uid || !body.texto) return { statusCode: 400, headers: h, body: JSON.stringify({ error: 'Faltam dados' }) };
+      const msgs = await db.collection('prumo_users').doc(body.uid).collection('mensagens').where('status', '==', 'aberta').get();
+      const m = msgs.docs[0];
+      if (!m) return { statusCode: 404, headers: h, body: JSON.stringify({ error: 'Nenhuma mensagem aberta' }) };
+      await m.ref.update({ status: 'respondida', resposta: body.texto, respondido_em: new Date(now()).toISOString() });
+      return { statusCode: 200, headers: h, body: JSON.stringify({ ok: true }) };
+    }
+
+    if (parte === 'mensagens') {
+      const uid = event.queryStringParameters && event.queryStringParameters.uid;
+      if (!uid) return { statusCode: 400, headers: h, body: JSON.stringify({ error: 'Faltam dados' }) };
+      const msgs = await db.collection('prumo_users').doc(uid).collection('mensagens').get();
+      return { statusCode: 200, headers: h, body: JSON.stringify({ mensagens: msgs.docs.map(d => d.data()) }) };
+    }
+
+    return { statusCode: 404, headers: h, body: JSON.stringify({ error: 'Ação não encontrada' }) };
   };
 }
-// Exportação do handler para uso nas rotas (mesma forma do agenda.js).
-// Exporte o handler direto: netlify/functions/agenda.js usa exports.handler = createHandler().
-exports.handler = createHandler();
+
 exports.createHandler = createHandler;
+exports.handler = async (event) => {
+  const handler = createHandler();
+  return handler(event);
+};
