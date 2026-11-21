@@ -64,3 +64,4 @@ class LessonStore {
 
 // Instância exportada do LessonStore
 module.exports = new LessonStore();
+// Lições do Cortex em CommonJS - Finalizado conforme pedido
