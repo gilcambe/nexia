@@ -39,9 +39,9 @@
       const corpo = () => ({ colecao: b.dataset.colecao, id: b.dataset.id });
       if (b.dataset.prv === 'confirmar') {
         b.onclick = () => MB.api('previsto_confirmar', corpo()).then(() => { if (ui.ok) ui.ok('✅ Confirmado.'); if (ui.recarregar) ui.recarregar(); });
-      } else if (b.dataset.prv === 'apagar') { // dono 19/11: "não tem botão de apagar"
+      } else if (b.dataset.prv === 'apagar') {
         const acao = { lancamentos: 'lanc_apagar', pagamentos: 'pagamento_apagar' }[b.dataset.colecao];
-        b.onclick = () => { if (!acao || !confirm('Apagar este item?')) return; MB.api(acao, { id: b.dataset.id }).then(() => { if (ui.ok) ui.ok('🗑️ Apagado.'); if (ui.recarregar) ui.recarregar(); }); };
+        b.onclick = () => { if (!acao || !confirm('Tem certeza que quer apagar este item?')) return; MB.api(acao, { id: b.dataset.id }).then(() => { if (ui.ok) ui.ok('🗑️ Apagado.'); if (ui.recarregar) ui.recarregar(); }); };
       } else if (b.dataset.prv === 'editar') {
         const colecao = b.dataset.colecao;
         const acaoEditar = { lancamentos: 'lanc_editar', pagamentos: 'pagamento_editar' }[colecao] || 'previsto_editar';
