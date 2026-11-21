@@ -23,15 +23,14 @@ class LessonStore {
   }
 
   async addLesson({ assinatura, causa, resolucao, issue }) {
+    if (!assinatura || typeof assinatura !== 'string' || !assinatura.trim()) {
+      throw new Error('Assinatura inválida');
+    }
     await this.ensureInitialized();
     const lesson = { assinatura, causa, resolucao, issue, createdAt: new Date().toISOString() };
     this.lessons.push(lesson);
     
-    // O pedido solicita persistir tanto as 'lessons' quanto os 'avoidCounts' atualizados
-    // Embora o incrementAvoidCount não seja chamado aqui, garantimos a consistência inicial
-    // caso necessário no futuro. O método abaixo já salva ambos.
     await cofreInstance.salvar('lessons', this.lessons);
-    await cofreInstance.salvar('avoidCounts', this.avoidCounts);
     await cofreInstance.sincronizar();
 
     return lesson;
