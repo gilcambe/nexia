@@ -3,7 +3,7 @@
  * Descrição: Consulta o estado atual do repositório (issues abertas, travadas, PRs, etc.),
  * gera um resumo compacto em Markdown e atualiza o arquivo docs/ESTADO-IA.md
  * de forma idempotente, registrando logs de sucesso.
- * Script validado e atualizado na branch de trabalho.
+ * Script validado, idempotente e integrado à rotina de atualização.
  */
 
 const fs = require('fs');
