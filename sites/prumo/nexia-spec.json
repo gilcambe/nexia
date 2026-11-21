@@ -1,0 +1,141 @@
+{
+  "spec": {
+    "kind": "system",
+    "name": "Painel Financeiro Prumo",
+    "tagline": "Análise e controle de finanças pessoais de forma inteligente",
+    "photo_theme": "financial data",
+    "description": "Análise e controle de finanças pessoais de forma inteligente",
+    "folder": "sites/prumo",
+    "fonts": {
+      "heading": "Playfair Display",
+      "body": "Inter"
+    },
+    "palette": {
+      "primary": "#2c3e50",
+      "accent": "#18bc9c",
+      "bg": "#fbfaf7",
+      "surface": "#ffffff",
+      "text": "#1d2426",
+      "muted": "#5d6b6e",
+      "dark": "#1a252f"
+    },
+    "style": "modern",
+    "contact": {
+      "whatsapp": "",
+      "phone": "(11) 91234-5678",
+      "email": "suporte@prumo.com.br",
+      "address": "",
+      "city": "",
+      "hours": "",
+      "instagram": "",
+      "facebook": "",
+      "youtube": "",
+      "tiktok": "",
+      "linkedin": ""
+    },
+    "logo": "",
+    "logo_scrolled": "",
+    "favicon": "",
+    "brand_text": false,
+    "selo": {
+      "label": "Feito com Kernex",
+      "url": "https://kernex.com.br/?utm_source=prumo&utm_medium=selo&utm_campaign=clientes"
+    },
+    "leads_origem": "",
+    "entities": [
+      {
+        "key": "transacoes",
+        "label": "Transações",
+        "singular": "Transação",
+        "fields": [
+          {
+            "key": "data",
+            "label": "Data",
+            "type": "date",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "tipo",
+            "label": "Tipo",
+            "type": "select",
+            "options": [
+              "entrada",
+              "saida"
+            ],
+            "required": true
+          },
+          {
+            "key": "valor",
+            "label": "Valor",
+            "type": "money",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "categoria",
+            "label": "Categoria",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "cartao",
+            "label": "Cartão",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "conta",
+            "label": "Conta",
+            "type": "text",
+            "options": [],
+            "required": true
+          }
+        ],
+        "sample": [
+          {
+            "data": "2026-01-15",
+            "tipo": "entrada",
+            "valor": "1500",
+            "categoria": "Salário",
+            "cartao": "N/A",
+            "conta": "Conta Corrente"
+          },
+          {
+            "data": "2026-01-20",
+            "tipo": "saida",
+            "valor": "200",
+            "categoria": "Alimentação",
+            "cartao": "Visa Gold",
+            "conta": "Conta Corrente"
+          },
+          {
+            "data": "2026-02-05",
+            "tipo": "saida",
+            "valor": "120",
+            "categoria": "Transporte",
+            "cartao": "Mastercard",
+            "conta": "Cartão Débito"
+          },
+          {
+            "data": "2026-02-12",
+            "tipo": "entrada",
+            "valor": "300",
+            "categoria": "Freelance",
+            "cartao": "N/A",
+            "conta": "Conta Poupança"
+          }
+        ]
+      }
+    ],
+    "modules": [
+      "Dashboard",
+      "Relatórios",
+      "Insights",
+      "Configurações"
+    ]
+  },
+  "media": {}
+}
