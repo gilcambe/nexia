@@ -1,7 +1,12 @@
-/**\n * Determina a cor da barra com base no percentual de uso.\n * Amarelo > 70%, Vermelho > 90%.\n * @param {number} percent
- * @returns {string} classe tailwind para cor de fundo\n */\nexport function utilBarColor(percent) {
+/**
+ * Determina a cor da barra com base no percentual de uso.
+ * Amarelo > 70%, Vermelho > 90%.
+ * @param {number} percent
+ * @returns {string} classe tailwind para cor de fundo
+ */
+export function utilBarColor(percent) {
   const p = Number(percent) || 0;
   if (p > 90) return 'bg-red-500';
   if (p > 70) return 'bg-amber-500';
   return 'bg-indigo-500';
-}percent) {\n  if (percent > 90) {\n    return 'bg-red-500';\n  }\n  if (percent > 70) {\n    return 'bg-amber-500';\n  }\n  return 'bg-indigo-500';\n}\n
+}
