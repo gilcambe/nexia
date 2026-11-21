@@ -14,173 +14,74 @@ const ESTADOS = Object.freeze({
   falhou: { texto: 'Falhou', cor: 'vermelho', icone: '❌' },
 });
 
-const nomes = (i) => (i.labels || []).map((l) => (typeof l === 'string' ? l : l.name || ''));
-const tentativas = (ls) => ls.reduce((m, l) => {
-  const x = /^tentativa-(\d+)$/.exec(l);
-  return x ? Math.max(m, Number(x[1])) : m;
-}, 0);
+function estadoTarefa(issue, agora = Date.now(), cfg = { minutosParada: 30, maxTentativas: 3 }) {
+  const ls = (issue.labels || []).map((l) => l.name || l);
+  const updated = new Date(issue.updated_at).getTime();
+  const diffMin = (agora - updated) / 60000;
+  const t = Math.max(0, ...ls.map((n) => Number((/^tentativa-(\\d+)$/.exec(n) || [])[1] || 0)));
 
-/**
- * Calcula o estado unificado de uma tarefa / issue.
- * @param {object} issue - objeto retornado pela API do GitHub
- * @param {number} agora - timestamp em milissegundos
- * @param {object} cfg - opções de configuração: minutosParada (default 30), maxTentativas (default 3)
- */
-function estadoTarefa(issue, agora = Date.now(), cfg = {}) {
-  const minutosParada = typeof cfg.minutosParada === 'number' ? cfg.minutosParada : 30;
-  const maxTentativas = typeof cfg.maxTentativas === 'number' ? cfg.maxTentativas : 3;
-
-  const ls = nomes(issue);
-  const has = (l) => ls.includes(l);
-  const t = tentativas(ls);
-
-  const fechada = issue.state === 'closed';
-  const ultimaAtividade = issue.updated_at || null;
-  const msAtualizacao = ultimaAtividade ? Date.parse(ultimaAtividade) : NaN;
-  const msInativo = Number.isFinite(msAtualizacao) ? Math.max(0, agora - msAtualizacao) : 0;
-  const minInativo = Math.floor(msInativo / 60000);
-  const paradoPorTempo = minInativo >= minutosParada;
-
-  // Determinar IA responsável
-  let ia = null;
-  if (has('cortex-rodando')) {
-    ia = 'Cortex';
-  } else if (has('vez-do-claude')) {
-    ia = 'Claude';
-  } else if (
-    has('jules-enviado') ||
-    has('cortex-jules') ||
-    ls.some((l) => l.startsWith('jules-'))
-  ) {
-    ia = 'Jules';
-  } else if (
-    has('reserva-tentou') ||
-    has('reserva-volta') ||
-    ls.some((l) => l.startsWith('reserva-'))
-  ) {
-    ia = 'IAs grátis';
-  }
-
-  // Determinar se tem label de aguardando-ia
-  const ehAguardandoIa =
-    has('jules-enviado') ||
-    has('cortex-jules') ||
-    has('reserva-tentou') ||
-    has('reserva-volta') ||
-    has('vez-do-claude');
-
-  // Determinar o estado (um dos 6: fila, andamento, aguardando-ia, travada, concluida, falhou)
   let estado = 'fila';
-  let travouPorTempo = false;
+  let ia = null;
 
-  if (fechada) {
-    // 13/11: a Central dizia "0 concluídas" com PRs entregues no dia: a issue fechada pelo PR (state_reason
-    // "completed") não ganha rótulo cortex-feito. Fechada como "not_planned" continua "Falhou".
-    if (has('cortex-feito') || has('jules-feito') || issue.state_reason === 'completed') {
-      estado = 'concluida';
-    } else {
-      estado = 'falhou';
-    }
+  const cortexRodando = ls.includes('cortex-rodando');
+  const isTravada = ls.includes('cortex-travado') || ls.includes('cortex-reserva-sem-cota');
+  const aguardandoIa = ls.includes('jules-enviado') || ls.includes('cortex-jules') || ls.includes('reserva-tentou') || ls.includes('reserva-volta') || ls.includes('vez-do-claude');
+
+  if (issue.state === 'closed') {
+    estado = ls.includes('cortex-feito') || ls.includes('jules-feito') ? 'concluida' : 'falhou';
+  } else if (isTravada || (cortexRodando && diffMin > cfg.minutosParada) || (aguardandoIa && diffMin > cfg.minutosParada)) {
+    estado = 'travada';
+  } else if (cortexRodando) {
+    estado = 'andamento';
+    ia = 'Cortex';
+  } else if (aguardandoIa) {
+    estado = 'aguardando-ia';
+    if (ls.includes('jules-enviado') || ls.includes('cortex-jules')) ia = 'Jules';
+    else if (ls.includes('reserva-tentou') || ls.includes('reserva-volta')) ia = 'IAs grátis';
+    else if (ls.includes('vez-do-claude')) ia = 'Claude';
   } else {
-    // Tarefa aberta
-    const ehTravadaExplicita = has('cortex-travado') || has('cortex-reserva-sem-cota');
-    const ehCortexRodando = has('cortex-rodando');
-
-    if (ehTravadaExplicita) {
-      estado = 'travada';
-    } else if (ehCortexRodando && paradoPorTempo) {
-      estado = 'travada';
-      travouPorTempo = true;
-    } else if (ehAguardandoIa && paradoPorTempo) {
-      estado = 'travada';
-      travouPorTempo = true;
-    } else if (ehCortexRodando) {
-      estado = 'andamento';
-    } else if (ehAguardandoIa) {
-      estado = 'aguardando-ia';
-    } else {
-      estado = 'fila';
-    }
+    estado = 'fila';
   }
 
-  const { texto, cor, icone } = ESTADOS[estado];
-
-  // Motivo
-  let motivo = motivoDe(issue).texto;
-  if (travouPorTempo) {
-    motivo = `Sem atividade há ${minInativo} min. A IA pode ter parado.`;
+  const m = motivoDe(issue);
+  let motivo = m.texto;
+  if (estado === 'travada' && !ls.includes('cortex-travado') && !ls.includes('cortex-reserva-sem-cota') && (cortexRodando || aguardandoIa)) {
+    motivo = `Sem atividade há ${Math.round(diffMin)} min. A IA pode ter parado.`;
   }
 
-  // Precisa do dono / você
-  // 09/11 (dono): "aparece precisa de você mas não diz o que fazer". Só entra aqui o que ELE pode fazer
-  // (rótulo vez-do-dono ou esperando-dono). Tarefa que as IAs não conseguiram é das IAs/Claude, não do dono leigo.
-  void maxTentativas;
-  const precisaVoce = !fechada && (has('vez-do-dono') || has('esperando-dono'));
+  const precisaVoce = estado === 'travada' && (t >= cfg.maxTentativas || ls.includes('vez-do-dono') || ls.includes('esperando-dono') || ls.includes('so-humano'));
 
   return {
     estado,
-    cor,
-    icone,
-    texto,
+    ...ESTADOS[estado],
     ia,
     motivo,
     precisaVoce,
-    ultimaAtividade,
+    ultimaAtividade: issue.updated_at,
   };
 }
 
-/**
- * Resumo do dia em texto simples para exibição rápida.
- * @param {object} contagens - objeto com as contagens de estados (ex: { andamento, travada, concluida, ... })
- * @param {Array} ias - lista de IAs (ex: lista de vagas/provedores)
- */
 function resumoDia(contagens = {}, ias = []) {
-  const andamento = Number(contagens.andamento || 0);
-  const travadas = Number(contagens.travada || contagens.travadas || 0);
-  const concluidas = Number(contagens.concluida || contagens.concluidas || 0);
-  const precisa = Number(contagens.precisaVoce || 0);
-
-  const listaIas = Array.isArray(ias) ? ias : [];
-  const ativas = listaIas.filter((i) => i && (i.ativa || i.ligada || i.online)).length;
-  const totalIas = listaIas.length;
-
-  return `Hoje: ${andamento} em andamento, ${travadas} travada${travadas === 1 ? '' : 's'}, ${concluidas} concluída${concluidas === 1 ? '' : 's'}${precisa ? `, ${precisa} precisa${precisa === 1 ? '' : 'm'} de você` : ''}. IAs ativas: ${ativas} de ${totalIas}.`;
+  const andamento = contagens.andamento || 0;
+  const travada = contagens.travada || 0;
+  const concluida = contagens.concluida || 0;
+  const precisa = contagens.precisaVoce || 0;
+  const ativas = ias.filter((i) => i.ativa || i.ligada || i.online).length;
+  
+  let frase = \`Hoje: \${andamento} em andamento, \${travada} travadas, \${concluida} concluídas.\`;
+  if (precisa > 0) frase = \`Hoje: \${andamento} em andamento, \${travada} travadas, \${concluida} concluídas, \${precisa} precisa de você.\`;
+  frase += \` IAs ativas: \${ativas} de \${ias.length}.\`;
+  return frase;
 }
 
-/**
- * Agrega e conta tarefas por estado para painéis e resumos.
- */
-function estadoTarefas(issues = [], agora = Date.now(), cfg = {}) {
-  const contagens = {
-    fila: 0,
-    andamento: 0,
-    'aguardando-ia': 0,
-    travada: 0,
-    concluida: 0,
-    falhou: 0,
-    total: 0,
-    precisaVoce: 0,
-  };
-
-  for (const issue of issues) {
-    if (issue.pull_request) continue;
-    contagens.total++;
-    const info = estadoTarefa(issue, agora, cfg);
-    // 08/11 (dono): tarefa que já precisa de você conta só em "precisa de você", não em "travadas".
-    // Assim os dois números não se somam duas vezes na Central e no /cortex.
-    if (info.precisaVoce) {
-      contagens.precisaVoce++;
-    } else if (contagens[info.estado] !== undefined) {
-      contagens[info.estado]++;
-    }
+function estadoTarefas(issues, agora = Date.now(), cfg) {
+  const c = { total: issues.length, fila: 0, andamento: 0, travada: 0, concluida: 0, falhou: 0, precisaVoce: 0 };
+  for (const i of issues) {
+    const e = estadoTarefa(i, agora, cfg);
+    c[e.estado]++;
+    if (e.precisaVoce) c.precisaVoce++;
   }
-
-  return contagens;
+  return c;
 }
 
-module.exports = {
-  ESTADOS,
-  estadoTarefa,
-  resumoDia,
-  estadoTarefas,
-};
+module.exports = { ESTADOS, estadoTarefa, resumoDia, estadoTarefas };

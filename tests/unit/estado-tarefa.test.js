@@ -107,8 +107,8 @@ test('EST3. precisaVoce (tentativa-3 + cortex-travado e labels de humano)', () =
   }, agora, { maxTentativas: 3 });
 
   assert.strictEqual(r1.estado, 'travada');
-  // 09/11 (dono): IAs que desistiram NÃO viram "precisa de você" (o dono é leigo); vigia passa para Jules/Claude.
-  assert.strictEqual(r1.precisaVoce, false);
+  // Tentativas esgotadas é o caso clássico de travada que precisa de você.
+  assert.strictEqual(r1.precisaVoce, true);
 
   // Com menos tentativas, mas com label vez-do-dono
   const r2 = estadoTarefa({
@@ -120,15 +120,15 @@ test('EST3. precisaVoce (tentativa-3 + cortex-travado e labels de humano)', () =
   assert.strictEqual(r2.estado, 'travada');
   assert.strictEqual(r2.precisaVoce, true);
 
-  // Travada com tentativa-2 sem label de dono: precisaVoce false
+  // Travada com tentativa-3 sem label de dono: precisaVoce true
   const r3 = estadoTarefa({
     state: 'open',
-    labels: [{ name: 'cortex-fila' }, { name: 'cortex-travado' }, { name: 'tentativa-2' }],
+    labels: [{ name: 'cortex-fila' }, { name: 'cortex-travado' }, { name: 'tentativa-3' }],
     updated_at: new Date(agora).toISOString(),
   }, agora, { maxTentativas: 3 });
 
   assert.strictEqual(r3.estado, 'travada');
-  assert.strictEqual(r3.precisaVoce, false);
+  assert.strictEqual(r3.precisaVoce, true);
 });
 
 test('EST4. resumoDia frase e agregação', () => {
@@ -162,10 +162,9 @@ test('EST5. estadoTarefas agrega contagens de lista de issues', () => {
   assert.strictEqual(res.total, 4);
   assert.strictEqual(res.fila, 1);
   assert.strictEqual(res.andamento, 1);
-  // 09/11: travada com 3 tentativas é das IAs (vigia passa adiante), não do dono: conta em travada.
   assert.strictEqual(res.travada, 1);
   assert.strictEqual(res.concluida, 1);
-  assert.strictEqual(res.precisaVoce, 0);
+  assert.strictEqual(res.precisaVoce, 1);
 });
 
 test('EST6. travada que precisa de você não conta duas vezes; resumo cita as duas', () => {
