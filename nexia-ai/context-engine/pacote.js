@@ -9,6 +9,9 @@
 const fs = require('fs');
 const path = require('path');
 
+/**
+ * Redige segredos comuns do projeto.
+ */
 function redactSecrets(text) {
   if (!text) return '';
   return String(text)
@@ -100,6 +103,11 @@ async function montarPacote({ issue = {}, arquivos = [], limiteTokens = 3000 } =
 
   return pacote;
 }
+
+module.exports = {
+  montarPacote,
+  redactSecrets
+};
 
 module.exports = {
   montarPacote,
