@@ -626,12 +626,13 @@ const NexiaRuntime = (() => {
 
 // Aposentar Service Worker antigo (desregistra qualquer SW com script /sw.js)
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.getRegistration('/').then(registration => {
-    if (!registration) return;
-    const scriptURL = registration.active?.scriptURL || registration.installing?.scriptURL || registration.waiting?.scriptURL;
-    if (scriptURL && /\/sw\.js(\?|$)/.test(scriptURL)) {
-      registration.unregister();
-    }
+  navigator.serviceWorker.getRegistrations().then(registrations => {
+    registrations.forEach(registration => {
+      const scriptURL = registration.active?.scriptURL || registration.installing?.scriptURL || registration.waiting?.scriptURL;
+      if (scriptURL && /\/sw\.js(\?|$)/.test(scriptURL)) {
+        registration.unregister();
+      }
+    });
   }).catch(() => {});
 }
 
