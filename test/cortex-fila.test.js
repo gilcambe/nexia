@@ -21,7 +21,7 @@ describe('validatePart', () => {
 
   test('deve aceitar parte se caminho inexistente e tarefa for criar arquivo', () => {
     const caminho = path.join(tempDir, 'novo.txt');
-    const part = { arquivos: [caminho], tarefa: 'criar arquivo novo' };
+    const part = { arquivos: [caminho], tarefa: 'criar arquivo' };
     expect(validatePart(part, 1)).toBe(true);
   });
 
