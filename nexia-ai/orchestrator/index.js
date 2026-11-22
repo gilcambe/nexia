@@ -921,13 +921,16 @@ function createOrchestrator(deps) {
    */
   // ADR-F12-03: `statuses` e `ctxFor` permitem a retomada agendada (sem pessoa) continuar só
   // execuções em andamento, cada uma em nome de quem pediu.
-  async function sweep(ctx, { staleMs = 10 * 60 * 1000, max = 20, statuses = ['planned', 'running', 'waiting_approval'], ctxFor = () => ctx } = {}) {
+  // 22/11: 38 de 40 rodadas do NEXIA Jobs morriam no limite de 30 min do Actions (20 execuções em fila, sem prazo).
+  // `deadline` (ms): depois dele nenhuma execução nova começa; a que está rodando termina e o resto fica para a próxima hora.
+  async function sweep(ctx, { staleMs = 10 * 60 * 1000, max = 20, statuses = ['planned', 'running', 'waiting_approval'], ctxFor = () => ctx, deadline = null } = {}) {
     const cutoff = new Date(now().getTime() - staleMs).toISOString();
     const out = [];
     for (const status of statuses) {
       const list = (await vault.Execution.list(ctx, { where: { status }, limit: 200 })).filter(x => (x.updated_at || x.started_at) <= cutoff);
       for (const x of list) {
         if (out.length >= max) return out;
+        if (deadline && now().getTime() >= deadline) return out;
         const action = status === 'waiting_approval' ? 'resume' : x.plan.every(s => s.status === 'done' || s.status === 'skipped') ? 'refresh' : 'run';
         try {
           const r = await { resume, refresh, run }[action](ctxFor(x), x.id);

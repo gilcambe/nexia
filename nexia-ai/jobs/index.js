@@ -101,7 +101,7 @@ function contextFor(job) {
  * Retomada de todas as empresas (cron): até 20 execuções paradas, cada uma em nome de quem pediu.
  * Usada pelo processo Node (server.js ou Actions); o Worker só verifica e despacha.
  */
-async function sweepAllTenants({ db, vdb, orchestrator, max = 20 }) {
+async function sweepAllTenants({ db, vdb, orchestrator, max = 20, deadline = Date.now() + 15 * 60 * 1000, now = Date.now, log = console.log }) {
   // Economia de cota (2026-10-08): com o banco do Vault (vdb), as empresas saem das próprias execuções
   // paradas (1 consulta no banco B) em vez de ler 'tenants' no banco principal, cuja cota esgotada
   // derrubava a retomada de hora em hora. Só visita empresas que têm algo a retomar.
@@ -111,11 +111,12 @@ async function sweepAllTenants({ db, vdb, orchestrator, max = 20 }) {
     : (await db.collection('tenants').select().limit(200).get()).docs.map(d => d.id).filter(t => TENANT_RE.test(t));
   const items = [];
   for (const tenantId of tenants) {
+    if (now() >= deadline) { log(`[sweep] prazo de 15 min: ${items.length} retomada(s); o resto fica para a próxima rodada`); break; }
     const sys = createExecutionContext({ tenantId, actor: { type: 'system', id: 'cron-sweep' } });
     // Aprovações (waiting_approval) ficam de fora: retomar depois de aprovar é ação de pessoa.
     const done = await orchestrator.sweep(sys, { statuses: ['planned', 'running'], max: max - items.length,
-      ctxFor: x => createExecutionContext({ tenantId, actor: x.requested_by, executionId: x.execution_id || undefined }) });
-    for (const d of done) items.push({ tenant: tenantId, ...d });
+      ctxFor: x => createExecutionContext({ tenantId, actor: x.requested_by, executionId: x.execution_id || undefined }), deadline });
+    for (const d of done) { items.push({ tenant: tenantId, ...d }); log(`[sweep] ${d.id} ${d.action}: ${d.from} → ${d.to || d.error}`); }
     if (items.length >= max) break;
   }
   return { tenants: tenants.length, items };
