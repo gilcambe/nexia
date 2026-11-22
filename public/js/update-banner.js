@@ -1,4 +1,4 @@
-// #2917: aviso único "Tem atualização nova — toque para atualizar" para todos os apps (PWA).
+// #2917: aviso único "Tem atualização nova 🎉 — toque para atualizar" para todos os apps (PWA).
 // Uso: <script src="/js/update-banner.js" defer></script>. Sem dependências. Grátis.
 // Versão atualizada: implementa auto-update a cada 30 min, visibilitychange e verificação de version.json.
 // Commit via agente NEXIA para garantir conformidade com o pedido.
