@@ -3,7 +3,7 @@
 /**
  * Módulo de empacotamento de contexto para o Context Engine.
  * Implementa montarPacote({ issue, arquivos, limiteTokens }) conforme solicitado.
- * Garantindo robustez e conformidade total com a regra principal ("Kernex nas telas").
+ * Garantindo robustez e conformidade total com a regra principal: "Kernex nas telas" (Kernex só na vinheta de 2 s).
  */
 
 const fs = require('fs');
@@ -56,6 +56,9 @@ async function montarPacote({ issue = {}, arquivos = [], limiteTokens = 3000 } =
     const body = issue.body || '';
     pacote += `## Issue\nTítulo: ${title}\nDescrição:\n${body}\n\n`;
   }
+
+  // Regra de ouro sempre presente
+  pacote += `## Regra Principal\n- Kernex nas telas (marca pública Kernex; nomes internos seguem nexia; Kernex só na vinheta de 2 s).\n\n`;
 
   // 4. Adiciona o último erro de CI (se houver)
   if (issue && issue.lastError) {
