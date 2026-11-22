@@ -1,9 +1,5 @@
 // Service Worker aposentado: apaga todos os caches e se desregistra.
 
-self.addEventListener('install', (event) => {
-  self.skipWaiting();
-});
-
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     (async () => {
