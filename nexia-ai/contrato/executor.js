@@ -303,10 +303,13 @@ async function executar(o) {
   // Memória (melhoria 15): caderno de lições no sistema + exemplos aprovados parecidos no pedido. memoria:false desliga.
   const mem = o.memoria === false ? null : (o.memoria || {});
   const lic = mem ? memoria.licoes(mem) : '';
-  const sistema = lic ? `${SISTEMA}\n\nLIÇÕES DO CORTEX (aprendidas em tarefas anteriores; siga sempre):\n${lic}` : SISTEMA;
+  // 22/11: livros por assunto (memoria/livros/*.md) entram só quando o contrato cita o assunto.
+  const livrosUsados = mem ? memoria.livros(c, mem) : [];
+  const sistema = (lic ? `${SISTEMA}\n\nLIÇÕES DO CORTEX (aprendidas em tarefas anteriores; siga sempre):\n${lic}` : SISTEMA)
+    + livrosUsados.map(l => `\n\nLIÇÕES DO CORTEX SOBRE ${l.nome.toUpperCase()} (siga sempre nesta tarefa):\n${l.texto}`).join('');
   const exemplosUsados = mem ? memoria.buscarExemplos(c, { ...mem, excluir: o.numero }) : [];
   const exemplos = memoria.textoExemplos(exemplosUsados);
-  if (lic || exemplosUsados.length) log(`memória: ${lic ? 'lições' : 'sem lições'}; exemplos ${exemplosUsados.map(e => '#' + e.numero).join(', ') || 'nenhum'}`);
+  if (lic || exemplosUsados.length) log(`memória: ${lic ? 'lições' : 'sem lições'}${livrosUsados.length ? ` + livros ${livrosUsados.map(l => l.nome).join(', ')}` : ''}; exemplos ${exemplosUsados.map(e => '#' + e.numero).join(', ') || 'nenhum'}`);
   // Regressão (melhoria 14): nomes dos testes da suíte que já falham antes da mudança.
   const regBase = o.regressao ? await o.regressao() : null;
   const jaFalhavam = new Set(regBase && !regBase.ok ? nomesDosTestes(regBase.completo || regBase.saida).falham : []);

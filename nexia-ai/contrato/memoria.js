@@ -33,6 +33,34 @@ function licoes(o = {}) {
   return t.length > LICOES_MAX ? t.slice(0, LICOES_MAX) + '\n(...)' : t;
 }
 
+/**
+ * 22/11: livros por assunto (o caderno geral tem limite de LICOES_MAX). Cada arquivo em memoria/livros/<assunto>.md
+ * começa com a linha "Quando: palavra, pasta/, arquivo" e só entra no pedido quando o pedido ou os arquivos do
+ * contrato citam um desses termos. Livro novo = arquivo novo; não há limite de livros, só de cada um (LICOES_MAX).
+ */
+function lerLivros(o = {}) {
+  const dir = path.join(pasta(o), 'livros');
+  if (!fs.existsSync(dir)) return [];
+  return fs.readdirSync(dir).filter(n => /^[\w-]+\.md$/.test(n)).sort().map(nome => {
+    const bruto = fs.readFileSync(path.join(dir, nome), 'utf8').trim();
+    const m = bruto.match(/^Quando:\s*(.+)$/im);
+    const termos = m ? m[1].split(',').map(x => semAcento(x).toLowerCase().trim()).filter(Boolean) : [];
+    const texto = bruto.replace(/^Quando:.*$/im, '').trim();
+    return { nome: nome.replace(/\.md$/, ''), termos, texto };
+  });
+}
+
+/** Livros cujo assunto aparece no contrato (pedido + arquivos), mais termos casados primeiro; cada um em LICOES_MAX. */
+function livros(c, o = {}) {
+  const alvo = semAcento(`${(c && c.pedido) || ''} ${((c && c.arquivos) || []).join(' ')}`).toLowerCase();
+  return lerLivros(o)
+    .map(l => ({ ...l, casou: l.termos.filter(t => alvo.includes(t)).length }))
+    .filter(l => l.casou > 0 && l.texto)
+    .sort((a, b) => b.casou - a.casou)
+    .slice(0, o.maxLivros ?? 2)
+    .map(l => ({ nome: l.nome, texto: l.texto.length > LICOES_MAX ? l.texto.slice(0, LICOES_MAX) + '\n(...)' : l.texto }));
+}
+
 function lerExemplos(o = {}) {
   const dir = path.join(pasta(o), 'exemplos');
   if (!fs.existsSync(dir)) return [];
@@ -102,4 +130,4 @@ function gravarExemplo({ numero, contrato, modelo, tentativas, diff }, o = {}) {
   return f;
 }
 
-module.exports = { pasta, palavras, licoes, lerExemplos, buscarExemplos, textoExemplos, gravarExemplo, LICOES_MAX };
+module.exports = { pasta, palavras, licoes, lerLivros, livros, lerExemplos, buscarExemplos, textoExemplos, gravarExemplo, LICOES_MAX };

@@ -1,0 +1,7 @@
+Quando: prumo, finance, MB.api, window.MB, holerite, salario
+1. CSS que entra depois vence o de antes com o MESMO peso: o CSS de prumo/ui.js entra DEPOIS do index.html. Para vencer ".linha{display:flex}" ou ".card{background}" use seletor mais forte (".linha.kf-tres", ".card.kf-hero"). Um <div> novo sem CSS tem tamanho zero: fundo escuro de menu precisa de position:fixed; inset:0; background rgba; z-index entre a página e a gaveta.
+2. Cor pelo nome do token, não pelo nome da classe antiga: ganho = var(--ganho) (verde), perda = var(--perda) (vermelho). --verde no Finance é AZUL (cor da marca).
+3. Antes de usar a resposta de MB.api(acao), veja o que o SERVIDOR devolve naquela ação (o "return [200, {...}]"): quase sempre é um OBJETO com a lista dentro ({ meses: [...] }, { itens: [...] }), não a lista. Array.isArray(resposta) dá false e a tela fica vazia sem erro.
+4. Nunca recrie window.MB = {...}: apaga o que outros scripts já guardaram (derrubou o Finance em 17/11). Junte: window.MB = Object.assign(window.MB || {}, {...}).
+5. Servidor sem estado: dado da pessoa só em c.base.collection('x') (já é a área dela). Nunca fs.writeFile no servidor (some e mistura usuários). Coleção nova entra em COLECOES de prumo-lib/ajuda.js.
+6. Vários arquivos: TODOS (até 5), foto e PDF juntos em const { imagens } = await MB.pdf.paraImagens(arquivos, reduzir); uma IA por imagem com Promise.all. A resposta vem em envelope { ok, pagamento }: use lido.pagamento, não o envelope.
