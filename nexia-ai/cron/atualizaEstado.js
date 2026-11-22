@@ -42,7 +42,7 @@ async function atualizaEstado() {
       console.log('[atualizaEstado] Token do GitHub não fornecido; gerando resumo com base no estado padrão.');
     }
 
-    const agora = new Date().toLocaleDateString('pt-BR');
+    const agora = new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
     const issuesAbertas = Array.isArray(openIssues) ? openIssues.filter(i => !i.pull_request) : [];
     const issuesTravadas = issuesAbertas.filter(i => i.labels && i.labels.some(l => l.name === 'cortex-travada' || l.name === 'cortex-alerta'));
     const pullsAbertos = Array.isArray(openPulls) ? openPulls : [];
@@ -79,7 +79,7 @@ Atualizado em ${agora}. Gerado automaticamente por \`nexia-ai/cron/atualizaEstad
 - **Pull Requests Abertos:** ${pullsAbertos.length}
 
 ## Últimos Merges
-${ultimosMerges.length > 0 ? ultimosMerges.slice(0, 10).map(m => `- PR #${m.number}: ${m.title} (mesclado em ${m.merged_at})`).join('\n') : '- Nenhum merge recente listado ou API indisponível.'}
+${ultimosMerges.length > 0 ? ultimosMerges.slice(0, 5).map(m => `- PR #${m.number}: ${m.title} (em ${new Date(m.merged_at).toLocaleDateString('pt-BR')})`).join('\n') : '- Nenhum merge recente listado ou API indisponível.'}
 `;
 
     const docsDir = path.resolve('docs');
