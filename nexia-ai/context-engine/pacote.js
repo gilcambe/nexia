@@ -9,17 +9,20 @@
 const fs = require('fs');
 const path = require('path');
 
+/**
+ * Redige segredos comuns do projeto.
+ */
 function redactSecrets(text) {
   if (!text) return '';
   return String(text)
-    .replace(/(api[_-]?key|secret|token|password|auth)['\"]?\s*[:=]\s*['\"]?[^'\"\s]+['\"]?/gi, '$1=[REDIGIDO]')
+    .replace(/(api[_-]?key|secret|token|password|auth)['\"]?\\s*[:=]\\s*['\"]?[^'\\\"\\s]+['\"]?/gi, '$1=[REDIGIDO]')
     .replace(/ghp_[a-zA-Z0-9]{36}/g, '[REDIGIDO]')
     .replace(/sk-[a-zA-Z0-9]{20,}/g, '[REDIGIDO]');
 }
 
 const { arquivosProvaveis } = require('./arquivos-provaveis');
-const licoesModule = require('../cortex/licoes');
-const LICOES = licoesModule.LICOES || (licoesModule.lessonStore && licoesModule.lessonStore.getRecentLessons ? licoesModule.lessonStore.getRecentLessons(10).map(l => l.causa || JSON.stringify(l)) : []);
+const { LessonStore } = require('../cortex/licoes');
+const lessonStore = new LessonStore();
 
 async function montarPacote({ issue = {}, arquivos = [], limiteTokens = 3000 } = {}) {
   let pacote = '';
@@ -60,21 +63,10 @@ async function montarPacote({ issue = {}, arquivos = [], limiteTokens = 3000 } =
   }
 
   // 5. Inclui até 3 lições similares de nexia-ai/cortex/licoes.js
-  {
-    let selecionadas = [];
-    const termoStr = (issue && (issue.title || issue.body || '')) || '';
-    if (licoesModule.lessonStore && typeof licoesModule.lessonStore.getSimilarLessons === 'function') {
-      const licoesDb = licoesModule.lessonStore.getSimilarLessons(termoStr, 3);
-      if (licoesDb && licoesDb.length > 0) {
-        selecionadas = licoesDb.map(l => l.resolucao || l.causa || (typeof l === 'string' ? l : JSON.stringify(l)));
-      }
-    }
-    if (selecionadas.length === 0 && Array.isArray(LICOES) && LICOES.length > 0) {
-      selecionadas = LICOES.slice(0, 3);
-    }
-    if (selecionadas.length > 0) {
-      pacote += `## Lições Similares\n` + selecionadas.slice(0, 3).map((l, i) => `${i + 1}. ${l}`).join('\n') + `\n\n`;
-    }
+  const termoStr = (issue && (issue.title || issue.body || '')) || '';
+  const licoesDb = await lessonStore.getSimilarLessons(termoStr, 3);
+  if (licoesDb && licoesDb.length > 0) {
+    pacote += `## Lições Similares\n` + licoesDb.map((l, i) => `${i + 1}. ${l.resolucao || l.causa || JSON.stringify(l)}`).join('\n') + `\n\n`;
   }
 
   // 6. Lista arquivos prováveis usando nexia-ai/context-engine/arquivos-provaveis.js
@@ -90,19 +82,12 @@ async function montarPacote({ issue = {}, arquivos = [], limiteTokens = 3000 } =
   }
 
   // 7. Redige segredos via redactSecrets
-  try {
-    if (typeof redactSecrets === 'function') {
-      pacote = redactSecrets(pacote);
-    }
-  } catch (e) {
-    pacote = pacote.replace(/(api[_-]?key|secret|token|password)['"]?\s*[:=]\s*['"]?[^'\"\s]+['"]?/gi, '[REDIGIDO]');
-  }
+  pacote = redactSecrets(pacote);
 
   // 8. Corta o texto para ficar dentro de limiteTokens (~3000 tokens)
-  // Aproximação: 1 token ~ 4 caracteres. Para um corte mais preciso, seria necessário um tokenizer.
+  // Aproximação: 1 token ~ 4 caracteres.
   const maxChars = (limiteTokens || 3000) * 4;
   if (pacote.length > maxChars) {
-    // Tenta cortar em um limite de linha ou parágrafo anterior para melhor coesão
     let cutIndex = maxChars;
     const lastNewline = pacote.lastIndexOf('\n', maxChars);
     const lastParagraph = pacote.lastIndexOf('\n\n', maxChars);
@@ -118,6 +103,11 @@ async function montarPacote({ issue = {}, arquivos = [], limiteTokens = 3000 } =
 
   return pacote;
 }
+
+module.exports = {
+  montarPacote,
+  redactSecrets
+};
 
 module.exports = {
   montarPacote,
