@@ -32,3 +32,5 @@
 27. Botão que só aparece às vezes: const b = el.querySelector('#x'); if (b) b.onclick = ... . prompt() cancelado devolve null: (prompt(...) || '').
 28. Vários arquivos: TODOS (até 5), foto e PDF juntos em const { imagens } = await MB.pdf.paraImagens(arquivos, reduzir); uma IA por imagem com Promise.all. A resposta vem em envelope { ok, pagamento }: use lido.pagamento, não o envelope.
 29. Teste não exige posição em lista (ex.: "minha aba é a última"); outra mudança quebra o teste à toa.
+30. Tarefa que pode rodar de novo (fila, robô, cron) é idempotente: antes de refazer, procure PR JUNTADO da mesma branch/título (não só PR aberto). O squash apaga a branch; sem isso a mesma tarefa vira vários PRs (atualizaEstado.js 9x em 22/11).
+31. Laço dentro de job com limite de tempo (Actions 30 min, Worker): tenha prazo (pare de pegar item novo antes do limite), deixe o resto para a próxima rodada e logue cada item feito. Sem prazo o job morre no meio e não registra nada (38 de 40 rodadas do NEXIA Jobs em 22/11).
