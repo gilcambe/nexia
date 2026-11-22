@@ -79,7 +79,7 @@ Atualizado em ${agora}. Gerado automaticamente por \`nexia-ai/cron/atualizaEstad
 - **Pull Requests Abertos:** ${pullsAbertos.length}
 
 ## Últimos Merges
-${ultimosMerges.length > 0 ? ultimosMerges.map(m => `- PR #${m.number}: ${m.title} (mesclado em ${m.merged_at})`).join('\n') : '- Nenhum merge recente listado ou API indisponível.'}
+${ultimosMerges.length > 0 ? ultimosMerges.slice(0, 10).map(m => `- PR #${m.number}: ${m.title} (mesclado em ${m.merged_at})`).join('\n') : '- Nenhum merge recente listado ou API indisponível.'}
 `;
 
     const docsDir = path.resolve('docs');
