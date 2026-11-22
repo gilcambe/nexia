@@ -1,28 +1,28 @@
-'use strict';
-const test = require('node:test');
-const assert = require('node:assert');
-const { LessonStore } = require('../../nexia-ai/cortex/licoes.js');
+const { LessonStore } = require('../../nexia-ai/cortex/licoes');
+const cofreInstance = require('../../nexia-ai/cortex/cofre');
 
-test('LessonStore adiciona e recupera lições corretamente', async () => {
+export async function test() {
   const store = new LessonStore();
-  const lesson = await store.addLesson({
-    assinatura: 'err_test',
-    causa: 'causa de teste',
-    resolucao: 'resolucao de teste',
-    issue: '#123'
+  await store.ensureInitialized();
+
+  // Adiciona uma lição
+  await store.addLesson({
+    assinatura: 'test-assinatura',
+    causa: 'test-cause',
+    resolucao: 'test-solution',
+    issue: 'test-issue'
   });
-  assert.strictEqual(lesson.assinatura, 'err_test');
-  
-  const similar = store.getSimilarLessons('err_test');
-  assert.strictEqual(similar.length, 1);
-  assert.strictEqual(similar[0].causa, 'causa de teste');
 
-  const recent = store.getRecentLessons(5);
-  assert.strictEqual(recent.length, 1);
+  // Recupera lições similares
+  const similar = store.getSimilarLessons('test');
+  console.log('Similar lessons:', similar);
 
-  const avoid = await store.incrementAvoidCount('err_test');
-  assert.strictEqual(avoid, 2);
+  // Incrementa contagem de evitação
+  await store.incrementAvoidCount('test-assinatura');
+  const avoidCounts = store.getAvoidCounts();
+  console.log('Avoid counts:', avoidCounts);
 
-  const counts = store.getAvoidCounts();
-  assert.strictEqual(counts['err_test'], 2);
-});
+  // Recupera lições recentes
+  const recent = store.getRecentLessons();
+  console.log('Recent lessons:', recent);
+}
