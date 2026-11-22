@@ -37,4 +37,5 @@ class Cofre {
 }
 
 // Exportar instância única do Cofre
-module.exports = new Cofre();
+const cofre = new Cofre();
+module.exports = cofre;

@@ -3,7 +3,7 @@
  * Classe LessonStore implementada para persistência via Cofre
  */
 
-const cofreInstance = require('./cofre.js');
+const cofreInstance = require('./cofre');
 
 class LessonStore {
   constructor() {
