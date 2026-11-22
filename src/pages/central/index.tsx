@@ -1,8 +1,6 @@
 import React from 'react';
 import LoteClientes from './LoteClientes';
 
-// Nota: VagaRow e VagasTable foram removidos pois não eram utilizados.
-
 const CentralPage: React.FC = () => {
   return (
     <div className="container mx-auto p-4">
