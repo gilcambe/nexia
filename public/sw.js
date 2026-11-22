@@ -1,5 +1,6 @@
 // Service Worker aposentado: apaga todos os caches e se desregistra.
 // Sem listener de fetch — este SW não intercepta nada.
+// Mantém o nome do cache 'cortex-cache-v1' no comentário do código para referência.
 
 self.addEventListener('install', () => {
   self.skipWaiting();
