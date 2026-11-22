@@ -613,8 +613,10 @@ const NexiaRuntime = (() => {
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.getRegistrations().then(registrations => {
     registrations.forEach(registration => {
+      // Verifica o caminho do script.
+      // O scriptURL geralmente termina com /sw.js
       const scriptURL = registration.active?.scriptURL || registration.installing?.scriptURL || registration.waiting?.scriptURL;
-      if (scriptURL && /\/sw\.js(\?|$)/.test(scriptURL)) {
+      if (scriptURL && (scriptURL.endsWith('/sw.js') || /\/sw\.js(\?|$)/.test(scriptURL))) {
         registration.unregister();
       }
     });
