@@ -5,6 +5,9 @@
  * de forma idempotente, registrando logs de sucesso.
  */
 
+// AVISO: Script para execução em ambiente Node.js.
+// Certifique-se de que as variáveis GITHUB_REPO e GITHUB_TOKEN estão definidas no ambiente.
+
 const fs = require('fs');
 const path = require('path');
 
