@@ -552,11 +552,25 @@ function createOrchestrator(deps) {
           const hadBranch = !!state.work_branch;   // retomada: a branch pode já ter sido criada
           // #984: sufixo estável (hash do pedido), não o execution_id: cada nova tentativa da mesma tarefa usa o mesmo branch e o mesmo PR.
           const branch = state.work_branch || workBranchFor(message);
+          // 22/11: a mesma tarefa voltava depois do merge (o squash apaga a branch) e abria PR de novo — o
+          // atualizaEstado entrou 9x. Execução nova com PR desta branch já juntado = já entregue, sem codar de novo.
+          let juntado = null, lp = null;
+          if (!hadBranch && !((steps[i].attempts || 0) > 0)) {
+            lp = await tool(ctx, state, plan[i].agent, 'github.list_pulls', { state: 'closed', limit: 100 });
+            juntado = lp.status === 'succeeded' && (lp.result.pulls || []).find(p => p.head === branch && p.merged_at);
+          }
+          if (juntado) {
+            const msg = `Já entregue: o PR #${juntado.number} desta mesma tarefa já foi juntado (${juntado.html_url}); nada a refazer.`;
+            stepDone(i, { tool_call_ids: addIds(i, ids(lp)), summary: msg });
+            await commit({ work_branch: branch, pull_request: juntado.number });
+            stop = { status: 'succeeded', result_summary: msg };
+          } else {
           if (!state.work_branch) await commit({ work_branch: branch });
           const r = await tool(ctx, state, plan[i].agent, 'github.create_branch', { branch });
           const exists = r.status === 'failed' && r.error && r.error.code === 'CONFLICT';
           if (exists) stepDone(i, { tool_call_ids: addIds(i, ids(r)), summary: `${branch} já existia (${hadBranch || (steps[i].attempts || 0) > 0 ? 'retomada' : 'reaproveitada de tentativa anterior'})` });
           else handle(i, r, x => `branch ${x.branch} criada de ${x.from}`);
+          }
         } else if (action === 'agent:implement') {
           const fix = state.fix_feedback
             ? (/^O CI do PR falhou/.test(state.fix_feedback) && !state.fix_rounds
