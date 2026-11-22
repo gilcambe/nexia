@@ -63,10 +63,11 @@ async function montarPacote({ issue = {}, arquivos = [], limiteTokens = 3000 } =
   }
 
   // 5. Inclui até 3 lições similares de nexia-ai/cortex/licoes.js
+  // Usa o título da issue ou o corpo como termo de busca para lições similares
   const termoStr = (issue && (issue.title || issue.body || '')) || '';
   const licoesDb = await lessonStore.getSimilarLessons(termoStr, 3);
   if (licoesDb && licoesDb.length > 0) {
-    pacote += `## Lições Similares\n` + licoesDb.map((l, i) => `${i + 1}. ${l.resolucao || l.causa || JSON.stringify(l)}`).join('\n') + `\n\n`;
+    pacote += `## Lições Similares\n` + licoesDb.map((l, i) => `${i + 1}. ${l.resolucao || l.causa || JSON.stringify(l)}`).slice(0, 3).join('\n') + `\n\n`;
   }
 
   // 6. Lista arquivos prováveis usando nexia-ai/context-engine/arquivos-provaveis.js
