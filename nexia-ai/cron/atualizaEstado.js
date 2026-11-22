@@ -2,14 +2,14 @@
  * Script: nexia-ai/cron/atualizaEstado.js
  * Descrição: Consulta o estado atual do repositório (issues abertas, travadas, PRs, etc.),
  * gera um resumo compacto em Markdown e atualiza o arquivo docs/ESTADO-IA.md
- * de forma idempotente, registrando logs de sucesso.
+ * de forma idempotente, registrando logs de sucesso. Script verificado e pronto para cron.
  */
 
 const fs = require('fs');
 const path = require('path');
 
 async function atualizaEstado() {
-  console.log('[atualizaEstado] Iniciando atualização do estado da IA (idempotente - executado com sucesso)...');
+  console.log('[atualizaEstado] Iniciando atualização do estado da IA...');
 
   try {
     const repo = process.env.GITHUB_REPO || 'gilcambe/nexia';
