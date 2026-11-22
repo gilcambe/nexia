@@ -538,6 +538,24 @@ const NexiaLandingRenderer = (() => {
 window.NexiaLandingRenderer = NexiaLandingRenderer;
 
 // ════════════════════════════════════════════════════════════════════
+// 5.5. SERVICE WORKER APOSENTADO — garantir desregistro
+// ════════════════════════════════════════════════════════════════════
+// Aposenta service worker antigo que intercepta fetch desnecessariamente.
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistration('/').then(reg => {
+    if (!reg) return;
+    const s = reg.active?.scriptURL || reg.installing?.scriptURL || reg.waiting?.scriptURL;
+    if (s && /\/sw\.js(\?|$)/.test(s)) {
+      reg.unregister();
+      // Recarrega para garantir que não fica preso ao SW antigo
+      if (window.location.protocol === 'http:' || window.location.protocol === 'https:') {
+        window.location.reload();
+      }
+    }
+  }).catch(() => {});
+}
+
+// ════════════════════════════════════════════════════════════════════
 // 6. NEXIA RUNTIME — Master Boot Sequence
 // ════════════════════════════════════════════════════════════════════
 const NexiaRuntime = (() => {
@@ -589,19 +607,6 @@ const NexiaRuntime = (() => {
       : await NexiaModuleEngine.loadForTenant(tenant.id);
     NexiaEventBus.emit('runtime:modules', { tenant: tenant.id, modules: moduleIds });
 
-    // 4. Parar de registrar /sw.js e desregistrar se existir registro com scope / e script /sw.js.
-    if ('serviceWorker' in navigator) {
-      try {
-        const registrations = await navigator.serviceWorker.getRegistrations();
-        for (const r of registrations) {
-          const scriptURL = r.active?.scriptURL || r.waiting?.scriptURL || r.installing?.scriptURL || '';
-          if (scriptURL.includes('/sw.js') && r.scope.endsWith('/')) {
-            await r.unregister();
-          }
-        }
-      } catch (e) {}
-    }
-
     NexiaEventBus.emit('runtime:ready', { tenant, modules: moduleIds });
     return { tenant, modules: moduleIds };
   }
@@ -615,6 +620,17 @@ const NexiaRuntime = (() => {
 
   return { boot };
 })();
+
+// Aposentar Service Worker antigo (desregistra qualquer SW com script /sw.js)
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistration('/').then(registration => {
+    if (!registration) return;
+    const scriptURL = registration.active?.scriptURL || registration.installing?.scriptURL || registration.waiting?.scriptURL;
+    if (scriptURL && /\/sw\.js(\?|$)/.test(scriptURL)) {
+      registration.unregister();
+    }
+  }).catch(() => {});
+}
 
 window.NexiaRuntime = NexiaRuntime;
 

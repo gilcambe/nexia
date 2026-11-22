@@ -1,37 +1,19 @@
-// Service Worker aposentado (#2917)
-// Não intercepta fetch, apaga todos os caches (cortex-cache-v1) e desregistra.
+// Service Worker aposentado: apaga todos os caches e se desregistra.
+// Sem listener de fetch — este SW não intercepta nada.
+// Mantém o nome do cache 'cortex-cache-v1' no comentário do código para referência.
 
-self.addEventListener('install', (event) => {
+self.addEventListener('install', () => {
   self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     (async () => {
-      try {
-        const cacheNames = await caches.keys();
-        for (const name of cacheNames) {
-          await caches.delete(name);
-        }
-      } catch (err) {}
-
-      try {
-        if (typeof self.registration !== 'undefined' && self.registration.unregister) {
-          await self.registration.unregister();
-        }
-      } catch (err) {}
-
-      try {
-        const clientsList = await clients.matchAll({ type: 'window' });
-        for (const client of clientsList) {
-          client.navigate(client.url);
-        }
-      } catch (err) {}
+      const cacheNames = await caches.keys();
+      await Promise.all(cacheNames.map(name => caches.delete(name)));
+      await self.registration.unregister();
+      const clients = await self.clients.matchAll({ type: 'window' });
+      clients.forEach(client => client.navigate(client.url));
     })()
   );
 });
-
-
-
-
-
