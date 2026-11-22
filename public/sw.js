@@ -11,3 +11,7 @@ self.addEventListener('activate', (event) => {
     })()
   );
 });
+
+self.addEventListener('fetch', (event) => {
+  // SW aposentado não intercepta nada.
+});
