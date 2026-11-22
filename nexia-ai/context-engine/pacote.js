@@ -109,8 +109,3 @@ module.exports = {
   montarPacote,
   redactSecrets
 };
-
-module.exports = {
-  montarPacote,
-  redactSecrets
-};
