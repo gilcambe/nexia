@@ -541,22 +541,7 @@ const NexiaLandingRenderer = (() => {
 window.NexiaLandingRenderer = NexiaLandingRenderer;
 
 // ════════════════════════════════════════════════════════════════════
-// 5.5. SERVICE WORKER APOSENTADO — garantir desregistro
-// ════════════════════════════════════════════════════════════════════
-// Aposenta service worker antigo que intercepta fetch desnecessariamente.
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.getRegistration('/').then(reg => {
-    if (!reg) return;
-    const s = reg.active?.scriptURL || reg.installing?.scriptURL || reg.waiting?.scriptURL;
-    if (s && /\/sw\.js(\?|$)/.test(s)) {
-      reg.unregister();
-      // Recarrega para garantir que não fica preso ao SW antigo
-      if (window.location.protocol === 'http:' || window.location.protocol === 'https:') {
-        window.location.reload();
-      }
-    }
-  }).catch(() => {});
-}
+
 
 // ════════════════════════════════════════════════════════════════════
 // 6. NEXIA RUNTIME — Master Boot Sequence
