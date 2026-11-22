@@ -2,6 +2,9 @@
  * ═══════════════════════════════════════════════════════════════════
  * NEXIA OS — MODULE ENGINE v5.2 (PRODUCTION)
  * core/nexia-engine.js
+ * 
+ * SW Retired: Removed automatic /sw.js registration.
+ * Added unregister logic for legacy SWs.
  *
  * Provides:
  *   NexiaTenantEngine   — detects and caches current tenant
