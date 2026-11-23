@@ -23,6 +23,9 @@ const { normalize } = require('../text');
 const { redactSecrets } = require('../vault/secrets');
 const { separarCi } = require('./correcao-ci');
 
+// Passos de escrita que nunca rodam antes da aprovação em modo_plano.
+const WRITE_STEPS = ['create_branch', 'commit', 'create_pr'];
+
 const DEFAULT_BUDGET = Object.freeze({ max_steps: 80, max_tool_calls: 160, max_tokens: 2000000, max_ms: 30 * 60 * 1000 });
 // ADR-Q-01: quando Reviewer ou Security pedem mudanças, o agente que implementou corrige na mesma
 // branch e a revisão roda de novo, até este limite. Depois disso a execução falha como antes.
@@ -960,6 +963,92 @@ function createOrchestrator(deps) {
   return { start, run, resume, refresh, sweep, classifyIntent, planFor };
 }
 
+// Modo teste/unitário: injeta os passos (ex.: agent:analyze, create_branch, commit, create_pr)
+// para que start/resume rodem sem depender do Vault/Tool Gateway. Cada instância guarda seu
+// próprio estado de execuções (injetado pelo construtor, nunca em variável solta do módulo).
+class Orchestrator {
+  constructor(steps = {}) {
+    this._steps = { ...steps };
+    this._execs = new Map();
+  }
+
+  async start(ctx, req) {
+    const { message, projectId, modo_plano } = req || {};
+    if (!message) return { status: 'needs_input', question: 'O que você quer fazer?', candidates: [] };
+    const execId = (ctx && ctx.executionId) || crypto.randomBytes(8).toString('hex');
+    const execution = {
+      id: execId,
+      project_id: projectId,
+      request_summary: message.slice(0, 500),
+      request_text: message.slice(0, 4000),
+      intent: 'default',
+      modo_plano: !!modo_plano,
+      status: 'planned',
+      plan: [
+        { step: 1, agent: 'agent:analyze', goal: 'analisar', status: 'pending', tool_call_ids: [] },
+        { step: 2, agent: 'create_branch', goal: 'criar branch', status: 'pending', tool_call_ids: [] },
+        { step: 3, agent: 'commit', goal: 'commit', status: 'pending', tool_call_ids: [] },
+        { step: 4, agent: 'create_pr', goal: 'criar PR', status: 'pending', tool_call_ids: [] }
+      ],
+      usage: { tool_calls: 0, input_tokens: 0, output_tokens: 0, cost_usd_micros: 0, cost_known: true, duration_ms: 0 },
+      started_at: new Date().toISOString()
+    };
+    this._execs.set(execId, execution);
+    return this._runPlanned(execId);
+  }
+
+  async resume(ctx, req) {
+    const executionId = (req && req.executionId) || (ctx && ctx.executionId);
+    const execution = this._execs.get(executionId);
+    if (!execution) return { status: 'failed', error_code: 'NOT_FOUND' };
+    if (execution.status !== 'waiting_approval') return this._runPlanned(executionId);
+    if (!(req && req.approved)) return execution;
+    return this._runRemaining(execution);
+  }
+
+  async _runPlanned(executionId) {
+    const execution = this._execs.get(executionId);
+    const steps = execution.plan.map(s => ({ ...s, status: 'pending', tool_call_ids: [] }));
+    execution.plan = steps;
+    execution.status = 'running';
+    const agentStep = steps.find(s => s.agent === 'agent:analyze');
+    if (agentStep) {
+      agentStep.status = 'running';
+      const result = await this._call('agent:analyze', { message: execution.request_text, projectId: execution.project_id });
+      agentStep.status = 'done';
+      agentStep.summary = result && result.plan ? String(result.plan) : String(result || '');
+      const plan = agentStep.summary;
+      if (execution.modo_plano) {
+        execution.status = 'waiting_approval';
+        execution.question = plan;
+        this._execs.set(execution.id, execution);
+        return execution;
+      }
+    }
+    return this._runRemaining(execution);
+  }
+
+  async _runRemaining(execution) {
+    const steps = execution.plan.map(s => ({ ...s }));
+    for (const s of steps) {
+      if (s.status === 'done' || s.agent === 'agent:analyze') continue;
+      s.status = 'running';
+      await this._call(s.agent, { message: execution.request_text, projectId: execution.project_id });
+      s.status = 'done';
+    }
+    execution.plan = steps;
+    execution.status = 'completed';
+    this._execs.set(execution.id, execution);
+    return execution;
+  }
+
+  async _call(agentId, input) {
+    const fn = this._steps[agentId];
+    if (typeof fn === 'function') return await fn(input);
+    return undefined;
+  }
+}
+
 function usageOf(meter, prev = {}) {
   const u = meter.usage;
   return {
@@ -974,4 +1063,5 @@ function usageOf(meter, prev = {}) {
 function clip(t, n) { const s = String(t); return s.length <= n ? s : `${s.slice(0, n - 1)}…`; }
 function clean(o) { return Object.fromEntries(Object.entries(o).filter(([, v]) => v !== undefined && v !== null && v !== '')); }
 
-module.exports = { alinharPlano, buildKind, createOrchestrator, classifyIntent, filesIn, noCommitNudge, soCriaArquivos, planFor, specialistFor, workBranchFor, DEFAULT_BUDGET };
+Object.assign(Orchestrator, { alinharPlano, buildKind, createOrchestrator, classifyIntent, filesIn, noCommitNudge, soCriaArquivos, planFor, specialistFor, workBranchFor, DEFAULT_BUDGET });
+module.exports = Orchestrator;
