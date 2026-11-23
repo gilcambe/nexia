@@ -91,9 +91,25 @@ ${ultimosMerges.length > 0 ? ultimosMerges.slice(0, 5).map(m => `- PR #${m.numbe
     }
 
     const filePath = path.join(docsDir, 'ESTADO-IA.md');
+
+    // Idempotência: só reescreve o arquivo se o conteúdo mudou.
+    // Assim, rodar o script várias vezes seguidas (cron) não gera commits
+    // vazios nem entra em loop.
+    let conteudoAnterior = null;
+    if (fs.existsSync(filePath)) {
+      conteudoAnterior = fs.readFileSync(filePath, 'utf8');
+    }
+
+    const caminhoRelativo = path.relative(process.cwd(), filePath) || filePath;
+
+    if (conteudoAnterior === resumoContent) {
+      console.log(`[atualizaEstado] Sucesso! Nada mudou; ${caminhoRelativo} mantido como está.`);
+      return true;
+    }
+
     fs.writeFileSync(filePath, resumoContent, 'utf8');
 
-    console.log(`[atualizaEstado] Sucesso! Arquivo ${filePath} atualizado com resumo compacto.`);
+    console.log(`[atualizaEstado] Sucesso! Arquivo ${caminhoRelativo} atualizado com resumo compacto.`);
     return true;
   } catch (err) {
     console.error('[atualizaEstado] Erro fatal ao atualizar estado:', err.message);
