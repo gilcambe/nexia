@@ -110,3 +110,11 @@ test('GC7. só 1 IA respondeu (errado) e as outras sem cota: espera a cota, não
   assert.equal(r2.ok, false);
   assert.equal(r2.sem_cota, undefined);
 });
+
+test('GC8. lógica em .ts: o padrão typescript + import do .mjs passa; require direto do .ts é recusado com a dica (23/11)', () => {
+  const codigo = "'use strict';\nconst test = require('node:test');\nconst assert = require('node:assert/strict');\nconst fs = require('node:fs');\nconst os = require('node:os');\nconst path = require('node:path');\nconst ts = require('typescript');\nconst { pathToFileURL } = require('node:url');\ntest('x', async () => {\n  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'c-'));\n  const src = fs.readFileSync(path.join(__dirname, '../../apps/body-coach/src/lib/x.ts'), 'utf8');\n  fs.writeFileSync(path.join(dir, 'x.mjs'), ts.transpileModule(src, { compilerOptions: { module: ts.ModuleKind.ESNext } }).outputText);\n  const m = await import(pathToFileURL(path.join(dir, 'x.mjs')).href);\n  assert.equal(m.f(1), 2);\n  assert.equal(m.f(0), 0);\n  assert.equal(m.f(-1), -2);\n});\n";
+  const ok = conferir({ arquivos: ['apps/body-coach/src/lib/x.ts'], teste: 'tests/unit/contrato-x.test.js', codigo });
+  assert.deepEqual(ok.erros, []);
+  const ruim = conferir({ arquivos: ['apps/body-coach/src/lib/x.ts'], teste: 'tests/unit/contrato-x.test.js', codigo: codigo.replace("const ts = require('typescript');", "const x = require('../../apps/body-coach/src/lib/x');") });
+  assert.match(ruim.erros.join(), /transpile/);
+});

@@ -112,10 +112,12 @@ function lerPlano(corpo) {
 // Corpo da issue de cada parte: o cabeçalho com o plano + o pedido + limites claros para a IA executora.
 // partes = o plano inteiro: os arquivos das partes de que esta depende vão no cabeçalho (antes), para esperar o PR delas
 // entrar mesmo depois que a issue da parte anterior já fechou.
-function corpoDaParte(parte, k, n, pai, partes = []) {
+// 23/11/2026 (#4205): a parte só levava um resumo ("normalizar conforme especificado") e a IA inventou os campos
+// (dias[].nome em vez de titulo, repeticoes em vez de reps). Agora cada parte leva o pedido original para consulta.
+function corpoDaParte(parte, k, n, pai, partes = [], original = '') {
   const antes = [...new Set(parte.depende.flatMap(d => (partes[d - 1] || {}).arquivos || []))];
   const meta = { pai, k, n, depende: parte.depende, arquivos: parte.arquivos, antes, pronto: parte.pronto, limite: MAX_LINHAS_PARTE };
-  return [
+  const corpo = [
     cabecalho(meta),
     parte.tarefa,
     '',
@@ -124,6 +126,10 @@ function corpoDaParte(parte, k, n, pai, partes = []) {
     `Limite: até ${MAX_LINHAS_PARTE} linhas mudadas. Arquivo grande: leia por trechos (start_line/end_line ou find) e mude só o trecho.`,
     parte.depende.length ? `Esta parte vem depois de: ${parte.depende.map(d => `parte ${d}`).join(', ')} (já estão na develop quando ela rodar).` : 'Esta parte roda ao mesmo tempo que outras; não mexa em arquivos fora da lista.',
   ].join('\n').slice(0, 3900);   // a API do Cortex recusa pedido acima de 4000 letras
+  const orig = String(original || '').replace(/<!--[\s\S]*?-->/g, '').trim();
+  const titulo = `\n\nPedido original de #${pai} (só consulta: nomes de campo, regras e limites dele valem aqui; mexa só nos arquivos desta parte):\n`;
+  const sobra = 3900 - corpo.length - titulo.length;
+  return orig && sobra > 200 ? corpo + titulo + orig.slice(0, sobra) : corpo;
 }
 
 // Pode rodar agora? Espera só as partes de que depende (não todas as anteriores, como antes) e o PR delas entrar.
