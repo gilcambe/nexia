@@ -97,3 +97,16 @@ test('ajustarTeste: teste bom no lugar errado vira tests/unit/contrato-<nome> e 
   assert.equal(ajustarTeste(certo), certo, 'o que já está no padrão não muda');
   assert.equal(ajustarTeste(null), null);
 });
+
+test('GC7. só 1 IA respondeu (errado) e as outras sem cota: espera a cota, não cai no caminho sem teste (23/11)', async () => {
+  const M3 = [{ provider: 'gratis', model: 'a' }, { provider: 'gratis', model: 'b' }, { provider: 'gratis', model: 'c' }];
+  const router = { chat: async (m) => { if (m.model !== 'a') { const e = new Error('429'); e.code = 'UPSTREAM'; throw e; } return { text: 'não é json' }; } };
+  const r = await gerar({ pedido: 'dobro', raiz: repo(), router, modelos: M3, rodarTeste: rodar(repo()) });
+  assert.equal(r.ok, false);
+  assert.equal(r.sem_cota, true);
+  assert.match(r.motivo, /sem cota/);
+  // Duas IAs responderam e ambas erraram: aí é pedido ruim mesmo, segue o caminho antigo.
+  const r2 = await gerar({ pedido: 'dobro', raiz: repo(), router: { chat: async (m) => { if (m.model === 'c') throw new Error('429'); return { text: 'nada' }; } }, modelos: M3, rodarTeste: rodar(repo()) });
+  assert.equal(r2.ok, false);
+  assert.equal(r2.sem_cota, undefined);
+});

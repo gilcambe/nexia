@@ -119,15 +119,17 @@ function precisaGerar(texto, contrato) {
 
 async function gerar(o) {
   const log = o.log || (() => {});
-  let tentativas = 0, ultimo = '', responderam = 0;
+  let tentativas = 0, ultimo = '', responderam = 0, semCota = 0;
+  const respondentes = new Set();
   for (const m of o.modelos) {
     for (let k = 0; k < 2; k++) {
       tentativas++;
       let out;
       try {
         out = await o.router.chat(m, { system: SISTEMA, messages: [{ role: 'user', content: `PEDIDO:\n${String(o.pedido).slice(0, 6000)}${o.referencia ? '\n\n(referencia pedida: inclua "solucao")' : ''}${ultimo ? `\n\nA TENTATIVA ANTERIOR FOI RECUSADA: ${ultimo}` : ''}` }], maxTokens: o.referencia ? 12000 : 4000 });
-      } catch (e) { log(`${m.provider}/${m.model}: sem resposta (${motivoCurto(e)})`); break; }
+      } catch (e) { semCota++; log(`${m.provider}/${m.model}: sem resposta (${motivoCurto(e)})`); break; }
       responderam++;
+      respondentes.add(`${m.provider}/${m.model}`);
       const p = ajustarTeste(extrairJson(out && out.text));
       if (p && p.ajustado) log(`${m.provider}/${m.model}: teste movido de ${p.ajustado} para ${p.teste}`);
       if (!p) { ultimo = 'responda só com o JSON pedido'; continue; }
@@ -187,6 +189,10 @@ async function gerar(o) {
     }
   }
   if (!responderam) return { ok: false, sem_cota: true, motivo: 'nenhuma IA respondeu (sem cota agora)', tentativas };
+  // 23/11/2026 (#4198-#4206): 4 pedidos juntos esgotaram a cota; só 1 IA respondeu, errou, e o pedido caiu no caminho
+  // SEM teste, que fez código errado (#4208, #4209). Com menos de 2 IAs ouvidas e outras sem cota, é falta de cota,
+  // não pedido ruim: espera a cota e tenta de novo.
+  if (semCota && respondentes.size < 2) return { ok: false, sem_cota: true, motivo: `só ${respondentes.size} IA respondeu e ${semCota} estavam sem cota (${ultimo})`, tentativas };
   return { ok: false, motivo: `nenhuma IA gerou um teste válido (${ultimo})`, tentativas };
 }
 
