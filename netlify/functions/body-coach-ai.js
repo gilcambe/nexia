@@ -23,6 +23,8 @@ const PRODUTOS_SYS = { suplemento: 'Você avalia um suplemento ou produto fitnes
 const PRODUTO = (tipo) => `${PRODUTOS_SYS[tipo] || PRODUTOS_SYS.suplemento} Responda em português do Brasil, sem markdown, com estas seções em texto simples: O que é; Pontos bons; Pontos de atenção (açúcar, sódio, aditivos, dose, excesso de promessa); Vale a pena para o objetivo da pessoa? (sim, depende ou não, e por quê); Alternativa melhor ou mais barata, se houver. Se algo não estiver legível, diga o que faltou. Não prescreva remédio nem diagnostique; para exame, só explique o que está fora da faixa e sugira levar ao médico. Informação educativa.`;
 const RECEITA = 'Você é um nutricionista no app NEXIA Body Coach e cria UMA receita simples, barata e gostosa da culinária brasileira, em português do Brasil. Use preferencialmente os ingredientes que a pessoa disser ter; se não disser, use itens comuns de mercado. Encaixe nas calorias e proteína que ainda faltam no dia (contexto) e respeite objetivo, restrições e limitações. Formato exato, sem enfeites: primeira linha só o nome da receita; depois "Tempo: X min | Rende: N porção(ões)"; depois "Ingredientes:" com um item por linha começando com "- "; depois "Modo de preparo:" com passos numerados (máximo 6, curtos); por fim "Aproximado por porção: X kcal, Y g de proteína". Não use markdown, asteriscos nem títulos. Não prescreva remédios nem trate doenças.';
 const IMPORTAR = 'Você recebe o texto de uma lista, relatório ou exportação de alunos de outro aplicativo de treino (MFit, Tecnofit, Treinus etc.). Devolva SOMENTE um JSON, sem markdown, no formato [{"nome":"...","email":"...","telefone":"..."}] com um item por aluno. Use string vazia no que não aparecer. Não invente alunos, e-mails nem telefones; ignore títulos, datas, valores e linhas que não sejam de aluno.';
+// Ficha de treino lida de PDF/foto (app: importar ficha). A conversão final e os limites ficam em importarFicha.ts.
+const FICHA = 'Você recebe o texto de uma ficha de treino (lida de PDF ou foto, pode ter erros de leitura). Devolva SOMENTE um JSON, sem markdown, no formato {"nome":"...","obs":"...","dias":[{"titulo":"...","exercicios":[{"nome":"...","series":3,"reps":"10-12","descanso":60,"carga":"","obs":""}]}]}. Não invente exercícios; corrija só erros óbvios de leitura no nome; descanso em segundos.';
 const resposta = (event, statusCode, body) => ({ statusCode, headers: makeHeaders(event), body: JSON.stringify(body) });
 
 // Tempo total que o app espera a resposta (o app desiste aos 30 s). Depois disso, nem tenta outro modelo.
@@ -67,7 +69,8 @@ exports.handler = async (event) => {
   try { body = JSON.parse(event.body || '{}'); } catch { return resposta(event, 400, { error: 'Pedido inválido.' }); }
   const message = typeof body.message === 'string' ? body.message.trim() : '';
   const importar = body.task === 'importar';
-  const limiteMsg = importar ? 12000 : 3000;
+  const ficha = body.task === 'ficha';
+  const limiteMsg = importar || ficha ? 12000 : 3000;
   if (message.length < 1 || message.length > limiteMsg) return resposta(event, 400, { error: `Escreva uma mensagem de até ${limiteMsg} caracteres.` });
   const role = Object.prototype.hasOwnProperty.call(PAPEIS, body.role) ? body.role : 'coach';
   const contexto = JSON.stringify(body.context && typeof body.context === 'object' ? body.context : {}).slice(0, 3000);
@@ -76,7 +79,7 @@ exports.handler = async (event) => {
   const sincera = body.task === 'avaliacao';
   const produto = body.task === 'produto';
   if (cardio && typeof body.image !== 'string') return resposta(event, 400, { error: 'Mande a foto do painel.' });
-  const system = `${importar ? IMPORTAR : cardio ? CARDIO : sincera ? SINCERA : produto ? PRODUTO(body.tipo) : receita ? RECEITA : PAPEIS[role]}\nContexto do aluno: ${contexto}`;
+  const system = `${ficha ? FICHA : importar ? IMPORTAR : cardio ? CARDIO : sincera ? SINCERA : produto ? PRODUTO(body.tipo) : receita ? RECEITA : PAPEIS[role]}\nContexto do aluno: ${contexto}`;
   // Últimas mensagens da conversa (até 10), para o coach lembrar o que o aluno já disse.
   const historico = Array.isArray(body.history) ? body.history.slice(-10).filter((h) => h && (h.role === 'user' || h.role === 'assistant') && typeof h.content === 'string' && h.content.trim()).map((h) => ({ role: h.role, content: h.content.trim().slice(0, 600) })) : [];
   const mensagens = [...historico, { role: 'user', content: message }];
@@ -96,7 +99,7 @@ exports.handler = async (event) => {
   if (produto && !images) return resposta(event, 400, { error: 'Mande a foto do produto.' });
 
   // Conversa livre: um pouco mais de variedade (tarefas de JSON e leitura de foto ficam no padrão do modelo).
-  const conversa = !importar && !cardio && !sincera && !produto && !receita && !images;
+  const conversa = !importar && !ficha && !cardio && !sincera && !produto && !receita && !images;
   const router = getRouter();
   // Regra do dono: o Body Coach só usa IA grátis, mesmo que alguém configure a chave paga da Anthropic.
   // Na conversa livre, pula os modelos de programação (codestral, "coder").
@@ -111,7 +114,7 @@ exports.handler = async (event) => {
       if (!cap.available || (images && !cap.vision)) continue;
       // Cada modelo tem no máximo 12 s, e nunca mais do que o tempo que ainda falta.
       const limite = Math.min(TEMPO_MODELO_MS, restante);
-      const out = await Promise.race([router.chat(d, { system, messages: mensagens, maxTokens: importar ? 2500 : sincera || produto ? 1600 : images ? 1200 : receita ? 2000 : 700, ...(conversa ? { temperature: 0.85 } : {}), ...(images ? { images } : {}) }), new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), limite))]);
+      const out = await Promise.race([router.chat(d, { system, messages: mensagens, maxTokens: importar || ficha ? 2500 : sincera || produto ? 1600 : images ? 1200 : receita ? 2000 : 700, ...(conversa ? { temperature: 0.85 } : {}), ...(images ? { images } : {}) }), new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), limite))]);
       if (out && out.text) return resposta(event, 200, { reply: out.text, role, model: d.model });
     } catch { /* tenta o próximo modelo */ }
   }

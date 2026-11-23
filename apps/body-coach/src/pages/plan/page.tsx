@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, type ReactNode } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { type Answers } from '@/lib/trainingPlan';
 import { DIVISOES, type Divisao } from '@/lib/dayPlan';
@@ -9,6 +9,12 @@ import Lembretes from './components/Lembretes';
 import Card from '@/components/base/Card';
 import ExportarPlano from '@/components/feature/ExportarPlano';
 import { diaDaFichaCoach, temFichaCoach, type FichaCoach } from '@/lib/coach/fichaCoach';
+import ImportarFicha from '@/components/feature/ImportarFicha';
+import FichaEditor from '@/pages/coach/components/FichaEditor';
+import { confirmar } from '@/lib/dialogo';
+
+// Ficha que o próprio aluno subiu (PDF/foto/texto). A do coach o aluno não troca nem apaga.
+const IMPORTADA = 'Importada por você';
 
 export default function Plan() {
   const navigate = useNavigate();
@@ -21,6 +27,9 @@ export default function Plan() {
   const [trocando, setTrocando] = useState(false);
   const [aberto, setAberto] = useState<number | null>(null);
   const [lembretes, setLembretes] = useState(false);
+  const [editando, setEditando] = useState<FichaCoach | null>(null); // ficha importada, ainda sendo conferida
+  const [salvandoImp, setSalvandoImp] = useState(false);
+  const [erroImp, setErroImp] = useState('');
 
   useEffect(() => {
     if (!user?.id) return;
@@ -45,9 +54,48 @@ export default function Plan() {
     if (user?.id) void setUserDoc(user.id, 'profile', 'main', { ficha: nova }, true).catch(() => {});
   };
 
+  const salvarImportada = async (f: FichaCoach) => {
+    if (!user?.id) return;
+    setSalvandoImp(true); setErroImp('');
+    const nova = { ...f, coach: IMPORTADA, em: Date.now() };
+    try {
+      await setUserDoc(user.id, 'profile', 'main', { ficha_coach: nova, ficha_coach_dia: 0 }, true);
+      setFichaCoach({ ficha: nova, dia: 0 }); setEditando(null);
+    } catch { setErroImp('Não consegui salvar agora. Tente de novo.'); } finally { setSalvandoImp(false); }
+  };
+  const apagarImportada = async () => {
+    if (!user?.id || !(await confirmar('Apagar a ficha que você importou? O app volta a montar o treino sozinho.'))) return;
+    try {
+      await setUserDoc(user.id, 'profile', 'main', { ficha_coach: null }, true);
+      setFichaCoach(null);
+    } catch { setErroImp('Não consegui apagar agora. Tente de novo.'); }
+  };
+
   if (loading) return <p className="text-sm text-foreground-500">Carregando...</p>;
 
-  if (fichaCoach) return <FichaDoCoach ficha={fichaCoach.ficha} dia={fichaCoach.dia} onTreinar={() => navigate('/workout')} />;
+  if (editando) {
+    return (
+      <div className="tela">
+        <h1 className="font-heading text-xl font-bold text-foreground-950">Confira sua ficha</h1>
+        <p className="text-sm text-foreground-600">Li o arquivo e montei a ficha. Corrija o que precisar e salve.</p>
+        {erroImp && <p role="alert" className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{erroImp}</p>}
+        <FichaEditor nomeAluno="você" respostas={(onboarding ?? {}) as unknown as Record<string, unknown>} inicial={editando} salvando={salvandoImp} rotuloEnviar="Salvar minha ficha" podeRemover={false} onSalvar={(f) => void salvarImportada(f)} onRemover={() => setEditando(null)} />
+        <button type="button" onClick={() => setEditando(null)} className="w-full rounded-xl border border-background-200 px-3 py-2 text-sm font-semibold text-foreground-600">Cancelar</button>
+      </div>
+    );
+  }
+
+  if (fichaCoach) {
+    const minha = fichaCoach.ficha.coach === IMPORTADA;
+    return (
+      <FichaDoCoach ficha={fichaCoach.ficha} dia={fichaCoach.dia} onTreinar={() => navigate('/workout')}>
+        {erroImp && <p role="alert" className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{erroImp}</p>}
+        {minha
+          ? <div className="space-y-2"><ImportarFicha onFicha={setEditando} /><button type="button" onClick={() => void apagarImportada()} className="w-full rounded-xl border border-red-200 px-3 py-2 text-sm font-semibold text-red-600"><i className="ri-delete-bin-line mr-1"></i>Apagar ficha importada</button></div>
+          : <p className="rounded-lg bg-background-100 px-3 py-2 text-xs text-foreground-600">Sua ficha é do seu coach. Peça a ele para trocar.</p>}
+      </FichaDoCoach>
+    );
+  }
 
   if (!onboarding) {
     return (
@@ -60,6 +108,8 @@ export default function Plan() {
         >
           Responder agora <i className="ri-arrow-right-line"></i>
         </Link>
+        <p className="mt-4 text-xs text-foreground-500">Já tem uma ficha pronta? Suba o arquivo:</p>
+        <div className="mt-2"><ImportarFicha onFicha={setEditando} /></div>
       </Card>
     );
   }
@@ -67,6 +117,7 @@ export default function Plan() {
   return (
     <div className="tela">
       <h1 className="font-heading text-xl font-bold text-foreground-950">Ficha de treino</h1>
+      <ImportarFicha onFicha={setEditando} />
 
       <Card padding="p-3">
         <button type="button" onClick={() => setTrocando((t) => !t)} aria-expanded={trocando} className="flex w-full items-center justify-between gap-2 text-left">
@@ -125,17 +176,18 @@ export default function Plan() {
 }
 
 // Ficha montada pelo coach: todos os treinos com séries, repetições, descanso, carga e observações.
-function FichaDoCoach({ ficha, dia, onTreinar }: { ficha: FichaCoach; dia: number; onTreinar: () => void }) {
+function FichaDoCoach({ ficha, dia, onTreinar, children }: { ficha: FichaCoach; dia: number; onTreinar: () => void; children?: ReactNode }) {
   return (
     <div className="tela tela-fim">
       <header>
         <h1 className="font-heading text-xl font-bold text-foreground-950">Ficha de treino</h1>
         <p className="text-sm text-foreground-600">
-          <b>{ficha.nome}</b>, do seu coach{ficha.coach ? ` ${ficha.coach}` : ''}. Os treinos seguem em ciclo.
+          <b>{ficha.nome}</b>{ficha.coach === IMPORTADA ? ', importada por você' : `, do seu coach${ficha.coach ? ` ${ficha.coach}` : ''}`}. Os treinos seguem em ciclo.
         </p>
         {ficha.obs && <p className="mt-2 rounded-lg bg-background-100 px-3 py-2 text-sm text-foreground-700">{ficha.obs}</p>}
       </header>
       <ExportarPlano ficha={ficha} />
+      {children}
       <div className="grid grid-cols-1 gap-2 md:grid-cols-2 lg:grid-cols-3">
         {ficha.dias.map((d, i) => {
           const proximo = i === dia;
