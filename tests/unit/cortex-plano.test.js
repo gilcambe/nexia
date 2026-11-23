@@ -97,3 +97,15 @@ test('PL8. 11/11: tarefa comum que cita arquivo e falha também leva o corpo par
   const [r] = decidir({ issues: [i], runs: [{ id: 9, name: 'Cortex #503', status: 'completed', conclusion: 'failure' }], agora: AGORA });
   assert.deepEqual([r.tipo, r.conferirEntrega, r.parte, /src\/routes\/health\.js/.test(r.corpo), r.desde], ['reenfileirar', true, undefined, true, '2026-11-11T10:00:00Z']);
 });
+
+test('corpoDaParte leva o pedido original para consulta, dentro do limite de 3900 letras (23/11, #4205)', () => {
+  const { corpoDaParte, lerPlano } = require('../../scripts/cortex-plano');
+  const parte = { tarefa: 'Criar importarFicha.ts', arquivos: ['apps/x/importarFicha.ts'], depende: [], pronto: 'ok' };
+  const c = corpoDaParte(parte, 1, 2, 4200, [parte], '<!-- cortex-plano {"x":1} -->\nFichaCoach usa dias[].titulo e exercicios[].reps.');
+  assert.match(c, /Pedido original de #4200/);
+  assert.match(c, /dias\[\]\.titulo/);
+  assert.equal(lerPlano(c).pai, 4200);
+  assert.equal((c.match(/cortex-plano/g) || []).length, 1);
+  assert.ok(corpoDaParte(parte, 1, 2, 4200, [parte], 'x'.repeat(9000)).length <= 3900);
+  assert.doesNotMatch(corpoDaParte(parte, 1, 2, 4200, [parte]), /Pedido original/);
+});

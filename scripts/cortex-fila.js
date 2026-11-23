@@ -592,7 +592,7 @@ async function executar(token, acao, dividir) {
       const p = partes[k];
       const labels = [L.fila, L.parte, ...(acao.herdar || [])];
       if (plano.vaiParaJules(p, acao.tamanhos || {})) labels.push(L.jules);
-      const r = await gh(token, 'POST', '/issues', { title: `[Parte ${k + 1}/${partes.length} de #${n}] ${String(p.titulo || acao.titulo).replace(/^NEXIA:\s*/, '').slice(0, 60)}`, body: plano.corpoDaParte(p, k + 1, partes.length, n, partes), labels });
+      const r = await gh(token, 'POST', '/issues', { title: `[Parte ${k + 1}/${partes.length} de #${n}] ${String(p.titulo || acao.titulo).replace(/^NEXIA:\s*/, '').slice(0, 60)}`, body: plano.corpoDaParte(p, k + 1, partes.length, n, partes, acao.tarefa), labels });
       if (r.status === 201) criadas.push(r.json.number);
     }
     if (criadas.length !== partes.length) { await comentar(`Só criei ${criadas.length} de ${partes.length} partes; deixei a tarefa inteira.`); await addLabel(L.semDivisao); return; }

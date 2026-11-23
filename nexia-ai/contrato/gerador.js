@@ -19,7 +19,8 @@ const { safePath } = require('../orchestrator/edit-blocks');
 
 const PROIBIDO = /^(tests\/|\.github\/|node_modules\/|dist\/|build\/)|(^|\/)\.env|wrangler\.toml$|package(-lock)?\.json$|(^|\/)(deploy|publicar)[^/]*$/i;
 // B6 (12/11): fs/path/os liberados para LER o arquivo da solução e gravar só em pasta temporária (mkdtemp).
-const MODULOS_OK = new Set(['node:test', 'node:assert', 'node:assert/strict', 'assert', 'assert/strict', 'node:fs', 'fs', 'node:path', 'path', 'node:os', 'os', 'node:vm', 'vm']); // vm: rodar tela do app num contexto falso (17/11)
+// 23/11/2026: 'typescript' e 'node:url' liberados: é assim que todo teste do Body Coach lê .ts/.tsx (#4199-#4206 eram recusados).
+const MODULOS_OK = new Set(['typescript', 'node:url', 'url', 'node:test', 'node:assert', 'node:assert/strict', 'assert', 'assert/strict', 'node:fs', 'fs', 'node:path', 'path', 'node:os', 'os', 'node:vm', 'vm']); // vm: rodar tela do app num contexto falso (17/11)
 const EXT_OK = /\.((c|m)?js|jsx|ts|tsx|html|css|json|md)$/i;
 const GRAVA = /\b(writeFileSync|writeFile|appendFileSync|appendFile|mkdirSync|rmSync|rmdirSync|unlinkSync|renameSync|copyFileSync|cpSync)\b/;
 const ABSOLUTO = /['"`]([A-Za-z]:\\|\/(home|etc|usr|var|tmp|Users|root)\/)/;
@@ -39,6 +40,9 @@ const SISTEMA = [
   'Kernex Finance (netlify/functions/prumo*, prumo/): servidor = p.agir(uid, { acao, ... }) de netlify/functions/prumo.js com p.deps.db = banco falso; dado da pessoa vive em c.base.collection(...), NUNCA em arquivo. Não peça handler novo, rota de teste nem ação que o pedido não citou.',
   'Tela (prumo/<aba>.js): rode o arquivo num vm com window.MB falso (api, ui) e um elemento falso; chame MB.telas.<aba>(el), clique (chame o onclick) e verifique o MB.api chamado com o corpo certo. Respostas falsas no MESMO formato do servidor. Teste que só procura texto no código NÃO vale para tela.',
   'Não exija posição em lista nem trecho exato de código; verifique comportamento.',
+  // 23/11/2026: sem este modelo nenhuma IA conseguia testar lógica em .ts (Body Coach), e o pedido caía no caminho sem teste.
+  'Lógica em .ts/.tsx (ex.: apps/body-coach/src/lib/x.ts): NUNCA faça require do .ts. Transpile e importe assim: const ts = require("typescript"); const { pathToFileURL } = require("node:url"); const dir = fs.mkdtempSync(path.join(os.tmpdir(), "c-")); const src = fs.readFileSync(path.join(__dirname, "../../apps/body-coach/src/lib/x.ts"), "utf8"); fs.writeFileSync(path.join(dir, "x.mjs"), ts.transpileModule(src, { compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 } }).outputText); const m = await import(pathToFileURL(path.join(dir, "x.mjs")).href); (dentro de test(..., async () => {...})). Se o .ts importa VALOR de outro arquivo do app (ex.: import { idDoNome } from "./fichaCoach"), transpile esse também para a mesma pasta e troque o caminho no texto (ex.: "./fichaCoach" vira "./fichaCoach.mjs"). Import só de tipo (import type) some sozinho.',
+  'Use EXATAMENTE os nomes de campo e tipos que o pedido e os arquivos citados usam (ex.: FichaCoach usa dias[].titulo e exercicios[].reps). Não invente campo.',
   'Só responda {"testavel": false, "motivo": "..."} se a mudança depender de serviço externo (painel da Cloudflare, Firebase, Play Store, DNS), de deploy ou de olhar humano (cor, layout).',
 ].join('\n');
 
@@ -87,6 +91,7 @@ function conferir(p) {
   const reqs = [...codigo.matchAll(/require\(\s*['"`]([^'"`]+)['"`]\s*\)/g)].map(m => m[1]);
   const daSolucao = r => r.startsWith('../../') && arquivos.some(a => a && (r.slice(6) === a || r.slice(6) + '.js' === a));
   const ruins = reqs.filter(r => !MODULOS_OK.has(r) && !daSolucao(r));
+  if (reqs.some(r => /\.tsx?$/.test(r) || arquivos.some(x => /\.tsx?$/.test(x) && r.startsWith('../../') && x.startsWith(r.slice(6))))) erros.push('não faça require de arquivo .ts/.tsx: leia com fs, transpile com require("typescript").transpileModule e importe o .mjs da pasta temporária');
   if (ruins.length) erros.push(`o teste importa o que não pode: ${ruins.join(', ')}`);
   const leSolucao = arquivos.some(a => a && codigo.includes(a));
   if (!reqs.some(daSolucao) && !leSolucao) erros.push('o teste não importa nem lê nenhum arquivo da solução');
