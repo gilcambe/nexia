@@ -1,5 +1,6 @@
 /**
  * Lições do Cortex em CommonJS
+ * Implementação de LessonStore com persistência via Cofre
  */
 
 const cofreInstance = require('./cofre');
