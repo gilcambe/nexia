@@ -115,7 +115,7 @@ async function sweepAllTenants({ db, vdb, orchestrator, max = 20, deadline = Dat
     const sys = createExecutionContext({ tenantId, actor: { type: 'system', id: 'cron-sweep' } });
     // Aprovações (waiting_approval) ficam de fora: retomar depois de aprovar é ação de pessoa.
     const done = await orchestrator.sweep(sys, { statuses: ['planned', 'running'], max: max - items.length,
-      ctxFor: x => createExecutionContext({ tenantId, actor: x.requested_by, executionId: x.execution_id || undefined }), deadline });
+      ctxFor: x => createExecutionContext({ tenantId, actor: x.requested_by, executionId: x.execution_id || undefined }), deadline, log });
     for (const d of done) { items.push({ tenant: tenantId, ...d }); log(`[sweep] ${d.id} ${d.action}: ${d.from} → ${d.to || d.error}`); }
     if (items.length >= max) break;
   }

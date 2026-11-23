@@ -235,12 +235,14 @@ const writtenPaths = (name, input) => (name === 'github.edit_files' ? (input.edi
   : name === 'github.commit_files' ? (input.files || []).map(f => f && f.path) : []).filter(p => typeof p === 'string');
 
 class BudgetError extends Error { constructor(what) { super(`Orçamento estourado: ${what}.`); this.code = 'BUDGET_EXCEEDED'; } }
+// 23/11: prazo da rodada (job do Actions morre em 30 min). Não é falha: a execução pausa e continua na próxima rodada.
+class PausaError extends Error { constructor() { super('Prazo da rodada: pausa para continuar na próxima.'); this.code = 'PAUSED_DEADLINE'; } }
 
 /**
  * Orçamento compartilhado pela execução inteira.
  * @param {{ max_steps, max_tool_calls, max_tokens, max_ms }} budget
  */
-function createMeter(budget, now = () => Date.now()) {
+function createMeter(budget, now = () => Date.now(), { deadline = null } = {}) {
   const t0 = now();
   const usage = { steps: 0, tool_calls: 0, input_tokens: 0, output_tokens: 0, cost_usd: 0, cost_known: true, models: new Set() };
   return {
@@ -250,6 +252,7 @@ function createMeter(budget, now = () => Date.now()) {
       if (usage.tool_calls >= budget.max_tool_calls) throw new BudgetError('chamadas de ferramenta');
       if (usage.input_tokens + usage.output_tokens >= budget.max_tokens) throw new BudgetError('tokens');
       if (now() - t0 >= budget.max_ms) throw new BudgetError('tempo');
+      if (deadline && now() >= deadline) throw new PausaError();
     },
     elapsed: () => now() - t0,
   };
@@ -535,4 +538,4 @@ function usedModel(desc, out) {
   return `${desc.provider}/${real}`;
 }
 
-module.exports = { askModel, verdictInText, classify, compact, runAgent, createMeter, BudgetError, toModelName, fromModelName, REPORT_TOOL };
+module.exports = { askModel, verdictInText, classify, compact, runAgent, createMeter, BudgetError, PausaError, toModelName, fromModelName, REPORT_TOOL };
