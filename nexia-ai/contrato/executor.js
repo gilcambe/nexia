@@ -305,8 +305,7 @@ async function executar(o) {
   const lic = mem ? memoria.licoes(mem) : '';
   // 22/11: livros por assunto (memoria/livros/*.md) entram só quando o contrato cita o assunto.
   const livrosUsados = mem ? memoria.livros(c, mem) : [];
-  const sistema = (lic ? `${SISTEMA}\n\nLIÇÕES DO CORTEX (aprendidas em tarefas anteriores; siga sempre):\n${lic}` : SISTEMA)
-    + livrosUsados.map(l => `\n\nLIÇÕES DO CORTEX SOBRE ${l.nome.toUpperCase()} (siga sempre nesta tarefa):\n${l.texto}`).join('');
+  const sistema = montarPromptSistema(c, mem, { lic, livrosUsados });
   const exemplosUsados = mem ? memoria.buscarExemplos(c, { ...mem, excluir: o.numero }) : [];
   const exemplos = memoria.textoExemplos(exemplosUsados);
   if (lic || exemplosUsados.length) log(`memória: ${lic ? 'lições' : 'sem lições'}${livrosUsados.length ? ` + livros ${livrosUsados.map(l => l.nome).join(', ')}` : ''}; exemplos ${exemplosUsados.map(e => '#' + e.numero).join(', ') || 'nenhum'}`);
@@ -472,4 +471,15 @@ async function executar(o) {
     melhor: melhor ? { estado: melhor.estado, nota: melhor.nota, texto: textoNota(melhor.nota) } : null, notaInicio };
 }
 
-module.exports = { trechosRelevantes, porAcerto, testeSuspeito, lerContrato, executar, aplicar, montarPedido, resgatarFormato, nota, nomesDosTestes, foco, referencias, SISTEMA, TESTE_OK };
+/** Prompt de sistema: base + constituição (valores) + lições + livros do assunto. */
+function montarPromptSistema(c, mem = {}, pre = {}) {
+  const lic = pre.lic !== undefined ? pre.lic : (mem ? memoria.licoes(mem) : '');
+  const livrosUsados = pre.livrosUsados || (mem && c ? memoria.livros(c, mem) : []);
+  const con = mem ? memoria.constituicao(mem) : '';
+  return SISTEMA
+    + (con ? `\n\nCONSTITUIÇÃO DO CORTEX (valores; siga sempre):\n${con}` : '')
+    + (lic ? `\n\nLIÇÕES DO CORTEX (aprendidas em tarefas anteriores; siga sempre):\n${lic}` : '')
+    + livrosUsados.map(l => `\n\nLIÇÕES DO CORTEX SOBRE ${l.nome.toUpperCase()} (siga sempre nesta tarefa):\n${l.texto}`).join('');
+}
+
+module.exports = { montarPromptSistema, trechosRelevantes, porAcerto, testeSuspeito, lerContrato, executar, aplicar, montarPedido, resgatarFormato, nota, nomesDosTestes, foco, referencias, SISTEMA, TESTE_OK };
