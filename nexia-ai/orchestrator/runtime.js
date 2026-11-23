@@ -231,8 +231,16 @@ function repairRaw(raw) {
   const t = String(raw || '').trim().replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/, '').replace(/,\s*([}\]])/g, '$1');
   try { const v = JSON.parse(t); return v && typeof v === 'object' && !Array.isArray(v) ? v : null; } catch { return null; }
 }
-const writtenPaths = (name, input) => (name === 'github.edit_files' ? (input.edits || []).map(e => e && e.path)
-  : name === 'github.commit_files' ? (input.files || []).map(f => f && f.path) : []).filter(p => typeof p === 'string');
+// 23/11: IA grátis mandou "edits" como objeto/texto em vez de lista e o Orchestrator caiu com TypeError
+// ("(input.edits || []).map is not a function"). Formato errado não derruba: vira lista (ou vazio) e o gateway devolve o erro à IA.
+function comoLista(v) {
+  if (Array.isArray(v)) return v;
+  if (typeof v === 'string') { try { return comoLista(JSON.parse(v)); } catch { return []; } }
+  if (v && typeof v === 'object') return v.path ? [v] : Object.values(v).filter(x => x && typeof x === 'object');
+  return [];
+}
+const writtenPaths = (name, input) => (name === 'github.edit_files' ? comoLista(input && input.edits).map(e => e && e.path)
+  : name === 'github.commit_files' ? comoLista(input && input.files).map(f => f && f.path) : []).filter(p => typeof p === 'string');
 
 class BudgetError extends Error { constructor(what) { super(`Orçamento estourado: ${what}.`); this.code = 'BUDGET_EXCEEDED'; } }
 // 23/11: prazo da rodada (job do Actions morre em 30 min). Não é falha: a execução pausa e continua na próxima rodada.
@@ -538,4 +546,4 @@ function usedModel(desc, out) {
   return `${desc.provider}/${real}`;
 }
 
-module.exports = { askModel, verdictInText, classify, compact, runAgent, createMeter, BudgetError, PausaError, toModelName, fromModelName, REPORT_TOOL };
+module.exports = { comoLista, writtenPaths, askModel, verdictInText, classify, compact, runAgent, createMeter, BudgetError, PausaError, toModelName, fromModelName, REPORT_TOOL };
