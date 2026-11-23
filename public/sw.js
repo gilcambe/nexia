@@ -10,8 +10,3 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-self.addEventListener('fetch', () => {
-  // SW aposentado: não intercepta requisições.
-});
-
-// Referência para teste: cortex-cache-v1 (limpo na ativação)
