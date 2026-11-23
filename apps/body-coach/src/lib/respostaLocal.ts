@@ -65,7 +65,7 @@ export function respostaLocal(texto: string, d: DadosLocais): string {
       `Respeita o corpo hoje, ${n}. Uma caminhada de 20 minutos já ajuda a ${obj}.`,
     ]);
   }
-  if (/dor|doendo|machuc|lesao|lesionei/.test(t)) {
+  /
     return uma([
       `Cuidado com isso, ${n}. Se a dor for forte, aguda ou com inchaço, pare e procure um profissional. No treino, use "Trocar exercício" para fugir do movimento que incomoda.`,
       `Dor não é para aguentar. Me diga onde dói em "Como você está hoje" que eu tiro do treino os exercícios que forçam essa região.`,
