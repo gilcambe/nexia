@@ -117,6 +117,13 @@ function motivoCurto(e) {
 // 23/11/2026: pedido com "Arquivos:" mas SEM linha "Teste:" era marcado contrato-invalido e parava (#4145-#4157).
 // Regra: só não gera quando JÁ existe uma linha "Teste:" (aí o erro é do contrato e precisa ser corrigido).
 // As linhas "Arquivos:" viram dica no pedido; o gerador escolhe os arquivos e escreve o teste.
+// Quantas rodadas o gerador já tentou (rótulos contrato-gerar-2, -3). Devolve o próximo rótulo, ou null depois da 3ª rodada.
+function proximaTentativaGerar(rotulos) {
+  const ls = Array.isArray(rotulos) ? rotulos : [];
+  if (ls.includes('contrato-gerar-3')) return null;
+  return ls.includes('contrato-gerar-2') ? 'contrato-gerar-3' : 'contrato-gerar-2';
+}
+
 function precisaGerar(texto, contrato) {
   if (contrato && contrato.ok) return false;
   return !/^\s*(?:[-*]\s*)?\**Teste\**\s*:/im.test(String(texto || ''));
@@ -171,7 +178,7 @@ async function gerar(o) {
         if (!rr || !rr.ok) {
           fs.unlinkSync(abs);
           ultimo = `a sua solução de referência NÃO passou no seu próprio teste: o teste se contradiz ou pede algo impossível (ou a solução está errada). Corrija. Saída: ${String((rr && rr.saida) || '').slice(-1500)}`;
-          log(`${m.provider}/${m.model}: recusado (referência não passa no teste)`);
+          log(`${m.provider}/${m.model}: recusado (referência não passa no teste): ${String((rr && rr.saida) || '').replace(/\s+/g, ' ').slice(-400)}`);
           continue;
         }
         log(`${m.provider}/${m.model}: solução de referência passou no teste (teste possível)`);
@@ -219,4 +226,4 @@ async function revisarCobertura(router, modelos, pedido, codigo) {
   return null;
 }
 
-module.exports = { precisaGerar, motivoCurto, ajustarTeste, gerar, conferir, extrairJson, revisarCobertura, SISTEMA, REVISOR };
+module.exports = { proximaTentativaGerar, precisaGerar, motivoCurto, ajustarTeste, gerar, conferir, extrairJson, revisarCobertura, SISTEMA, REVISOR };
