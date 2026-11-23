@@ -50,10 +50,17 @@ const router = { capabilities: () => ({ available: true, tool_call: true }), cos
 const ctx = { tenantId: 't1', actor: { type: 'user', id: 'gilcambe' } };
 const PEDIDO = 'Crie o script nexia-ai/cron/atualizaEstado.js que atualiza o estado';
 
-async function rodar(pulls) {
+async function rodar(pulls, { retomada = false } = {}) {
   const gw = gateway(pulls);
-  const o = createOrchestrator({ vault: fakeVault(), gateway: gw, router, resolver: async () => ({ project_id: 'prj_1', confidence: 1 }), contextBuilder: async () => ({ text: '' }), fetchImpl: async () => ({ status: 200 }) });
+  const vault = fakeVault();
+  const o = createOrchestrator({ vault, gateway: gw, router, resolver: async () => ({ project_id: 'prj_1', confidence: 1 }), contextBuilder: async () => ({ text: '' }), fetchImpl: async () => ({ status: 200 }) });
   const s = await o.start({ ...ctx, executionId: `exe-${Math.random()}` }, { message: PEDIDO, projectId: 'prj_1' });
+  if (retomada) {
+    // Execução ANTIGA retomada pela varredura (#4141): a branch já foi criada numa rodada anterior.
+    const x = await vault.Execution.get(ctx, s.execution.id);
+    const plan = x.plan.map(p => (p.action === 'create_branch' || p.action === 'agent:analyze' ? { ...p, status: 'done', attempts: 1 } : p));
+    await vault.Execution.update(ctx, x.id, { plan, work_branch: workBranchFor(PEDIDO), status: 'planned' });
+  }
   return { exe: await o.run(ctx, s.execution.id), gw };
 }
 
@@ -68,4 +75,12 @@ test('tarefa com PR já juntado termina "Já entregue" sem codar nem abrir PR', 
 test('PR fechado SEM merge da mesma branch não bloqueia: a tarefa segue', async () => {
   const { gw } = await rodar([{ number: 10, head: workBranchFor(PEDIDO), merged_at: null, html_url: 'x' }]);
   assert.ok(gw.chamadas.includes('github.create_branch'), gw.chamadas.join(','));
+});
+
+test('#4141: execução ANTIGA retomada (branch já criada) com PR juntado também termina "Já entregue"', async () => {
+  const { exe, gw } = await rodar([{ number: 4136, head: workBranchFor(PEDIDO), merged_at: '2026-11-22T17:10:00Z', html_url: 'u' }], { retomada: true });
+  assert.strictEqual(exe.status, 'succeeded', exe.result_summary);
+  assert.match(exe.result_summary, /Já entregue: o PR #4136/);
+  assert.ok(!gw.chamadas.includes('github.create_pr') && !gw.chamadas.includes('github.commit_files'), gw.chamadas.join(','));
+  assert.strictEqual(gw.chamadas.filter(c => c === 'github.list_pulls').length, 1, 'confere uma vez só por rodada');
 });
