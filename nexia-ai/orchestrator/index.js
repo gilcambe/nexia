@@ -534,13 +534,31 @@ function createOrchestrator(deps) {
     };
 
     try {
+      let juntadoVisto;   // undefined = ainda não conferido nesta rodada
+      const jaJuntado = async (i) => {
+        if (juntadoVisto !== undefined) return juntadoVisto;
+        const branch = state.work_branch || workBranchFor(message);
+        const lp = await tool(ctx, state, plan[i].agent, 'github.list_pulls', { state: 'closed', limit: 100 });
+        const pr = lp.status === 'succeeded' && (lp.result.pulls || []).find(p => p.head === branch && p.merged_at);
+        juntadoVisto = pr ? { pr, ids: ids(lp) } : null;
+        return juntadoVisto;
+      };
       for (let i = 0; i < plan.length && !stop; i++) {
         if (steps[i].status === 'done' || steps[i].status === 'skipped') continue;
         const { action } = plan[i];
         const analysis = (steps.find((s, k) => ['agent:analyze', 'design_spec'].includes(plan[k].action)) || {}).summary || '';
         const diffRef = `${repo ? repo.default_branch : 'main'}...${state.work_branch}`;
 
-        if (action === 'agent:analyze' || action === 'agent:answer') {
+        // 22/11: a mesma tarefa voltava depois do merge (o squash apaga a branch) e virava PR de novo — atualizaEstado
+        // juntado 9x, e de novo no #4141 por uma execução ANTIGA retomada pela varredura. Uma vez por rodada, antes de
+        // criar branch, codar ou abrir PR: se a branch desta tarefa já tem PR JUNTADO, a execução termina "Já entregue".
+        const juntado = ['create_branch', 'agent:implement', 'create_pr'].includes(action) ? await jaJuntado(i) : null;
+        if (juntado) {
+          const msg = `Já entregue: o PR #${juntado.pr.number} desta mesma tarefa já foi juntado (${juntado.pr.html_url}); nada a refazer.`;
+          stepDone(i, { tool_call_ids: addIds(i, juntado.ids), summary: msg });
+          await commit({ work_branch: juntado.pr.head, pull_request: juntado.pr.number });
+          stop = { status: 'succeeded', result_summary: msg };
+        } else if (action === 'agent:analyze' || action === 'agent:answer') {
           await runA(i, plan[i].agent, action === 'agent:answer'
             ? `Pedido do usuário: "${message}"\nResponda com base nas ferramentas de leitura. Cite as evidências (ids, arquivos, SHAs).`
             : plan[i].agent === 'designer'
@@ -552,25 +570,11 @@ function createOrchestrator(deps) {
           const hadBranch = !!state.work_branch;   // retomada: a branch pode já ter sido criada
           // #984: sufixo estável (hash do pedido), não o execution_id: cada nova tentativa da mesma tarefa usa o mesmo branch e o mesmo PR.
           const branch = state.work_branch || workBranchFor(message);
-          // 22/11: a mesma tarefa voltava depois do merge (o squash apaga a branch) e abria PR de novo — o
-          // atualizaEstado entrou 9x. Execução nova com PR desta branch já juntado = já entregue, sem codar de novo.
-          let juntado = null, lp = null;
-          if (!hadBranch && !((steps[i].attempts || 0) > 0)) {
-            lp = await tool(ctx, state, plan[i].agent, 'github.list_pulls', { state: 'closed', limit: 100 });
-            juntado = lp.status === 'succeeded' && (lp.result.pulls || []).find(p => p.head === branch && p.merged_at);
-          }
-          if (juntado) {
-            const msg = `Já entregue: o PR #${juntado.number} desta mesma tarefa já foi juntado (${juntado.html_url}); nada a refazer.`;
-            stepDone(i, { tool_call_ids: addIds(i, ids(lp)), summary: msg });
-            await commit({ work_branch: branch, pull_request: juntado.number });
-            stop = { status: 'succeeded', result_summary: msg };
-          } else {
           if (!state.work_branch) await commit({ work_branch: branch });
           const r = await tool(ctx, state, plan[i].agent, 'github.create_branch', { branch });
           const exists = r.status === 'failed' && r.error && r.error.code === 'CONFLICT';
           if (exists) stepDone(i, { tool_call_ids: addIds(i, ids(r)), summary: `${branch} já existia (${hadBranch || (steps[i].attempts || 0) > 0 ? 'retomada' : 'reaproveitada de tentativa anterior'})` });
           else handle(i, r, x => `branch ${x.branch} criada de ${x.from}`);
-          }
         } else if (action === 'agent:implement') {
           const fix = state.fix_feedback
             ? (/^O CI do PR falhou/.test(state.fix_feedback) && !state.fix_rounds
