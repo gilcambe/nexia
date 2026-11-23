@@ -96,6 +96,18 @@ export async function lerArquivos(arquivos: File[], aviso: Progresso = () => {})
 }
 
 // Só o texto corrido de um PDF (até 8 páginas), para a IA procurar a lista de alunos.
+export async function textoDoArquivo(arquivo: File): Promise<string> {
+  const tipo = arquivo.type;
+  const nome = arquivo.name.toLowerCase();
+  if (tipo === 'application/pdf' || nome.endsWith('.pdf')) {
+    return textoDoPdf(arquivo);
+  }
+  if (tipo.startsWith('image/') || nome.endsWith('.png') || nome.endsWith('.jpg') || nome.endsWith('.jpeg') || nome.endsWith('.gif') || nome.endsWith('.webp')) {
+    return ocr([arquivo], () => {});
+  }
+  return arquivo.text();
+}
+
 export async function textoDoPdf(arquivo: File): Promise<string> {
   const lib = await pdfjs();
   const doc = await lib.getDocument({ data: new Uint8Array(await arquivo.arrayBuffer()) }).promise;
