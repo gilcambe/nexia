@@ -13,6 +13,7 @@ const { decide } = require('../policy-engine');
 const { validate } = require('../model-router');
 const { VaultError, CODES: VAULT_CODES } = require('../vault');
 const { GatewayError, CODES } = require('./errors');
+const { criarHooks, bloquearPerigoso, checarSintaxe } = require('./hooks');
 
 const QUEUE_COLLECTION = 'nexia_tool_queue';
 const DEFAULT_TTL_MS = 24 * 60 * 60 * 1000;
@@ -63,6 +64,10 @@ function createGateway(o) {
   }
   const queue = id => db.collection(QUEUE_COLLECTION).doc(id);
 
+  const hooks = criarHooks();
+  hooks.antes(bloquearPerigoso);
+  hooks.depois(checarSintaxe);
+
   async function policyFor(ctx, projectId) {
     const list = await vault.ToolPolicy.list(ctx, { where: { project_id: projectId }, limit: 1 });
     return list[0] || null;
@@ -73,8 +78,10 @@ function createGateway(o) {
     try {
       const result = await tool.run({ vault, ctx, project, env, fetchImpl, github: o.github }, input);
       const out = tool.summarizeOutput ? tool.summarizeOutput(result, input) : 'ok';
+      const avisos = await hooks.rodarDepois({ tool: tool.name, input }, result);
+      const finalOutput = avisos.length ? { ...((typeof result === 'object' && result !== null) ? result : { result }), avisos } : result;
       const record = await vault.ToolCall.update(ctx, call.id, { status: 'succeeded', output_summary: safeText(out, 2000) || 'ok', duration_ms: Date.now() - t0 }, { expectedVersion: call.version });
-      return { tool_call: record, status: 'succeeded', result };
+      return { tool_call: record, status: 'succeeded', result: finalOutput, ...(avisos.length ? { avisos } : {}) };
     } catch (e) {
       const code = (e && e.code && /^[A-Z0-9_]+$/.test(e.code) ? e.code : 'TOOL_ERROR').slice(0, 64);
       const record = await vault.ToolCall.update(ctx, call.id, { status: 'failed', error_code: code, duration_ms: Date.now() - t0 }, { expectedVersion: call.version });
@@ -91,6 +98,23 @@ function createGateway(o) {
     const tool = registry.get(req.tool);
     if (!tool) throw new GatewayError(CODES.UNKNOWN_TOOL, `Ferramenta desconhecida: ${req.tool}`);
     const input = checkInput(tool, req.input);
+
+    // Valida hooks de antes (bloqueio preventivo)
+    const bloqueio = await hooks.rodarAntes({ tool: tool.name, input });
+    if (bloqueio && bloqueio.bloquear) {
+      const projectForBlocked = await vault.Project.get(ctx, req.projectId).catch(() => ({ id: req.projectId }));
+      const atBlocked = now().toISOString();
+      const blockedData = {
+        project_id: projectForBlocked.id, tool: tool.name, risk: tool.risk, decision: 'auto', decision_reason: bloqueio.bloquear,
+        status: 'failed', error_code: 'HOOK_BLOCKED', requested_by: ctx.actor, requested_at: atBlocked, input_sha256: sha256(canonical(input)),
+        input_summary: safeText(tool.summarizeInput ? tool.summarizeInput(input) : tool.name, 500) || tool.name,
+        execution_id: ctx.executionId,
+        decided_by: { type: 'system', id: 'hooks' }, decided_at: atBlocked
+      };
+      const { record } = await vault.ToolCall.create(ctx, blockedData, req.idempotencyKey ? { idempotencyKey: req.idempotencyKey } : {});
+      return { tool_call: record, status: 'failed', error: { code: 'HOOK_BLOCKED', message: bloqueio.bloquear } };
+    }
+
     const project = await vault.Project.get(ctx, req.projectId);
     const policy = await policyFor(ctx, project.id);
     const d = decide({ tool, project, environment: req.environment, policy });
@@ -142,6 +166,15 @@ function createGateway(o) {
       if (q.exists) await queue(id).delete();
       return { tool_call: record, status: 'rejected', reason: d.decision === 'forbidden' ? 'A política atual proíbe esta ferramenta.' : 'Entrada da chamada não encontrada.' };
     }
+
+    // Validação de hooks antes ao aprovar
+    const bloqueio = await hooks.rodarAntes({ tool: tool.name, input: q.data().input });
+    if (bloqueio && bloqueio.bloquear) {
+      const record = await vault.ToolCall.update(ctx, id, { status: 'failed', ...decided, error_code: 'HOOK_BLOCKED' }, { expectedVersion: call.version });
+      await queue(id).delete();
+      return { tool_call: record, status: 'failed', error: { code: 'HOOK_BLOCKED', message: bloqueio.bloquear } };
+    }
+
     const running = await vault.ToolCall.update(ctx, id, { status: 'running', ...decided }, { expectedVersion: call.version });
     await queue(id).delete();
     return execute(ctx, running, tool, project, q.data().input);
@@ -167,7 +200,7 @@ function createGateway(o) {
 
   const describe = () => [...registry.values()].map(t => ({ name: t.name, risk: t.risk, min_autonomy: t.min_autonomy, description: t.description, input_schema: t.input_schema }));
 
-  return { invoke, approve, reject, pending, calls, describe, QUEUE_COLLECTION };
+  return { invoke, approve, reject, pending, calls, describe, QUEUE_COLLECTION, hooks };
 }
 
 module.exports = { createGateway, DEFAULT_TOOLS, GatewayError, CODES, QUEUE_COLLECTION, safeText };
