@@ -106,7 +106,15 @@ function conferir(p) {
 function motivoCurto(e) {
   const { redactSecrets } = require('../vault/secrets');
   const cod = e && (e.code || e.status) ? `${e.code || e.status}: ` : '';
-  return redactSecrets(cod + String((e && e.message) || e)).replace(/s+/g, ' ').slice(0, 160);
+  return redactSecrets(cod + String((e && e.message) || e)).replace(/\s+/g, ' ').slice(0, 160);
+}
+
+// 23/11/2026: pedido com "Arquivos:" mas SEM linha "Teste:" era marcado contrato-invalido e parava (#4145-#4157).
+// Regra: só não gera quando JÁ existe uma linha "Teste:" (aí o erro é do contrato e precisa ser corrigido).
+// As linhas "Arquivos:" viram dica no pedido; o gerador escolhe os arquivos e escreve o teste.
+function precisaGerar(texto, contrato) {
+  if (contrato && contrato.ok) return false;
+  return !/^\s*(?:[-*]\s*)?\**Teste\**\s*:/im.test(String(texto || ''));
 }
 
 async function gerar(o) {
@@ -200,4 +208,4 @@ async function revisarCobertura(router, modelos, pedido, codigo) {
   return null;
 }
 
-module.exports = { motivoCurto, ajustarTeste, gerar, conferir, extrairJson, revisarCobertura, SISTEMA, REVISOR };
+module.exports = { precisaGerar, motivoCurto, ajustarTeste, gerar, conferir, extrairJson, revisarCobertura, SISTEMA, REVISOR };

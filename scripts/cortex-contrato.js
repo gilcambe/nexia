@@ -155,7 +155,7 @@ const cota = require('../nexia-ai/model-router/cota');
   const texto = `${issue.title}\n\n${issue.body || ''}`;
   let c = lerContrato(texto);
   const { router, lista } = modelos();
-  // Pedido SEM contrato (nenhuma linha "Arquivos:"): a IA gera o teste e os portões conferem (gerador.js).
+  // Pedido SEM linha "Teste:" (com ou sem "Arquivos:"; 23/11/2026): a IA gera o teste e os portões conferem (gerador.js).
   // Se não der para virar contrato, a tarefa VOLTA para a fila no caminho antigo: o fluxo nunca para.
   let gerado = null;
   const voltarParaFila = async (motivo, rotulo) => {
@@ -169,7 +169,7 @@ const cota = require('../nexia-ai/model-router/cota');
     await rotular('contrato-aguardando-cota');
     for (const l of ['contrato-falhou', 'contrato-nao-testavel']) await gh('DELETE', `/issues/${N}/labels/${l}`);
   };
-  if (!c.ok && !/^\s*(?:[-*]\s*)?\**Arquivos\**\s*:/im.test(texto) && process.env.CONTRATO_GERAR !== '0') {
+  if (require('../nexia-ai/contrato/gerador').precisaGerar(texto, c) && process.env.CONTRATO_GERAR !== '0') {
     const { gerar, revisarCobertura } = require('../nexia-ai/contrato/gerador');
     const checarSintaxe = f => { try { execFileSync(process.execPath, ['--check', f], { stdio: 'pipe' }); return true; } catch { return false; } };
     // Portão 8: outra IA grátis (não a que escreveu o teste) confere se o teste cobre o pedido. Sem cota, segue sem ele.
