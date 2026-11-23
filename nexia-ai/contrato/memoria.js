@@ -33,6 +33,14 @@ function licoes(o = {}) {
   return t.length > LICOES_MAX ? t.slice(0, LICOES_MAX) + '\n(...)' : t;
 }
 
+/** Constituição do Cortex (valores). '' se o arquivo não existir. Cortada em 2500. */
+function constituicao(o = {}) {
+  const f = path.join(__dirname, 'constituicao.md');
+  if (!fs.existsSync(f)) return '';
+  const t = fs.readFileSync(f, 'utf8').trim();
+  return t.length > 2500 ? t.slice(0, 2500) : t;
+}
+
 /**
  * 22/11: livros por assunto (o caderno geral tem limite de LICOES_MAX). Cada arquivo em memoria/livros/<assunto>.md
  * começa com a linha "Quando: palavra, pasta/, arquivo" e só entra no pedido quando o pedido ou os arquivos do
@@ -130,4 +138,4 @@ function gravarExemplo({ numero, contrato, modelo, tentativas, diff }, o = {}) {
   return f;
 }
 
-module.exports = { pasta, palavras, licoes, lerLivros, livros, lerExemplos, buscarExemplos, textoExemplos, gravarExemplo, LICOES_MAX };
+module.exports = { pasta, palavras, licoes, constituicao, lerLivros, livros, lerExemplos, buscarExemplos, textoExemplos, gravarExemplo, LICOES_MAX };
