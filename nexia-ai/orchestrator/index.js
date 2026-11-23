@@ -242,10 +242,10 @@ function createOrchestrator(deps) {
   };
 
   /** Executa os passos a partir do primeiro não concluído. */
-  async function advance(ctx, exe, req) {
+  async function advance(ctx, exe, req, { deadline = null } = {}) {
     const message = exe.request_text || exe.request_summary;
     let plan = planFor(exe.intent, message);
-    const meter = createMeter({ ...DEFAULT_BUDGET, ...(exe.budget || {}) });
+    const meter = createMeter({ ...DEFAULT_BUDGET, ...(exe.budget || {}) }, undefined, { deadline });
     const project = await vault.Project.get(ctx, exe.project_id);
     const repo = project.primary_repository_id ? await vault.Repository.get(ctx, project.primary_repository_id)
       : (await vault.Repository.list(ctx, { where: { project_id: project.id }, limit: 1 }))[0];
@@ -545,6 +545,7 @@ function createOrchestrator(deps) {
       };
       for (let i = 0; i < plan.length && !stop; i++) {
         if (steps[i].status === 'done' || steps[i].status === 'skipped') continue;
+        if (deadline && now().getTime() >= deadline) { const e = new Error('prazo'); e.code = 'PAUSED_DEADLINE'; throw e; }
         const { action } = plan[i];
         const analysis = (steps.find((s, k) => ['agent:analyze', 'design_spec'].includes(plan[k].action)) || {}).summary || '';
         const diffRef = `${repo ? repo.default_branch : 'main'}...${state.work_branch}`;
@@ -752,6 +753,13 @@ function createOrchestrator(deps) {
         await commit({ status: stop && !FINAL.includes(stop.status) ? stop.status : 'running', ...(stop && stop.question ? { question: stop.question } : {}) });
       }
     } catch (e) {
+      if (e && e.code === 'PAUSED_DEADLINE') {
+        // Passo interrompido volta a "pending": a próxima rodada continua dele (commits já feitos ficam na branch).
+        const at = steps.findIndex(s => s.status === 'running');
+        if (at >= 0) steps[at] = { ...steps[at], status: 'pending' };
+        console.log(`[orchestrator] ${state.id} pausada no prazo da rodada (passo ${at >= 0 ? at + 1 : '-'}); continua na próxima`);
+        return finish(ctx, state, steps, meter, { status: 'planned', error_code: 'PAUSED_DEADLINE', result_summary: 'Pausada no prazo da rodada (limite de tempo do job); continua sozinha do mesmo passo na próxima rodada.' }, checks, baseUsage);
+      }
       const code = e && e.code === 'BUDGET_EXCEEDED' ? 'BUDGET_EXCEEDED' : (e && /^[A-Z_]+$/.test(e.code || '') ? e.code : 'ORCHESTRATOR_ERROR');
       // Issue #234: a causa (mensagem e onde) fica gravada na execução para diagnóstico.
       const cause = `${(e && e.message) || String(e)}${e && e.stack ? ` @ ${String(e.stack).split('\n').slice(1, 2).join('').trim()}` : ''}`.slice(0, 600);
@@ -876,10 +884,10 @@ function createOrchestrator(deps) {
   }
 
   /** Executa (ou continua) uma execução até concluir, esperar aprovação/CI ou falhar. */
-  async function run(ctx, executionId) {
+  async function run(ctx, executionId, opcoes = {}) {
     const exe = await vault.Execution.get(ctx, executionId);
     if (FINAL.includes(exe.status) || exe.status === 'needs_input') return exe;
-    return advance(ctx, exe);
+    return advance(ctx, exe, undefined, opcoes);
   }
 
   /**
@@ -927,7 +935,7 @@ function createOrchestrator(deps) {
   // execuções em andamento, cada uma em nome de quem pediu.
   // 22/11: 38 de 40 rodadas do NEXIA Jobs morriam no limite de 30 min do Actions (20 execuções em fila, sem prazo).
   // `deadline` (ms): depois dele nenhuma execução nova começa; a que está rodando termina e o resto fica para a próxima hora.
-  async function sweep(ctx, { staleMs = 10 * 60 * 1000, max = 20, statuses = ['planned', 'running', 'waiting_approval'], ctxFor = () => ctx, deadline = null } = {}) {
+  async function sweep(ctx, { staleMs = 10 * 60 * 1000, max = 20, statuses = ['planned', 'running', 'waiting_approval'], ctxFor = () => ctx, deadline = null, log = () => {} } = {}) {
     const cutoff = new Date(now().getTime() - staleMs).toISOString();
     const out = [];
     for (const status of statuses) {
@@ -937,7 +945,9 @@ function createOrchestrator(deps) {
         if (deadline && now().getTime() >= deadline) return out;
         const action = status === 'waiting_approval' ? 'resume' : x.plan.every(s => s.status === 'done' || s.status === 'skipped') ? 'refresh' : 'run';
         try {
-          const r = await { resume, refresh, run }[action](ctxFor(x), x.id);
+          log(`[sweep] começa ${x.id} (${action}, ${status})`);
+          // Prazo duro: 10 min depois do prazo de começar, a execução pausa entre passos/chamadas (o job morre em 30).
+          const r = action === 'run' ? await run(ctxFor(x), x.id, { deadline: deadline ? deadline + 10 * 60 * 1000 : null }) : await { resume, refresh }[action](ctxFor(x), x.id);
           out.push({ id: x.id, action, from: status, to: r.status });
         } catch (e) {
           out.push({ id: x.id, action, from: status, error: e && /^[A-Z_]+$/.test(e.code || '') ? e.code : 'ERROR' });
