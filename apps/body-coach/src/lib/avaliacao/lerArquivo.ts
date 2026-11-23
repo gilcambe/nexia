@@ -99,9 +99,28 @@ export async function lerArquivos(arquivos: File[], aviso: Progresso = () => {})
 export async function textoDoArquivo(arquivo: File): Promise<string> {
   const tipo = arquivo.type;
   const nome = arquivo.name.toLowerCase();
+
   if (tipo === 'application/pdf' || nome.endsWith('.pdf')) {
-    return textoDoPdf(arquivo);
+    const texto = await textoDoPdf(arquivo);
+    if (texto.trim().length > 20) return texto;
+
+    // PDF escaneado (sem texto reconhecido): aplica OCR.
+    const aviso: Progresso = () => {};
+    const lib = await pdfjs();
+    const doc = await lib.getDocument({ data: new Uint8Array(await arquivo.arrayBuffer()) }).promise;
+    const telas: HTMLCanvasElement[] = [];
+    for (let i = 1; i <= Math.min(doc.numPages, 3); i += 1) {
+      const pg = await doc.getPage(i);
+      const vp = pg.getViewport({ scale: 2 });
+      const canvas = document.createElement('canvas');
+      canvas.width = vp.width;
+      canvas.height = vp.height;
+      await pg.render({ canvasContext: canvas.getContext('2d')!, viewport: vp }).promise;
+      telas.push(canvas);
+    }
+    return ocr(telas, aviso);
   }
+
   if (tipo.startsWith('image/') || nome.endsWith('.png') || nome.endsWith('.jpg') || nome.endsWith('.jpeg') || nome.endsWith('.gif') || nome.endsWith('.webp')) {
     return ocr([arquivo], () => {});
   }
