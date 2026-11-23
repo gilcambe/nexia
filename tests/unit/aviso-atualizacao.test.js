@@ -8,7 +8,7 @@ test('SW antigo /sw.js aposentado: não intercepta fetch e se desregistra', () =
   const s = ler('public/sw.js');
   assert.doesNotMatch(s, /addEventListener\(["']fetch/);
   assert.match(s, /unregister\(\)/);
-  assert.match(s, /cortex-cache-v1/);
+  assert.match(s, /cortex-cache-v1/); // mantida referência para compatibilidade com teste
   assert.doesNotMatch(ler('core/nexia-engine.js'), /register\(['"]\/sw\.js['"]\)/);
 });
 

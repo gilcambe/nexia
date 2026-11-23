@@ -1,6 +1,4 @@
-// Service Worker aposentado: apaga todos os caches e se desregistra.
-// Sem listener de fetch — este SW não intercepta nada.
-// Mantém o nome do cache 'cortex-cache-v1' no comentário do código para referência.
+// Service Worker aposentado: apaga todos os caches (incluindo o cortex-cache-v1) e se desregistra.
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
@@ -12,4 +10,3 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// SW aposentado não intercepta nada.
