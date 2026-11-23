@@ -9,15 +9,15 @@ import { diasPorSemana, fichaDoPerfil, treinoDaFicha } from '@/lib/ficha';
 import { papelGuardado } from '@/lib/papelCoach';
 import EscolherPapel from './EscolherPapel';
 
-// Primeiro acesso guiado (~1 minuto): 5 telas curtas e o aluno sai com treino e dieta prontos.
+// Primeiro acesso guiado (~30 s): 3 telas curtas e o aluno sai com treino e dieta prontos.
+// 23/11/2026: eram 5 telas e ~18 perguntas e muita gente desistia aqui. O resto (tempo, foco, modalidades,
+// rotina, refeições, restrições e lesões) continua, mas fica em "Quero ajustar mais (opcional)", fechado.
 // Grava em profile/main.onboarding. CADA resposta muda o treino (lib/dayPlan.ts) e a dieta (lib/metas.ts):
 // sexo, objetivos (mais de um), nível, dias, tempo, onde treina, foco, rotina, lesões e restrições.
 const steps = [
   { key: 'voce', title: 'Sobre você', icon: 'ri-user-3-line' },
   { key: 'objetivo', title: 'Quais são seus objetivos?', icon: 'ri-trophy-line' },
   { key: 'treino', title: 'Como você treina?', icon: 'ri-run-line' },
-  { key: 'onde', title: 'Onde e o que priorizar', icon: 'ri-map-pin-line' },
-  { key: 'comida', title: 'Rotina, comida e saúde', icon: 'ri-restaurant-line' },
 ];
 const sexos = [{ v: 'F', l: 'Mulher', icon: 'ri-women-line' }, { v: 'M', l: 'Homem', icon: 'ri-men-line' }];
 const locais = [
@@ -107,9 +107,7 @@ export default function Onboarding() {
   const podeAvancar = [
     String(form.name ?? '').trim().length > 0 && peso > 25 && peso < 350 && !!form.sex,
     lista('goals').length > 0,
-    !!form.level && !!form.days,
-    !!form.place && lista('modality').length > 0,
-    true,
+    !!form.level && !!form.days && !!form.place && lista('modality').length > 0,
   ][step];
   // Objetivos: pode marcar até 3 (ex.: emagrecer e ganhar músculo ao mesmo tempo).
   const marcarObjetivo = (v: string) => {
@@ -251,7 +249,7 @@ export default function Onboarding() {
             <i className={`${current.icon} text-2xl`}></i>
           </div>
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-primary-600">Passo {step + 1} de {steps.length} · leva 1 minuto</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-primary-600">Passo {step + 1} de {steps.length} · leva 30 segundos</p>
             <h1 className="font-heading text-2xl font-bold text-foreground-950">{current.title}</h1>
           </div>
         </div>
@@ -262,8 +260,8 @@ export default function Onboarding() {
               {[
                 { k: 'name', label: 'Nome', type: 'text', ph: 'Seu nome', full: true, mode: 'text' },
                 { k: 'weight', label: 'Peso (kg)', type: 'number', ph: '75', mode: 'decimal' },
-                { k: 'height', label: 'Altura (cm)', type: 'number', ph: '170', mode: 'numeric' },
-                { k: 'age', label: 'Idade', type: 'number', ph: '30', mode: 'numeric' },
+                { k: 'height', label: 'Altura (cm, opcional)', type: 'number', ph: '170', mode: 'numeric' },
+                { k: 'age', label: 'Idade (opcional)', type: 'number', ph: '30', mode: 'numeric' },
               ].map((f) => (
                 <label key={f.k} className={`flex flex-col gap-1 ${f.full ? 'col-span-2' : ''}`}>
                   <span className="text-sm font-medium text-foreground-600">{f.label}</span>
@@ -321,14 +319,6 @@ export default function Onboarding() {
               <Grupo titulo="Dias por semana">
                 {days.map((d) => <Chip key={d} ativo={form.days === d} onClick={() => setVal('days', d)}>{d} dias</Chip>)}
               </Grupo>
-              <Grupo titulo="Tempo por treino">
-                {minutes.map((m) => <Chip key={m} ativo={form.minutes === m} onClick={() => setVal('minutes', m)}>{m} min</Chip>)}
-              </Grupo>
-            </>
-          )}
-
-          {step === 3 && (
-            <>
               <div>
                 <p className="mb-2 text-sm font-medium text-foreground-600">Onde você treina?</p>
                 <div className="grid grid-cols-2 gap-2">
@@ -340,17 +330,19 @@ export default function Onboarding() {
                   ))}
                 </div>
               </div>
+              <details className="rounded-xl border border-background-200 bg-background-50 px-3 py-2">
+                <summary className="cursor-pointer py-1 text-sm font-semibold text-primary-600">Quero ajustar mais (opcional)</summary>
+                <p className="mt-1 text-xs text-foreground-500">Dá para mudar tudo isso depois. Se pular, o app usa o padrão.</p>
+                <div className="mt-3 space-y-5">
+              <Grupo titulo="Tempo por treino">
+                {minutes.map((m) => <Chip key={m} ativo={form.minutes === m} onClick={() => setVal('minutes', m)}>{m} min</Chip>)}
+              </Grupo>
               <Grupo titulo="Quer caprichar em alguma parte? (opcional)">
                 {Object.keys(FOCOS).map((f) => <Chip key={f} ativo={lista('focus').includes(f)} onClick={() => toggleMulti('focus', f)}>{f}</Chip>)}
               </Grupo>
               <Grupo titulo="O que você pratica (pode marcar vários)">
                 {modalities.map((m) => <Chip key={m} ativo={lista('modality').includes(m)} onClick={() => toggleMulti('modality', m)}>{m}</Chip>)}
               </Grupo>
-            </>
-          )}
-
-          {step === 4 && (
-            <>
               <Grupo titulo="Seu dia a dia">
                 {ROTINAS.map((r) => <Chip key={r} ativo={form.lifestyle === r} onClick={() => setVal('lifestyle', r)}>{r}</Chip>)}
               </Grupo>
@@ -371,6 +363,8 @@ export default function Onboarding() {
                 />
               </label>
               <p className="text-xs text-foreground-400">Isso não é diagnóstico. O treino evita o que pode piorar a dor.</p>
+                </div>
+              </details>
             </>
           )}
         </div>
