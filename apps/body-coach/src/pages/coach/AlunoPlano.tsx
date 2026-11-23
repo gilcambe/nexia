@@ -5,6 +5,7 @@ import FichaEditor from './components/FichaEditor';
 import DietaEditor, { type Plano } from './components/DietaEditor';
 import { SalvarComoModelo, UsarModelo } from './components/ModeloUtil';
 import ExportarPlano from '@/components/feature/ExportarPlano';
+import ImportarFicha from '@/components/feature/ImportarFicha';
 import type { FichaCoach } from '@/lib/coach/fichaCoach';
 import type { AnamneseDoAluno } from '@/lib/coach/equipe';
 
@@ -83,6 +84,7 @@ export default function AlunoPlano() {
 
       {p && aba === 'treino' && !pode.ficha && <FichaLeitura ficha={p.ficha} quem={p.equipe?.nome ?? 'o outro profissional'} />}
       {p && aba === 'dieta' && !pode.dieta && <DietaLeitura plano={p.plano} quem={p.equipe?.nome ?? 'o outro profissional'} />}
+      {p && aba === 'treino' && pode.ficha && <ImportarFicha onFicha={(f) => { usarModelo('ficha', f); setOk('Ficha lida do arquivo. Confira e toque em enviar.'); }} />}
       {p && aba === 'treino' && pode.ficha && (
         <FichaEditor
           key={`f${versao}`}

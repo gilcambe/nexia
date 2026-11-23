@@ -10,7 +10,8 @@ import {
 } from 'react';
 import type { CoachMessage } from '@/mocks/coach';
 import { useAuth } from './AuthContext';
-import { perguntar, type TurnoConversa } from '@/lib/coachAI';
+import { perguntar } from '@/lib/coachAI';
+import { historicoParaIA } from '@/lib/historicoIA';
 import { cargasDoTexto } from '@/lib/cargasDoTexto';
 import { registrarSeries } from '@/lib/treinoAtivo';
 import { respostaLocal } from '@/lib/respostaLocal';
@@ -45,6 +46,9 @@ export function useCoach() {
   return ctx;
 }
 
+// Mensagem gerada aqui no aparelho (resposta reserva ou aviso automático): local: true tira ela do histórico da IA.
+type MensagemCoach = CoachMessage & { local?: boolean };
+
 function buildGreeting(name: string): string {
   return `Olá, ${name}! Sou seu coach no Body Coach. Me conta o que fez (ex.: "fiz 12 com 70"), como está se sentindo, ou pergunte do seu treino e da sua dieta.`;
 }
@@ -54,7 +58,7 @@ export function CoachProvider({ children }: { children: ReactNode }) {
 
   const [open, setOpen] = useState(false);
   const [unread, setUnread] = useState(1);
-  const [messages, setMessages] = useState<CoachMessage[]>([]);
+  const [messages, setMessages] = useState<MensagemCoach[]>([]);
   const [loadingAI, setLoadingAI] = useState(false);
 
   // O coach chama o aluno pelo apelido que ele escolheu no Perfil.
@@ -76,7 +80,7 @@ export function CoachProvider({ children }: { children: ReactNode }) {
     if (!chave || carregado.current !== chave || messages.length === 0) return;
     try { localStorage.setItem(chave, JSON.stringify(messages.slice(-60))); } catch { /* sem armazenamento */ }
   }, [messages, chave]);
-  const mensagensRef = useRef<CoachMessage[]>([]);
+  const mensagensRef = useRef<MensagemCoach[]>([]);
   const avisouErro = useRef(false);
   // Título do treino de hoje (o mesmo que a tela Treino mostra), para o coach falar dele.
   const treinoHoje = useCallback((): string | null => {
@@ -104,7 +108,7 @@ export function CoachProvider({ children }: { children: ReactNode }) {
   // Reinicia a saudação quando o nome real do atleta é resolvido
   // Só troca o texto da saudação; a conversa em andamento nunca é apagada.
   useEffect(() => {
-    const greet: CoachMessage = { id: 'c-greet', speaker: 'coach', text: buildGreeting(firstName), time: 'agora' };
+    const greet: MensagemCoach = { id: 'c-greet', speaker: 'coach', text: buildGreeting(firstName), time: 'agora' };
     setMessages((prev) => (prev.length === 0 || prev[0].id === 'c-greet' ? [greet, ...prev.slice(1)] : prev));
   }, [firstName]);
 
@@ -129,14 +133,14 @@ export function CoachProvider({ children }: { children: ReactNode }) {
         if (aviso) {
           setMessages((prev) => [
             ...prev,
-            { id: `a-${Date.now()}`, speaker: 'coach', text: aviso, time: 'agora' },
+            { id: `a-${Date.now()}`, speaker: 'coach', text: aviso, time: 'agora', local: true },
           ]);
         }
       } catch (e: any) {
         const errorMsg = e?.message || 'Erro ao registrar séries.';
         setMessages((prev) => [
           ...prev,
-          { id: `a-${Date.now()}`, speaker: 'coach', text: errorMsg, time: 'agora' },
+          { id: `a-${Date.now()}`, speaker: 'coach', text: errorMsg, time: 'agora', local: true },
         ]);
       }
     }
@@ -171,11 +175,8 @@ export function CoachProvider({ children }: { children: ReactNode }) {
       };
 
       // As últimas mensagens vão junto: o coach lembra o que já foi dito e responde ao que o aluno acabou de falar.
-      const historico: TurnoConversa[] = mensagensRef.current
-        .filter((m) => m.id !== 'c-greet' && m.text)
-        .slice(-10)
-        .map((m) => ({ role: m.speaker === 'user' ? 'user' as const : 'assistant' as const, content: m.text }));
-      const reply = await perguntar('coach', trimmed, contextData, undefined, historico);
+      // Respostas reserva e avisos automáticos (local: true) não vão: a IA lia isso como conversa real.
+      const reply = await perguntar('coach', trimmed, contextData, undefined, historicoParaIA(mensagensRef.current));
       avisouErro.current = false;
 
       setMessages((prev) => [
@@ -190,7 +191,7 @@ export function CoachProvider({ children }: { children: ReactNode }) {
       avisouErro.current = true;
       setMessages((prev) => [
         ...prev,
-        { id: `c-${Date.now()}`, speaker: 'coach', text: texto, time: 'agora' },
+        { id: `c-${Date.now()}`, speaker: 'coach', text: texto, time: 'agora', local: true },
       ]);
       if (!openRef.current) setUnread((u) => u + 1);
     } finally {

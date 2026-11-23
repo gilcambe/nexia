@@ -9,7 +9,7 @@ export default function PreTreinoCoach({ ficha, diaInicial, onStart, onUsarApp }
   return (
     <div className="mx-auto max-w-3xl space-y-4">
       <Card padding="p-5">
-        <p className="text-xs font-semibold uppercase tracking-wide text-primary-600"><i className="ri-user-star-line mr-1"></i>Ficha do seu coach{ficha.coach ? ` · ${ficha.coach}` : ''}</p>
+        <p className="text-xs font-semibold uppercase tracking-wide text-primary-600"><i className="ri-user-star-line mr-1"></i>{ficha.coach === 'Importada por você' ? 'Sua ficha · importada por você' : `Ficha do seu coach${ficha.coach ? ` · ${ficha.coach}` : ''}`}</p>
         <h1 className="mt-1 font-heading text-xl font-bold text-foreground-950">{ficha.nome}</h1>
         {ficha.obs && <p className="mt-2 rounded-lg bg-background-100 px-3 py-2 text-sm text-foreground-700">{ficha.obs}</p>}
         {ficha.dias.length > 1 && (

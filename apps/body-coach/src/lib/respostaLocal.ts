@@ -57,7 +57,7 @@ export function respostaLocal(texto: string, d: DadosLocais): string {
   if (/obrigad|valeu|vlw|tmj/.test(t)) {
     return uma([`Tamo junto, ${n}!`, `Imagina, ${n}. Conta comigo!`, `Por nada! Qualquer coisa, me chama.`, `É nós, ${n}! Segue firme.`]);
   }
-  if (/cansad|sono|exaust|sem energia|desanim|preguic|sem vontade/.test(t)) {
+  if (/\b(cansad[oa]|cansaco|sono|exaust[oa]|sem energia|desanimad[oa]|preguica|sem vontade)\b/.test(t)) {
     return uma([
       `Poxa, ${n}, entendo. Que tal um treino mais leve hoje, só os 3 primeiros exercícios? Já conta muito.`,
       `Acontece, ${n}. Se dormiu pouco, baixa a carga e deixa 2 ou 3 repetições sobrando em cada série. Consistência ganha de intensidade.`,
@@ -65,7 +65,7 @@ export function respostaLocal(texto: string, d: DadosLocais): string {
       `Respeita o corpo hoje, ${n}. Uma caminhada de 20 minutos já ajuda a ${obj}.`,
     ]);
   }
-  if (/dor|doendo|machuc|lesao|lesionei/.test(t)) {
+  if (/\b(dor|dores|doendo|doi|doeu|machuquei|machucad[oa]|lesao|lesionei|contusao)\b/.test(t)) {
     return uma([
       `Cuidado com isso, ${n}. Se a dor for forte, aguda ou com inchaço, pare e procure um profissional. No treino, use "Trocar exercício" para fugir do movimento que incomoda.`,
       `Dor não é para aguentar. Me diga onde dói em "Como você está hoje" que eu tiro do treino os exercícios que forçam essa região.`,
