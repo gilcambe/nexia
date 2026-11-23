@@ -609,19 +609,33 @@ const NexiaRuntime = (() => {
   return { boot };
 })();
 
-// Aposentar Service Worker antigo (desregistra qualquer SW com script /sw.js)
-if ('serviceWorker' in navigator) {
+// Aposentar Service Worker antigo (desregistra SWs do escopo raiz '/' cujo script é /sw.js)
+(function aposentarServiceWorkerAntigo() {
+  if (!('serviceWorker' in navigator)) return;
+  try {
+    const _jaRodou = sessionStorage.getItem('nexia_sw_retired');
+    if (_jaRodou) return;
+    sessionStorage.setItem('nexia_sw_retired', '1');
+  } catch (_) { /* sessionStorage indisponível — segue sem trava de disparo único */ }
+
   navigator.serviceWorker.getRegistrations().then(registrations => {
     registrations.forEach(registration => {
-      // Verifica o caminho do script.
-      // O scriptURL geralmente termina com /sw.js
-      const scriptURL = registration.active?.scriptURL || registration.installing?.scriptURL || registration.waiting?.scriptURL;
-      if (scriptURL && (scriptURL.endsWith('/sw.js') || /\/sw\.js(\?|$)/.test(scriptURL))) {
+      const scriptURL = registration.active?.scriptURL
+        || registration.waiting?.scriptURL
+        || registration.installing?.scriptURL;
+      // Só aposenta SWs do escopo raiz '/' cujo script seja /sw.js.
+      // Escopo diferente (outro app no mesmo domínio) não é tocado.
+      try {
+        if (registration.scope !== location.origin + '/') return;
+      } catch (_) { return; }
+      if (!scriptURL) return;
+      const url = new URL(scriptURL, location.origin);
+      if (url.origin === location.origin && url.pathname === '/sw.js') {
         registration.unregister();
       }
     });
   }).catch(() => {});
-}
+})();
 
 window.NexiaRuntime = NexiaRuntime;
 
