@@ -25,6 +25,24 @@ const RECEITA = 'Você é um nutricionista no app NEXIA Body Coach e cria UMA re
 const IMPORTAR = 'Você recebe o texto de uma lista, relatório ou exportação de alunos de outro aplicativo de treino (MFit, Tecnofit, Treinus etc.). Devolva SOMENTE um JSON, sem markdown, no formato [{"nome":"...","email":"...","telefone":"..."}] com um item por aluno. Use string vazia no que não aparecer. Não invente alunos, e-mails nem telefones; ignore títulos, datas, valores e linhas que não sejam de aluno.';
 const resposta = (event, statusCode, body) => ({ statusCode, headers: makeHeaders(event), body: JSON.stringify(body) });
 
+// Tempo total que o app espera a resposta (o app desiste aos 30 s). Depois disso, nem tenta outro modelo.
+const TEMPO_TOTAL_MS = 22000;
+// Tempo máximo de cada modelo, quando ainda sobra tempo.
+const TEMPO_MODELO_MS = 12000;
+
+// Conversa livre não pode cair em modelo de programação (codestral, "coder"): eles respondem mal a papo de academia.
+const modelosConversa = (lista) => (Array.isArray(lista) ? lista : []).filter((d) => {
+  if (!d) return false;
+  const provider = String(d.provider || '').toLowerCase();
+  const model = String(d.model || '').toLowerCase();
+  if (provider === 'anthropic' || provider === 'codestral') return false;
+  if (model.includes('codestral') || model.includes('coder')) return false;
+  return true;
+});
+
+exports.TEMPO_TOTAL_MS = TEMPO_TOTAL_MS;
+exports.modelosConversa = modelosConversa;
+
 exports.handler = async (event) => {
   const method = String(event.httpMethod || '').toUpperCase();
   if (method === 'OPTIONS') return { statusCode: 204, headers: makeHeaders(event), body: '' };
@@ -81,12 +99,19 @@ exports.handler = async (event) => {
   const conversa = !importar && !cardio && !sincera && !produto && !receita && !images;
   const router = getRouter();
   // Regra do dono: o Body Coach só usa IA grátis, mesmo que alguém configure a chave paga da Anthropic.
-  for (const d of listFor('fast').filter((x) => x.provider !== 'anthropic')) {
+  // Na conversa livre, pula os modelos de programação (codestral, "coder").
+  const lista = conversa ? modelosConversa(listFor('fast')) : listFor('fast').filter((x) => x.provider !== 'anthropic');
+  const inicio = Date.now();
+  for (const d of lista) {
+    // Nunca passa do tempo total: se já estourou, para e responde indisponível (o app já desistiu).
+    const restante = TEMPO_TOTAL_MS - (Date.now() - inicio);
+    if (restante <= 0) break;
     try {
       const cap = router.capabilities(d);
       if (!cap.available || (images && !cap.vision)) continue;
-      // Cada modelo tem 12 s; se demorar, passa logo para o próximo (nunca deixa o aluno esperando no vazio).
-      const out = await Promise.race([router.chat(d, { system, messages: mensagens, maxTokens: importar ? 2500 : sincera || produto ? 1600 : images ? 1200 : receita ? 2000 : 700, ...(conversa ? { temperature: 0.85 } : {}), ...(images ? { images } : {}) }), new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 12000))]);
+      // Cada modelo tem no máximo 12 s, e nunca mais do que o tempo que ainda falta.
+      const limite = Math.min(TEMPO_MODELO_MS, restante);
+      const out = await Promise.race([router.chat(d, { system, messages: mensagens, maxTokens: importar ? 2500 : sincera || produto ? 1600 : images ? 1200 : receita ? 2000 : 700, ...(conversa ? { temperature: 0.85 } : {}), ...(images ? { images } : {}) }), new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), limite))]);
       if (out && out.text) return resposta(event, 200, { reply: out.text, role, model: d.model });
     } catch { /* tenta o próximo modelo */ }
   }
