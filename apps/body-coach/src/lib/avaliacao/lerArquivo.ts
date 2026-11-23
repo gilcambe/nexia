@@ -106,3 +106,16 @@ export async function textoDoPdf(arquivo: File): Promise<string> {
   }
   return t;
 }
+
+export async function textoDoArquivo(arquivo: File, aviso: Progresso = () => {}): Promise<string> {
+  const nome = arquivo.name.toLowerCase();
+  const tipo = arquivo.type;
+  if (tipo === 'application/pdf' || nome.endsWith('.pdf')) {
+    const t = await textoDoPdf(arquivo);
+    if (t.trim().length > 40) return t;
+    // PDF não contiver texto, aplicar OCR nas páginas já existente
+    try {
+      const lib = await pdfjs();
+      const doc = await lib.getDocument({ data: new Uint8Array(await arquivo.arrayBuffer()) }).promise;
+      const telas: HTMLCanvasElement[] = [];
+      for (let i =
