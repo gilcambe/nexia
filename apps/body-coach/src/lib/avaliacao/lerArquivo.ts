@@ -101,8 +101,37 @@ export async function textoDoPdf(arquivo: File): Promise<string> {
   const doc = await lib.getDocument({ data: new Uint8Array(await arquivo.arrayBuffer()) }).promise;
   let t = '';
   for (let i = 1; i <= Math.min(doc.numPages, 8); i += 1) {
-    const tc = await (await doc.getPage(i)).getTextContent();
-    t += `${(tc.items as { str?: string }[]).map((it) => it.str ?? '').join(' ')}\n`;
+    const pg = await doc.getPage(i);
+    const tc = await pg.getTextContent();
+    const textoPagina = (tc.items as { str?: string }[]).map((it) => it.str ?? '').join(' ');
+    t += `${textoPagina}\n`;
+    if (!textoPagina.trim()) {
+      const vp = pg.getViewport({ scale: 2 });
+      const canvas = document.createElement('canvas');
+      canvas.width = vp.width;
+      canvas.height = vp.height;
+      await pg.render({ canvasContext: canvas.getContext('2d')!, viewport: vp }).promise;
+      const { createWorker } = await import('tesseract.js');
+      const w = await createWorker('por');
+      t += `${(await w.recognize(canvas)).data.text}\n`;
+      await w.terminate();
+    }
   }
   return t;
+}
+
+export async function textoDoArquivo(arquivo: File): Promise<string> {
+  const nome = arquivo.name.toLowerCase();
+  if (nome.endsWith('.pdf')) {
+    const texto = await textoDoPdf(arquivo);
+    if (texto.trim()) return texto;
+  }
+  if (arquivo.type.startsWith('image/') || nome.endsWith('.png') || nome.endsWith('.jpg') || nome.endsWith('.jpeg')) {
+    const { createWorker } = await import('tesseract.js');
+    const w = await createWorker('por');
+    const texto = (await w.recognize(arquivo)).data.text;
+    await w.terminate();
+    return texto;
+  }
+  return await arquivo.text();
 }
