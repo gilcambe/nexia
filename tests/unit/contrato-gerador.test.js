@@ -118,3 +118,11 @@ test('GC8. lógica em .ts: o padrão typescript + import do .mjs passa; require 
   const ruim = conferir({ arquivos: ['apps/body-coach/src/lib/x.ts'], teste: 'tests/unit/contrato-x.test.js', codigo: codigo.replace("const ts = require('typescript');", "const x = require('../../apps/body-coach/src/lib/x');") });
   assert.match(ruim.erros.join(), /transpile/);
 });
+
+test('GC9. teste que não saiu: insiste até a 3ª rodada antes do caminho sem teste (23/11)', () => {
+  const { proximaTentativaGerar } = require('../../nexia-ai/contrato/gerador');
+  assert.equal(proximaTentativaGerar([]), 'contrato-gerar-2');
+  assert.equal(proximaTentativaGerar(['cortex-parte', 'contrato-gerar-2']), 'contrato-gerar-3');
+  assert.equal(proximaTentativaGerar(['contrato-gerar-2', 'contrato-gerar-3']), null);
+  assert.equal(proximaTentativaGerar(undefined), 'contrato-gerar-2');
+});

@@ -177,6 +177,18 @@ const cota = require('../nexia-ai/model-router/cota');
     const revisar = ({ pedido, codigo, modelo }) => revisarCobertura(router, gratis.filter(d => !(d.provider === modelo.provider && d.model === modelo.model)).slice(0, 3), pedido, codigo);
     gerado = await gerar({ pedido: texto, raiz: process.cwd(), router, modelos: lista, rodarTeste, checarSintaxe, revisar, referencia: process.env.CONTRATO_REFERENCIA !== '0', log: s => console.log('  gerador: ' + s) });
     if (!gerado.ok && gerado.sem_cota) return aguardarCota('ao gerar o teste');
+    // 23/11/2026 (#4202-#4206): teste que não saiu (IA errou o formato ou a referência) caía NA HORA no caminho sem teste,
+    // que fez código errado 5 vezes no mesmo dia. Agora insiste até 3 rodadas (30 min entre elas) antes de desistir.
+    if (!gerado.ok && !gerado.nao_testavel) {
+      const proxima = require('../nexia-ai/contrato/gerador').proximaTentativaGerar((issue.labels || []).map(l => l.name || l));
+      if (proxima) {
+        await rotular(proxima);
+        await comentar(`🔁 O teste não saiu nesta rodada (${String(gerado.motivo).slice(0, 200)}). Não vou para o caminho sem teste ainda: tento de novo sozinho em 30 min (rodada ${proxima.slice(-1)} de 3).`);
+        await rotular('contrato-aguardando-cota');
+        for (const l of ['contrato-falhou', 'contrato-nao-testavel']) await gh('DELETE', `/issues/${N}/labels/${l}`);
+        return;
+      }
+    }
     if (!gerado.ok) return voltarParaFila(gerado.nao_testavel ? `Não dá para provar com teste automático (${gerado.motivo}).` : `Não consegui gerar um teste válido: ${gerado.motivo}.`, 'contrato-nao-testavel');
     c = gerado.contrato;
     await comentar(`📝 Contrato gerado por ${gerado.modelo}: arquivos ${c.arquivos.map(a => `\`${a}\``).join(', ')}; teste \`${c.teste}\` (falha hoje, passou nos portões).`);
