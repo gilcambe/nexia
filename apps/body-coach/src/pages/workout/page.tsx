@@ -40,6 +40,7 @@ import { definirVoz, falar, fraseExercicio, fraseFim, fraseSerie, vozDisponivel,
 import { useTelaLigada } from '@/lib/telaLigada';
 import { duplaAtual, enviarStatusDupla } from '@/lib/ferramentas/social';
 import { confirmar } from '../../lib/dialogo';
+import Confete from '@/components/feature/Confete';
 
 type Phase =
   | 'PRE_SESSION'
@@ -902,12 +903,22 @@ function WorkoutFlow({ session, lesoes = [], avisos = [], origem, inicial, onSes
         })()}
 
         {phase === 'SESSION_COMPLETE' && (
-          <div className="rounded-2xl border border-accent-200 bg-accent-100/50 p-5 text-center sm:p-8">
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-accent-500 text-background-50">
-              <i className="ri-check-line text-2xl"></i>
-            </div>
-            <h2 className="mt-4 font-heading text-2xl font-bold text-foreground-950">Sessão concluída!</h2>
-            <p className="mx-auto mt-2 max-w-md text-sm text-foreground-600">Excelente trabalho. Bom descanso e hidratação.</p>
+          <div className="rounded-2xl border border-accent-200 bg-accent-100/50 p-5 text-center sm:p-8" data-testid="fim-treino">
+            <Confete />
+            <p className="text-xs font-semibold uppercase tracking-wide text-accent-700">Treino concluído · {new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'short' })}</p>
+            <h2 className="mt-1 font-heading text-2xl font-bold text-foreground-950">{cartao?.titulo ?? 'Sessão concluída!'}</h2>
+            {cartao?.destaque && <p className="mx-auto mt-2 inline-block rounded-full bg-amber-200 px-3 py-1 text-sm font-bold text-amber-900">🏆 {cartao.destaque}</p>}
+            {cartao && (
+              <div className="mx-auto mt-4 grid max-w-md grid-cols-2 gap-px overflow-hidden rounded-2xl bg-background-200 text-left">
+                {cartao.itens.map((it) => (
+                  <div key={it.rotulo} className="bg-background-50 px-4 py-3">
+                    <p className="font-heading text-3xl font-bold leading-none text-foreground-950">{it.valor}</p>
+                    <p className="mt-1 text-xs text-foreground-500">{it.rotulo}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+            <p className="mx-auto mt-3 max-w-md text-sm text-foreground-600">Excelente trabalho. Bom descanso e hidratação.</p>
             {ficouNoCelular
               ? <p className="mx-auto mt-3 max-w-md rounded-lg bg-secondary-50 px-3 py-2 text-xs text-secondary-900" role="status"><i className="ri-wifi-off-line mr-1"></i>Sem internet agora: o treino ficou guardado no celular e vai sozinho para o seu histórico quando a conexão voltar.</p>
               : <p className="mt-3 text-xs text-foreground-400">Tudo foi salvo no seu diário mestre.</p>}
