@@ -101,8 +101,9 @@ export async function textoDoArquivo(arquivo: File): Promise<string> {
   const nome = arquivo.name.toLowerCase();
 
   if (tipo === 'application/pdf' || nome.endsWith('.pdf')) {
+    // textoDoPdf só tem texto quando o PDF nasceu com letras; PDF escaneado vem vazio.
     const texto = await textoDoPdf(arquivo);
-    if (texto.trim().length > 20) return texto;
+    if (texto.trim().length > 0) return texto;
 
     // PDF escaneado (sem texto reconhecido): aplica OCR.
     const aviso: Progresso = () => {};
