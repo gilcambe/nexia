@@ -15,16 +15,14 @@
     b.setAttribute("role", "status");
     b.style.cssText = "position:fixed;left:12px;right:12px;bottom:12px;z-index:2147483647;display:flex;align-items:center;gap:12px;" +
       "padding:12px 14px;border-radius:14px;background:#111827;color:#fff;font:15px/1.3 system-ui,sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.35);max-width:520px;margin:0 auto";
-    b.innerHTML = '<span style="flex:1">Tem atualização nova 🎉 — Toque para atualizar</span>' +
-      '<button type="button" style="border:0;border-radius:10px;padding:10px 14px;font:600 15px system-ui,sans-serif;background:#fff;color:#000;cursor:pointer">Atualizar</button>' +
-      '<button type="button" aria-label="Fechar" style="border:0;background:none;color:#9ca3af;font-size:20px;cursor:pointer">×</button>';
-    var bts = b.querySelectorAll("button");
-    bts[0].onclick = function () {
-      bts[0].disabled = true; bts[0].textContent = "Atualizando…";
+    b.innerHTML = '<span style="flex:1;cursor:pointer">Tem atualização nova 🎉 — Toque para atualizar</span>' +
+      '<button type="button" aria-label="Fechar" style="border:0;background:none;color:#9ca3af;font-size:20px;cursor:pointer;margin-left:10px">×</button>';
+    b.onclick = function () {
+      b.querySelector("span").textContent = "Atualizando…";
       if (worker) worker.postMessage({ tipo: "atualizar" });
       setTimeout(function () { location.reload(); }, 3000); // reserva, se o worker não responder
     };
-    bts[1].onclick = function () { b.remove(); };
+    b.querySelector("button").onclick = function (e) { e.stopPropagation(); b.remove(); };
     (document.body || document.documentElement).appendChild(b);
   }
 
