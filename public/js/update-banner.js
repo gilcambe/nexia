@@ -15,14 +15,16 @@
     b.setAttribute("role", "status");
     b.style.cssText = "position:fixed;left:12px;right:12px;bottom:12px;z-index:2147483647;display:flex;align-items:center;gap:12px;" +
       "padding:12px 14px;border-radius:14px;background:#111827;color:#fff;font:15px/1.3 system-ui,sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.35);max-width:520px;margin:0 auto";
-    b.innerHTML = '<button type="button" style="flex:1;cursor:pointer;background:none;border:none;color:white;text-align:left;font:inherit">Tem atualização nova 🎉 — Toque para atualizar</button>' +
+    b.innerHTML = '<button type="button" style="flex:1;cursor:pointer;background:none;border:none;color:white;text-align:left;font:bold 15px/1.3 system-ui,sans-serif">Tem atualização nova 🎉 — Toque para atualizar</button>' +
       '<button type="button" aria-label="Fechar" style="border:0;background:none;color:#9ca3af;font-size:20px;cursor:pointer;margin-left:10px">×</button>';
-    b.querySelector('button').onclick = function () {
-      b.querySelector('button').textContent = "Atualizando…";
+    var btnAtualizar = b.querySelector('button');
+    var btnFechar = b.querySelectorAll('button')[1];
+    btnAtualizar.onclick = function () {
+      btnAtualizar.textContent = "Atualizando…";
       if (worker) worker.postMessage({ tipo: "atualizar" });
       setTimeout(function () { location.reload(); }, 3000); // reserva, se o worker não responder
     };
-    b.querySelector("button").onclick = function (e) { e.stopPropagation(); b.remove(); };
+    btnFechar.onclick = function (e) { e.stopPropagation(); b.remove(); };
     (document.body || document.documentElement).appendChild(b);
   }
 
@@ -49,20 +51,18 @@
   });
   navigator.serviceWorker.ready.then(function () { return navigator.serviceWorker.getRegistration(); }).then(vigiar).catch(function () {});
 
-  // Extra: verificação opcional de /version.json se o SW não estiver ativo ou não cobrir
-  if (!navigator.serviceWorker.controller) {
-    fetch("/version.json?t=" + Date.now()).then(function(res) {
-      if (!res.ok) return;
-      return res.json();
-    }).then(function(data) {
-      if (!data || !data.version) return;
-      var chave = "kx_ver";
-      var atual = localStorage.getItem(chave);
-      if (atual && atual !== data.version) {
-        mostrar(null);
-      } else if (!atual) {
-        localStorage.setItem(chave, data.version);
-      }
-    }).catch(function() {});
-  }
+  // Extra: verificação opcional de /version.json
+  fetch("/version.json?t=" + Date.now()).then(function(res) {
+    if (!res.ok) return;
+    return res.json();
+  }).then(function(data) {
+    if (!data || !data.version) return;
+    var chave = "kx_ver";
+    var atual = localStorage.getItem(chave);
+    if (atual && atual !== data.version) {
+      mostrar(null);
+    } else if (!atual) {
+      localStorage.setItem(chave, data.version);
+    }
+  }).catch(function() {});
 })();
