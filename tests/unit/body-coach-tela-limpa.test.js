@@ -29,3 +29,12 @@ test('Hoje: sem Convidar/robô no topo, sem "Falar com o Coach", nutrição só 
   assert.doesNotMatch(h.slice(h.indexOf('<header'), h.indexOf('{!verTudo ? (')), /Convidar|ri-robot/);
   assert.doesNotMatch(ler('pages/home/components/TodayCard.tsx'), /Falar com o Coach/);
 });
+
+test('começar treino: direto no 1º exercício, aquecimento e dicas recolhidos nele, "sem tempo" em Mais opções', () => {
+  const w = ler('pages/workout/page.tsx');
+  assert.match(w, /\?\? 'EXERCISE_ACTIVE'\);/);
+  assert.match(w, /if \(inicial\) return;\s*zerarSessaoFC\(\);/);
+  assert.match(w, /exIndex === 0 && currentSets\.length === 0 && \(session\.warmup\.length > 0 \|\| avisos\.length > 0\)/);
+  assert.match(w, /id: 'treino-expresso-agora'/);
+  assert.match(w, /soConectado=\{phase !== 'PRE_SESSION' && phase !== 'WARMUP' && !ferramentas\}/);
+});
