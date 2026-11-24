@@ -15,6 +15,8 @@ const Planos = carregar(() => import('./Planos'));
 const Relogio = carregar(() => import('./Relogio'));
 const TreinosProntos = carregar(() => import('./TreinosProntos'));
 const ExerciciosComunidade = carregar(() => import('./ExerciciosComunidade'));
+const TesteFisico = carregar(() => import('./TesteFisico'));
+const SemanaPico = carregar(() => import('./SemanaPico'));
 const ContadorReps = carregar(() => import('./ContadorReps'));
 const EvolucaoCarga = carregar(() => import('./EvolucaoCarga'));
 const Periodizacao = carregar(() => import('./Periodizacao'));
@@ -38,6 +40,8 @@ const AvaliarFoto = carregar(() => import('./AvaliarFoto'));
 export const FERRAMENTAS = [
   { id: 'treinos-prontos', grupo: 'Treino', nome: 'Treinos prontos', desc: 'HIIT, abdômen, yoga, alongamento, casa e corrida, guiados por voz', icone: 'ri-play-circle-line', el: TreinosProntos },
   { id: 'exercicios', grupo: 'Treino', nome: 'Exercícios da comunidade', desc: 'Exercícios criados pelos usuários: veja, crie, edite e apague os seus', icone: 'ri-group-line', el: ExerciciosComunidade },
+  { id: 'teste-fisico', grupo: 'Treino', nome: 'Teste físico do mês', desc: 'Flexões, agachamentos, abdominais, prancha e 1 km: compare mês a mês', icone: 'ri-medal-line', el: TesteFisico },
+  { id: 'semana-pico', grupo: 'Treino', nome: 'Semana de pico', desc: 'Foto, campeonato ou praia: o que fazer em cada um dos 7 dias antes', icone: 'ri-calendar-event-line', el: SemanaPico },
   { id: 'contador', grupo: 'Treino', nome: 'Contador por câmera', desc: 'A câmera conta suas repetições e avisa a amplitude', icone: 'ri-camera-lens-line', el: ContadorReps },
   { id: 'relogio', grupo: 'Treino', nome: 'Relógio e batimentos', desc: 'Cinta/relógio ao vivo e importar treino (GPX/TCX)', icone: 'ri-heart-pulse-line', el: Relogio },
   { id: 'cardio', grupo: 'Treino', nome: 'Cardio por foto', desc: 'Foto do painel da esteira, bike ou escada: lê tempo, km e calorias e soma na semana', icone: 'ri-camera-lens-line', el: Cardio },

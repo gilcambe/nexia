@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import HistoricoTreinos from './HistoricoTreinos';
+import MapaCorpo from './components/MapaCorpo';
+import AvisoPlato from './components/AvisoPlato';
 import Card from '@/components/base/Card';
 import { useAuth } from '@/components/feature/AuthContext';
 import { useProgressData } from '@/hooks/useProgressData';
@@ -104,6 +106,7 @@ export default function Evolution() {
             {rapido && <div className="mt-4"><RegisterProgress userId={user?.id} onSaved={reload} /></div>}
           </Card>
 
+          <AvisoPlato uid={user?.id} />
           <HistoricoTreinos uid={user?.id} />
 
         </>
@@ -129,6 +132,8 @@ export default function Evolution() {
               <i className="ri-fire-line text-lg text-primary-500"></i>
               <h2 className="font-heading text-base font-semibold text-foreground-950">Músculos treinados (7 dias)</h2>
             </div>
+            <MapaCorpo series={volumeSemana} />
+            <div className="my-3 border-t border-background-200"></div>
             {Object.keys(volumeSemana).length === 0 ? (
               <p className="text-sm text-foreground-500">Faça um treino para ver aqui quantas séries cada músculo recebeu.</p>
             ) : (
