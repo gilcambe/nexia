@@ -114,100 +114,135 @@ export default function Plan() {
     );
   }
 
+  // Ordem: próximo treino em destaque, depois os outros dias; o resto fica em "Mais opções".
+  const ordem = dias.map((_, i) => (ficha.proximoDia + i) % dias.length);
+  const prox = ordem[0];
   return (
     <div className="tela">
-      <h1 className="font-heading text-xl font-bold text-foreground-950">Ficha de treino</h1>
-      <ImportarFicha onFicha={setEditando} />
+      <header>
+        <h1 className="font-heading text-xl font-bold text-foreground-950">Seu treino</h1>
+        <p className="text-sm text-foreground-600">{DIVISOES[ficha.divisao].nome} · {dias.length} {dias.length === 1 ? 'treino' : 'treinos'} em ciclo</p>
+      </header>
 
-      <Card padding="p-3">
-        <button type="button" onClick={() => setTrocando((t) => !t)} aria-expanded={trocando} className="flex w-full items-center justify-between gap-2 text-left">
-          <span className="min-w-0">
-            <span className="block text-xs text-foreground-500">Divisão do treino ({dias.length} {dias.length === 1 ? 'dia' : 'dias'} em ciclo)</span>
-            <span className="block truncate text-sm font-semibold text-foreground-950">{DIVISOES[ficha.divisao].nome}</span>
-          </span>
-          <span className="shrink-0 text-xs font-semibold text-primary-600">{trocando ? 'Fechar' : 'Trocar'} <i className={trocando ? 'ri-arrow-up-s-line' : 'ri-arrow-down-s-line'}></i></span>
-        </button>
-        {trocando && (
-          <div className="mt-2 grid grid-cols-2 gap-1.5 lg:grid-cols-3">
-            {(Object.keys(DIVISOES) as Divisao[]).map((d) => (
-              <button
-                key={d}
-                onClick={() => escolher(d)}
-                className={`rounded-lg border px-2.5 py-1.5 text-left transition ${ficha.divisao === d ? 'border-primary-400 bg-primary-100/60 ring-2 ring-primary-200' : 'border-background-200 bg-background-50 hover:border-background-300'}`}
-              >
-                <span className="block text-xs font-semibold leading-tight text-foreground-950">{DIVISOES[d].nome}</span>
-                <span className="block text-[11px] text-foreground-500">{DIVISOES[d].dias.length} {DIVISOES[d].dias.length === 1 ? 'dia' : 'dias'}</span>
-              </button>
-            ))}
-          </div>
-        )}
+      <Card padding="p-4">
+        <div className="flex items-center justify-between gap-2">
+          <p className="min-w-0 truncate font-heading text-base font-semibold text-foreground-950">{dias[prox].titulo}</p>
+          <span className="shrink-0 rounded-full bg-primary-500 px-2 py-0.5 text-xs font-semibold text-background-50">Próximo</span>
+        </div>
+        <ul className="mt-2 space-y-1">
+          {previa(prox).map((n) => <li key={n} className="text-sm text-foreground-700"><i className="ri-checkbox-circle-line mr-1 text-accent-600"></i>{n}</li>)}
+        </ul>
+        <button type="button" onClick={() => navigate('/workout')} className="mt-3 w-full rounded-xl bg-primary-500 px-4 py-3 text-sm font-semibold text-background-50 hover:bg-primary-600"><i className="ri-play-circle-line mr-1"></i>Treinar agora</button>
       </Card>
 
-      <div className="flex flex-1 flex-col gap-2 md:grid md:grid-cols-2 lg:grid-cols-3">
-        {dias.map((d, i) => {
-          const proximo = i === ficha.proximoDia;
-          const lista = previa(i);
-          const mostra = proximo || aberto === i;
-          return (
-            <div key={d.titulo} className={`flex flex-col rounded-2xl border px-3 py-2 ${proximo ? 'flex-1 ' : ''}${proximo ? 'border-primary-300 bg-primary-100/50' : 'border-background-200 bg-background-50'}`}>
-              <button type="button" onClick={() => !proximo && setAberto(aberto === i ? null : i)} aria-expanded={mostra} className="flex w-full items-center justify-between gap-2 text-left">
-                <span className="min-w-0 truncate font-heading text-sm font-semibold text-foreground-950">{d.titulo}</span>
-                {!mostra && <span className="ml-auto shrink-0 text-xs text-foreground-500" title={lista.join(', ')}>{lista.length} exercícios</span>}
-                {proximo ? <span className="shrink-0 rounded-full bg-primary-500 px-2 py-0.5 text-xs font-semibold text-background-50">Próximo</span> : <i className={`shrink-0 text-foreground-400 ${mostra ? 'ri-arrow-up-s-line' : 'ri-arrow-down-s-line'}`}></i>}
-              </button>
-              {mostra && (
-                <ul className="mt-1 grid flex-1 grid-cols-2 content-around gap-x-2 gap-y-0.5 alto:grid-cols-1">
-                  {lista.map((n) => <li key={n} className="truncate text-xs text-foreground-600 alto:text-sm"><i className="ri-checkbox-circle-line mr-1 text-accent-600"></i>{n}</li>)}
-                </ul>
-              )}
-              {proximo && (
-                <button onClick={() => navigate('/workout')} className="mt-2 w-full rounded-xl bg-primary-500 px-4 py-2 text-sm font-semibold text-background-50 hover:bg-primary-600">Treinar agora</button>
-              )}
-            </div>
-          );
-        })}
-      </div>
+      {ordem.length > 1 && (
+        <section className="space-y-1.5">
+          <h2 className="text-xs font-semibold uppercase tracking-wide text-foreground-500">Depois</h2>
+          {ordem.slice(1).map((i) => {
+            const lista = previa(i);
+            const mostra = aberto === i;
+            return (
+              <div key={dias[i].titulo} className="rounded-xl border border-background-200 bg-background-50 px-3 py-2">
+                <button type="button" onClick={() => setAberto(mostra ? null : i)} aria-expanded={mostra} className="flex w-full items-center justify-between gap-2 text-left">
+                  <span className="min-w-0 truncate text-sm font-semibold text-foreground-900">{dias[i].titulo}</span>
+                  <span className="shrink-0 text-xs text-foreground-500">{lista.length} exercícios <i className={mostra ? 'ri-arrow-up-s-line' : 'ri-arrow-down-s-line'}></i></span>
+                </button>
+                {mostra && <ul className="mt-1 space-y-0.5">{lista.map((n) => <li key={n} className="text-xs text-foreground-600">· {n}</li>)}</ul>}
+              </div>
+            );
+          })}
+        </section>
+      )}
 
-      {lembretes
-        ? <Lembretes diasPorSemana={diasPorSemana(onboarding as unknown as Record<string, unknown>)} apelido={profile?.nickname || profile?.full_name?.split(' ')[0] || null} />
-        : <button type="button" onClick={() => setLembretes(true)} className="w-full rounded-xl border border-background-200 bg-background-50 px-3 py-2.5 text-left text-sm font-semibold text-foreground-800"><i className="ri-alarm-line mr-1 text-primary-500"></i>Lembretes de treino no celular <i className="ri-arrow-down-s-line float-right text-foreground-400"></i></button>}
+      <details className="rounded-xl border border-background-200 bg-background-50 px-3 py-2">
+        <summary className="cursor-pointer text-sm font-semibold text-foreground-800"><i className="ri-settings-3-line mr-1 text-primary-500"></i>Mais opções</summary>
+        <div className="mt-3 space-y-3">
+          <div>
+            <button type="button" onClick={() => setTrocando((t) => !t)} aria-expanded={trocando} className="flex w-full items-center justify-between text-left text-sm font-semibold text-foreground-800">
+              Trocar divisão do treino <i className={trocando ? 'ri-arrow-up-s-line' : 'ri-arrow-down-s-line'}></i>
+            </button>
+            {trocando && (
+              <div className="mt-2 grid grid-cols-2 gap-1.5 lg:grid-cols-3">
+                {(Object.keys(DIVISOES) as Divisao[]).map((d) => (
+                  <button
+                    key={d}
+                    onClick={() => escolher(d)}
+                    className={`rounded-lg border px-2.5 py-1.5 text-left transition ${ficha.divisao === d ? 'border-primary-400 bg-primary-100/60 ring-2 ring-primary-200' : 'border-background-200 bg-background-50 hover:border-background-300'}`}
+                  >
+                    <span className="block text-xs font-semibold leading-tight text-foreground-950">{DIVISOES[d].nome}</span>
+                    <span className="block text-[11px] text-foreground-500">{DIVISOES[d].dias.length} {DIVISOES[d].dias.length === 1 ? 'dia' : 'dias'}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+          <div>
+            <p className="mb-1 text-xs text-foreground-500">Já tem uma ficha pronta (do seu personal, por exemplo)?</p>
+            <ImportarFicha onFicha={setEditando} />
+          </div>
+          {lembretes
+            ? <Lembretes diasPorSemana={diasPorSemana(onboarding as unknown as Record<string, unknown>)} apelido={profile?.nickname || profile?.full_name?.split(' ')[0] || null} />
+            : <button type="button" onClick={() => setLembretes(true)} className="w-full text-left text-sm font-semibold text-foreground-800"><i className="ri-alarm-line mr-1 text-primary-500"></i>Lembretes de treino no celular</button>}
+        </div>
+      </details>
     </div>
   );
 }
 
-// Ficha montada pelo coach: todos os treinos com séries, repetições, descanso, carga e observações.
+// Ficha montada pelo coach (ou importada): próximo treino em destaque, os outros abaixo, opções no fim.
 function FichaDoCoach({ ficha, dia, onTreinar, children }: { ficha: FichaCoach; dia: number; onTreinar: () => void; children?: ReactNode }) {
+  const [aberto, setAberto] = useState<number | null>(null);
+  const ordem = ficha.dias.map((_, i) => (dia + i) % ficha.dias.length);
+  const d = ficha.dias[ordem[0]];
   return (
     <div className="tela tela-fim">
       <header>
-        <h1 className="font-heading text-xl font-bold text-foreground-950">Ficha de treino</h1>
+        <h1 className="font-heading text-xl font-bold text-foreground-950">Seu treino</h1>
         <p className="text-sm text-foreground-600">
-          <b>{ficha.nome}</b>{ficha.coach === IMPORTADA ? ', importada por você' : `, do seu coach${ficha.coach ? ` ${ficha.coach}` : ''}`}. Os treinos seguem em ciclo.
+          <b>{ficha.nome}</b>{ficha.coach === IMPORTADA ? ', importada por você' : `, do seu coach${ficha.coach ? ` ${ficha.coach}` : ''}`}
         </p>
         {ficha.obs && <p className="mt-2 rounded-lg bg-background-100 px-3 py-2 text-sm text-foreground-700">{ficha.obs}</p>}
       </header>
-      <ExportarPlano ficha={ficha} />
-      {children}
-      <div className="grid grid-cols-1 gap-2 md:grid-cols-2 lg:grid-cols-3">
-        {ficha.dias.map((d, i) => {
-          const proximo = i === dia;
-          return (
-            <div key={i} className={`relative rounded-2xl border px-3 py-2.5 ${proximo ? 'border-primary-300 bg-primary-100/50' : 'border-background-200 bg-background-50'}`}>
-              {proximo && <span className="absolute right-3 top-3 rounded-full bg-primary-500 px-2 py-0.5 text-xs font-semibold text-background-50">Próximo</span>}
-              <p className="pr-16 font-heading text-base font-semibold leading-snug text-foreground-950">{d.titulo}</p>
-              <ul className="mt-1.5 space-y-1">
-                {d.exercicios.map((x, j) => (
-                  <li key={j} className="text-xs text-foreground-700">
-                    <span className="font-medium">{x.nome}</span> · {x.series} × {x.reps}{x.carga ? ` · ${x.carga}` : ''}
-                    {x.obs && <span className="block text-foreground-500">{x.obs}</span>}
-                  </li>
-                ))}
-              </ul>
-              {proximo && <button onClick={onTreinar} className="mt-2 w-full rounded-xl bg-primary-500 px-4 py-2.5 text-sm font-semibold text-background-50 hover:bg-primary-600">Treinar agora</button>}
-            </div>
-          );
-        })}
-      </div>
+      <Card padding="p-4">
+        <div className="flex items-center justify-between gap-2">
+          <p className="min-w-0 truncate font-heading text-base font-semibold text-foreground-950">{d.titulo}</p>
+          <span className="shrink-0 rounded-full bg-primary-500 px-2 py-0.5 text-xs font-semibold text-background-50">Próximo</span>
+        </div>
+        <ul className="mt-2 space-y-1.5">
+          {d.exercicios.map((x, j) => (
+            <li key={j} className="text-sm text-foreground-800">
+              <span className="font-medium">{x.nome}</span> <span className="text-foreground-500">· {x.series} × {x.reps}{x.carga ? ` · ${x.carga}` : ''}</span>
+              {x.obs && <span className="block text-xs text-foreground-500">{x.obs}</span>}
+            </li>
+          ))}
+        </ul>
+        <button type="button" onClick={onTreinar} className="mt-3 w-full rounded-xl bg-primary-500 px-4 py-3 text-sm font-semibold text-background-50 hover:bg-primary-600"><i className="ri-play-circle-line mr-1"></i>Treinar agora</button>
+      </Card>
+      {ordem.length > 1 && (
+        <section className="space-y-1.5">
+          <h2 className="text-xs font-semibold uppercase tracking-wide text-foreground-500">Depois</h2>
+          {ordem.slice(1).map((i) => {
+            const x = ficha.dias[i];
+            const mostra = aberto === i;
+            return (
+              <div key={i} className="rounded-xl border border-background-200 bg-background-50 px-3 py-2">
+                <button type="button" onClick={() => setAberto(mostra ? null : i)} aria-expanded={mostra} className="flex w-full items-center justify-between gap-2 text-left">
+                  <span className="min-w-0 truncate text-sm font-semibold text-foreground-900">{x.titulo}</span>
+                  <span className="shrink-0 text-xs text-foreground-500">{x.exercicios.length} exercícios <i className={mostra ? 'ri-arrow-up-s-line' : 'ri-arrow-down-s-line'}></i></span>
+                </button>
+                {mostra && <ul className="mt-1 space-y-0.5">{x.exercicios.map((e, j) => <li key={j} className="text-xs text-foreground-600">· {e.nome} · {e.series} × {e.reps}{e.carga ? ` · ${e.carga}` : ''}</li>)}</ul>}
+              </div>
+            );
+          })}
+        </section>
+      )}
+      <details className="rounded-xl border border-background-200 bg-background-50 px-3 py-2">
+        <summary className="cursor-pointer text-sm font-semibold text-foreground-800"><i className="ri-settings-3-line mr-1 text-primary-500"></i>Mais opções</summary>
+        <div className="mt-3 space-y-3">
+          <ExportarPlano ficha={ficha} />
+          {children}
+        </div>
+      </details>
     </div>
   );
 }
