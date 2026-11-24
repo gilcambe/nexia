@@ -430,6 +430,17 @@ async function executar(body, uid, db, ctx = {}) {
   }
 
   // Treino feito: conta a semana para o ranking da equipe e marca o desafio do dia sozinho.
+  // Aluno apagou um treino que já tinha feito: sai do histórico e da contagem da semana.
+  if (acao === 'treino_apagado') {
+    const { historico, removido } = presenca.apagar(eu, body.feitoEm, body.titulo);
+    if (!removido) return [200, { ok: true, removido: false }];
+    const sem = inicioSemanaBR();
+    const mesmaSemana = eu.semana && eu.semana.inicio === sem && removido.em >= Date.parse(sem + 'T03:00:00Z');
+    const semana = mesmaSemana ? { ...eu.semana, treinos: Math.max(0, (eu.semana.treinos || 0) - 1), minutos: Math.max(0, (eu.semana.minutos || 0) - (removido.min || 0)), kcal: Math.max(0, (eu.semana.kcal || 0) - (removido.kcal || 0)) } : eu.semana;
+    await dir.doc(uid).set(semana ? { historico, semana } : { historico }, { merge: true });
+    return [200, { ok: true, removido: true }];
+  }
+
   if (acao === 'treino_feito') {
     const min = Math.min(300, Math.max(0, Math.round(Number(body.minutos) || 0)));
     const kcal = Math.min(3000, Math.max(0, Math.round(Number(body.kcal) || 0)));

@@ -20,4 +20,18 @@ function ultimos(eu, dias = 60, agora = Date.now()) {
   return lista.filter((h) => h && h.em > agora - dias * 86400000).map((h) => ({ em: h.em, titulo: h.titulo, min: h.min, kcal: h.kcal }));
 }
 
-module.exports = { registrar, ultimos, MAX };
+// Treino apagado pelo aluno: tira do histórico o registro do mesmo título feito perto daquela hora (até 30 min).
+function apagar(eu, em, titulo) {
+  const lista = Array.isArray(eu.historico) ? eu.historico : [];
+  const t = String(titulo || '').replace(/\s+/g, ' ').trim().slice(0, 80) || 'Treino';
+  const alvo = Number(em) || 0;
+  let melhor = -1;
+  lista.forEach((h, i) => {
+    if (!h || h.titulo !== t || Math.abs(h.em - alvo) > 30 * 60000) return;
+    if (melhor < 0 || Math.abs(h.em - alvo) < Math.abs(lista[melhor].em - alvo)) melhor = i;
+  });
+  if (melhor < 0) return { historico: lista, removido: null };
+  return { historico: lista.filter((_, i) => i !== melhor), removido: lista[melhor] };
+}
+
+module.exports = { registrar, ultimos, apagar, MAX };

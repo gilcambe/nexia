@@ -10,6 +10,7 @@ import SobreVoce from './components/SobreVoce';
 import CicloCard from './components/CicloCard';
 import ConviteCoach from './components/ConviteCoach';
 import { definirLetra, letraGuardada, TAMANHOS } from '@/lib/letra';
+import { definirTema, temaGuardado, TEMAS } from '@/lib/tema';
 import { confirmar } from '../../lib/dialogo';
 import Abas, { useAba } from '@/components/base/Abas';
 
@@ -32,6 +33,24 @@ interface SavedProfile {
 
 const MISSING = 'Não informado';
 const text = (v: unknown, suffix = '') => (typeof v === 'string' && v.trim() ? `${v.trim()}${suffix}` : MISSING);
+
+// Modo escuro: bom para treinar à noite e economizar bateria.
+function ModoEscuro() {
+  const [atual, setAtual] = useState(temaGuardado);
+  return (
+    <Card padding="p-3">
+      <h2 className="mb-1.5 font-heading text-sm font-semibold text-foreground-950"><i className="ri-contrast-2-line mr-1 text-primary-500"></i>Aparência</h2>
+      <div className="grid grid-cols-3 gap-2" role="radiogroup" aria-label="Aparência" data-testid="modo-escuro">
+        {TEMAS.map((t) => (
+          <button key={t.id} type="button" role="radio" aria-checked={atual === t.id} onClick={() => { definirTema(t.id); setAtual(t.id); }}
+            className={`min-h-[40px] rounded-xl border-2 px-1 py-1 text-xs font-semibold leading-tight ${atual === t.id ? 'border-primary-500 bg-primary-50 text-primary-800' : 'border-background-200 text-foreground-700'}`}>
+            <i className={`${t.icone} block text-lg`}></i>{t.nome}
+          </button>
+        ))}
+      </div>
+    </Card>
+  );
+}
 
 // Letra maior para quem acha pequeno: vale para o app inteiro, neste celular.
 function TamanhoDaLetra() {
@@ -235,6 +254,7 @@ export default function Profile() {
 
       {aba === 'conta' && (<>
       <TamanhoDaLetra />
+      <ModoEscuro />
       <ConviteCoach />
       {/* privacy */}
       <Card padding="p-3">

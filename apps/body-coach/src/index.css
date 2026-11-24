@@ -160,3 +160,20 @@ h1, h2, h3, h4, h5, h6 {
   .tela-fim > :last-child { flex-grow: 1; }
   @media (min-height: 740px) { .tela { gap: 0.625rem; } }
 }
+
+/* Modo escuro (Perfil > Aparência): fundos claros fixos viram tons escuros e textos escuros clareiam. */
+.dark .bg-white, .dark .bg-gray-50, .dark .bg-slate-50, .dark .bg-zinc-50 { background-color: oklch(var(--background-100)); }
+.dark .bg-white\/80 { background-color: oklch(var(--background-100) / 0.8); }
+.dark .text-black, .dark .text-gray-900, .dark .text-gray-700 { color: oklch(var(--foreground-900)); }
+.dark .bg-primary-50 { background-color: oklch(var(--primary-500) / 0.16); }
+.dark .bg-primary-100 { background-color: oklch(var(--primary-500) / 0.24); }
+.dark .bg-accent-50 { background-color: oklch(var(--accent-500) / 0.16); }
+.dark .bg-secondary-50 { background-color: oklch(var(--secondary-500) / 0.16); }
+.dark .text-primary-900, .dark .text-primary-800, .dark .text-primary-700 { color: oklch(var(--primary-300)); }
+.dark .bg-red-50 { background-color: rgb(239 68 68 / 0.16); }
+.dark .text-red-600, .dark .text-red-700, .dark .text-red-800 { color: #fca5a5; }
+.dark .bg-emerald-50 { background-color: rgb(16 185 129 / 0.16); }
+.dark .text-emerald-700, .dark .text-emerald-800 { color: #6ee7b7; }
+.dark .bg-amber-50 { background-color: rgb(245 158 11 / 0.16); }
+.dark .text-amber-700, .dark .text-amber-800, .dark .text-amber-900 { color: #fcd34d; }
+.dark { color-scheme: dark; }

@@ -8,11 +8,14 @@ import ErroGeral from './components/feature/ErroGeral'
 import { mostrarAbertura } from './abertura'
 import { aplicarMarca, marcaGuardada } from './lib/coach/profissionais'
 import { aplicarLetra } from './lib/letra'
+import { aplicarTema } from './lib/tema'
 
 // abre já com a cor do coach (a marca guardada da última vez), sem piscar o laranja padrão
 aplicarMarca(marcaGuardada())
 // e com o tamanho de letra escolhido no Perfil
 aplicarLetra()
+// e com o modo claro/escuro escolhido no Perfil
+aplicarTema()
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

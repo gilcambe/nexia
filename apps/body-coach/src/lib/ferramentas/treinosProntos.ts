@@ -28,6 +28,18 @@ function circuito(exs: [string, string][], trabalho: number, descanso: number, v
 }
 const seq = (exs: [string, number, string?][]): Bloco[] => exs.map(([nome, seg, dica]) => ({ nome, seg, dica }));
 
+// Tiros em aparelho (esteira, bike, escada, elíptico, remo): aquece, N tiros forte/leve, desaquece.
+function tiros(aquec: [number, string], n: number, forte: [number, string], leve: [number, string], desaq: [number, string]): Bloco[] {
+  return [
+    { nome: 'Aquecer', seg: aquec[0], dica: aquec[1] },
+    ...Array.from({ length: n }, (_, i) => [
+      { nome: `TIRO ${i + 1} de ${n}: acelere`, seg: forte[0], dica: forte[1] },
+      { nome: 'Recupere: ritmo leve', seg: leve[0], dica: leve[1], descanso: true },
+    ]).flat(),
+    { nome: 'Desaquecer', seg: desaq[0], dica: desaq[1] },
+  ];
+}
+
 const AQUEC: Bloco[] = seq([
   ['Marcha no lugar', 40, 'Braços acompanhando, respiração solta.'],
   ['Rotação de ombros', 30, 'Para frente e para trás.'],
@@ -159,6 +171,113 @@ export const TREINOS_PRONTOS: TreinoPronto[] = [
       ['Aquecer leve', 240, 'Carga leve, giro solto.'], ['Carga média', 180], ['Carga forte', 120], ['Carga muito forte', 60, 'Quase no limite.'],
       ['Carga forte', 120], ['Carga média', 180], ['Sprint final', 60, 'Tudo o que tiver!'], ['Soltar as pernas', 240, 'Carga mínima.'], ['Alongar em cima da bike', 60],
     ]),
+  },
+  // ── Mais abdômen / core ──
+  {
+    id: 'core-iniciante', nome: 'Core iniciante 8 min', categoria: 'Abdômen', nivel: 'Iniciante', met: 3.5,
+    desc: 'Para quem está começando: protege a lombar e firma a barriga.',
+    blocos: circuito([
+      ['Dead bug', 'Lombar colada no chão, braço e perna opostos.'], ['Prancha nos joelhos', 'Barriga encolhida.'], ['Ponte de glúteo', 'Aperte o glúteo em cima.'],
+      ['Bird dog (perdigueiro)', 'Braço e perna opostos, sem girar o quadril.'],
+    ], 30, 20, 3, 30),
+  },
+  {
+    id: 'core-lombar', nome: 'Core sem dor nas costas 10 min', categoria: 'Abdômen', nivel: 'Iniciante', met: 3.5,
+    desc: 'Exercícios de estabilidade, bons para quem tem lombar sensível.',
+    blocos: circuito([
+      ['Prancha', 'Corpo reto do ombro ao pé.'], ['Dead bug', 'Devagar, solte o ar ao estender.'], ['Prancha lateral (direita)', 'Pode apoiar o joelho.'],
+      ['Prancha lateral (esquerda)', 'Pode apoiar o joelho.'], ['Bird dog (perdigueiro)', 'Segure 2 s em cima.'], ['Superman', 'Olhar para o chão, sem forçar o pescoço.'],
+    ], 35, 15, 2, 45),
+  },
+  {
+    id: 'abs-obliquos', nome: 'Oblíquos e cintura 12 min', categoria: 'Abdômen', nivel: 'Intermediário', met: 4.5,
+    desc: 'Foco nas laterais da barriga.',
+    blocos: circuito([
+      ['Russian twist', 'Gire o tronco, não só os braços.'], ['Prancha lateral com elevação de quadril (direita)', 'Sobe e desce devagar.'],
+      ['Prancha lateral com elevação de quadril (esquerda)', 'Sobe e desce devagar.'], ['Bicicleta no ar', 'Cotovelo no joelho oposto.'],
+      ['Abdominal oblíquo cruzado', 'Ombro em direção ao joelho oposto.'], ['Limpador de para-brisa', 'Pernas juntas de um lado ao outro, com controle.'],
+    ], 40, 15, 2, 45),
+  },
+  {
+    id: 'abs-5min', nome: 'Abdômen expresso 5 min', categoria: 'Abdômen', nivel: 'Intermediário', met: 4.5,
+    desc: 'Para encaixar no fim do treino de musculação.',
+    blocos: circuito([
+      ['Abdominal crunch', 'Curto e controlado.'], ['Elevação de pernas', 'Lombar no chão.'], ['Prancha', 'Firme.'], ['Mountain climber', 'Rápido.'], ['Hollow hold', 'Segure.'],
+    ], 45, 15, 1),
+  },
+  {
+    id: 'core-academia', nome: 'Core na academia 15 min', categoria: 'Abdômen', nivel: 'Avançado', met: 5,
+    desc: 'Com aparelhos: roda, polia e barra fixa.',
+    blocos: circuito([
+      ['Rolinho / roda abdominal', 'Vá só até onde a lombar não arqueia.'], ['Abdominal na polia (ajoelhado)', 'Enrole a coluna, quadril parado.'],
+      ['Elevação de pernas na barra fixa', 'Sem balançar.'], ['Pallof press na polia (direita)', 'Não deixe o tronco girar.'], ['Pallof press na polia (esquerda)', 'Não deixe o tronco girar.'],
+      ['Prancha com peso nas costas', 'Peso leve, corpo reto.'],
+    ], 40, 20, 3, 60),
+  },
+  // ── Mais HIIT ──
+  {
+    id: 'hiit-sem-impacto', nome: 'HIIT sem impacto 15 min', categoria: 'HIIT', nivel: 'Iniciante', met: 6,
+    desc: 'Sem pulos: bom para joelho, apartamento e iniciante.',
+    blocos: [...AQUEC, ...circuito([
+      ['Agachamento rápido', 'Sem pular.'], ['Soco no ar alternado', 'Abdômen firme.'], ['Escalador lento', 'Um pé de cada vez.'], ['Afundo para trás alternado', 'Tronco reto.'],
+      ['Polichinelo sem salto', 'Braços acima da cabeça.'],
+    ], 40, 20, 3, 60)],
+  },
+  {
+    id: 'hiit-emom', nome: 'EMOM 16 min', categoria: 'HIIT', nivel: 'Avançado', met: 9,
+    desc: 'A cada minuto: faça as repetições e descanse o que sobrar.',
+    blocos: [...AQUEC, ...Array.from({ length: 4 }, () => seq([
+      ['10 burpees e descanse o resto do minuto', 60], ['15 agachamentos com salto e descanse', 60], ['20 mountain climbers por perna e descanse', 60], ['12 flexões e descanse', 60],
+    ])).flat()],
+  },
+  {
+    id: 'hiit-corda', nome: 'Corda de pular HIIT 12 min', categoria: 'HIIT', nivel: 'Intermediário', met: 10,
+    desc: 'Pule 40 s e descanse 20 s. Sem corda, imite o movimento.',
+    blocos: [...AQUEC, ...circuito([['Corda: pulo normal', 'Saltos baixos, na ponta dos pés.'], ['Corda: alternando os pés', 'Como uma corrida no lugar.'], ['Corda: o mais rápido que der', 'Tudo!']], 40, 20, 3, 60)],
+  },
+  // ── HIIT em aparelhos de cardio ──
+  {
+    id: 'esteira-30-30', nome: 'Esteira HIIT 30/30 · 18 min', categoria: 'Cardio', nivel: 'Intermediário', met: 9,
+    desc: '12 tiros de 30 s forte com 30 s leve. Muito gasto em pouco tempo.',
+    blocos: tiros([240, 'Caminhe a 5-6 km/h e depois trote.'], 12, [30, 'Corra forte: 11 a 15 km/h.'], [30, 'Caminhe a 5-6 km/h (ou fique nas laterais da esteira).'], [180, 'Caminhada leve.']),
+  },
+  {
+    id: 'esteira-inclinada', nome: 'Esteira inclinada (caminhando) 25 min', categoria: 'Cardio', nivel: 'Iniciante', met: 6,
+    desc: 'Sem correr: a inclinação sobe e desce. Queima bem sem impacto.',
+    blocos: seq([
+      ['Aquecer: plano, 5 km/h', 180], ['Inclinação 4%', 180], ['Inclinação 8%', 180], ['Inclinação 12%', 180, 'Não segure no apoio.'], ['Inclinação 15%', 120, 'Passos curtos.'],
+      ['Inclinação 10%', 180], ['Inclinação 12%', 180], ['Inclinação 6%', 120], ['Desaquecer: plano, 4 km/h', 180],
+    ]),
+  },
+  {
+    id: 'bike-hiit', nome: 'Bike HIIT 20/40 · 15 min', categoria: 'Cardio', nivel: 'Intermediário', met: 8.5,
+    desc: '10 sprints de 20 s com carga alta e 40 s soltando as pernas.',
+    blocos: tiros([240, 'Carga leve, 80-90 rpm.'], 10, [20, 'Carga alta, pedale o máximo que der.'], [40, 'Carga mínima, giro solto.'], [120, 'Carga leve.']),
+  },
+  {
+    id: 'bike-iniciante', nome: 'Bike intervalada iniciante 20 min', categoria: 'Cardio', nivel: 'Iniciante', met: 6,
+    desc: '1 min mais forte e 2 min leve. Para começar sem sofrer.',
+    blocos: tiros([180, 'Carga leve.'], 5, [60, 'Suba 2 a 3 níveis de carga.'], [120, 'Volte para carga leve.'], [120, 'Carga mínima.']),
+  },
+  {
+    id: 'escada-hiit', nome: 'Escada (simulador) intervalada 20 min', categoria: 'Cardio', nivel: 'Intermediário', met: 9,
+    desc: 'Na escada da academia: 1 min rápido e 1 min devagar. Glúteo e perna trabalham muito.',
+    blocos: tiros([180, 'Nível baixo, mãos leves no apoio.'], 8, [60, 'Suba o nível: degraus rápidos, sem se apoiar.'], [60, 'Nível baixo.'], [180, 'Nível mínimo.']),
+  },
+  {
+    id: 'escada-predio', nome: 'Escada de prédio 15 min', categoria: 'Cardio', nivel: 'Intermediário', met: 8,
+    desc: 'Suba rápido e desça andando. Segure no corrimão ao descer.',
+    blocos: tiros([120, 'Suba devagar 2 andares.'], 6, [60, 'Suba rápido, de degrau em degrau.'], [60, 'Desça andando com calma.'], [120, 'Caminhe no plano.']),
+  },
+  {
+    id: 'eliptico-hiit', nome: 'Elíptico HIIT 20 min', categoria: 'Cardio', nivel: 'Iniciante', met: 7,
+    desc: 'Sem impacto nos joelhos. 40 s forte e 80 s leve.',
+    blocos: tiros([180, 'Resistência leve.'], 8, [40, 'Resistência alta e passada rápida.'], [80, 'Resistência leve.'], [120, 'Bem leve.']),
+  },
+  {
+    id: 'remo-hiit', nome: 'Remo HIIT 15 min', categoria: 'Cardio', nivel: 'Intermediário', met: 8.5,
+    desc: 'Remada: pernas empurram primeiro, depois puxe com os braços.',
+    blocos: tiros([180, 'Ritmo leve, 20 remadas por minuto.'], 8, [30, 'Forte: 28-32 remadas por minuto.'], [60, 'Leve.'], [120, 'Leve.']),
   },
 ];
 

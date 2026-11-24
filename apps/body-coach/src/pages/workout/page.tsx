@@ -38,6 +38,7 @@ import { estadoFC, kcalMusculacao, zerarSessaoFC } from '@/lib/ferramentas/frequ
 import type { DadosCartao } from '@/lib/ferramentas/cartao';
 import { definirVoz, falar, fraseExercicio, fraseFim, fraseSerie, vozDisponivel, vozLigada } from '@/lib/ferramentas/vozCoach';
 import { useTelaLigada } from '@/lib/telaLigada';
+import { bloqueadoLigado, desligarBloqueado, ligarBloqueado, mostrarNaTelaBloqueada } from '@/lib/treinoBloqueado';
 import { duplaAtual, enviarStatusDupla } from '@/lib/ferramentas/social';
 import { confirmar } from '../../lib/dialogo';
 import Confete from '@/components/feature/Confete';
@@ -187,6 +188,7 @@ function WorkoutFlow({ session, lesoes = [], avisos = [], origem, inicial, onSes
   const [setsByEx, setSetsByEx] = useState<Record<string, SetLog[]>>(() => inicial?.setsByEx ?? {});
   const [restLeft, setRestLeft] = useState(0);
   const [resting, setResting] = useState(false);
+  const [bloqueado, setBloqueado] = useState(false); // treino continua com a tela bloqueada (áudio mudo + tela de bloqueio)
   const [cardioDone, setCardioDone] = useState(false);
   const [cardioFeito, setCardioFeito] = useState<CardioAtividade[]>(() => inicial?.cardioFeito ?? []);
   const [extras, setExtras] = useState<Extra[]>(() => inicial?.extras ?? []);
@@ -299,6 +301,13 @@ function WorkoutFlow({ session, lesoes = [], avisos = [], origem, inicial, onSes
   };
 
   const currentSets = setsByEx[exercise.id] ?? [];
+  // Tela de bloqueio mostra o exercício e a série da vez; ao terminar o treino, solta o áudio mudo.
+  useEffect(() => {
+    if (!bloqueado) return;
+    if (phase === 'SESSION_COMPLETE') { desligarBloqueado(false); setBloqueado(false); return; }
+    if (!resting) mostrarNaTelaBloqueada(exercise.name, `Série ${Math.min(currentSets.length + 1, exercise.targetSets || 3)} de ${exercise.targetSets || 3} · ${session.title}`);
+  }, [bloqueado, phase, resting, exercise.name, exercise.targetSets, currentSets.length, session.title]);
+  useEffect(() => () => desligarBloqueado(false), []);
 
   // Cargas ditas no chat do coach caem direto na ficha do exercício atual.
   useEffect(() => {
@@ -370,6 +379,11 @@ function WorkoutFlow({ session, lesoes = [], avisos = [], origem, inicial, onSes
               <i className={voz ? 'ri-volume-up-line text-base' : 'ri-volume-mute-line text-base'}></i>Voz
             </button>
           )}
+          <button type="button" onClick={() => { if (bloqueado) { desligarBloqueado(); setBloqueado(false); } else void ligarBloqueado().then(setBloqueado); }} aria-pressed={bloqueado}
+            className={`inline-flex items-center gap-1.5 rounded-full px-3 py-2 text-xs font-semibold ${bloqueado ? 'bg-accent-500 text-background-50' : 'border border-background-200 bg-background-50 text-foreground-700'}`}
+            aria-label={bloqueado ? 'Desligar treino com a tela bloqueada' : 'Continuar o treino com a tela bloqueada'} data-testid="tela-bloqueada">
+            <i className={bloqueado ? 'ri-lock-line text-base' : 'ri-lock-unlock-line text-base'}></i>{bloqueado ? 'Bloqueio ligado' : 'Bloquear tela'}
+          </button>
           <MomentoTreino />
           {duplaAtual() && (
             <Link to="/ferramentas/dupla" className="inline-flex items-center gap-1.5 rounded-full border border-background-200 bg-background-50 px-3 py-2.5 text-sm font-semibold text-foreground-700"><i className="ri-team-line text-base"></i>Dupla</Link>
@@ -414,7 +428,7 @@ function WorkoutFlow({ session, lesoes = [], avisos = [], origem, inicial, onSes
               </details>
             )}
             <button
-              onClick={() => { zerarSessaoFC(); setPhase('EXERCISE_ACTIVE'); }}
+              onClick={() => { zerarSessaoFC(); if (bloqueadoLigado()) void ligarBloqueado().then(setBloqueado); setPhase('EXERCISE_ACTIVE'); }}
               className="mt-6 w-full rounded-xl bg-primary-500 px-6 py-3 text-sm font-semibold text-background-50 transition hover:bg-primary-600"
             >
               INICIAR TREINO
@@ -795,6 +809,7 @@ function WorkoutFlow({ session, lesoes = [], avisos = [], origem, inicial, onSes
             if (user) {
               // Campos que as regras do Firestore exigem: title e done_at (texto).
               const w = {
+                id: session.id,
                 user_id: user.id,
                 title: session.title,
                 done_at: new Date().toISOString(),

@@ -35,5 +35,59 @@
       "purpose": "any"
     }
   ],
-  "id": "/body-coach/"
+  "id": "/body-coach/",
+  "shortcuts": [
+    {
+      "name": "Treinar agora",
+      "short_name": "Treinar",
+      "description": "Abre o treino de hoje",
+      "url": "/body-coach/workout?origem=atalho",
+      "icons": [
+        {
+          "src": "/body-coach/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Anotar refeição",
+      "short_name": "Refeição",
+      "description": "Registrar o que comeu",
+      "url": "/body-coach/nutrition?origem=atalho",
+      "icons": [
+        {
+          "src": "/body-coach/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Falar com o coach",
+      "short_name": "Coach",
+      "description": "Abrir o chat",
+      "url": "/body-coach/chat?origem=atalho",
+      "icons": [
+        {
+          "src": "/body-coach/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Minha evolução",
+      "short_name": "Evolução",
+      "description": "Peso, medidas e fotos",
+      "url": "/body-coach/evolution?origem=atalho",
+      "icons": [
+        {
+          "src": "/body-coach/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    }
+  ]
 }

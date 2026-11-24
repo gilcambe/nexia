@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { falar, fraseDescanso, FRASE_FIM_DESCANSO } from '@/lib/ferramentas/vozCoach';
 import { agendarFimDescanso, cancelarFimDescanso } from '@/lib/avisos';
+import { bloqueadoAtivo, mostrarNaTelaBloqueada } from '@/lib/treinoBloqueado';
 
 export interface DescansoTimerProps {
   segundos: number;
@@ -57,6 +58,13 @@ export default function DescansoTimer({ segundos: initialSegundos, onFinish, onS
     return () => cancelarFimDescanso();
   }, [fimEm, proximo]);
 
+  // Treino com a tela bloqueada: a tela de bloqueio mostra o descanso com barra de tempo.
+  useEffect(() => {
+    const total = Math.max(1, initialRef.current);
+    const hora = new Date(fimEm).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    mostrarNaTelaBloqueada(`Descanso até ${hora}`, proximo ? `Depois: ${proximo}` : 'Body Coach', { total, passou: total - (fimEm - Date.now()) / 1000 });
+  }, [fimEm, proximo]);
+
   useEffect(() => {
     const f = fraseDescanso(segundos);
     if (f) falar(f);
@@ -65,7 +73,7 @@ export default function DescansoTimer({ segundos: initialSegundos, onFinish, onS
   useEffect(() => {
     if (segundos <= 0 && !acabou.current) {
       acabou.current = true;
-      if (document.visibilityState === 'visible') {
+      if (document.visibilityState === 'visible' || bloqueadoAtivo()) {
         avisar();
         falar(FRASE_FIM_DESCANSO);
       }
