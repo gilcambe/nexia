@@ -27,6 +27,7 @@ export interface SetLog {
   porLado?: boolean; // carga de cada lado
   unilateral?: boolean; // um lado por vez
   porTempo?: boolean; // prancha e isometria: reps = segundos
+  tecnica?: 'drop' | 'restpause'; // drop-set (tira carga e segue) ou rest-pause (pausa curta e segue)
 }
 
 export interface PrevSet {
@@ -51,6 +52,7 @@ export interface Exercise {
   weightUnit: string;
   prevSession: { date: string; sets: PrevSet[] };
   sets: SetLog[];
+  biset?: boolean; // feito junto com o próximo, sem descanso entre os dois
 }
 
 export interface Session {

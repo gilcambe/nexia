@@ -10,7 +10,16 @@ export interface NewSet {
   porLado?: boolean; // a carga é de cada lado (ex.: 40 kg em cada halter)
   unilateral?: boolean; // feito um lado por vez
   porTempo?: boolean; // prancha e isometria: reps guarda os segundos
+  tecnica?: 'drop' | 'restpause';
 }
+
+// Técnicas avançadas: um toque troca entre série normal, drop-set e rest-pause.
+const TECNICAS = [
+  { id: 'normal', nome: 'Série normal' },
+  { id: 'drop', nome: 'Drop-set' },
+  { id: 'restpause', nome: 'Rest-pause' },
+] as const;
+type Tecnica = (typeof TECNICAS)[number]['id'];
 
 // Lembra, por exercício, se a carga é de cada lado e se é unilateral (a próxima série já vem marcada).
 const chaveModo = (ex: string) => `bc_carga_modo_${ex}`;
@@ -57,6 +66,7 @@ export default function SetEntry({
   const [rir, setRir] = useState(2);
   const [nota, setNota] = useState('');
   const [anotando, setAnotando] = useState(false);
+  const [tecnica, setTecnica] = useState<Tecnica>('normal');
 
   const tempo = ehPorTempo(exercicio);
   // Campo vazio usa o que aparece nele (a última série ou o alvo): o número na tela é o que vale.
@@ -77,8 +87,11 @@ export default function SetEntry({
   const submit = (e: FormEvent) => {
     e.preventDefault();
     if (!canSubmit) return;
-    enviar({ weight: tempo ? 0 : Number(pesoUsado), reps: Number(repsUsadas), rir, falha: rir === 0, nota: nota.trim() || undefined, ...(tempo ? { porTempo: true } : modo) });
+    const carga = tempo ? 0 : Number(pesoUsado);
+    enviar({ weight: carga, reps: Number(repsUsadas), rir, falha: rir === 0, nota: nota.trim() || undefined, ...(tempo ? { porTempo: true } : modo), ...(tecnica !== 'normal' && !tempo ? { tecnica } : {}) });
     limpar();
+    // Drop-set: a próxima já vem com uns 20% a menos de carga (arredondado de 2,5 em 2,5).
+    if (tecnica === 'drop' && carga > 0) setWeight(String(Math.max(0, Math.round((carga * 0.8) / 2.5) * 2.5)));
   };
 
   const ajustar = (campo: 'weight' | 'reps', delta: number) => {
@@ -139,6 +152,7 @@ export default function SetEntry({
         <div className="mt-2 flex flex-wrap items-center gap-1.5">
           <button type="button" onClick={() => mudarModo({ ...modo, porLado: !modo.porLado })} aria-pressed={modo.porLado} data-testid="carga-lado" className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${modo.porLado ? 'border-primary-500 bg-primary-100 text-primary-800' : 'border-background-300 text-foreground-600'}`}>{modo.porLado ? 'Carga de cada lado' : 'Carga total'}</button>
           <button type="button" onClick={() => mudarModo({ ...modo, unilateral: !modo.unilateral })} aria-pressed={modo.unilateral} data-testid="carga-unilateral" className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${modo.unilateral ? 'border-primary-500 bg-primary-100 text-primary-800' : 'border-background-300 text-foreground-600'}`}>{modo.unilateral ? 'Unilateral' : 'Bilateral'}</button>
+          <button type="button" onClick={() => setTecnica(TECNICAS[(TECNICAS.findIndex((t) => t.id === tecnica) + 1) % TECNICAS.length].id)} aria-pressed={tecnica !== 'normal'} data-testid="tecnica-serie" className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${tecnica !== 'normal' ? 'border-secondary-500 bg-secondary-100 text-secondary-800' : 'border-background-300 text-foreground-600'}`}>{TECNICAS.find((t) => t.id === tecnica)?.nome}</button>
           <button type="button" onClick={() => setAnotando(!anotando)} aria-pressed={anotando || !!nota} className={`ml-auto text-xs font-semibold ${nota ? 'text-primary-700' : 'text-foreground-600'} underline`}>
             <i className="ri-sticky-note-line mr-0.5"></i>{nota ? 'Nota ✓' : 'Nota p/ coach'}
           </button>
