@@ -107,8 +107,6 @@ function varrerProjeto(raiz, opcoes = {}) {
         porExtensao[ext] = (porExtensao[ext] || 0) + 1;
 
         // porPasta count (first level of normalizedRel)
-        const firstSegment = normalizedRel.includes('/') ? normalizedRel.split('/')[0] : '.';
-        // Se o arquivo estiver na raiz, 'firstSegment' será o nome do arquivo, e não '.', corrigindo:
         const folder = normalizedRel.includes('/') ? normalizedRel.split('/')[0] : '.';
         porPasta[folder] = (porPasta[folder] || 0) + 1;
 
