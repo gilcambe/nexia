@@ -404,8 +404,17 @@ function WorkoutFlow({ session, lesoes = [], avisos = [], origem, inicial, onSes
                 </span>
               ))}
             </div>
+            {/* Aquecimento sem tela própria: uma tela a menos até o primeiro exercício. */}
+            {session.warmup.length > 0 && (
+              <details className="mt-4 rounded-xl bg-background-100/70 px-3 py-2" data-testid="aquecimento">
+                <summary className="cursor-pointer text-sm font-semibold text-foreground-800"><i className="ri-fire-line mr-1 text-primary-500"></i>Aquecimento sugerido ({session.warmup.reduce((t, w) => t + Math.round(w.durationSec / 60), 0)} min)</summary>
+                <ul className="mt-2 space-y-1">
+                  {session.warmup.map((w) => <li key={w.name} className="flex justify-between text-sm text-foreground-700"><span>{w.name}</span><span className="text-foreground-500">{Math.round(w.durationSec / 60)} min</span></li>)}
+                </ul>
+              </details>
+            )}
             <button
-              onClick={() => { zerarSessaoFC(); setPhase('WARMUP'); }}
+              onClick={() => { zerarSessaoFC(); setPhase('EXERCISE_ACTIVE'); }}
               className="mt-6 w-full rounded-xl bg-primary-500 px-6 py-3 text-sm font-semibold text-background-50 transition hover:bg-primary-600"
             >
               INICIAR TREINO
