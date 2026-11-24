@@ -45,6 +45,5 @@ test('Cartões principais crescem até o menu (Nutrição, Cardápio, Hoje, Perf
   assert.match(ler('pages/home/components/TodayCard.tsx'), /data-testid="exercicios-hoje"/);
   assert.match(ler('pages/profile/page.tsx'), /flex flex-1 flex-col divide-y/);
   const f = ler('pages/ferramentas/page.tsx');
-  assert.match(f, /const linhas = Math\.max\(4, Math\.ceil\(lista\.length \/ 3\)\)/);
   assert.match(f, /data-testid="grade-ferramentas"/);
 });

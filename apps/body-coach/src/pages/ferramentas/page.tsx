@@ -112,13 +112,11 @@ export default function Ferramentas() {
       </div>
     );
   }
-  // Lista em abas e grade de ícones: cada grupo cabe numa tela do celular, sem rolar.
+  // Lista em abas: ícone pequeno e nome em linhas, como uma lista de ajustes do celular.
   const lista = [
     ...FERRAMENTAS.filter((f) => (GRUPOS_DA_ABA[aba] as readonly string[]).includes(f.grupo)).map((f) => ({ chave: f.id, to: `/ferramentas/${f.id}`, nome: f.nome, desc: f.desc, icone: f.icone })),
     ...(aba === 'mais' ? MAIS_TELAS.map((f) => ({ chave: f.to, to: f.to, nome: f.nome, desc: f.desc, icone: f.icone })) : []),
   ];
-  // Grade de 3 colunas que ocupa a altura até o menu (no mínimo 4 linhas, para os ícones não ficarem gigantes).
-  const linhas = Math.max(4, Math.ceil(lista.length / 3));
   return (
     <div className="tela">
       <header>
@@ -126,14 +124,18 @@ export default function Ferramentas() {
         <p className="text-xs text-foreground-600">Grátis e no seu celular. Toque para abrir.</p>
       </header>
       <Abas abas={ABAS_FERRAMENTAS} atual={aba} onMudar={setAba} rotulo="Grupos de ferramentas" />
-      <div className="grid flex-1 grid-cols-3 gap-1.5 alto:gap-2 sm:grid-cols-4 sm:!grid-rows-none" style={{ gridTemplateRows: `repeat(${linhas}, minmax(min-content, 1fr))` }} data-testid="grade-ferramentas">
+      {/* Lista simples (pedido do dono em 24/11/2026: "poluída"): ícone pequeno e nome, sem cartões */}
+      <ul className="grid grid-cols-1 sm:grid-cols-2 sm:gap-x-6" data-testid="grade-ferramentas">
         {lista.map((f) => (
-          <Link key={f.chave} to={f.to} title={f.desc} className="flex flex-col items-center justify-center gap-1.5 rounded-2xl border border-background-200 bg-background-50 px-1 py-1.5 text-center transition active:scale-[0.98] hover:border-primary-300 alto:py-2">
-            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-100 text-xl text-primary-700 alto:h-12 alto:w-12 alto:text-2xl"><i className={f.icone}></i></span>
-            <span className="text-xs font-semibold leading-tight text-foreground-950 alto:text-sm">{f.nome}</span>
-          </Link>
+          <li key={f.chave} className="border-b border-background-200">
+            <Link to={f.to} title={f.desc} className="flex items-center gap-3 py-2.5 active:opacity-70">
+              <i className={`${f.icone} w-6 text-center text-lg text-primary-600`}></i>
+              <span className="min-w-0 flex-1 truncate text-sm font-medium text-foreground-900">{f.nome}</span>
+              <i className="ri-arrow-right-s-line text-lg text-foreground-400"></i>
+            </Link>
+          </li>
         ))}
-      </div>
+      </ul>
     </div>
   );
 }

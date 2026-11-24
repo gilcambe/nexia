@@ -67,7 +67,6 @@ export default function Nutrition() {
             <MacroSummary meals={meals} targets={targets} />
           </Card>
           <Favoritas />
-          <AjudaRefeicao />
           <Card padding="p-3" className="flex flex-1 flex-col">
             <div className="flex items-center justify-between">
               <h2 className="font-heading text-sm font-semibold text-foreground-950"><i className="ri-restaurant-2-line mr-1 text-secondary-500"></i>Refeições de hoje</h2>
@@ -115,6 +114,8 @@ export default function Nutrition() {
       {/* Ideias: uma ferramenta por vez, escolhida numa grade de 4 (cabe sem rolar). */}
       {aba === 'ferramentas' && (
         <>
+          {/* "O que comer agora" saiu da aba Hoje (tela limpa) e abre aqui primeiro */}
+          <AjudaRefeicao />
           <div className="grid grid-cols-4 gap-1.5" role="group" aria-label="Ferramentas de nutrição">
             {FERRAMENTAS.map((f) => (
               <button key={f.id} type="button" onClick={() => setFerramenta(f.id)} aria-pressed={ferramenta === f.id} className={`flex flex-col items-center gap-0.5 rounded-xl border px-1 py-1.5 text-[11px] font-medium leading-tight ${ferramenta === f.id ? 'border-primary-500 bg-primary-50 text-primary-700' : 'border-background-200 bg-background-50 text-foreground-600'}`}>
