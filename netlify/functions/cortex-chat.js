@@ -214,23 +214,16 @@ async function reservaWorkersAI(system, msgs, ai = globalThis.__NEXIA_AI__) {
   return null;
 }
 
-async function generateImage(prompt, style) {
-  // Grátis primeiro: FLUX schnell pelo binding do Workers AI (o mesmo que lê os anexos, #1671).
-  const ai = globalThis.__NEXIA_AI__;
-  if (ai && typeof ai.run === 'function') {
-    try {
-      const r = await ai.run('@cf/black-forest-labs/flux-1-schnell', { prompt: String(prompt).slice(0, 2000), steps: 4 });
-      if (r && r.image) return { ok: true, url: `data:image/jpeg;base64,${r.image}`, revised_prompt: prompt, modelo: 'FLUX schnell (Workers AI)' };
-    } catch (e) { console.warn('[CORTEX] FLUX falhou:', e && e.message); }
-  }
-  const key = process.env.OPENAI_API_KEY;
-  if (!key) return { ok: false, error: 'não consegui criar a imagem agora. Tente de novo em instantes.' };
+async function generateImage(prompt) {
+  // Grátis sempre: FLUX schnell no Workers AI e, se a cota acabar, no Hugging Face (lib/imagemGratis.js). Nada pago.
   try {
-    const res = await fetch('https://api.openai.com/v1/images/generations', { method: 'POST', headers: { 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ model: 'dall-e-3', prompt, n: 1, size: '1024x1024', style: style === 'artistic' ? 'vivid' : 'natural', response_format: 'url' }) });
-    if (!res.ok) throw new Error(`DALL-E ${res.status}: ${await res.text()}`);
-    const d = await res.json();
-    return { ok: true, url: d.data[0].url, revised_prompt: d.data[0].revised_prompt };
-  } catch (e) { return { ok: false, error: 'Internal error' }; }
+    const r = await require('../../lib/imagemGratis').gerarImagem(globalThis.__NEXIA_AI__, String(prompt).slice(0, 2000), { steps: 4 });
+    const b64 = Buffer.from(r.bytes).toString('base64');
+    return { ok: true, url: `data:${r.tipo};base64,${b64}`, revised_prompt: prompt, modelo: `FLUX schnell (${r.fonte})` };
+  } catch (e) {
+    console.warn('[CORTEX] imagem grátis falhou:', e && e.message);
+    return { ok: false, error: 'as IAs grátis de imagem estão sem cota agora. Tente de novo em alguns minutos.' };
+  }
 }
 
 // ═══ SWARM ════════════════════════════════════════════════════════════

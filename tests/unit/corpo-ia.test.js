@@ -9,7 +9,12 @@ const carregar = () => import(pathToFileURL(path.join(__dirname, '../../cloudfla
 test('corpo-ia: recusa chave fora da lista e devolve JPEG com a chave certa', async () => {
   const { corpoIa } = await carregar();
   assert.equal((await corpoIa(new Request('https://x/api/corpo-ia?k=qualquer coisa'), {})).status, 400);
-  assert.equal((await corpoIa(new Request('https://x/api/corpo-ia?k=m-clara-magro-frente'), {})).status, 503);
+  const antes = globalThis.fetch;
+  globalThis.fetch = async () => new Response('event: error\ndata: null\n\n', { status: 200 });
+  try {
+    // sem Workers AI e sem GPU no Hugging Face: avisa (503) em vez de travar
+    assert.equal((await corpoIa(new Request('https://x/api/corpo-ia?k=m-clara-magro-frente'), {})).status, 503);
+  } finally { globalThis.fetch = antes; }
   let pedido;
   const env = { AI: { run: async (modelo, entrada) => { pedido = { modelo, entrada }; return { image: Buffer.from('jpg').toString('base64') }; } } };
   const r = await corpoIa(new Request('https://x/api/corpo-ia?k=f-negra-alto-lado'), env);
@@ -17,5 +22,5 @@ test('corpo-ia: recusa chave fora da lista e devolve JPEG com a chave certa', as
   assert.equal(r.headers.get('content-type'), 'image/jpeg');
   assert.equal(Buffer.from(await r.arrayBuffer()).toString(), 'jpg');
   assert.match(pedido.modelo, /flux-1-schnell/);
-  assert.match(pedido.entrada.prompt, /woman.*dark black skin.*overweight.*side view/);
+  assert.match(pedido.entrada.prompt, /woman.*dark black skin.*overweight.*no logo.*side view/);
 });
