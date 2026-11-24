@@ -27,7 +27,7 @@ test('Treino em andamento: Registrar e Próximo numa barra fixa acima do menu', 
   const w = ler('pages/workout/page.tsx');
   assert.match(w, /data-testid="concluir-exercicio"/);
   assert.match(w, /data-testid="abrir-mais-opcoes"/);
-  assert.match(w, /hidden aspect-\[16\/9\] max-h-\[16dvh\][^"]*alto:block/);
+  assert.match(w, /data-testid="ver-execucao"/); // vídeo só quando o aluno pede
 });
 
 test('Telas com pouco conteúdo mostram aviso grande no meio, não cartão vazio', () => {

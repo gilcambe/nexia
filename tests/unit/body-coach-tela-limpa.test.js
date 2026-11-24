@@ -38,3 +38,19 @@ test('começar treino: direto no 1º exercício, aquecimento e dicas recolhidos 
   assert.match(w, /id: 'treino-expresso-agora'/);
   assert.match(w, /soConectado=\{phase !== 'PRE_SESSION' && phase !== 'WARMUP' && !ferramentas\}/);
 });
+
+test('treino: vídeo só abre quando o aluno pede (Ver execução)', () => {
+  const w = ler('pages/workout/page.tsx');
+  assert.match(w, /data-testid="ver-execucao"/);
+  assert.doesNotMatch(w, /max-h-\[16dvh\]/); // sem vídeo automático na tela
+  assert.match(w, /showVideo && \(/); // o vídeo grande continua disponível
+});
+
+test('topo sem botões repetidos e página de erro em português', () => {
+  const a = ler('components/feature/AppShell.tsx');
+  assert.doesNotMatch(a, /aria-label="Abrir menu"/); // o "Mais" de baixo já abre o menu
+  assert.doesNotMatch(a, /<FeedbackLink compact \/>/);
+  const n = ler('pages/NotFound.tsx');
+  assert.match(n, /Página não encontrada/);
+  assert.doesNotMatch(n, /has not been generated/);
+});
