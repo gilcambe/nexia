@@ -60,7 +60,7 @@ test('Hoje cabe numa tela: recuperação em uma linha, nutrição com 4 barras n
   assert.match(home, /aria-label="Ver tudo" data-testid="ver-tudo"/);
   assert.match(ler('pages/home/components/RecuperacaoCard.tsx'), /aria-expanded=\{aberto\}/);
   const n = ler('pages/home/components/NutritionCard.tsx');
-  assert.match(n, /grid grid-cols-4 gap-2/);
+  assert.match(n, /simples \? 'grid-cols-2 gap-x-4' : 'grid-cols-4'/);
   assert.match(n, /faltam \$\{remainingCal/);
 });
 
