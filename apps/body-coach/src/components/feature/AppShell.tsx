@@ -205,7 +205,11 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
     // Sem coach (treina sozinho): sem Conversa e Feed da equipe; quem tiver um personal entra pelo link de convite dele.
     : [...navItems.filter((i) => i.to !== '/chat' && i.to !== '/feed'), { to: '/acesso', label: 'Minha assinatura', icon: 'ri-vip-crown-line' }]
   const ehAdmin = useEhDono(!!user);
-  const comAdmin = ehAdmin ? [...itens, { to: '/admin/painel', label: 'Painel do dono', icon: 'ri-dashboard-line' }, { to: '/admin/acessos', label: 'Acessos (admin)', icon: 'ri-shield-user-line' }] : itens;
+  // Na gaveta do celular (aberta pelo "Mais" de baixo) não repete o que já está na barra de baixo.
+  const naGaveta = !!onNavigate;
+  const naBarra = ehCoach ? ['/coach/alunos', '/chat', '/coach/evolucao', '/coach/financeiro'] : ['/', '/nutrition', '/evolution'];
+  const itensMenu = naGaveta ? itens.filter((i) => !naBarra.includes(i.to)) : itens;
+  const comAdmin = ehAdmin ? [...itensMenu, { to: '/admin/painel', label: 'Painel do dono', icon: 'ri-dashboard-line' }, { to: '/admin/acessos', label: 'Acessos (admin)', icon: 'ri-shield-user-line' }] : itensMenu;
 
 
   const handleSignOut = async () => {
@@ -239,7 +243,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
           </NavLink>
         ))}
 
-        {!ehCoach && <button
+        {!ehCoach && !naGaveta && <button
           onClick={() => {
             navigate('/workout');
             onNavigate?.();
@@ -252,7 +256,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
 
         <InstallButton />
 
-{!ehCoach && <button
+{!ehCoach && !naGaveta && <button
           onClick={() => setOpen(true)}
           className="mt-1 flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-foreground-600 transition hover:bg-background-100"
         >

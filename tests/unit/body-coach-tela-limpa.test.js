@@ -54,3 +54,13 @@ test('topo sem botões repetidos e página de erro em português', () => {
   assert.match(n, /Página não encontrada/);
   assert.doesNotMatch(n, /has not been generated/);
 });
+
+test('menu Mais sem repetir a barra de baixo; Ferramentas em lista; Nutrição Hoje sem "O que comer agora"', () => {
+  const a = ler('components/feature/AppShell.tsx');
+  assert.match(a, /const itensMenu = naGaveta \? itens\.filter\(\(i\) => !naBarra\.includes\(i\.to\)\) : itens;/);
+  assert.match(a, /\{!ehCoach && !naGaveta && <button/);
+  const f = ler('pages/ferramentas/page.tsx');
+  assert.match(f, /<ul className="grid grid-cols-1[^"]*" data-testid="grade-ferramentas">/);
+  const n = ler('pages/nutrition/page.tsx');
+  assert.ok(n.indexOf('<AjudaRefeicao') > n.indexOf("aba === 'ferramentas'"), 'O que comer agora fica em Ideias');
+});
