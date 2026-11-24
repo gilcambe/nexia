@@ -235,6 +235,35 @@ export const TREINOS_PRONTOS: TreinoPronto[] = [
     desc: 'Pule 40 s e descanse 20 s. Sem corda, imite o movimento.',
     blocos: [...AQUEC, ...circuito([['Corda: pulo normal', 'Saltos baixos, na ponta dos pés.'], ['Corda: alternando os pés', 'Como uma corrida no lugar.'], ['Corda: o mais rápido que der', 'Tudo!']], 40, 20, 3, 60)],
   },
+  // ── Pausa ativa (quem trabalha sentado): 3 a 4 minutos, na roupa do trabalho, sem suar ──
+  {
+    id: 'pausa-pescoco', nome: 'Pausa no trabalho: pescoço e ombros 3 min', categoria: 'Mobilidade', nivel: 'Iniciante', met: 2,
+    desc: 'Na cadeira ou em pé. Para quem passa o dia no computador ou no celular.',
+    blocos: seq([
+      ['Encolher e soltar os ombros', 30, 'Sobe até a orelha e solta o ar.'], ['Inclinar a cabeça para a direita', 25, 'Orelha em direção ao ombro, sem forçar.'],
+      ['Inclinar a cabeça para a esquerda', 25, 'Devagar.'], ['Queixo para dentro (papada)', 30, 'Leve a cabeça para trás sem olhar para cima.'],
+      ['Abrir o peito: mãos atrás da cabeça', 30, 'Cotovelos para trás, respire fundo.'], ['Círculos com os ombros para trás', 30, 'Grandes e lentos.'],
+    ]),
+  },
+  {
+    id: 'pausa-lombar', nome: 'Pausa no trabalho: costas e lombar 4 min', categoria: 'Mobilidade', nivel: 'Iniciante', met: 2.3,
+    desc: 'Alivia a lombar depois de horas sentado.',
+    blocos: seq([
+      ['Levantar e andar no lugar', 30, 'Solte o corpo.'], ['Gato e vaca em pé (mãos nos joelhos)', 40, 'Arredonde e estenda a coluna devagar.'],
+      ['Rotação do tronco sentado (direita)', 25, 'Mão no encosto da cadeira.'], ['Rotação do tronco sentado (esquerda)', 25, 'Sem forçar.'],
+      ['Inclinar para frente (mãos no chão ou na canela)', 30, 'Joelhos soltos, cabeça pendurada.'], ['Extensão em pé: mãos na lombar', 25, 'Leve o quadril para frente e olhe para cima.'],
+      ['Ponte de glúteo no chão ou agachamento na cadeira', 40, 'Acorda o glúteo que ficou "desligado".'],
+    ]),
+  },
+  {
+    id: 'pausa-pernas', nome: 'Pausa no trabalho: pernas e circulação 3 min', categoria: 'Mobilidade', nivel: 'Iniciante', met: 3,
+    desc: 'Para quem fica muito tempo sentado ou em pé: tira o inchaço e o peso das pernas.',
+    blocos: seq([
+      ['Panturrilha: subir na ponta dos pés', 40, 'Devagar, segure na mesa.'], ['Sentar e levantar da cadeira', 40, 'Sem usar as mãos.'],
+      ['Alongar a frente da coxa (direita)', 20, 'Segure o pé atrás, joelhos juntos.'], ['Alongar a frente da coxa (esquerda)', 20, 'Segure na mesa.'],
+      ['Marcha no lugar com joelho alto', 40, 'Respire fundo.'],
+    ]),
+  },
   // ── HIIT em aparelhos de cardio ──
   {
     id: 'esteira-30-30', nome: 'Esteira HIIT 30/30 · 18 min', categoria: 'Cardio', nivel: 'Intermediário', met: 9,

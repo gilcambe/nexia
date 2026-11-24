@@ -22,13 +22,15 @@ test('Nutrição: Hoje, Cardápio e Ferramentas, sem perder nenhuma parte', () =
   assert.match(ler('pages/nutrition/components/MacroSummary.tsx'), /grid grid-cols-\[auto_1fr\]/, 'anel e barras lado a lado no celular');
 });
 
-test('Evolução: aba Corpo separada; mulher sem foto não vê o corpo de exemplo masculino', () => {
+test('Evolução: aba Corpo separada; mulher vê corpo de mulher no Body Twin (nunca o masculino)', () => {
   const p = ler('pages/evolution/page.tsx');
   assert.match(p, /\{ id: 'corpo', label: 'Corpo'/);
   assert.match(p, /parte="corpo"/);
   const r = ler('pages/evolution/ResumoEvolucao.tsx');
-  assert.match(r, /\{\(!mulher \|\| comFotos\) && <Card/);
   assert.match(r, /perfil\.sexo === 'F'/);
+  assert.match(r, /avatar=\{lerAvatar\(profile\?\.avatar, mulher \? 'F' : perfil\.sexo\)\}/);
+  const t = ler('pages/evolution/components/BodyTwin.tsx');
+  assert.match(t, /if \(avatar\?\.sexo === 'f'\) return imagemDoCorpo\(/);
 });
 
 test('Perfil em 3 abas, com tudo que existia (privacidade e excluir conta incluídos)', () => {

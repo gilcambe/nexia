@@ -25,6 +25,24 @@ export const FAT_LEVEL_IMAGES: FatLevelImage[] = [
   },
 ];
 
+import { chaveDisponivel, type Avatar, type VistaCorpo } from '@/lib/avaliacao/avatar';
+import ANCORAS from '@/lib/avaliacao/corposAncoras.json';
+
+const EXISTE = (k: string) => k in (ANCORAS as Record<string, unknown>);
+const ANTIGAS: Record<VistaCorpo, string> = {
+  frente: `${import.meta.env.BASE_URL}imagens/bt-real-frente.jpg`,
+  lado: `${import.meta.env.BASE_URL}imagens/bt-real-lado.jpg`,
+  costas: `${import.meta.env.BASE_URL}imagens/bt-real-costas.jpg`,
+};
+
+// Corpo do Body Twin conforme o aluno: mulher vê corpo de mulher (com o tom de pele escolhido),
+// no biotipo do % de gordura. Homem continua com as fotos de estúdio originais.
+export function imagemDoCorpo(avatar: Avatar | null | undefined, gordura: number, vista: VistaCorpo, meta = false): string {
+  if (!avatar || avatar.sexo === 'm') return vista === 'frente' ? pickBodyImage(gordura) : ANTIGAS[vista];
+  const chave = chaveDisponivel(meta ? { ...avatar, biotipo: 'auto' } : avatar, gordura, vista, EXISTE);
+  return chave ? `${import.meta.env.BASE_URL}imagens/corpos/${chave}.jpg` : ANTIGAS[vista];
+}
+
 // Escolhe a imagem cujo nível de gordura está mais próximo do % informado.
 export function pickBodyImage(bodyFat: number): string {
   const sorted = [...FAT_LEVEL_IMAGES].sort(
