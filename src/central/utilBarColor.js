@@ -1,6 +1,6 @@
 /**
  * Determina a cor da barra com base no percentual de uso.
- * Amarelo > 70%, Vermelho > 90%. Implementação confirmada.
+ * Amarelo > 70%, Vermelho > 90%.
  * @param {number} percent
  * @returns {string} classe tailwind para cor de fundo
  */
