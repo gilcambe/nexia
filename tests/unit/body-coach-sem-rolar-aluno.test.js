@@ -40,8 +40,11 @@ test('Perfil em 3 abas, com tudo que existia (privacidade e excluir conta inclu�
 
 test('Ficha: só o próximo treino aberto, divisão e lembretes abrem no toque', () => {
   const s = ler('pages/plan/page.tsx');
-  assert.match(s, /const mostra = proximo \|\| aberto === i/);
+  // Próximo treino sempre aberto; os outros dias abrem no toque; o resto fica em "Mais opções".
+  assert.match(s, /const prox = ordem\[0\]/);
+  assert.match(s, /const mostra = aberto === i/);
   assert.match(s, /const \[trocando, setTrocando\] = useState\(false\)/);
+  assert.match(s, /Mais opções<\/summary>/);
   assert.match(s, /Lembretes de treino no celular/);
 });
 
