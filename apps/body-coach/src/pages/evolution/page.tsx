@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import HistoricoTreinos from './HistoricoTreinos';
 import Card from '@/components/base/Card';
 import { useAuth } from '@/components/feature/AuthContext';
 import { useProgressData } from '@/hooks/useProgressData';
@@ -102,6 +103,8 @@ export default function Evolution() {
             </button>
             {rapido && <div className="mt-4"><RegisterProgress userId={user?.id} onSaved={reload} /></div>}
           </Card>
+
+          <HistoricoTreinos uid={user?.id} />
 
         </>
       )}
