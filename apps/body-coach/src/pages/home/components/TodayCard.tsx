@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useCoach } from '@/components/feature/CoachContext';
 import { useAuth } from '@/components/feature/AuthContext';
 import { getUserDoc } from '@/lib/userData';
 import { DIVISOES } from '@/lib/dayPlan';
@@ -12,7 +11,6 @@ import Card from '@/components/base/Card';
 
 export default function TodayCard() {
   const navigate = useNavigate();
-  const { setOpen } = useCoach();
   const { user } = useAuth();
   const [profile, setProfile] = useState<{ onboarding?: Record<string, unknown>; ficha?: Partial<Ficha>; mobility?: string[]; ficha_coach?: unknown; ficha_coach_dia?: number } | null>(null);
   const [trocando, setTrocando] = useState(false);
@@ -58,7 +56,7 @@ export default function TodayCard() {
 
   const title = andamento ? andamento.session.title : sessaoCoach ? sessaoCoach.title : dia ? dia.titulo : 'Treino de hoje';
   const subtitle = andamento
-    ? `Treino em andamento · ${seriesFeitas(andamento)} séries anotadas. Continue de onde parou.`
+    ? `Em andamento · ${seriesFeitas(andamento)} séries feitas`
     : sessaoCoach && fc
       ? `Ficha do coach${fc.coach ? ` ${fc.coach}` : ''} · ${sessaoCoach.exercises.length} exercícios · ~${sessaoCoach.estimatedMinutes} min`
       : treino && ficha
@@ -77,9 +75,9 @@ export default function TodayCard() {
 
       {/* Os exercícios do dia em 2 colunas (só em celular alto; no baixo não cabem sem rolar). */}
       {nomesExercicios.length > 0 && (
-        <ul className="mt-2 hidden flex-1 grid-cols-2 content-center gap-x-2 gap-y-1.5 alto:grid" data-testid="exercicios-hoje">
+        <ul className="mt-2 hidden flex-1 grid-cols-2 content-start gap-x-4 alto:grid" data-testid="exercicios-hoje">
           {nomesExercicios.map((n) => (
-            <li key={n} className="truncate rounded-lg bg-background-100 px-2 py-1.5 text-xs text-foreground-700" title={n}><i className="ri-checkbox-blank-circle-line mr-1 text-[10px] text-primary-500"></i>{n}</li>
+            <li key={n} className="truncate border-b border-background-100 py-1.5 text-sm text-foreground-700" title={n}>{n}</li>
           ))}
         </ul>
       )}
@@ -95,13 +93,6 @@ export default function TodayCard() {
       </div>
 
       <div className="mt-1.5 flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
-        <button
-          onClick={() => setOpen(true)}
-          className="inline-flex items-center gap-1.5 text-sm font-medium text-foreground-700 hover:underline"
-        >
-          <i className="ri-mic-line"></i>
-          Falar com o Coach
-        </button>
       {opcoes.length > 1 && !andamento && (
         <div>
           <button

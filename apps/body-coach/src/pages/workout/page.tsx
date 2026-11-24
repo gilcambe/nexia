@@ -224,6 +224,7 @@ function WorkoutFlow({ session, lesoes = [], avisos = [], origem, inicial, onSes
   }, [user?.id]);
   const [showVideo, setShowVideo] = useState(false);
   const [maisOpcoes, setMaisOpcoes] = useState(false);
+  const [ferramentas, setFerramentas] = useState(false);
   const [showSwapModal, setShowSwapModal] = useState(false);
 
   const exercise = session.exercises[exIndex] ?? session.exercises[0];
@@ -404,10 +405,16 @@ function WorkoutFlow({ session, lesoes = [], avisos = [], origem, inicial, onSes
     <div className="mx-auto max-w-3xl">
       {/* top progress */}
       <div className="mb-2">
-        <div className="flex items-center justify-between text-sm">
-          <span className="font-heading font-semibold text-foreground-950">{session.title}</span>
-          <span className="text-foreground-500">
-            {exIndex + 1}/{session.exercises.length} exercícios
+        <div className="flex items-center justify-between gap-2 text-sm">
+          <span className="min-w-0 truncate font-heading font-semibold text-foreground-950">{session.title}</span>
+          <span className="flex shrink-0 items-center gap-2 text-foreground-500">
+            {exIndex + 1}/{session.exercises.length}
+            {phase !== 'PRE_SESSION' && phase !== 'SESSION_COMPLETE' && (
+              <button type="button" onClick={() => setFerramentas((v) => !v)} aria-expanded={ferramentas} data-testid="abrir-ferramentas-treino"
+                className={`inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-semibold ${ferramentas ? 'bg-primary-100 text-primary-800' : 'border border-background-200 text-foreground-700'}`}>
+                <i className="ri-music-2-line"></i>Música<i className={ferramentas ? 'ri-arrow-up-s-line' : 'ri-arrow-down-s-line'}></i>
+              </button>
+            )}
           </span>
         </div>
         <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-background-200">
@@ -418,9 +425,9 @@ function WorkoutFlow({ session, lesoes = [], avisos = [], origem, inicial, onSes
         </div>
       </div>
 
-      {/* barra de música/entretenimento/coach: fica no fluxo da página, nunca por cima dos botões */}
+      {/* música, vídeo, voz, bloqueio e coach: fechados em "Música e mais" (dono, 24/11/2026: tela poluída). Ficam montados (só escondidos) para a música não parar. */}
       {phase !== 'PRE_SESSION' && phase !== 'SESSION_COMPLETE' && (
-        <div className="mb-2 flex items-center gap-1.5 overflow-x-auto pb-0.5 [&>*]:shrink-0" data-testid="barra-treino">
+        <div className={`mb-2 flex-wrap items-center gap-1.5 ${ferramentas ? 'flex' : 'hidden'}`} data-testid="barra-treino">
           <MusicaTreino variante="pilula" />
           <EntretenimentoTreino variante="pilula" />
           {vozDisponivel() && (
@@ -530,8 +537,7 @@ function WorkoutFlow({ session, lesoes = [], avisos = [], origem, inicial, onSes
             {parceiroBiset && <p className="mt-0.5 inline-flex items-center gap-1 rounded-full bg-secondary-100 px-2 py-0.5 text-xs font-semibold text-secondary-800" data-testid="selo-biset"><i className="ri-links-line"></i>Bi-set com {parceiroBiset.name}</p>}
             {cadencia && <Cadencia onFechar={() => setCadencia(false)} />}
             <p className="mt-0.5 text-sm leading-snug text-foreground-600">
-              <strong className="text-foreground-900">Série {Math.min(currentSets.length + 1, exercise.targetSets || 3)} de {exercise.targetSets || 3}</strong> · {ehPorTempo(exercise.name) ? 'por tempo' : `${exercise.targetReps} reps`} · descanso {exercise.restSec || 60} s
-              {rirDaNota(exercise.note) !== null && !ehPorTempo(exercise.name) && <> · deixe {rirDaNota(exercise.note)} sobrando</>}
+              <strong className="text-foreground-900">Série {Math.min(currentSets.length + 1, exercise.targetSets || 3)} de {exercise.targetSets || 3}</strong> · {ehPorTempo(exercise.name) ? 'por tempo' : `${exercise.targetReps} reps`}
             </p>
 
             {/* Demonstração pequena (toque para pausar); grande em "Ver execução" */}
@@ -604,9 +610,6 @@ function WorkoutFlow({ session, lesoes = [], avisos = [], origem, inicial, onSes
                   onFinish={() => setResting(false)}
                   onSkip={() => setResting(false)}
                 />
-                <button type="button" onClick={() => setExtraModo('intervalo')} className="mt-1.5 text-sm font-semibold text-secondary-800 underline" data-testid="fiz-no-intervalo">
-                  <i className="ri-add-line mr-1"></i>Fiz algo no descanso (ex.: abdominal)
-                </button>
               </div>
             )}
 
@@ -626,6 +629,8 @@ function WorkoutFlow({ session, lesoes = [], avisos = [], origem, inicial, onSes
                 weightUnit={exercise.weightUnit}
                 exercicio={exercise.name}
                 targetReps={exercise.targetReps}
+                ajustes={maisOpcoes}
+                metaSobra={ehPorTempo(exercise.name) ? null : rirDaNota(exercise.note)}
                 sugestao={exercise.sets.length === 0 && !ehPorTempo(exercise.name) ? sugerirCarga(historicoSeries[exercise.name], exercise.targetReps) : null}
                 ultima={(() => { const l = currentSets[currentSets.length - 1] ?? exercise.sets[exercise.sets.length - 1]; return l ? { weight: l.weight, reps: l.reps } : null; })()}
                 acaoAoLado={

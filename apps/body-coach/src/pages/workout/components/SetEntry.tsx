@@ -46,6 +46,8 @@ export default function SetEntry({
   exercicio = '',
   onSubmit,
   acaoAoLado,
+  ajustes = false,
+  metaSobra = null,
 }: {
   minWeight: number;
   maxWeight: number;
@@ -57,13 +59,17 @@ export default function SetEntry({
   onSubmit: (set: NewSet) => void;
   // Botão que fica ao lado de "Registrar" na barra fixa (ex.: Próximo exercício).
   acaoAoLado?: ReactNode;
+  // Carga de cada lado, unilateral, técnica e nota só aparecem com "Mais opções" aberto (tela limpa).
+  ajustes?: boolean;
+  // "Deixe N sobrando" da ficha: aparece como meta na pergunta de quantas ainda dava.
+  metaSobra?: number | null;
 }) {
   const [modo, setModo] = useState(() => modoSalvo(exercicio, weightUnit === 'kg/lado'));
   const mudarModo = (m: { porLado: boolean; unilateral: boolean }) => { setModo(m); try { localStorage.setItem(chaveModo(exercicio), JSON.stringify(m)); } catch { /* sem armazenamento */ } };
   const unidade = weightUnit === 'kg/lado' ? 'kg' : weightUnit;
   const [weight, setWeight] = useState('');
   const [reps, setReps] = useState('');
-  const [rir, setRir] = useState(2);
+  const [rir, setRir] = useState(metaSobra ?? 2);
   const [nota, setNota] = useState('');
   const [anotando, setAnotando] = useState(false);
   const [tecnica, setTecnica] = useState<Tecnica>('normal');
@@ -71,8 +77,10 @@ export default function SetEntry({
   const tempo = ehPorTempo(exercicio);
   // Campo vazio usa o que aparece nele (a última série ou o alvo): o número na tela é o que vale.
   const topoAlvo = Number(/(\d+)\D*$/.exec(targetReps)?.[1]) || 12;
-  const pesoUsado = weight !== '' ? weight : ultima ? String(ultima.weight) : '';
-  const repsUsadas = reps !== '' ? reps : String(ultima?.reps ?? (tempo ? 30 : topoAlvo));
+  // Sem série anterior, a sugestão de progressão já vem no campo: um toque em Registrar e pronto.
+  const base = ultima ?? sugestao ?? null;
+  const pesoUsado = weight !== '' ? weight : base ? String(base.weight) : '';
+  const repsUsadas = reps !== '' ? reps : String(base?.reps ?? (tempo ? 30 : topoAlvo));
   const canSubmit = (tempo || pesoUsado !== '') && repsUsadas !== '';
   // Um toque só por série: toques repetidos em menos de 2 s não registram de novo.
   const ultimoToque = useRef(0);
@@ -82,7 +90,7 @@ export default function SetEntry({
   const [agora, setAgora] = useState(0);
   useEffect(() => { if (inicio === null) return; const t = setInterval(() => setAgora(Date.now()), 250); return () => clearInterval(t); }, [inicio]);
   const cronometro = () => { if (inicio === null) { setInicio(Date.now()); setAgora(Date.now()); } else { setReps(String(Math.round((Date.now() - inicio) / 1000))); setInicio(null); } };
-  const limpar = () => { setWeight(''); setReps(''); setRir(2); setNota(''); setAnotando(false); };
+  const limpar = () => { setWeight(''); setReps(''); setRir(metaSobra ?? 2); setNota(''); setAnotando(false); };
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
@@ -96,7 +104,7 @@ export default function SetEntry({
 
   const ajustar = (campo: 'weight' | 'reps', delta: number) => {
     const set = campo === 'weight' ? setWeight : setReps;
-    const atual = Number(campo === 'weight' ? weight : reps) || (ultima ? (campo === 'weight' ? ultima.weight : ultima.reps) : 0);
+    const atual = Number(campo === 'weight' ? weight : reps) || (base ? (campo === 'weight' ? base.weight : base.reps) : 0);
     set(String(Math.max(0, Math.round((atual + delta) * 100) / 100)));
   };
   // Compacto: carga e repetições lado a lado no celular, para registrar sem rolar a tela.
@@ -105,17 +113,6 @@ export default function SetEntry({
 
   return (
     <div>
-      {sugestao && (
-        <div className="mb-2 flex items-center gap-2 rounded-xl border border-primary-200 bg-primary-50 px-2.5 py-1.5" title={sugestao.motivo}>
-          <p className="min-w-0 flex-1 text-sm font-semibold text-primary-700"><i className="ri-line-chart-line mr-1"></i>Sugestão: {sugestao.weight} {weightUnit} × {sugestao.reps}</p>
-          <button type="button" onClick={() => { setWeight(String(sugestao.weight)); setReps(String(sugestao.reps)); }} className="shrink-0 rounded-lg bg-primary-500 px-3 py-1.5 text-sm font-semibold text-background-50 active:scale-95">Usar</button>
-        </div>
-      )}
-      {ultima && (
-        <button type="button" onClick={() => { enviar({ weight: ultima.weight, reps: ultima.reps, rir, falha: rir === 0, nota: nota.trim() || undefined, ...(tempo ? { porTempo: true } : modo) }); limpar(); }} className="mb-2 w-full rounded-xl bg-primary-100 px-4 py-2.5 text-base font-bold text-primary-800 active:scale-[0.98]" data-testid="repetir-serie">
-          <i className="ri-repeat-line mr-1"></i>{tempo ? `Repetir: ${ultima.reps} s` : `Repetir: ${ultima.weight} ${unidade}${modo.porLado ? ' cada lado' : ''} × ${ultima.reps}`}
-        </button>
-      )}
       <form onSubmit={submit}>
         {tempo ? (
           <label className="block">
@@ -133,10 +130,10 @@ export default function SetEntry({
         <>
         <div className="grid grid-cols-2 gap-2">
           <label className="block">
-            <span className="text-sm font-semibold text-foreground-600">Carga ({unidade}){modo.porLado ? '/lado' : ''}</span>
+            <span className="text-sm font-semibold text-foreground-600">Carga ({unidade}){modo.porLado ? '/lado' : ''}{!ultima && sugestao && weight === '' && <span className="ml-1 font-normal text-primary-700" title={sugestao.motivo}>· sugerida</span>}</span>
             <span className="mt-1 flex items-center gap-1">
               <button type="button" onClick={() => ajustar('weight', -2.5)} className={mais} aria-label="Menos 2,5 de carga">−</button>
-              <input type="number" inputMode="decimal" value={weight} onChange={(e) => setWeight(e.target.value)} placeholder={ultima ? String(ultima.weight) : 'kg'} aria-label={`Carga (${weightUnit}) de ${minWeight} a ${maxWeight}`} className={campo} />
+              <input type="number" inputMode="decimal" value={weight} onChange={(e) => setWeight(e.target.value)} placeholder={base ? String(base.weight) : 'kg'} aria-label={`Carga (${weightUnit}) de ${minWeight} a ${maxWeight}`} className={campo} />
               <button type="button" onClick={() => ajustar('weight', 2.5)} className={mais} aria-label="Mais 2,5 de carga">+</button>
             </span>
           </label>
@@ -149,18 +146,18 @@ export default function SetEntry({
             </span>
           </label>
         </div>
-        <div className="mt-2 flex flex-wrap items-center gap-1.5">
+        {ajustes && <div className="mt-2 flex flex-wrap items-center gap-1.5" data-testid="ajustes-serie">
           <button type="button" onClick={() => mudarModo({ ...modo, porLado: !modo.porLado })} aria-pressed={modo.porLado} data-testid="carga-lado" className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${modo.porLado ? 'border-primary-500 bg-primary-100 text-primary-800' : 'border-background-300 text-foreground-600'}`}>{modo.porLado ? 'Carga de cada lado' : 'Carga total'}</button>
           <button type="button" onClick={() => mudarModo({ ...modo, unilateral: !modo.unilateral })} aria-pressed={modo.unilateral} data-testid="carga-unilateral" className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${modo.unilateral ? 'border-primary-500 bg-primary-100 text-primary-800' : 'border-background-300 text-foreground-600'}`}>{modo.unilateral ? 'Unilateral' : 'Bilateral'}</button>
           <button type="button" onClick={() => setTecnica(TECNICAS[(TECNICAS.findIndex((t) => t.id === tecnica) + 1) % TECNICAS.length].id)} aria-pressed={tecnica !== 'normal'} data-testid="tecnica-serie" className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${tecnica !== 'normal' ? 'border-secondary-500 bg-secondary-100 text-secondary-800' : 'border-background-300 text-foreground-600'}`}>{TECNICAS.find((t) => t.id === tecnica)?.nome}</button>
           <button type="button" onClick={() => setAnotando(!anotando)} aria-pressed={anotando || !!nota} className={`ml-auto text-xs font-semibold ${nota ? 'text-primary-700' : 'text-foreground-600'} underline`}>
             <i className="ri-sticky-note-line mr-0.5"></i>{nota ? 'Nota ✓' : 'Nota p/ coach'}
           </button>
-        </div>
+        </div>}
         </>
         )}
         {!tempo && <>
-        <p className="mt-2 text-sm font-semibold text-foreground-600">Quantas repetições ainda dava?</p>
+        <p className="mt-2 text-sm font-semibold text-foreground-600">Quantas ainda dava?{metaSobra != null && <span className="font-normal text-foreground-500"> (meta: {metaSobra})</span>}</p>
         <div className="mt-1 grid grid-cols-4 gap-1.5" role="radiogroup" aria-label="Quantas repetições ainda dava">
           {SOBRA.map((o) => (
             <button key={o.rir} type="button" role="radio" aria-checked={rir === o.rir} aria-label={o.nome} onClick={() => setRir(o.rir)}
@@ -170,7 +167,7 @@ export default function SetEntry({
           ))}
         </div>
         </>}
-        {tempo && (
+        {tempo && ajustes && (
           <button type="button" onClick={() => setAnotando(!anotando)} aria-pressed={anotando || !!nota} className={`mt-3 text-sm font-semibold ${nota ? 'text-primary-700' : 'text-foreground-600'} underline`}>
             <i className="ri-sticky-note-line mr-1"></i>{nota ? 'Nota para o coach ✓' : 'Anotar algo para o coach'}
           </button>
@@ -187,7 +184,7 @@ export default function SetEntry({
             data-testid="registrar-serie"
           >
             <i className="ri-check-line text-xl"></i>
-            <span className="truncate">{canSubmit ? (tempo ? `Registrar ${repsUsadas} s` : `Registrar ${pesoUsado} ${unidade} × ${repsUsadas}`) : 'Coloque a carga'}</span>
+            <span className="truncate">{canSubmit ? (tempo ? `Registrar ${repsUsadas} s` : `Registrar ${pesoUsado} × ${repsUsadas}`) : 'Digite a carga'}</span>
           </button>
           {acaoAoLado}
         </div>

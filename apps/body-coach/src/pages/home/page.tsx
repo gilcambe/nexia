@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/components/feature/AuthContext';
-import { useCoach } from '@/components/feature/CoachContext';
 import { useReadiness } from '@/components/feature/ReadinessContext';
 import DailyCheckIn from './components/DailyCheckIn';
 import TodayCard from './components/TodayCard';
@@ -16,10 +15,10 @@ import ConviteTestador from './components/ConviteTestador';
 import PedirAvaliacao from '@/components/feature/PedirAvaliacao';
 import { guardarVerTudo, proximaAcao, verTudoGuardado } from '@/lib/modoSimples';
 
-// Tela Hoje. Modo simples (padrão): 3 cartões (treino de hoje, refeição de hoje, próxima ação) e "Ver tudo".
+// Tela Hoje. Modo simples (padrão, pedido do dono em 24/11/2026: "poluída"): só treino, comida (calorias, proteína, água) e próxima ação.
+// Coach fica no menu de baixo; Convidar e Recuperação ficam em "Ver tudo".
 // "Ver tudo" mostra a tela completa (treino, dieta, água, check-in, avisos e "Mais"). O resto fica em Ferramentas.
 export default function Home() {
-  const { setOpen } = useCoach();
   const { profile, user, loading } = useAuth();
   const { result, hasCheckedToday, loading: carregandoCheckin } = useReadiness();
   const navigate = useNavigate();
@@ -55,20 +54,6 @@ export default function Home() {
           <p className="text-xs font-medium capitalize text-foreground-500">{dateStr}</p>
         </div>
         <div className="flex shrink-0 items-center gap-1.5">
-        <button
-          onClick={() => setConvidando((v) => !v)}
-          className="inline-flex shrink-0 items-center gap-1 rounded-full border border-primary-300 px-2.5 py-1.5 text-xs font-semibold text-primary-700 transition hover:bg-primary-100"
-        >
-          <i className="ri-user-add-line"></i>
-          Convidar
-        </button>
-        <button
-          onClick={() => setOpen(true)}
-          className="inline-flex shrink-0 items-center gap-1 rounded-full bg-primary-500 px-2.5 py-1.5 text-xs font-semibold text-background-50 transition hover:bg-primary-600"
-        >
-          <i className="ri-robot-2-line"></i>
-          <span className="sr-only min-[400px]:not-sr-only">Coach</span>
-        </button>
         {!verTudo && (
           <button type="button" onClick={() => mudarVerTudo(true)} className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-background-200 text-foreground-700" aria-label="Ver tudo" data-testid="ver-tudo">
             <i className="ri-layout-grid-line"></i>
@@ -77,14 +62,11 @@ export default function Home() {
         </div>
       </header>
 
-      {convidando && <ConvidarAmigo onFechar={() => setConvidando(false)} />}
-
       {!verTudo ? (
         <>
           <AvisoAnamnese />
           <TodayCard />
-          <RecuperacaoCard />
-          <NutritionCard />
+          <NutritionCard simples />
           {(() => {
             const a = proximaAcao({ onboarding: !!profile?.onboarding, checkinHoje: hasCheckedToday || carregandoCheckin, hora: now.getHours() });
             const corpo = (
@@ -131,6 +113,10 @@ export default function Home() {
           <i className="ri-arrow-down-s-line text-xl text-foreground-400 transition group-open:rotate-180"></i>
         </summary>
         <div className="space-y-5 px-4 pb-4">
+          <button type="button" onClick={() => setConvidando((v) => !v)} className="inline-flex items-center gap-1 rounded-full border border-primary-300 px-3 py-2 text-sm font-semibold text-primary-700">
+            <i className="ri-user-add-line"></i>Convidar
+          </button>
+          {convidando && <ConvidarAmigo onFechar={() => setConvidando(false)} />}
           <PedirAvaliacao />
           <LigarAvisos />
           <ConviteTestador />

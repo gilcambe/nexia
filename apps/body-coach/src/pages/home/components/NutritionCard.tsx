@@ -14,14 +14,16 @@ function Bar({ current, target }: { current: number; target: number }) {
   );
 }
 
-export default function NutritionCard() {
+export default function NutritionCard({ simples = false }: { simples?: boolean }) {
   const { water, waterGoal, totals, targets, addWater } = useNutrition();
 
   const macroList = [
     { key: 'Calorias', current: totals.calories, target: targets.calories },
-    { key: 'Proteína', current: totals.protein, target: targets.protein },
-    { key: 'Carbo', current: totals.carbs, target: targets.carbs },
-    { key: 'Gordura', current: totals.fat, target: targets.fat },
+    { key: 'Proteína (g)', current: totals.protein, target: targets.protein },
+    ...(simples ? [] : [
+      { key: 'Carbo', current: totals.carbs, target: targets.carbs },
+      { key: 'Gordura', current: totals.fat, target: targets.fat },
+    ]),
   ];
 
   const remainingCal = targets.calories - totals.calories;
@@ -33,12 +35,12 @@ export default function NutritionCard() {
       <div className="mb-1.5 flex items-center justify-between gap-2">
         <h2 className="min-w-0 truncate font-heading text-sm font-semibold text-foreground-950">
           <i className="ri-restaurant-line mr-1 text-secondary-500"></i>Nutrição
-          <span className="ml-1 text-xs font-normal text-foreground-500">· {remainingCal > 0 ? `faltam ${remainingCal.toLocaleString('pt-BR')} kcal${remainingProtein > 0 ? ` e ${remainingProtein} g de proteína` : ''}` : 'meta batida'}</span>
+          {!simples && <span className="ml-1 text-xs font-normal text-foreground-500">· {remainingCal > 0 ? `faltam ${remainingCal.toLocaleString('pt-BR')} kcal${remainingProtein > 0 ? ` e ${remainingProtein} g de proteína` : ''}` : 'meta batida'}</span>}
         </h2>
         <Link to="/nutrition" className="shrink-0 text-xs font-semibold text-primary-700">Ver dieta ›</Link>
       </div>
 
-      <div className="grid grid-cols-4 gap-2">
+      <div className={`grid gap-2 ${simples ? 'grid-cols-2 gap-x-4' : 'grid-cols-4'}`}>
         {macroList.map((m) => (
           <div key={m.key} className="min-w-0">
             <p className="truncate text-[10px] text-foreground-500">{m.key}</p>
