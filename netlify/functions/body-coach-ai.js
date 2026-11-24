@@ -24,6 +24,8 @@ const PRODUTO = (tipo) => `${PRODUTOS_SYS[tipo] || PRODUTOS_SYS.suplemento} Resp
 const RECEITA = 'Você é um nutricionista no app NEXIA Body Coach e cria UMA receita simples, barata e gostosa da culinária brasileira, em português do Brasil. Use preferencialmente os ingredientes que a pessoa disser ter; se não disser, use itens comuns de mercado. Encaixe nas calorias e proteína que ainda faltam no dia (contexto) e respeite objetivo, restrições e limitações. Formato exato, sem enfeites: primeira linha só o nome da receita; depois "Tempo: X min | Rende: N porção(ões)"; depois "Ingredientes:" com um item por linha começando com "- "; depois "Modo de preparo:" com passos numerados (máximo 6, curtos); por fim "Aproximado por porção: X kcal, Y g de proteína". Não use markdown, asteriscos nem títulos. Não prescreva remédios nem trate doenças.';
 const IMPORTAR = 'Você recebe o texto de uma lista, relatório ou exportação de alunos de outro aplicativo de treino (MFit, Tecnofit, Treinus etc.). Devolva SOMENTE um JSON, sem markdown, no formato [{"nome":"...","email":"...","telefone":"..."}] com um item por aluno. Use string vazia no que não aparecer. Não invente alunos, e-mails nem telefones; ignore títulos, datas, valores e linhas que não sejam de aluno.';
 // Ficha de treino lida de PDF/foto (app: importar ficha). A conversão final e os limites ficam em importarFicha.ts.
+// Dieta do nutricionista lida de PDF, foto ou texto colado (app: Nutrição > importar plano). A conversão final fica em dietaDoJson.ts.
+const DIETA = 'Você recebe o texto de um plano alimentar passado por nutricionista (lido de PDF, foto ou colado do WhatsApp; pode ter erros de leitura). Devolva SOMENTE um JSON, sem markdown, no formato {"refeicoes":[{"horario":"07:00","nome":"Café da manhã","itens":[{"nome":"Pão integral","qtd":"2 fatias (50 g)"}],"trocas":[{"de":"Pão integral","por":["Tapioca 40 g"]}],"obs":["..."],"macros":{"kcal":0,"proteina":0,"carbo":0,"gordura":0}}],"totais":{"kcal":0,"proteina":0,"carbo":0,"gordura":0},"orientacoes":["..."]}. Copie fielmente alimentos e quantidades (com gramas quando houver); as opções de substituição vão em "trocas". Não invente alimento, quantidade nem número: se o plano não trouxer macros ou totais, deixe 0. horario no formato HH:MM ou vazio.';
 const FICHA = 'Você recebe o texto de uma ficha de treino (lida de PDF ou foto, pode ter erros de leitura). Devolva SOMENTE um JSON, sem markdown, no formato {"nome":"...","obs":"...","dias":[{"titulo":"...","exercicios":[{"nome":"...","series":3,"reps":"10-12","descanso":60,"carga":"","obs":""}]}]}. Não invente exercícios; corrija só erros óbvios de leitura no nome; descanso em segundos.';
 const resposta = (event, statusCode, body) => ({ statusCode, headers: makeHeaders(event), body: JSON.stringify(body) });
 
@@ -69,7 +71,8 @@ exports.handler = async (event) => {
   try { body = JSON.parse(event.body || '{}'); } catch { return resposta(event, 400, { error: 'Pedido inválido.' }); }
   const message = typeof body.message === 'string' ? body.message.trim() : '';
   const importar = body.task === 'importar';
-  const ficha = body.task === 'ficha';
+  const ficha = body.task === 'ficha' || body.task === 'dieta';
+  const dieta = body.task === 'dieta';
   const limiteMsg = importar || ficha ? 12000 : 3000;
   if (message.length < 1 || message.length > limiteMsg) return resposta(event, 400, { error: `Escreva uma mensagem de até ${limiteMsg} caracteres.` });
   const role = Object.prototype.hasOwnProperty.call(PAPEIS, body.role) ? body.role : 'coach';
@@ -80,7 +83,7 @@ exports.handler = async (event) => {
   const sincera = body.task === 'avaliacao';
   const produto = body.task === 'produto';
   if (cardio && typeof body.image !== 'string') return resposta(event, 400, { error: 'Mande a foto do painel.' });
-  const system = `${ficha ? FICHA : importar ? IMPORTAR : cardio ? CARDIO : sincera ? SINCERA : produto ? PRODUTO(body.tipo) : receita ? RECEITA : PAPEIS[role]}\nContexto do aluno: ${contexto}`;
+  const system = `${dieta ? DIETA : ficha ? FICHA : importar ? IMPORTAR : cardio ? CARDIO : sincera ? SINCERA : produto ? PRODUTO(body.tipo) : receita ? RECEITA : PAPEIS[role]}\nContexto do aluno: ${contexto}`;
   // Últimas mensagens da conversa (até 10), para o coach lembrar o que o aluno já disse.
   const historico = Array.isArray(body.history) ? body.history.slice(-10).filter((h) => h && (h.role === 'user' || h.role === 'assistant') && typeof h.content === 'string' && h.content.trim()).map((h) => ({ role: h.role, content: h.content.trim().slice(0, 600) })) : [];
   const mensagens = [...historico, { role: 'user', content: message }];
@@ -115,7 +118,7 @@ exports.handler = async (event) => {
       if (!cap.available || (images && !cap.vision)) continue;
       // Cada modelo tem no máximo 12 s, e nunca mais do que o tempo que ainda falta.
       const limite = Math.min(TEMPO_MODELO_MS, restante);
-      const out = await Promise.race([router.chat(d, { system, messages: mensagens, maxTokens: importar || ficha ? 2500 : sincera || produto ? 1600 : images ? 1200 : receita ? 2000 : 700, ...(conversa ? { temperature: 0.85 } : {}), ...(images ? { images } : {}) }), new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), limite))]);
+      const out = await Promise.race([router.chat(d, { system, messages: mensagens, maxTokens: dieta ? 3500 : importar || ficha ? 2500 : sincera || produto ? 1600 : images ? 1200 : receita ? 2000 : 700, ...(conversa ? { temperature: 0.85 } : {}), ...(images ? { images } : {}) }), new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), limite))]);
       if (out && out.text) return resposta(event, 200, { reply: out.text, role, model: d.model });
     } catch { /* tenta o próximo modelo */ }
   }

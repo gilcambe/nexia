@@ -11,6 +11,10 @@ import PlanoNutricionista from './components/PlanoNutricionista';
 import LembretesRefeicoes from './components/LembretesRefeicoes';
 import AjusteSemanal from './components/AjusteSemanal';
 import ReceitaIA from './components/ReceitaIA';
+import ReceitasProntas from './components/ReceitasProntas';
+import TrocarAlimentoLivre from './components/TrocarAlimentoLivre';
+import ComerFora from './components/ComerFora';
+import BebidaFimDeSemana from './components/BebidaFimDeSemana';
 import { RefeicaoRapida } from './components/RefeicaoRapida';
 import Favoritas from './components/Favoritas';
 import AjudaRefeicao from './components/AjudaRefeicao';
@@ -24,9 +28,13 @@ const ABAS = [
 
 const FERRAMENTAS = [
   { id: 'rapida', label: 'Comi algo', icone: 'ri-restaurant-line' },
-  { id: 'receita', label: 'Receita', icone: 'ri-bowl-line' },
+  { id: 'receita', label: 'Receita IA', icone: 'ri-bowl-line' },
   { id: 'ajuste', label: 'Ajuste', icone: 'ri-scales-3-line' },
   { id: 'tendencia', label: 'Semana', icone: 'ri-line-chart-line' },
+  { id: 'receitas', label: 'Receitas fit', icone: 'ri-book-2-line' },
+  { id: 'trocar', label: 'Trocar', icone: 'ri-arrow-left-right-line' },
+  { id: 'fora', label: 'Comer fora', icone: 'ri-store-2-line' },
+  { id: 'bebida', label: 'Bebida', icone: 'ri-goblet-line' },
 ] as const;
 
 export default function Nutrition() {
@@ -116,6 +124,10 @@ export default function Nutrition() {
           </div>
           {ferramenta === 'rapida' && <RefeicaoRapida />}
           {ferramenta === 'receita' && <ReceitaIA />}
+          {ferramenta === 'receitas' && <ReceitasProntas />}
+          {ferramenta === 'trocar' && <TrocarAlimentoLivre />}
+          {ferramenta === 'fora' && <ComerFora />}
+          {ferramenta === 'bebida' && <BebidaFimDeSemana />}
           {ferramenta === 'ajuste' && <AjusteSemanal />}
           {ferramenta === 'tendencia' && (
             <Card padding="p-3">
