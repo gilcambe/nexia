@@ -23,10 +23,11 @@ export const NO_INTERVALO = ['Abdominal', 'Prancha', 'Panturrilha', 'Alongamento
 const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim();
 
 // Sugestões enquanto digita: primeiro o banco do app (tem demonstração), depois os nomes comuns.
-export function sugerirNomes(texto: string, max = 6): string[] {
+// `extras`: nomes dos exercícios da comunidade (salvos por outros usuários).
+export function sugerirNomes(texto: string, max = 6, extras: string[] = []): string[] {
   const q = norm(texto);
   if (q.length < 2) return [];
-  const todos = [...EXERCICIOS.map((e) => e.nome), ...NOMES_COMUNS];
+  const todos = [...EXERCICIOS.map((e) => e.nome), ...NOMES_COMUNS, ...extras];
   const comeca = todos.filter((n) => norm(n).startsWith(q));
   const contem = todos.filter((n) => !norm(n).startsWith(q) && norm(n).includes(q));
   return [...new Set([...comeca, ...contem])].slice(0, max);
@@ -34,6 +35,10 @@ export function sugerirNomes(texto: string, max = 6): string[] {
 
 // Exercício do banco com esse nome exato (ignora acento e maiúscula), se houver.
 export const doBanco = (nome: string) => EXERCICIOS.find((e) => norm(e.nome) === norm(nome));
+
+// Nome que o app já conhece (banco ou lista comum, mais os extras): esses não vão para a comunidade.
+export const nomeConhecido = (nome: string, extras: string[] = []) =>
+  [...EXERCICIOS.map((e) => e.nome), ...NOMES_COMUNS, ...extras].some((n) => norm(n) === norm(nome));
 
 // Monta o exercício escrito pelo aluno no formato do treino. Herda séries/reps/descanso de `base` (o que estava no lugar).
 export function exercicioLivre(nome: string, base?: Exercise, idsNoTreino: string[] = []): Exercise {
