@@ -1,3 +1,4 @@
+import { lerAvatar } from '@/lib/avaliacao/avatar';
 import { useNavigate } from 'react-router-dom';
 import Card from '@/components/base/Card';
 import EstadoVazio from '@/components/base/EstadoVazio';
@@ -114,9 +115,9 @@ export default function ResumoEvolucao({
     // No resumo sem avaliação, o cartão "Última avaliação" é que ocupa o espaço (não o lembrete do fim).
     <div className={`tela ${parte === 'resumo' ? '' : 'tela-fim'}`}>
       {parte === 'corpo' && (<>
-      {/* Body Twin (corpo realista): usa a medição real mais recente. As fotos de exemplo são de um homem,
-          então para mulher sem fotos próprias fica só o corpo moldado abaixo (que já é feminino). */}
-      {(!mulher || comFotos) && <Card padding="p-4">
+      {/* Body Twin (corpo realista): usa a medição real mais recente. Mulher vê corpo de mulher
+          (com o tom de pele escolhido no avatar); homem, as fotos de estúdio. */}
+      {<Card padding="p-4">
         <div className="mb-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <i className="ri-body-scan-line text-lg text-primary-500"></i>
@@ -140,6 +141,7 @@ export default function ResumoEvolucao({
           onSalvarFoto={salvarFoto}
           medidasRegiao={medidasRegiao}
           onSalvarMedida={medidaTwin}
+          avatar={lerAvatar(profile?.avatar, mulher ? 'F' : perfil.sexo)}
           fotosReais={comFotos ? { frente: comFotos.fotos.frente, lado: comFotos.fotos.direita ?? comFotos.fotos.esquerda, costas: comFotos.fotos.costas } : undefined}
         />
       </Card>}

@@ -43,6 +43,9 @@ import { bloqueadoLigado, desligarBloqueado, ligarBloqueado, mostrarNaTelaBloque
 import { duplaAtual, enviarStatusDupla } from '@/lib/ferramentas/social';
 import { confirmar } from '../../lib/dialogo';
 import Confete from '@/components/feature/Confete';
+import Cadencia from './components/Cadencia';
+import SentiDor from './components/SentiDor';
+import { encurtarTreino, minutosEstimados } from '@/lib/treinoExpresso';
 
 type Phase =
   | 'PRE_SESSION'
@@ -189,6 +192,9 @@ function WorkoutFlow({ session, lesoes = [], avisos = [], origem, inicial, onSes
   const [setsByEx, setSetsByEx] = useState<Record<string, SetLog[]>>(() => inicial?.setsByEx ?? {});
   const [restLeft, setRestLeft] = useState(0);
   const [resting, setResting] = useState(false);
+  const [cadencia, setCadencia] = useState(false); // metrônomo da repetição
+  const [dor, setDor] = useState(false); // "Senti dor"
+  const [doresHoje, setDoresHoje] = useState<Lesao[]>([]); // dor forte avisada hoje: a troca evita a região
   const [bloqueado, setBloqueado] = useState(false); // treino continua com a tela bloqueada (áudio mudo + tela de bloqueio)
   const [cardioDone, setCardioDone] = useState(false);
   const [cardioFeito, setCardioFeito] = useState<CardioAtividade[]>(() => inicial?.cardioFeito ?? []);
@@ -488,6 +494,12 @@ function WorkoutFlow({ session, lesoes = [], avisos = [], origem, inicial, onSes
             >
               INICIAR TREINO
             </button>
+            {/* Sem tempo hoje: mesmo treino, só o principal (4 exercícios, 2 séries, bi-sets). */}
+            {!session.title.endsWith('(expresso)') && session.exercises.length > 4 && (
+              <button type="button" onClick={() => onSessionChange?.(encurtarTreino(session))} className="mt-2 w-full rounded-xl border border-primary-300 px-6 py-2.5 text-sm font-semibold text-primary-700" data-testid="treino-expresso">
+                <i className="ri-flashlight-line mr-1"></i>Estou sem tempo: versão de ~{minutosEstimados(encurtarTreino(session))} min
+              </button>
+            )}
           </div>
         )}
 
@@ -516,6 +528,7 @@ function WorkoutFlow({ session, lesoes = [], avisos = [], origem, inicial, onSes
           <div className="rounded-2xl border border-background-200 bg-background-50 p-3 sm:p-6">
             <h2 className="font-heading text-lg font-bold leading-tight text-foreground-950 sm:text-3xl">{exercise.name}</h2>
             {parceiroBiset && <p className="mt-0.5 inline-flex items-center gap-1 rounded-full bg-secondary-100 px-2 py-0.5 text-xs font-semibold text-secondary-800" data-testid="selo-biset"><i className="ri-links-line"></i>Bi-set com {parceiroBiset.name}</p>}
+            {cadencia && <Cadencia onFechar={() => setCadencia(false)} />}
             <p className="mt-0.5 text-sm leading-snug text-foreground-600">
               <strong className="text-foreground-900">Série {Math.min(currentSets.length + 1, exercise.targetSets || 3)} de {exercise.targetSets || 3}</strong> · {ehPorTempo(exercise.name) ? 'por tempo' : `${exercise.targetReps} reps`} · descanso {exercise.restSec || 60} s
               {rirDaNota(exercise.note) !== null && !ehPorTempo(exercise.name) && <> · deixe {rirDaNota(exercise.note)} sobrando</>}
@@ -656,6 +669,8 @@ function WorkoutFlow({ session, lesoes = [], avisos = [], origem, inicial, onSes
                 { rotulo: 'Trocar exercício', icone: 'ri-refresh-line', acao: () => setShowSwapModal(true) },
                 { rotulo: 'Fiz outro exercício', icone: 'ri-edit-2-line', acao: () => setExtraModo('trocar'), id: 'fiz-outro' },
                 { rotulo: 'Fiz no intervalo', icone: 'ri-timer-line', acao: () => setExtraModo('intervalo') },
+                { rotulo: cadencia ? 'Fechar cadência' : 'Cadência (metrônomo)', icone: 'ri-rhythm-line', acao: () => setCadencia((c) => !c), id: 'abrir-cadencia' },
+                { rotulo: 'Senti dor', icone: 'ri-first-aid-kit-line', acao: () => setDor(true), id: 'senti-dor' },
                 ...(exIndex < session.exercises.length - 1 ? [{ rotulo: exercise.biset ? 'Desfazer bi-set' : `Bi-set com ${session.exercises[exIndex + 1].name}`, icone: 'ri-links-line', acao: alternarBiset, id: 'biset' }] : []),
               ].map((o) => (
                 <button key={o.rotulo} type="button" onClick={o.acao} data-testid={o.id} className="flex min-h-[52px] items-center gap-2 rounded-xl border border-background-200 bg-background-50 px-3 py-2 text-left text-sm font-semibold text-foreground-800 hover:bg-background-100">
@@ -742,7 +757,7 @@ function WorkoutFlow({ session, lesoes = [], avisos = [], origem, inicial, onSes
                   </button>
                   <p className="mt-3 text-sm text-foreground-600">Ou escolha uma opção para {exercise.name}:</p>
                   <div className="mt-2 flex-1 space-y-2 overflow-y-auto">
-                    {alternativas(exercise.id, new Set(lesoes), [], session.exercises.map((e) => e.id), exercise.muscleGroup).map(({ ex: alt, aviso }) => (
+                    {alternativas(exercise.id, new Set([...lesoes, ...doresHoje]), [], session.exercises.map((e) => e.id), exercise.muscleGroup).map(({ ex: alt, aviso }) => (
                       <button
                         key={alt.id}
                         onClick={() => {
@@ -761,6 +776,15 @@ function WorkoutFlow({ session, lesoes = [], avisos = [], origem, inicial, onSes
                   </div>
                 </div>
               </div>
+            )}
+
+            {dor && (
+              <SentiDor
+                exercicio={exercise.name}
+                onRegistrar={(t, lesao) => { const x = novoExtra(t, '', exercise.name); if (x) setExtras((l) => [...l, x]); if (lesao) setDoresHoje((d) => (d.includes(lesao) ? d : [...d, lesao])); }}
+                onTrocar={() => { setDor(false); setResting(false); setShowSwapModal(true); }}
+                onFechar={() => setDor(false)}
+              />
             )}
 
             {extraModo && (

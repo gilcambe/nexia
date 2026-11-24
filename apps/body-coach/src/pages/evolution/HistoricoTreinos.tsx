@@ -3,6 +3,7 @@ import Card from '@/components/base/Card';
 import { confirmar } from '@/lib/dialogo';
 import { deleteUserDoc, listUserDocs, setUserDoc } from '@/lib/userData';
 import { apiOuGuardar } from '@/lib/pendentes';
+import { treinosEmCsv } from '@/lib/treinoExpresso';
 import { corrigirNoCelular, diaLocal, gradeDoMes, juntar, lerLocais, porDia, tirarDoCelular, type TreinoFeito } from '@/lib/historicoTreinos';
 
 const MESES = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
@@ -64,7 +65,17 @@ export default function HistoricoTreinos({ uid }: { uid?: string }) {
     <Card padding="p-3">
       <div className="flex items-center justify-between">
         <h2 className="font-heading text-base font-semibold text-foreground-950"><i className="ri-calendar-check-line mr-1 text-primary-500"></i>Treinos feitos</h2>
-        <span className="text-xs text-foreground-500">{doMes} no mês</span>
+        <span className="flex items-center gap-2 text-xs text-foreground-500">{doMes} no mês
+          {lista.length > 0 && (
+            <button type="button" onClick={() => {
+              const url = URL.createObjectURL(new Blob([treinosEmCsv(lista)], { type: 'text/csv;charset=utf-8' }));
+              const a = document.createElement('a'); a.href = url; a.download = `meus-treinos-${new Date().toISOString().slice(0, 10)}.csv`; a.click();
+              setTimeout(() => URL.revokeObjectURL(url), 2000);
+            }} aria-label="Baixar planilha dos treinos" className="inline-flex items-center gap-0.5 rounded-lg border border-background-200 px-2 py-1 font-semibold text-foreground-700" data-testid="baixar-csv">
+              <i className="ri-file-excel-2-line"></i>Planilha
+            </button>
+          )}
+        </span>
       </div>
       <div className="mt-2 flex items-center justify-between">
         <button type="button" onClick={() => mudarMes(-1)} aria-label="Mês anterior" className="flex h-9 w-9 items-center justify-center rounded-lg hover:bg-background-100"><i className="ri-arrow-left-s-line text-xl"></i></button>

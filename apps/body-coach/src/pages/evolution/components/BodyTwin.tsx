@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent, type MouseEvent as ReactMouseEvent } from 'react';
-import { pickBodyImage } from './bodyImages';
+import { imagemDoCorpo } from './bodyImages';
+import type { Avatar } from '@/lib/avaliacao/avatar';
+import ANCORAS from '@/lib/avaliacao/corposAncoras.json';
 import AjustarFoto from '../fotos/AjustarFoto';
 import EditarMedida from './EditarMedida';
 import {
@@ -66,6 +68,7 @@ export default function BodyTwin({
   goalBodyFat,
   goalWeight,
   fotosReais,
+  avatar,
   onSalvarFoto,
   medidasRegiao,
   onSalvarMedida,
@@ -79,6 +82,7 @@ export default function BodyTwin({
   goalWeight: number | null;
   // Últimas fotos da aba Fotos: aparecem em "Foto real" sem precisar enviar de novo.
   fotosReais?: Partial<Record<Angle, string | null>>;
+  avatar?: Avatar | null; // mulher: corpo feminino (com a pele escolhida)
   // Grava a foto enviada aqui junto com as fotos de evolução (ângulo, imagem já ajustada).
   onSalvarFoto?: (angle: Angle, foto: Blob) => Promise<void>;
   // Texto da medida de cada região, mostrado ao tocar no ponto (ex.: "78 cm · −3 cm").
@@ -135,19 +139,32 @@ export default function BodyTwin({
 
   const currentImage = (() => {
     if (mode === 'foto') return photos[angle];
+    if (avatar?.sexo === 'f') return imagemDoCorpo(avatar, goalMode ? goalBodyFat : currentBodyFat, goalMode ? 'frente' : angle, goalMode);
     if (goalMode) {
-      return style === 'realista' ? pickBodyImage(goalBodyFat) : META_IMAGES[style];
+      return style === 'realista' ? imagemDoCorpo(null, goalBodyFat, 'frente') : META_IMAGES[style];
     }
     if (style === 'realista' && angle === 'frente') {
-      return pickBodyImage(currentBodyFat);
+      return imagemDoCorpo(null, currentBodyFat, 'frente');
     }
     return IA_IMAGES[style][angle];
   })();
 
+  const feminino = avatar?.sexo === 'f';
   const compareCurrentSrc =
-    style === 'realista' ? pickBodyImage(currentBodyFat) : IA_IMAGES[style].frente;
+    feminino ? imagemDoCorpo(avatar, currentBodyFat, 'frente') : style === 'realista' ? imagemDoCorpo(null, currentBodyFat, 'frente') : IA_IMAGES[style].frente;
   const compareGoalSrc =
-    style === 'realista' ? pickBodyImage(goalBodyFat) : META_IMAGES[style];
+    feminino ? imagemDoCorpo(avatar, goalBodyFat, 'frente', true) : style === 'realista' ? imagemDoCorpo(null, goalBodyFat, 'frente') : META_IMAGES[style];
+
+  // Corpo feminino: os marcadores vão para a altura medida de cada parte naquela foto (corposAncoras.json).
+  useEffect(() => {
+    const k = /imagens\/corpos\/([^/]+)\.jpg$/.exec(currentImage || '')?.[1];
+    const anc = k ? (ANCORAS as Record<string, { cx: number; y: Record<string, number> }>)[k] : undefined;
+    if (anc) {
+      const x = Math.round(anc.cx * 100);
+      const y = (p: string, padrao: number) => Math.round((anc.y[p] ?? padrao) * 100);
+      setMarkerPos({ deltoides: { x, y: y('ombro', 0.22) }, pecs: { x, y: y('torax', 0.29) }, abdomen: { x, y: y('cintura', 0.43) }, gluteos: { x, y: y('quadril', 0.54) }, quadriceps: { x, y: y('coxa', 0.68) }, panturrilhas: { x, y: y('panturrilha', 0.84) } });
+    } else if (/imagens\/bt-/.test(currentImage || '')) setMarkerPos(INITIAL_POS);
+  }, [currentImage]);
 
   const showMarkers = mode === 'foto' ? angle === 'frente' : !goalMode && angle === 'frente';
 
