@@ -1,18 +1,15 @@
-import { useLocation } from "react-router-dom";
+import { Link } from "react-router-dom";
 
+// Endereço que não existe: mensagem simples em português e caminho de volta.
 export default function NotFound() {
-  const location = useLocation();
-  
   return (
-    <div className="relative flex flex-col items-center justify-center h-screen text-center px-4">
-      <h1 className="absolute bottom-0 text-9xl md:text-[12rem] font-black text-gray-50 select-none pointer-events-none z-0">
-        404
-      </h1>
-      <div className="relative z-10">
-        <h1 className="text-xl md:text-2xl font-semibold mt-6">This page has not been generated</h1>
-        <p className="mt-2 text-base text-gray-400 font-mono">{location.pathname}</p>
-        <p className="mt-4 text-lg md:text-xl text-gray-500">Tell me more about this page, so I can generate it</p>
-      </div>
+    <div className="flex h-screen flex-col items-center justify-center gap-4 bg-background-50 px-6 text-center">
+      <i className="ri-compass-3-line text-5xl text-primary-500"></i>
+      <h1 className="font-heading text-xl font-bold text-foreground-950">Página não encontrada</h1>
+      <p className="text-sm text-foreground-600">Esse endereço não existe no Body Coach.</p>
+      <Link to="/" className="rounded-full bg-primary-500 px-6 py-3 text-sm font-semibold text-background-50" data-testid="voltar-inicio">
+        Voltar para o início
+      </Link>
     </div>
   );
 }

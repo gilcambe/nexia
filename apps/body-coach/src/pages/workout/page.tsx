@@ -558,12 +558,8 @@ function WorkoutFlow({ session, lesoes = [], avisos = [], origem, inicial, onSes
               </details>
             )}
 
-            {/* Demonstração pequena (toque para pausar); grande em "Ver execução" */}
-            {currentSets.length === 0 ? (
-              <VideoDoCoach id={exercise.id} nome={exercise.name} className="mt-1.5 hidden aspect-[16/9] max-h-[16dvh] w-full rounded-xl alto:block sm:max-w-sm" gravar={false} />
-            ) : (
-              <button type="button" onClick={() => setShowVideo(true)} className="mt-2 text-sm font-semibold text-primary-700 underline"><i className="ri-play-circle-line mr-1"></i>Ver execução</button>
-            )}
+            {/* Vídeo só quando o aluno pede (pedido do dono em 24/11/2026): tela limpa por padrão */}
+            <button type="button" onClick={() => setShowVideo(true)} className="mt-1 inline-flex items-center gap-1 text-sm font-semibold text-primary-700" data-testid="ver-execucao"><i className="ri-play-circle-line text-base"></i>Ver execução</button>
 
             {exercise.note && !/^Alvo RIR \d+\.$/.test(exercise.note.trim()) && (
               <p className="mt-2 rounded-xl bg-background-100/70 px-3 py-1.5 text-sm leading-snug text-foreground-700">
@@ -688,7 +684,6 @@ function WorkoutFlow({ session, lesoes = [], avisos = [], origem, inicial, onSes
                 </button>
               )}
               {[
-                { rotulo: 'Ver execução', icone: 'ri-play-circle-line', acao: () => setShowVideo(true) },
                 { rotulo: 'Trocar exercício', icone: 'ri-refresh-line', acao: () => setShowSwapModal(true) },
                 { rotulo: 'Fiz outro exercício', icone: 'ri-edit-2-line', acao: () => setExtraModo('trocar'), id: 'fiz-outro' },
                 { rotulo: 'Fiz no intervalo', icone: 'ri-timer-line', acao: () => setExtraModo('intervalo') },

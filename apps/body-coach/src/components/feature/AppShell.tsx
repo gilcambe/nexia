@@ -352,14 +352,7 @@ function Shell() {
         </div>
         <div className="flex items-center gap-2">
           <InstallButton compact />
-          <FeedbackLink compact />
-          <button
-            onClick={() => setMobileOpen(true)}
-          className="flex h-9 w-9 items-center justify-center rounded-lg text-foreground-600 hover:bg-background-100"
-          aria-label="Abrir menu"
-        >
-            <i className="ri-menu-line text-xl"></i>
-          </button>
+          {/* Feedback e menu ficam no "Mais" da barra de baixo (sem botões repetidos no topo) */}
         </div>
       </header>
 
