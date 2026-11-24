@@ -7,6 +7,8 @@ import { identificar, quantidadeDoTexto, trocasDoNutri, equivalentes } from '@/l
 import { useTrocasDoDia, type Troca } from '@/lib/useTrocasDoDia';
 import type { TrocaFixa } from '@/components/feature/AuthContext';
 import ExportarPlano from '@/components/feature/ExportarPlano';
+import { perguntar } from '@/lib/coachAI';
+import { planoDoJson } from '@/lib/dietaDoJson';
 import TrocaAlimento from './TrocaAlimento';
 import { confirmar } from '../../../lib/dialogo';
 
@@ -152,16 +154,47 @@ export default function PlanoNutricionista() {
     setErro(null);
     setLendo(true);
     try {
-      const { lerPlanoPdf } = await import('@/lib/planoAlimentarPdf');
-      const p = await lerPlanoPdf(f);
-      if (!p.refeicoes.length) throw new Error('vazio');
-      await salvar(p);
+      // 1º: PDF dos sistemas de nutrição (leitura exata, sem IA). 2º: qualquer PDF ou foto, lida pela IA.
+      if (/\.pdf$/i.test(f.name) || f.type === 'application/pdf') {
+        const { lerPlanoPdf } = await import('@/lib/planoAlimentarPdf');
+        const p = await lerPlanoPdf(f).catch(() => null);
+        if (p?.refeicoes.length) { await salvar(p); return; }
+      }
+      const { textoDoArquivo } = await import('@/lib/avaliacao/lerArquivo');
+      await pelaIA(await textoDoArquivo(f, () => undefined), f.name.replace(/\.[a-z0-9]+$/i, ''));
     } catch {
-      setErro('Não consegui ler as refeições deste arquivo. Envie o PDF do plano alimentar exportado pelo sistema do nutricionista.');
+      setErro('Não consegui ler a dieta deste arquivo. Tente uma foto mais nítida, o PDF original ou cole o texto.');
     } finally {
       setLendo(false);
     }
   };
+
+  // Texto (do arquivo ou colado do WhatsApp) → IA monta as refeições, trocas e calorias → salva.
+  const pelaIA = async (texto: string, nome = 'Plano do nutricionista') => {
+    if (texto.replace(/[^a-zA-ZÀ-ÿ]/g, '').length < 20) throw new Error('curto');
+    const resposta = await perguntar('nutrologo', texto.slice(0, 12000), {}, undefined, undefined, 'dieta');
+    const p = planoDoJson(resposta, nome);
+    if (!p) throw new Error('vazio');
+    await salvar(p);
+  };
+  const [colando, setColando] = useState(false);
+  const [colado, setColado] = useState('');
+  const usarColado = async () => {
+    setErro(null); setLendo(true);
+    try { await pelaIA(colado); setColando(false); setColado(''); }
+    catch { setErro('Não encontrei refeições nesse texto. Confira se colou a dieta inteira.'); }
+    finally { setLendo(false); }
+  };
+  const caixaColar = colando && (
+    <div className="mt-2 space-y-2">
+      <textarea value={colado} onChange={(e) => setColado(e.target.value)} rows={6} maxLength={12000} placeholder="Cole aqui a dieta (do WhatsApp, e-mail ou PDF)" aria-label="Texto da dieta"
+        className="w-full rounded-xl border-2 border-background-200 bg-background-50 px-3 py-2 text-sm outline-none focus:border-primary-400" data-testid="dieta-colada" />
+      <div className="grid grid-cols-2 gap-2">
+        <button type="button" onClick={() => { setColando(false); setColado(''); }} className="rounded-lg border border-background-200 py-2 text-sm font-semibold text-foreground-700">Cancelar</button>
+        <button type="button" onClick={() => void usarColado()} disabled={lendo || colado.trim().length < 20} className="rounded-lg bg-primary-500 py-2 text-sm font-semibold text-background-50 disabled:opacity-50" data-testid="usar-dieta-colada">{lendo ? 'Lendo…' : 'Montar meu plano'}</button>
+      </div>
+    </div>
+  );
 
   const entrada = <input ref={ref} type="file" className="hidden" onChange={escolher} data-testid="plano-arquivo" />;
 
@@ -176,6 +209,8 @@ export default function PlanoNutricionista() {
             {lendo ? 'Lendo...' : 'Importar'}
           </button>
         </div>
+        <p className="mt-1 text-xs text-foreground-600">PDF, foto do papel ou <button type="button" onClick={() => setColando(true)} className="font-semibold text-primary-600 underline" data-testid="colar-dieta">cole o texto</button>: o app monta as refeições, trocas e metas.</p>
+        {caixaColar}
         {erro && <p className="mt-1 text-xs text-red-600">{erro}</p>}
         {entrada}
       </div>
@@ -222,11 +257,13 @@ export default function PlanoNutricionista() {
         <button type="button" onClick={() => ref.current?.click()} disabled={lendo} className="rounded-lg bg-background-100 px-3 py-1.5 text-xs font-semibold text-foreground-700">
           {lendo ? 'Lendo...' : 'Trocar plano'}
         </button>
+        <button type="button" onClick={() => setColando(true)} disabled={lendo} className="rounded-lg bg-background-100 px-3 py-1.5 text-xs font-semibold text-foreground-700">Colar texto</button>
         <button type="button" onClick={async () => { if (await confirmar('Remover o plano do nutricionista?')) salvar(null); }} className="rounded-lg px-3 py-1.5 text-xs font-semibold text-foreground-500">
           Remover
         </button>
       </div>
       <div className="mt-3"><ExportarPlano plano={plano} aluno={profile?.full_name || undefined} coach={plano.do_coach ? plano.arquivo.replace(/^Plano de /, '') : undefined} /></div>
+      {caixaColar}
       {erro && <p className="mt-2 text-sm text-red-600">{erro}</p>}
       {entrada}
     </div>
