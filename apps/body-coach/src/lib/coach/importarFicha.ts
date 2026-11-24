@@ -1,73 +1,54 @@
-import type { FichaCoach } from './fichaCoach'
-import { idDoNome } from '@/utils/id'
+import type { FichaCoach, DiaCoach, ExercicioCoach } from './fichaCoach'
+import { idDoNome } from './fichaCoach'
 
 /**
  * Extrai o primeiro objeto JSON válido de um texto que pode conter markdown.
  * Normaliza os campos da ficha de acordo com as regras de negócio e devolve
  * `null` caso não haja exercícios ou o texto não contenha JSON válido.
- *
- * Regras de normalização:
- * - `nome` padrão: "Ficha sem nome" caso esteja ausente ou vazio.
- * - `limiteDias` máximo: 30 (se o valor fornecido for maior, será truncado).
- * - `limiteExercicios` máximo: 100 (se o valor fornecido for maior, será truncado).
- * - Cada exercício deve possuir `serie`, `repeticoes` e `descanso`.
- *   Caso falte, usa-se os defaults: `serie = 3`, `repeticoes = 10`, `descanso = 60`.
- * - O `id` de cada exercício é gerado via `idDoNome(nomeDoExercicio)`.
- * - Itens incompletos (sem nome) são descartados.
- * - Se após a filtragem não houver nenhum exercício, retorna `null`.
  */
 export function fichaDoJson(texto: string): FichaCoach | null {
-  // 1. Encontrar o primeiro bloco JSON (ignorando markdown delimitadores)
-  const jsonMatch = texto.match(/\{[^]*?\}/)
-  if (!jsonMatch) return null
-  const raw = jsonMatch[0]
+  if (typeof texto !== 'string') return null
+
+  const match = texto.match(/\{[\s\S]*\}/)
+  if (!match) return null
 
   let parsed: any
   try {
-    parsed = JSON.parse(raw)
-  } catch (e) {
-    // JSON inválido
+    parsed = JSON.parse(match[0])
+  } catch {
     return null
   }
 
-  // 2. Normalizar campos principais da ficha
-  const nome = typeof parsed.nome === 'string' && parsed.nome.trim() !== ''
-    ? parsed.nome.trim()
-    : 'Ficha sem nome'
+  if (!parsed || typeof parsed !== 'object' || !Array.isArray(parsed.dias)) return null
 
-  const limiteDias = typeof parsed.limiteDias === 'number'
-    ? Math.min(parsed.limiteDias, 30)
-    : 30
-
-  const limiteExercicios = typeof parsed.limiteExercicios === 'number'
-    ? Math.min(parsed.limiteExercicios, 100)
-    : 100
-
-  // 3. Processar lista de exercícios
-  const rawExercicios = Array.isArray(parsed.exercicios) ? parsed.exercicios : []
-  const exercicios = rawExercicios
-    .filter((ex: any) => typeof ex.nome === 'string' && ex.nome.trim() !== '')
-    .slice(0, limiteExercicios)
-    .map((ex: any) => {
-      const nomeEx = ex.nome.trim()
-      return {
-        id: idDoNome(nomeEx),
-        nome: nomeEx,
-        serie: typeof ex.serie === 'number' ? ex.serie : 3,
-        repeticoes: typeof ex.repeticoes === 'number' ? ex.repeticoes : 10,
-        descanso: typeof ex.descanso === 'number' ? ex.descanso : 60,
-      }
+  const dias: DiaCoach[] = parsed.dias
+    .map((d: any, i: number) => {
+      if (!d || !Array.isArray(d.exercicios)) return null
+      const exercicios: ExercicioCoach[] = d.exercicios
+        .filter((ex: any) => typeof ex.nome === 'string' && ex.nome.trim() !== '')
+        .slice(0, 15)
+        .map((ex: any) => ({
+          id: idDoNome(ex.nome.trim()),
+          nome: ex.nome.trim(),
+          grupo: typeof ex.grupo === 'string' ? ex.grupo : '',
+          series: Math.max(1, Math.min(10, typeof ex.series === 'number' ? ex.series : 3)),
+          reps: typeof ex.reps === 'string' || typeof ex.reps === 'number' ? String(ex.reps) : '10',
+          descanso: Math.max(15, Math.min(600, typeof ex.descanso === 'number' ? ex.descanso : 60)),
+          carga: typeof ex.carga === 'string' ? ex.carga : '',
+          obs: typeof ex.obs === 'string' ? ex.obs : '',
+        }))
+      return exercicios.length > 0
+        ? { titulo: typeof d.titulo === 'string' && d.titulo.trim() ? d.titulo.trim() : `Treino ${String.fromCharCode(65 + i)}`, exercicios }
+        : null
     })
+    .filter((d): d is DiaCoach => !!d)
+    .slice(0, 7)
 
-  if (exercicios.length === 0) return null
+  if (dias.length === 0) return null
 
-  const ficha: FichaCoach = {
-    id: idDoNome(nome),
-    nome,
-    limiteDias,
-    limiteExercicios,
-    exercicios,
+  return {
+    nome: typeof parsed.nome === 'string' && parsed.nome.trim() ? parsed.nome.trim() : 'Ficha importada',
+    obs: typeof parsed.obs === 'string' ? parsed.obs : '',
+    dias,
   }
-
-  return ficha
 }
