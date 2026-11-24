@@ -181,7 +181,8 @@ function WorkoutFlow({ session, lesoes = [], avisos = [], origem, inicial, onSes
   const pesoAluno = Number(profile?.onboarding?.weight) || 70;
   const { setOpen } = useCoach();
   const [startedAt] = useState(() => inicial?.startedAt ?? new Date().toISOString());
-  const [phase, setPhase] = useState<Phase>(() => (inicial?.phase as Phase | undefined) ?? 'PRE_SESSION');
+  // Começa direto no 1º exercício (dono, 24/11/2026: 3 telas até treinar era demais). A tela "Pronto para começar?" só volta num treino antigo salvo nela.
+  const [phase, setPhase] = useState<Phase>(() => (inicial?.phase as Phase | undefined) ?? 'EXERCISE_ACTIVE');
   const [ficouNoCelular, setFicouNoCelular] = useState(false);
   const [esforco, setEsforco] = useState(0); // 1 a 5, opcional
   const [comentario, setComentario] = useState('');
@@ -200,6 +201,13 @@ function WorkoutFlow({ session, lesoes = [], avisos = [], origem, inicial, onSes
   const [cardioFeito, setCardioFeito] = useState<CardioAtividade[]>(() => inicial?.cardioFeito ?? []);
   const [extras, setExtras] = useState<Extra[]>(() => inicial?.extras ?? []);
   const [extraModo, setExtraModo] = useState<ModoExtra | null>(null);
+
+  useEffect(() => {
+    if (inicial) return;
+    zerarSessaoFC();
+    if (bloqueadoLigado()) void ligarBloqueado().then(setBloqueado);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Guarda o treino no celular a cada mudança: sair da tela ou fechar o app não perde nada.
   useEffect(() => {
@@ -463,7 +471,7 @@ function WorkoutFlow({ session, lesoes = [], avisos = [], origem, inicial, onSes
       )}
       <div className="space-y-2">
         {phase === 'PRE_SESSION' && <MusicaTreino variante="cartao" />}
-        {phase !== 'SESSION_COMPLETE' && phase !== 'SESSION_REVIEW' && <MonitorCardiaco compacto soConectado={phase !== 'PRE_SESSION' && phase !== 'WARMUP'} />}
+        {phase !== 'SESSION_COMPLETE' && phase !== 'SESSION_REVIEW' && <MonitorCardiaco compacto soConectado={phase !== 'PRE_SESSION' && phase !== 'WARMUP' && !ferramentas} />}
         {phase === 'PRE_SESSION' && (
           <div className="rounded-2xl border border-background-200 bg-background-50 p-4 sm:p-6">
             <h2 className="font-heading text-xl font-bold text-foreground-950">Pronto para começar?</h2>
@@ -539,6 +547,16 @@ function WorkoutFlow({ session, lesoes = [], avisos = [], origem, inicial, onSes
             <p className="mt-0.5 text-sm leading-snug text-foreground-600">
               <strong className="text-foreground-900">Série {Math.min(currentSets.length + 1, exercise.targetSets || 3)} de {exercise.targetSets || 3}</strong> · {ehPorTempo(exercise.name) ? 'por tempo' : `${exercise.targetReps} reps`}
             </p>
+
+            {exIndex === 0 && currentSets.length === 0 && (session.warmup.length > 0 || avisos.length > 0) && (
+              <details className="mt-1 rounded-xl bg-background-100/70 px-3 py-1.5" data-testid="aquecimento">
+                <summary className="cursor-pointer text-sm font-semibold text-foreground-800"><i className="ri-fire-line mr-1 text-primary-500"></i>{session.warmup.length > 0 ? `Aquecimento (${session.warmup.reduce((t, w) => t + Math.round(w.durationSec / 60), 0)} min) e dicas` : 'Dicas deste treino'}</summary>
+                <ul className="mt-1.5 space-y-1">
+                  {session.warmup.map((w) => <li key={w.name} className="flex justify-between text-sm text-foreground-700"><span>{w.name}</span><span className="text-foreground-500">{Math.round(w.durationSec / 60)} min</span></li>)}
+                  {avisos.slice(0, 4).map((a) => <li key={a} className="flex gap-2 text-sm text-foreground-600" data-testid="avisos-treino"><i className="ri-sparkling-2-line mt-0.5 text-primary-500"></i><span>{a}</span></li>)}
+                </ul>
+              </details>
+            )}
 
             {/* Demonstração pequena (toque para pausar); grande em "Ver execução" */}
             {currentSets.length === 0 ? (
@@ -676,6 +694,7 @@ function WorkoutFlow({ session, lesoes = [], avisos = [], origem, inicial, onSes
                 { rotulo: 'Fiz no intervalo', icone: 'ri-timer-line', acao: () => setExtraModo('intervalo') },
                 { rotulo: cadencia ? 'Fechar cadência' : 'Cadência (metrônomo)', icone: 'ri-rhythm-line', acao: () => setCadencia((c) => !c), id: 'abrir-cadencia' },
                 { rotulo: 'Senti dor', icone: 'ri-first-aid-kit-line', acao: () => setDor(true), id: 'senti-dor' },
+                ...(exIndex === 0 && currentSets.length === 0 && !session.title.endsWith('(expresso)') && session.exercises.length > 4 ? [{ rotulo: `Sem tempo: versão de ~${minutosEstimados(encurtarTreino(session))} min`, icone: 'ri-flashlight-line', acao: () => onSessionChange?.(encurtarTreino(session)), id: 'treino-expresso-agora' }] : []),
                 ...(exIndex < session.exercises.length - 1 ? [{ rotulo: exercise.biset ? 'Desfazer bi-set' : `Bi-set com ${session.exercises[exIndex + 1].name}`, icone: 'ri-links-line', acao: alternarBiset, id: 'biset' }] : []),
               ].map((o) => (
                 <button key={o.rotulo} type="button" onClick={o.acao} data-testid={o.id} className="flex min-h-[52px] items-center gap-2 rounded-xl border border-background-200 bg-background-50 px-3 py-2 text-left text-sm font-semibold text-foreground-800 hover:bg-background-100">

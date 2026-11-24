@@ -21,7 +21,8 @@ test.describe('Body Coach Application', () => {
     await expect(page).toHaveURL(/\/workout/);
 
     // Additional assertions to verify the workout page is working correctly
-    await expect(page.getByRole('button', { name: /INICIAR TREINO/i })).toBeVisible();
+    // Começar treino abre direto o 1º exercício (sem a tela "Pronto para começar?").
+    await expect(page.getByTestId('registrar-serie')).toBeVisible();
   });
 
   test('should allow changing exercises and navigating through them', async ({ page }) => {
@@ -32,8 +33,8 @@ test.describe('Body Coach Application', () => {
     await handleDailyStatusScreen(page).catch(() => {});
 
     // Start the workout
-    // O aquecimento fica na mesma tela: INICIAR TREINO já abre o primeiro exercício.
-    await page.getByRole('button', { name: /INICIAR TREINO/i }).click();
+    // Começar treino já abre o primeiro exercício (aquecimento recolhido nele).
+    await expect(page.getByTestId('registrar-serie')).toBeVisible();
 
     // Get the initial exercise name
     const initialExerciseName = await page.locator('h2, h3').filter({ hasText: /\S/ }).nth(1).innerText();
