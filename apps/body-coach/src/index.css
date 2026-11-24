@@ -177,3 +177,7 @@ h1, h2, h3, h4, h5, h6 {
 .dark .bg-amber-50 { background-color: rgb(245 158 11 / 0.16); }
 .dark .text-amber-700, .dark .text-amber-800, .dark .text-amber-900 { color: #fcd34d; }
 .dark { color-scheme: dark; }
+.dark .bg-secondary-100 { background-color: oklch(var(--secondary-500) / 0.24); }
+.dark .bg-accent-100 { background-color: oklch(var(--accent-500) / 0.24); }
+.dark .text-secondary-800, .dark .text-secondary-700 { color: oklch(var(--secondary-300)); }
+.dark .text-accent-700, .dark .text-accent-800 { color: oklch(var(--accent-300)); }

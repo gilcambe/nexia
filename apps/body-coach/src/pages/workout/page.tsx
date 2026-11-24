@@ -30,7 +30,8 @@ import DescansoTimer from './components/DescansoTimer';
 import { CardioEntry } from './components/CardioEntry';
 import type { CardioAtividade } from '@/lib/cardioDoTexto';
 import { useCoach } from '@/components/feature/CoachContext';
-import { setTreinoAtivo } from '@/lib/treinoAtivo';
+import { anotarDoTexto, resumoSeries, setTreinoAtivo } from '@/lib/treinoAtivo';
+import { comandoDaFrase, ouvirUmaFrase, temMicrofone } from '@/lib/ouvir';
 import { ehRecorde } from '@/lib/recorde';
 import CompartilharCartao from '@/components/feature/CompartilharCartao';
 import MonitorCardiaco from '@/components/feature/MonitorCardiaco';
@@ -279,8 +280,19 @@ function WorkoutFlow({ session, lesoes = [], avisos = [], origem, inicial, onSes
       ...(newSet.porLado ? { porLado: true } : {}),
       ...(newSet.unilateral ? { unilateral: true } : {}),
       ...(newSet.porTempo ? { porTempo: true } : {}),
+      ...(newSet.tecnica ? { tecnica: newSet.tecnica } : {}),
     };
     setSetsByEx((v) => ({ ...v, [exercise.id]: [...prev, setLog] }));
+    // Drop-set: sem descanso (tira carga e segue). Rest-pause: só 15 s e faz mais com a mesma carga.
+    if (newSet.tecnica === 'drop') { setResting(false); falar('Drop-set: tire uns 20% da carga e continue, sem descanso.'); return; }
+    if (newSet.tecnica === 'restpause') { startRest(15); falar('Rest-pause: 15 segundos e faça mais repetições com a mesma carga.'); return; }
+    // Bi-set: do primeiro vai direto para o segundo; do segundo descansa e volta ao primeiro (se ainda faltar série).
+    const depois = exercise.biset ? session.exercises[exIndex + 1] : undefined;
+    const primeiro = exIndex > 0 && session.exercises[exIndex - 1]?.biset ? session.exercises[exIndex - 1] : undefined;
+    if (depois) { setResting(false); setExIndex(exIndex + 1); falar(`Bi-set: agora ${depois.name}, sem descanso.`); return; }
+    if (primeiro && (setsByEx[primeiro.id] ?? []).length < (primeiro.targetSets || 3)) {
+      setExIndex(exIndex - 1); startRest(exercise.restSec); falar(`Descanse e volte para ${primeiro.name}.`); return;
+    }
     startRest(exercise.restSec);
     const antes = historicoSeries[exercise.name] ?? [];
     const recorde = antes.length > 0 && ehRecorde(antes, { weight: newSet.weight, reps: newSet.reps });
@@ -290,6 +302,10 @@ function WorkoutFlow({ session, lesoes = [], avisos = [], origem, inicial, onSes
 
   // Apaga uma série registrada por engano e renumera as outras.
   const removerSerie = (id: string) => setSetsByEx((v) => ({ ...v, [exercise.id]: (v[exercise.id] ?? []).filter((s) => s.id !== id).map((s, i) => ({ ...s, set: i + 1 })) }));
+
+  // Junta (ou separa) o exercício da vez com o próximo num bi-set.
+  const alternarBiset = () => onSessionChange?.({ ...session, exercises: session.exercises.map((e, i) => (i === exIndex ? { ...e, biset: !e.biset } : e)) });
+  const parceiroBiset = exercise.biset ? session.exercises[exIndex + 1] : exIndex > 0 && session.exercises[exIndex - 1]?.biset ? session.exercises[exIndex - 1] : undefined;
 
   const finishExercise = () => {
     if (exIndex < session.exercises.length - 1) {
@@ -315,25 +331,52 @@ function WorkoutFlow({ session, lesoes = [], avisos = [], origem, inicial, onSes
       setTreinoAtivo(null);
       return;
     }
-    setTreinoAtivo((series) => {
+    setTreinoAtivo((series, nome) => {
+      // "agachamento 8x60": vai para o exercício citado; sem nome, para o da vez.
+      const alvo = (nome && session.exercises.find((e) => e.name === nome)) || exercise;
       setSetsByEx((v) => {
-        const prev = v[exercise.id] ?? [];
+        const prev = v[alvo.id] ?? [];
         const novas: SetLog[] = series.map((s, i) => ({
-          id: `${exercise.id}-chat-${Date.now()}-${i}`,
+          id: `${alvo.id}-chat-${Date.now()}-${i}`,
           set: prev.length + i + 1,
           weight: s.weight,
           reps: s.reps,
           rir: null,
           rpe: null,
-          restSec: exercise.restSec,
+          restSec: alvo.restSec,
           completed: true,
         }));
-        return { ...v, [exercise.id]: [...prev, ...novas] };
+        return { ...v, [alvo.id]: [...prev, ...novas] };
       });
-      return `Anotei ${series.length} série(s) em ${exercise.name}.`;
-    });
+      if (alvo.id === exercise.id) startRest(alvo.restSec);
+      return `Anotei em ${alvo.name}: ${resumoSeries(series)}.`;
+    }, session.exercises.map((e) => e.name));
     return () => setTreinoAtivo(null);
   }, [phase, exercise]);
+
+  // Treino falado: toca no microfone e fala "12 com 30 quilos", "próximo", "pular" ou "repetir".
+  const [ouvindo, setOuvindo] = useState(false);
+  const [avisoVoz, setAvisoVoz] = useState('');
+  const falarSerie = async () => {
+    if (ouvindo) return;
+    setOuvindo(true);
+    setAvisoVoz('Pode falar: "12 com 30 quilos", "próximo", "pular" ou "repetir".');
+    const t = await ouvirUmaFrase().promessa;
+    setOuvindo(false);
+    if (!t) { setAvisoVoz('Não ouvi. Toque no microfone e fale de novo.'); return; }
+    const cmd = comandoDaFrase(t);
+    if (cmd === 'proximo') { setResting(false); finishExercise(); setAvisoVoz(`"${t}": fui para o próximo exercício.`); return; }
+    if (cmd === 'pular') { setResting(false); setAvisoVoz(`"${t}": descanso encerrado.`); return; }
+    if (cmd === 'repetir') {
+      const u = currentSets[currentSets.length - 1];
+      if (!u) { setAvisoVoz('Ainda não tem série para repetir.'); return; }
+      addSet({ weight: u.weight, reps: u.reps, rir: 2, ...(u.porLado ? { porLado: true } : {}) });
+      setAvisoVoz(`Repeti: ${u.reps} × ${u.weight} kg.`);
+      return;
+    }
+    const r = anotarDoTexto(t, user?.id);
+    setAvisoVoz(r ?? `Ouvi "${t}", mas não achei carga e repetições. Ex.: "12 com 30 quilos".`);
+  };
 
   // Extrair faixa de repetições alvo do exercício (ex: "8-12 reps" -> [8, 12])
   const parseReps = (target: string): [number, number] => {
@@ -384,6 +427,12 @@ function WorkoutFlow({ session, lesoes = [], avisos = [], origem, inicial, onSes
             aria-label={bloqueado ? 'Desligar treino com a tela bloqueada' : 'Continuar o treino com a tela bloqueada'} data-testid="tela-bloqueada">
             <i className={bloqueado ? 'ri-lock-line text-base' : 'ri-lock-unlock-line text-base'}></i>{bloqueado ? 'Bloqueio ligado' : 'Bloquear tela'}
           </button>
+          {temMicrofone() && (
+            <button type="button" onClick={() => void falarSerie()} aria-pressed={ouvindo} data-testid="falar-serie" aria-label="Falar a série (ex.: 12 com 30 quilos)"
+              className={`inline-flex items-center gap-1.5 rounded-full px-3 py-2 text-xs font-semibold ${ouvindo ? 'animate-pulse bg-red-500 text-background-50' : 'border border-background-200 bg-background-50 text-foreground-700'}`}>
+              <i className="ri-mic-line text-base"></i>{ouvindo ? 'Ouvindo…' : 'Falar série'}
+            </button>
+          )}
           <MomentoTreino />
           {duplaAtual() && (
             <Link to="/ferramentas/dupla" className="inline-flex items-center gap-1.5 rounded-full border border-background-200 bg-background-50 px-3 py-2.5 text-sm font-semibold text-foreground-700"><i className="ri-team-line text-base"></i>Dupla</Link>
@@ -392,6 +441,12 @@ function WorkoutFlow({ session, lesoes = [], avisos = [], origem, inicial, onSes
             <i className="ri-chat-3-line text-base"></i>Coach
           </button>
         </div>
+      )}
+      {avisoVoz && phase === 'EXERCISE_ACTIVE' && (
+        <p role="status" className="mb-2 flex items-start gap-2 rounded-xl bg-accent-50 px-3 py-2 text-sm text-foreground-800" data-testid="aviso-voz">
+          <i className="ri-mic-line mt-0.5 text-accent-600"></i><span className="flex-1">{avisoVoz}</span>
+          <button type="button" onClick={() => setAvisoVoz('')} aria-label="Fechar aviso" className="text-foreground-500"><i className="ri-close-line"></i></button>
+        </p>
       )}
       <div className="space-y-2">
         {phase === 'PRE_SESSION' && <MusicaTreino variante="cartao" />}
@@ -460,6 +515,7 @@ function WorkoutFlow({ session, lesoes = [], avisos = [], origem, inicial, onSes
         {phase === 'EXERCISE_ACTIVE' && (
           <div className="rounded-2xl border border-background-200 bg-background-50 p-3 sm:p-6">
             <h2 className="font-heading text-lg font-bold leading-tight text-foreground-950 sm:text-3xl">{exercise.name}</h2>
+            {parceiroBiset && <p className="mt-0.5 inline-flex items-center gap-1 rounded-full bg-secondary-100 px-2 py-0.5 text-xs font-semibold text-secondary-800" data-testid="selo-biset"><i className="ri-links-line"></i>Bi-set com {parceiroBiset.name}</p>}
             <p className="mt-0.5 text-sm leading-snug text-foreground-600">
               <strong className="text-foreground-900">Série {Math.min(currentSets.length + 1, exercise.targetSets || 3)} de {exercise.targetSets || 3}</strong> · {ehPorTempo(exercise.name) ? 'por tempo' : `${exercise.targetReps} reps`} · descanso {exercise.restSec || 60} s
               {rirDaNota(exercise.note) !== null && !ehPorTempo(exercise.name) && <> · deixe {rirDaNota(exercise.note)} sobrando</>}
@@ -497,7 +553,8 @@ function WorkoutFlow({ session, lesoes = [], avisos = [], origem, inicial, onSes
                       </span>
                       <span className="text-right text-base font-semibold text-foreground-950">
                         {s.porTempo ? `${s.reps} s` : <>{s.weight}{s.porLado || exercise.weightUnit === 'kg/lado' ? ' kg cada lado' : ' kg'} × {s.reps}{s.unilateral ? ' (unilateral)' : ''}</>}
-                        <span className="ml-2 text-sm font-normal text-foreground-500">{s.porTempo ? '' : s.falha ? 'falha' : `RIR ${s.rir}`}</span>
+                        <span className="ml-2 text-sm font-normal text-foreground-500">{s.porTempo || s.rir == null ? '' : s.falha ? 'falha' : `RIR ${s.rir}`}</span>
+                        {s.tecnica && <span className="ml-1 rounded-full bg-secondary-100 px-1.5 py-0.5 text-[11px] font-semibold text-secondary-800">{s.tecnica === 'drop' ? 'drop' : 'rest-pause'}</span>}
                         {s.nota && <span className="block text-sm font-normal text-primary-700"><i className="ri-sticky-note-line mr-0.5"></i>{s.nota}</span>}
                       </span>
                       {delta !== null && (
@@ -599,6 +656,7 @@ function WorkoutFlow({ session, lesoes = [], avisos = [], origem, inicial, onSes
                 { rotulo: 'Trocar exercício', icone: 'ri-refresh-line', acao: () => setShowSwapModal(true) },
                 { rotulo: 'Fiz outro exercício', icone: 'ri-edit-2-line', acao: () => setExtraModo('trocar'), id: 'fiz-outro' },
                 { rotulo: 'Fiz no intervalo', icone: 'ri-timer-line', acao: () => setExtraModo('intervalo') },
+                ...(exIndex < session.exercises.length - 1 ? [{ rotulo: exercise.biset ? 'Desfazer bi-set' : `Bi-set com ${session.exercises[exIndex + 1].name}`, icone: 'ri-links-line', acao: alternarBiset, id: 'biset' }] : []),
               ].map((o) => (
                 <button key={o.rotulo} type="button" onClick={o.acao} data-testid={o.id} className="flex min-h-[52px] items-center gap-2 rounded-xl border border-background-200 bg-background-50 px-3 py-2 text-left text-sm font-semibold text-foreground-800 hover:bg-background-100">
                   <i className={`${o.icone} text-xl text-primary-600`}></i>{o.rotulo}

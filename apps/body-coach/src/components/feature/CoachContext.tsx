@@ -12,8 +12,7 @@ import type { CoachMessage } from '@/mocks/coach';
 import { useAuth } from './AuthContext';
 import { perguntar } from '@/lib/coachAI';
 import { historicoParaIA } from '@/lib/historicoIA';
-import { cargasDoTexto } from '@/lib/cargasDoTexto';
-import { registrarSeries } from '@/lib/treinoAtivo';
+import { anotarDoTexto } from '@/lib/treinoAtivo';
 import { respostaLocal } from '@/lib/respostaLocal';
 import { DIVISOES, objetivosDe, sexoDe } from '@/lib/dayPlan';
 import { fichaDoPerfil } from '@/lib/ficha';
@@ -127,23 +126,11 @@ export function CoachProvider({ children }: { children: ReactNode }) {
       { id: `u-${Date.now()}`, speaker: 'user', text: trimmed, time: 'agora' },
     ]);
 
-    const series = cargasDoTexto(trimmed) ?? [];
-    if (series.length > 0) {
-      try {
-        const aviso = registrarSeries(series);
-        if (aviso) {
-          setMessages((prev) => [
-            ...prev,
-            { id: `a-${Date.now()}`, speaker: 'coach', text: aviso, time: 'agora', local: true },
-          ]);
-        }
-      } catch (e: any) {
-        const errorMsg = e?.message || 'Erro ao registrar séries.';
-        setMessages((prev) => [
-          ...prev,
-          { id: `a-${Date.now()}`, speaker: 'coach', text: errorMsg, time: 'agora', local: true },
-        ]);
-      }
+    // "fiz 12 com 30 kg" com treino aberto: anota a série no exercício certo e responde na hora (sem gastar IA).
+    const anotado = anotarDoTexto(trimmed, user?.id);
+    if (anotado) {
+      setMessages((prev) => [...prev, { id: `a-${Date.now()}`, speaker: 'coach', text: anotado, time: 'agora', local: true }]);
+      return;
     }
 
     setLoadingAI(true);
@@ -201,7 +188,7 @@ export function CoachProvider({ children }: { children: ReactNode }) {
     } finally {
       setLoadingAI(false);
     }
-  }, [loadingAI, profile, firstName, treinoHoje, dadosLocais]);
+  }, [loadingAI, profile, firstName, treinoHoje, dadosLocais, user?.id]);
 
   const value = useMemo(
     () => ({ open, setOpen: setOpenSafe, messages, send, unread, typing: loadingAI }),
