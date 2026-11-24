@@ -1,4 +1,7 @@
-// Converte a resposta da IA (JSON da ficha lida de PDF/foto/texto) numa FichaCoach válida.
+/**
+ * Converte a resposta da IA (JSON da ficha lida de PDF/foto/texto) numa FichaCoach válida.
+ * Atende ao pedido #4205.
+ */
 // Nunca lança erro: texto sem JSON ou sem exercício devolve null.
 import { idDoNome, type DiaCoach, type ExercicioCoach, type FichaCoach } from './fichaCoach';
 
