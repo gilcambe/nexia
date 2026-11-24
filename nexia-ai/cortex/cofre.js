@@ -1,5 +1,6 @@
 /**
- * Cofre para sincronizar dados em memória
+ * Cofre para sincronizar dados em memória.
+ * Implementado conforme solicitado.
  */
 
 class Cofre {
