@@ -1,5 +1,6 @@
-import { useState } from 'react';
-import { NO_INTERVALO, sugerirNomes } from '@/lib/exercicioLivre';
+import { useEffect, useState } from 'react';
+import { NO_INTERVALO, nomeConhecido, sugerirNomes } from '@/lib/exercicioLivre';
+import { listarExercicios, salvarExercicio } from '@/lib/exerciciosComunidade';
 
 export type ModoExtra = 'trocar' | 'mais' | 'intervalo';
 
@@ -15,11 +16,17 @@ export default function ExercicioExtra({ modoInicial, atual, onTrocar, onAdicion
   const [modo, setModo] = useState<ModoExtra>(modoInicial);
   const [nome, setNome] = useState('');
   const [quanto, setQuanto] = useState('');
-  const sugestoes = modo === 'intervalo' && nome.trim().length < 2 ? NO_INTERVALO : sugerirNomes(nome);
+  // Exercícios que outros usuários criaram também aparecem nas sugestões (sem internet, segue sem eles).
+  const [daComunidade, setDaComunidade] = useState<string[]>([]);
+  useEffect(() => { listarExercicios().then((r) => setDaComunidade(r.lista.map((e) => e.nome))).catch(() => {}); }, []);
+  const sugestoes = modo === 'intervalo' && nome.trim().length < 2 ? NO_INTERVALO : sugerirNomes(nome, 6, daComunidade);
   const ok = nome.trim().length >= 2;
+  const novo = ok && modo !== 'intervalo' && !nomeConhecido(nome.trim(), daComunidade);
 
   const salvar = () => {
     if (!ok) return;
+    // Exercício que ninguém tinha: fica salvo para todos (dá para editar e apagar em Ferramentas > Exercícios da comunidade).
+    if (novo) void salvarExercicio({ nome: nome.trim() }).catch(() => {});
     if (modo === 'trocar') onTrocar(nome);
     else if (modo === 'mais') onAdicionar(nome);
     else onIntervalo(nome, quanto);
@@ -67,6 +74,8 @@ export default function ExercicioExtra({ modoInicial, atual, onTrocar, onAdicion
             ))}
           </div>
         )}
+
+        {novo && <p className="mt-2 text-xs text-foreground-500" data-testid="ex-novo"><i className="ri-group-line mr-1 text-primary-500"></i>Exercício novo: fica salvo para todos os usuários.</p>}
 
         {modo === 'intervalo' && (
           <label className="mt-4 block">

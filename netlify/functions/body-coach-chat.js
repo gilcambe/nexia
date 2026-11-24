@@ -23,6 +23,7 @@ const { profissionais, vinculoDe, podeEditar, meusAlunos, marcaLimpa, marcarConv
 const presenca = require('./body-coach/presenca');
 const { acoesAcesso, estaBloqueado, LIVRES } = require('./body-coach/acesso');
 const { acoesAvaliacoes, depoimentosPublicos } = require('./body-coach/avaliacoes');
+const { exercicios } = require('./body-coach/exercicios');
 
 const resposta = (event, statusCode, body) => ({ statusCode, headers: makeHeaders(event), body: JSON.stringify(body) });
 const par = (a, b) => [a, b].sort().join('__');
@@ -326,6 +327,8 @@ async function executar(body, uid, db, ctx = {}) {
   if (doNegocio) return doNegocio;
   const daComunidade = await comunidade(body, uid, db, eu);
   if (daComunidade) return daComunidade;
+  const dosExercicios = await exercicios(body, uid, db, eu, ctx);
+  if (dosExercicios) return dosExercicios;
   const dosProfissionais = await profissionais(body, uid, db, eu);
   if (dosProfissionais) return dosProfissionais;
 
