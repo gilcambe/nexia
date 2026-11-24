@@ -17,6 +17,7 @@ import { registrarSeries } from '@/lib/treinoAtivo';
 import { respostaLocal } from '@/lib/respostaLocal';
 import { DIVISOES, objetivosDe, sexoDe } from '@/lib/dayPlan';
 import { fichaDoPerfil } from '@/lib/ficha';
+import { resumoFicha, resumoTreinos } from '@/lib/coach/contextoTreino';
 
 export interface CoachContextSnapshot {
   name: string;
@@ -172,6 +173,9 @@ export function CoachProvider({ children }: { children: ReactNode }) {
         caloriesTarget: snapshot?.caloriesTarget ?? null,
         protein: snapshot?.protein ?? null,
         proteinTarget: snapshot?.proteinTarget ?? null,
+        // Ficha do coach (ou importada) e os últimos treinos: o coach responde sobre o treino real da pessoa.
+        ficha: resumoFicha((profile as { ficha_coach?: unknown } | null)?.ficha_coach),
+        ultimos_treinos: (() => { try { return resumoTreinos(JSON.parse(localStorage.getItem(`bc_workouts_${user?.id}`) || '[]')); } catch { return []; } })(),
       };
 
       // As últimas mensagens vão junto: o coach lembra o que já foi dito e responde ao que o aluno acabou de falar.
