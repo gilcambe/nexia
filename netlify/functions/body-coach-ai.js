@@ -57,9 +57,12 @@ exports.handler = async (event) => {
   const receita = body.task === 'receita';
   const cardio = body.task === 'cardio';
   const sincera = body.task === 'avaliacao';
+  const ficha = body.task === 'ficha';
   const produto = body.task === 'produto';
   if (cardio && typeof body.image !== 'string') return resposta(event, 400, { error: 'Mande a foto do painel.' });
-  const system = `${importar ? IMPORTAR : cardio ? CARDIO : sincera ? SINCERA : produto ? PRODUTO(body.tipo) : receita ? RECEITA : PAPEIS[role]}\nContexto do aluno: ${contexto}`;
+  // Ficha: só JSON, sem conversa.
+  const FICHA = PAPEIS.ficha + ' Devolva SOMENTE um JSON válido, sem markdown e sem texto fora dele, no formato {"resumo":"...","pontos_fortes":["..."],"pontos_a_melhorar":["..."],"recomendacoes":["..."]}. Não invente dados que não estejam no contexto nem nas imagens.';
+  const system = `${importar ? IMPORTAR : cardio ? CARDIO : sincera ? SINCERA : ficha ? FICHA : produto ? PRODUTO(body.tipo) : receita ? RECEITA : PAPEIS[role]}\nContexto do aluno: ${contexto}`;
   // Últimas mensagens da conversa (até 10), para o coach lembrar o que o aluno já disse.
   const historico = Array.isArray(body.history) ? body.history.slice(-10).filter((h) => h && (h.role === 'user' || h.role === 'assistant') && typeof h.content === 'string' && h.content.trim()).map((h) => ({ role: h.role, content: h.content.trim().slice(0, 600) })) : [];
   const mensagens = [...historico, { role: 'user', content: message }];
@@ -87,7 +90,7 @@ exports.handler = async (event) => {
       const cap = router.capabilities(d);
       if (!cap.available || (images && !cap.vision)) continue;
       // Cada modelo tem 12 s; se demorar, passa logo para o próximo (nunca deixa o aluno esperando no vazio).
-      const out = await Promise.race([router.chat(d, { system, messages: mensagens, maxTokens: importar ? 2500 : sincera || produto ? 1600 : images ? 1200 : receita ? 2000 : 700, ...(conversa ? { temperature: 0.85 } : {}), ...(images ? { images } : {}) }), new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 12000))]);
+      const out = await Promise.race([router.chat(d, { system, messages: mensagens, maxTokens: importar || ficha ? 2500 : sincera || produto ? 1600 : images ? 1200 : receita ? 2000 : 700, ...(conversa ? { temperature: 0.85 } : {}), ...(images ? { images } : {}) }), new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 12000))]);
       if (out && out.text) return resposta(event, 200, { reply: out.text, role, model: d.model });
     } catch { /* tenta o próximo modelo */ }
   }
