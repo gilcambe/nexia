@@ -60,8 +60,7 @@
     var atual = localStorage.getItem(chave);
     if (atual && atual !== data.version) {
       mostrar(null);
-    } else if (!atual) {
-      localStorage.setItem(chave, data.version);
     }
+    localStorage.setItem(chave, data.version);
   }).catch(function() {});
 })();
