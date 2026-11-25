@@ -1,5 +1,5 @@
 {
-  "rodizio": 83,
+  "rodizio": 84,
   "feitos": [
     "body-coach-01",
     "body-coach-02",
@@ -9,23 +9,6 @@
     "body-coach-06"
   ],
   "historico": [
-    {
-      "quando": "2026-10-24T14:02:45.840Z",
-      "id": null,
-      "cliente": "body-coach",
-      "resultados": [
-        {
-          "canal": "facebook",
-          "ok": true,
-          "ref": "1380111745183159_122102050227518156"
-        },
-        {
-          "canal": "instagram",
-          "ok": true,
-          "ref": "17983768874901964"
-        }
-      ]
-    },
     {
       "quando": "2026-10-24T18:10:46.282Z",
       "id": null,
@@ -1146,6 +1129,25 @@
       ],
       "formato": "reel",
       "serie": "passo-a-passo"
+    },
+    {
+      "quando": "2026-11-25T04:55:57.292Z",
+      "id": null,
+      "cliente": "body-coach",
+      "resultados": [
+        {
+          "canal": "facebook",
+          "ok": true,
+          "ref": "1380111745183159_122114614257518156"
+        },
+        {
+          "canal": "instagram",
+          "ok": true,
+          "ref": "18117796318843578"
+        }
+      ],
+      "formato": "carrossel",
+      "serie": "checklist"
     }
   ],
   "seguidores": [
@@ -1283,6 +1285,10 @@
     },
     {
       "dia": "2026-11-24",
+      "total": 3
+    },
+    {
+      "dia": "2026-11-25",
       "total": 3
     }
   ]
