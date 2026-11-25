@@ -13,7 +13,7 @@ const DailySpendCard = () => {
     const fetchUsage = async () => {
       try {
         const data = await getUsage();
-        const list = Array.isArray(data) ? data : data?.providers ?? [];
+        const list = Array.isArray(data) ? data : (data?.providers ?? []);
         setUsageData(list);
       } catch (err) {
         setUsageData([]);
