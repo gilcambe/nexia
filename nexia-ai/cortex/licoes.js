@@ -14,8 +14,10 @@ class LessonStore {
   }
 
   async loadInitialState() {
-    this.lessons = (await cofreInstance.recuperar('lessons')) || [];
-    this.avoidCounts = (await cofreInstance.recuperar('avoidCounts')) || {};
+    const savedLessons = await cofreInstance.recuperar('lessons');
+    const savedAvoidCounts = await cofreInstance.recuperar('avoidCounts');
+    if (savedLessons) this.lessons = savedLessons;
+    if (savedAvoidCounts) this.avoidCounts = savedAvoidCounts;
     return true;
   }
 
