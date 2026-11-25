@@ -10,7 +10,7 @@ class LessonStore {
   constructor() {
     this.lessons = [];
     this.avoidCounts = {};
-    this.initialized = this.loadInitialState();
+    this.initializationPromise = this.loadInitialState();
   }
 
   async loadInitialState() {
@@ -22,7 +22,7 @@ class LessonStore {
   }
 
   async ensureInitialized() {
-    await this.initialized;
+    await this.initializationPromise;
   }
 
   async addLesson({ assinatura, causa, resolucao, issue }) {
@@ -34,6 +34,7 @@ class LessonStore {
     this.lessons.push(lesson);
     
     await cofreInstance.salvar('lessons', this.lessons);
+    await cofreInstance.salvar('avoidCounts', this.avoidCounts);
     await cofreInstance.sincronizar();
 
     return lesson;
