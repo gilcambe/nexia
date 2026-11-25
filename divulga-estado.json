@@ -1,5 +1,5 @@
 {
-  "rodizio": 84,
+  "rodizio": 85,
   "feitos": [
     "body-coach-01",
     "body-coach-02",
@@ -9,25 +9,6 @@
     "body-coach-06"
   ],
   "historico": [
-    {
-      "quando": "2026-10-24T18:10:46.282Z",
-      "id": null,
-      "cliente": "body-coach",
-      "resultados": [
-        {
-          "canal": "facebook",
-          "ok": true,
-          "ref": "1380111745183159_122102316807518156"
-        },
-        {
-          "canal": "instagram",
-          "ok": true,
-          "ref": "18117300898822011"
-        }
-      ],
-      "formato": "foto",
-      "serie": "bastidores"
-    },
     {
       "quando": "2026-10-25T00:22:45.622Z",
       "id": null,
@@ -1147,6 +1128,25 @@
         }
       ],
       "formato": "carrossel",
+      "serie": "checklist"
+    },
+    {
+      "quando": "2026-11-25T19:57:53.225Z",
+      "id": null,
+      "cliente": "body-coach",
+      "resultados": [
+        {
+          "canal": "facebook",
+          "ok": true,
+          "ref": "1380111745183159_122114771271518156"
+        },
+        {
+          "canal": "instagram",
+          "ok": true,
+          "ref": "18660276991015441"
+        }
+      ],
+      "formato": "foto",
       "serie": "checklist"
     }
   ],
