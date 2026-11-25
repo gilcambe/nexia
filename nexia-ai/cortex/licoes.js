@@ -47,7 +47,7 @@ class LessonStore {
 
   async incrementAvoidCount(assinatura) {
     await this.ensureInitialized();
-    this.avoidCounts[assinatura] = (this.avoidCounts[assinatura] || 1) + 1;
+    this.avoidCounts[assinatura] = (this.avoidCounts[assinatura] || 0) + 1;
 
     await cofreInstance.salvar('avoidCounts', this.avoidCounts);
     await cofreInstance.sincronizar();
