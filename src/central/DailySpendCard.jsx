@@ -38,13 +38,13 @@ const DailySpendCard = () => {
         {usageData.map((provider, index) => (
           <div key={index} className="space-y-1">
             <div className="flex justify-between text-sm">
-              <span className="text-slate-700 font-medium">{provider.name}</span>
-              <span className="text-slate-500">{Math.round(provider.pct)}%</span>
+              <span className="text-slate-700 font-medium">{provider.name || 'Provedor'}</span>
+              <span className="text-slate-500">{Math.round(provider.pct || 0)}%</span>
             </div>
             <div className="h-2 rounded-full bg-slate-100 overflow-hidden">
               <div
-                className={`h-full rounded-full transition-all duration-300 ${utilBarColor(provider.pct)}`}
-                style={{ width: `${Math.max(2, Math.min(100, provider.pct))}%` }}
+                className={`h-full rounded-full transition-all duration-300 ${utilBarColor(provider.pct || 0)}`}
+                style={{ width: `${Math.max(2, Math.min(100, provider.pct || 0))}%` }}
               ></div>
             </div>
           </div>
