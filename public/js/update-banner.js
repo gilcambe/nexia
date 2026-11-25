@@ -55,7 +55,8 @@
   }
 
   // Extra (roda mesmo sem serviceWorker): compara /version.json com a última versão vista.
-  function guardarVersao(erro) {
+  function guardarVersao(data) {
+    if (!data || !data.version) return;
     var chave = "kx_ver";
     var atual = null;
     try { atual = localStorage.getItem(chave); } catch (e) { atual = null; }
@@ -69,6 +70,6 @@
     return res.json();
   }).then(function (data) {
     if (!data || !data.version) return;
-    guardarVersao();
+    guardarVersao(data);
   }).catch(function () {});
 })();
