@@ -2,16 +2,18 @@
 // Implementação final: atualiza via SW, visibilitychange, intervalo e fallback por version.json.
 // Uso: <script src="/js/update-banner.js" defer></script>. Sem dependências.
 (function () {
-  if (window.__kxUpdateBanner || !("serviceWorker" in navigator)) return;
+  if (window.__kxUpdateBanner) return;
   window.__kxUpdateBanner = true;
   var recarregou = false;
-  var tinhaControle = !!navigator.serviceWorker.controller; // na 1ª instalação não recarrega
+  var tinhaControle = "serviceWorker" in navigator && !!navigator.serviceWorker.controller; // na 1ª instalação não recarrega
 
   function mostrar(worker) {
     if (document.getElementById("kx-atualizar")) return;
     var b = document.createElement("div");
     b.id = "kx-atualizar";
-    b.setAttribute("role", "status");
+    b.setAttribute("role", "region");
+    b.setAttribute("aria-live", "polite");
+    b.setAttribute("aria-label", "Aviso de atualização");
     b.style.cssText = "position:fixed;left:12px;right:12px;bottom:12px;z-index:2147483647;display:flex;align-items:center;gap:12px;" +
       "padding:12px 14px;border-radius:14px;background:#111827;color:#fff;font:15px/1.3 system-ui,sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.35);max-width:520px;margin:0 auto";
     b.innerHTML = '<button type="button" style="flex:1;cursor:pointer;background:none;border:none;color:white;text-align:left;font:bold 15px/1.3 system-ui,sans-serif">Tem atualização nova 🎉 — Toque para atualizar</button>' +
@@ -29,12 +31,12 @@
 
   function vigiar(reg) {
     if (!reg) return;
-    if (reg.waiting && navigator.serviceWorker.controller) mostrar(reg.waiting);
+    if (reg.waiting) mostrar(reg.waiting);
     reg.addEventListener("updatefound", function () {
       var novo = reg.installing;
       if (!novo) return;
       novo.addEventListener("statechange", function () {
-        if (novo.state === "installed" && navigator.serviceWorker.controller) mostrar(novo);
+        if (novo.state === "installed") mostrar(novo);
       });
     });
     var checar = function () { reg.update().catch(function () {}); };
@@ -43,24 +45,30 @@
     checar();
   }
 
-  navigator.serviceWorker.addEventListener("controllerchange", function () {
-    if (recarregou || !tinhaControle) return;
-    recarregou = true;
-    location.reload();
-  });
-  navigator.serviceWorker.ready.then(function () { return navigator.serviceWorker.getRegistration(); }).then(vigiar).catch(function () {});
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.addEventListener("controllerchange", function () {
+      if (recarregou || !tinhaControle) return;
+      recarregou = true;
+      location.reload();
+    });
+    navigator.serviceWorker.ready.then(function () { return navigator.serviceWorker.getRegistration(); }).then(vigiar).catch(function () {});
+  }
 
-  // Extra: verificação opcional de /version.json
-  fetch("/version.json?t=" + Date.now()).then(function(res) {
-    if (!res.ok) return;
-    return res.json();
-  }).then(function(data) {
-    if (!data || !data.version) return;
+  // Extra (roda mesmo sem serviceWorker): compara /version.json com a última versão vista.
+  function guardarVersao(erro) {
     var chave = "kx_ver";
-    var atual = localStorage.getItem(chave);
+    var atual = null;
+    try { atual = localStorage.getItem(chave); } catch (e) { atual = null; }
     if (atual && atual !== data.version) {
       mostrar(null);
     }
-    localStorage.setItem(chave, data.version);
-  }).catch(function() {});
+    try { localStorage.setItem(chave, data.version); } catch (e) {}
+  }
+  fetch("/version.json?t=" + Date.now()).then(function (res) {
+    if (!res.ok) return;
+    return res.json();
+  }).then(function (data) {
+    if (!data || !data.version) return;
+    guardarVersao();
+  }).catch(function () {});
 })();
