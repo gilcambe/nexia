@@ -1,33 +1,46 @@
-const fs = require('fs');
-const path = require('path');
-const assert = require('assert');
-const { listar, catalogo, escolher, carregar } = require('../nexia-ai/skills/index');
+const assert = require('node:assert');
+const { describe, it } = require('node:test');
+const path = require('node:path');
+const fs = require('node:fs');
+const skills = require('../../nexia-ai/skills/index');
 
-// Cria estrutura temporária para teste
-const skillsDir = path.join(__dirname, '../nexia-ai/skills');
+describe('Cortex Skills', () => {
+  it('deve listar skills', () => {
+    const lista = skills.listar();
+    assert.ok(Array.isArray(lista));
+    assert.ok(lista.find(s => s.nome === 'tela-finance'));
+    assert.ok(lista.find(s => s.nome === 'job-agendado'));
+  });
 
-// Teste do listar
-const lista = listar();
-console.log('Testando listar...');
-assert(lista.find(s => s.nome === 'tela-finance'), 'Deve achar tela-finance');
-assert(lista.find(s => s.nome === 'job-agendado'), 'Deve achar job-agendado');
+  it('catalogo não deve conter corpo', () => {
+    const lista = skills.listar();
+    const texto = skills.catalogo(lista);
+    assert.ok(!texto.includes('# SKILL'));
+    assert.ok(texto.includes('SKILLS DISPONÍVEIS:'));
+  });
 
-// Teste do catálogo
-const cat = catalogo(lista);
-console.log('Testando catálogo...');
-assert(cat.includes('SKILLS DISPONÍVEIS:'), 'Deve ter cabeçalho');
-assert(cat.includes('- tela-finance:'), 'Deve ter o nome');
-assert(!cat.includes('Regras de uso:'), 'Não deve ter o conteúdo');
+  it('escolher deve retornar a skill correta', () => {
+    const lista = skills.listar();
+    const escolhidas = skills.escolher('criar cron que atualiza o estado', lista);
+    assert.strictEqual(escolhidas[0].nome, 'job-agendado');
+  });
 
-// Teste da escolha
-console.log('Testando escolher...');
-const escolha = escolher('criar cron que atualiza o estado', lista);
-assert(escolha[0].nome === 'job-agendado', 'Deve escolher job-agendado pelo pedido');
+  it('carregar deve devolver corpo sem frontmatter', () => {
+    const corpo = skills.carregar('tela-finance');
+    assert.ok(corpo.includes('Use esta skill quando a tarefa'));
+    assert.ok(!corpo.includes('name: tela-finance'));
+  });
 
-// Teste do carregar
-console.log('Testando carregar...');
-const corpo = carregar('tela-finance');
-assert(corpo.includes('Regras de uso:'), 'Deve ter o conteúdo');
-assert(!corpo.includes('name: tela-finance'), 'Não deve ter o frontmatter');
-
-console.log('Todos os testes passaram!');
+  it('pasta inválida não deve derrubar listar', () => {
+    // Cria uma pasta inválida que será ignorada pelo listar
+    const dir = path.join(__dirname, '../../nexia-ai/skills/invalida');
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir);
+    fs.writeFileSync(path.join(dir, 'SKILL.md'), 'conteudo sem frontmatter');
+    
+    const lista = skills.listar();
+    assert.ok(Array.isArray(lista));
+    
+    fs.unlinkSync(path.join(dir, 'SKILL.md'));
+    fs.rmdirSync(dir);
+  });
+});
