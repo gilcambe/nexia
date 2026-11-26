@@ -54,10 +54,10 @@ test('RF4. REGRESSÃO #2141/#2145/#2159: tarefa com mais de 100 eventos, travada
   assert.deepEqual(v.map(x => [x.tipo, x.numero, x.motivo]), [['reserva-volta', 2141, 'cofre'], ['reserva-volta', 2159, 'cofre']]);
 });
 
-test('RF5. travou DEPOIS do conserto: vai para o executor de contrato (#3419); se o contrato já falhou, não volta (sem laço)', async () => {
+test('RF5. travou DEPOIS do conserto: vai para o executor de contrato (#3419); se o contrato já falhou, destrava em degraus (limitado, sem laço)', async () => {
   const gh = githubFalso({ eventos: { 2383: historico({ rotulo: 'cortex-travado', em: DEPOIS }), 2384: historico({ rotulo: 'cortex-travado', em: DEPOIS }) } });
   const v = await travadasPeloCofre('t', [issue(2383, ['cortex-travado']), issue(2384, ['cortex-travado', 'contrato-falhou'])], { ghFn: gh });
-  assert.deepEqual(v.map(x => [x.numero, x.motivo]), [[2383, 'contrato']]);
+  assert.deepEqual(v.map(x => [x.numero, x.motivo, x.tipo]), [[2383, 'contrato', 'reserva-volta'], [2384, undefined, 'destravar']]);
 });
 
 test('RF6. REGRESSÃO da janela de 15: travadas antigas elegíveis são alcançadas mesmo com 15 mais novas na frente', async () => {

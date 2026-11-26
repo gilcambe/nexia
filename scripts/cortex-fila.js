@@ -64,8 +64,17 @@ function paisConcluidos({ pais, partes }) {
   return pais.filter(x => { const ps = porPai.get(x.number) || []; return ps.length > 0 && ps.every(p => p.state === 'closed' && nomes(p).includes(L.feito)); }).map(x => x.number);
 }
 // Caminhos de arquivo entre crases no pedido (ex.: `src/a/b.ts`). Servem para conferir se a entrega mexeu no que foi pedido.
+// 26/11/2026 (trava): parte de pedido grande leva no fim o "Pedido original de #pai (só consulta)", que cita arquivos das
+// OUTRAS partes (nexia-ai/skills/index.js em #4155/#4156/#4157). Eles entravam na conferência e a parte nunca passava.
+// Agora: parte com plano confere só os arquivos do plano; texto de consulta nunca entra.
+const FORMATO_CAMINHO = /^[\w./-]*\/[\w.-]+\.(?:js|ts|tsx|jsx|css|html|json|md|yml|svg|webmanifest)$/;
 function caminhosDoPedido(corpo) {
-  const achados = String(corpo || '').match(/`[\w./-]*\/[\w.-]+\.(?:js|ts|tsx|jsx|css|html|json|md|yml|svg|webmanifest)`/g) || [];
+  const meta = plano.lerPlano(corpo);
+  if (meta && Array.isArray(meta.arquivos) && meta.arquivos.length) {
+    const doPlano = meta.arquivos.filter(c => typeof c === 'string' && FORMATO_CAMINHO.test(c) && !c.startsWith('/') && !c.includes('..'));
+    if (doPlano.length) return [...new Set(doPlano)];
+  }
+  const achados = String(corpo || '').split(/\n\nPedido original de #\d+/)[0].match(/`[\w./-]*\/[\w.-]+\.(?:js|ts|tsx|jsx|css|html|json|md|yml|svg|webmanifest)`/g) || [];
   return [...new Set(achados.map(c => c.slice(1, -1)).filter(c => !c.startsWith('/') && !c.includes('..')))];
 }
 // Rede de segurança do "feito": o pedido cita arquivos, mas nenhum deles existe na develop nem em PR aberto = a rodada não entregou nada.
@@ -126,12 +135,17 @@ async function validarCortexFeito(token, issue, ghFn = gh) {
     const reRef = new RegExp(`#${n}(?!\\d)`, 'i');
     const pr = prsFechados.find(p => p && p.merged_at && (p.base || {}).ref === 'develop' && reRef.test(`${p.title || ''}\n${p.body || ''}`));
 
+    // A rodada termina ANTES do merge: o PR do Cortex ainda está aberto (esperando o CI/automerge). Isso não é falta de
+    // entrega; antes contava como "Nenhum PR mesclado" e travava a tarefa 2 rodadas depois (#4093, #4097, #4189, #4203).
+    let prAberto = null;
     if (!pr) {
-      faltas.push('Nenhum PR mesclado em develop citando esta issue');
+      const abertos = (await ghFn(token, 'GET', '/pulls?state=open&per_page=100')).json;
+      prAberto = (Array.isArray(abertos) ? abertos : []).find(p => p && (p.base || {}).ref === 'develop' && /^nexia\//.test((p.head || {}).ref || '') && reRef.test(`${p.title || ''}\n${p.body || ''}`)) || null;
+      if (!prAberto) faltas.push('Nenhum PR mesclado em develop citando esta issue');
     }
 
     // 2. Arquivos existem na branch develop
-    if (caminhos.length > 0) {
+    if (caminhos.length > 0 && !prAberto) {   // com PR aberto, os arquivos ainda estão no PR, não na develop
       const inexistentes = [];
       for (const c of caminhos) {
         const res = await ghFn(token, 'GET', `/contents/${c}?ref=develop`);
@@ -151,7 +165,14 @@ async function validarCortexFeito(token, issue, ghFn = gh) {
         const runs = (await ghFn(token, 'GET', `/actions/runs?head_sha=${sha}&per_page=10`)).json || {};
         const listaRuns = runs.workflow_runs || [];
         if (listaRuns.length > 0) {
-          const comErro = listaRuns.some(r => r.conclusion === 'failure' || r.conclusion === 'timed_out');
+          // Vale a execução MAIS RECENTE de cada fluxo: falha antiga já refeita com sucesso não é falha.
+          const ultimaPorFluxo = new Map();
+          for (const r of listaRuns) {
+            const k = r.workflow_id || r.name || '?';
+            const atual = ultimaPorFluxo.get(k);
+            if (!atual || (Date.parse(r.created_at) || 0) >= (Date.parse(atual.created_at) || 0)) ultimaPorFluxo.set(k, r);
+          }
+          const comErro = [...ultimaPorFluxo.values()].some(r => r.conclusion === 'failure' || r.conclusion === 'timed_out');
           if (comErro) {
             faltas.push(`CI do commit ${sha.slice(0, 7)} falhou`);
           }
@@ -288,6 +309,31 @@ function juntarTravadas(issues, travadas) {
   const vistos = new Set((issues || []).map(i => i.number));
   return [...(issues || []), ...(Array.isArray(travadas) ? travadas : []).filter(i => !i.pull_request && !vistos.has(i.number) && vistos.add(i.number))];
 }
+// 26/11/2026: contrato-nao-testavel/contrato-falhou + cortex-travado era BECO SEM SAÍDA: nada na fila tirava a tarefa de lá
+// (15 issues paradas). Agora o Cortex se destrava em degraus, mudando algo a cada vez; só no fim pede uma pessoa, com motivo.
+const MAX_DESTRAVAS = 2;
+const ESPERA_DESTRAVA_MS = 2 * 3600e3;   // espera depois de travar, para a cota/IA mudar antes de tentar de novo
+const DE_CONTRATO = ['contrato-nao-testavel', 'contrato-falhou'];
+const destravasFeitas = ls => Math.max(0, ...ls.map(l => { const m = /^destrava-(\d+)$/.exec(l); return m ? Number(m[1]) : 0; }));
+// Função pura: o que fazer com uma travada que o contrato já tentou. null = ainda não é hora.
+function planoDeDestrava(i, travadoEm, agora = Date.now()) {
+  const ls = nomes(i);
+  if (!ls.includes(L.travado) || !ls.some(l => DE_CONTRATO.includes(l)) || ls.some(l => FORA_DA_RECUPERACAO.includes(l))) return null;
+  if (travadoEm && agora - Date.parse(travadoEm) < ESPERA_DESTRAVA_MS) return null;
+  const feitas = destravasFeitas(ls);
+  return feitas >= MAX_DESTRAVAS ? { tipo: 'pedir-humano', passo: feitas + 1 } : { tipo: 'destravar', passo: feitas + 1 };
+}
+// Função pura: o dono (ou colaborador) escreveu "Feito no PR #N" e esse PR foi mesclado = a tarefa já foi entregue por outro caminho.
+const FEITO_NO_PR = /\b(?:feito|conclu[ií]d[ao]|resolvid[ao]|entregue)\b[^\n]*?\bPR\s*#(\d+)/i;
+function feitoPorComentario(comentarios, prsMesclados) {
+  for (const c of [...(comentarios || [])].reverse()) {
+    if (!c || !CONFIAVEIS.includes(c.author_association)) continue;
+    const m = FEITO_NO_PR.exec(String(c.body || ''));
+    const pr = m && (prsMesclados || []).find(p => p && p.merged_at && p.number === Number(m[1]));
+    if (pr) return pr;
+  }
+  return null;
+}
 async function travadasPeloCofre(token, issues, { ghFn = gh, agora = Date.now() } = {}) {
   const voltar = [];
   const fora = x => nomes(x).some(l => FORA_DA_RECUPERACAO.includes(l));
@@ -302,12 +348,26 @@ async function travadasPeloCofre(token, issues, { ghFn = gh, agora = Date.now() 
       const quando = await ultimoRotuloEm(token, i.number, L.travado, ghFn);
       // Travou antes do conserto do ambiente: volta do zero (cofre). Depois: a causa é da tarefa, então vai para o contrato.
       const julesRecente = fora(i) && !(quando && agora - Date.parse(quando) >= JULES_PARADO_MS);
-      const motivo = !fora(i) && travouAntesDoConserto(quando) ? 'cofre' : tentaContrato(i) && !julesRecente ? 'contrato' : null;
+      const destrava = planoDeDestrava(i, quando, agora);
+      const motivo = !fora(i) && travouAntesDoConserto(quando) ? 'cofre' : tentaContrato(i) && !julesRecente ? 'contrato' : destrava ? 'destrava' : null;
       if (!motivo) continue;
       if (mesclados === null) { const r = (await ghFn(token, 'GET', '/pulls?state=closed&sort=updated&direction=desc&per_page=100')).json; mesclados = Array.isArray(r) ? r : []; }
-      const pr = entregaComprovada(i.number, mesclados);
-      if (pr) { console.log(`travada #${i.number}: o PR #${pr.number} já integrado diz fechar a tarefa; não volta para a fila (precisa de conferência da entrega)`); continue; }
-      voltar.push({ tipo: 'reserva-volta', numero: i.number, rotulos: nomes(i), motivo });
+      // Já foi entregue por outro caminho (PR mesclado que fecha a tarefa, ou "Feito no PR #N" do dono)? Fecha em vez de refazer,
+      // desde que os arquivos dela estejam na develop. Antes ficava aberta com cortex-travado e o painel acusava trava falsa.
+      let pr = entregaComprovada(i.number, mesclados);
+      if (!pr) {
+        try { pr = feitoPorComentario((await ghFn(token, 'GET', `/issues/${i.number}/comments?per_page=100`)).json, mesclados); } catch { pr = null; }
+      }
+      if (pr) {
+        const val = await validarCortexFeito(token, { number: i.number, body: i.body }, ghFn).catch(() => ({ ok: false }));
+        const porComentario = !entregaComprovada(i.number, mesclados);
+        if (val.ok || porComentario) { voltar.push({ tipo: 'fechar-por-pr', numero: i.number, rotulos: nomes(i), pr: pr.number }); continue; }
+        console.log(`travada #${i.number}: o PR #${pr.number} já integrado diz fechar a tarefa, mas a conferência falhou (${(val.faltas || []).join('; ')}); não volta para a fila`);
+        continue;
+      }
+      voltar.push(motivo === 'destrava'
+        ? { ...destrava, numero: i.number, rotulos: nomes(i), parte: nomes(i).includes(L.parte) }
+        : { tipo: 'reserva-volta', numero: i.number, rotulos: nomes(i), motivo });
     } catch (e) { console.log(`travada #${i.number}: ${e.message}`); }
   }
   return voltar;
@@ -679,6 +739,27 @@ async function executar(token, acao, dividir) {
     await limparPistas(); await addLabel(L.feito);
     await comentar(`O PR do Jules (#${acao.pr}) entrou na develop. Parte concluída.`);
     await gh(token, 'PATCH', `/issues/${n}`, { state: 'closed', state_reason: 'completed' });
+  } else if (acao.tipo === 'fechar-por-pr') {
+    for (const l of acao.rotulos.filter(x => [L.travado, L.rodando, L.fila, L.jules, 'jules-enviado', 'cortex-contrato', ...DE_CONTRATO].includes(x) || /^(tentativa|sem-entrega|pista|destrava)-\d+$/.test(x))) await delLabel(l).catch(() => null);
+    await addLabel(L.feito);
+    await comentar(`Esta tarefa já foi entregue pelo PR #${acao.pr} (mesclado na develop). Tirei o rótulo de travada e fechei como concluída, sem refazer o trabalho.`);
+    await gh(token, 'PATCH', `/issues/${n}`, { state: 'closed', state_reason: 'completed' });
+  } else if (acao.tipo === 'destravar') {
+    // Degrau 1: mesma tarefa, outro caminho (Reserva de novo com outra IA; pode ser dividida se não for parte). Degrau 2: também
+    // refaz o teste (contrato). Nunca é a mesma tentativa repetida: a cada degrau o que bloqueava sai.
+    const tira = acao.rotulos.filter(x => [L.travado, L.rodando, L.semDivisao, 'reserva-tentou', 'cortex-contrato'].includes(x)
+      || /^(tentativa|sem-entrega|pista)-\d+$/.test(x) || (acao.passo >= 2 && DE_CONTRATO.includes(x)) || (acao.parte && x === L.semDivisao));
+    for (const l of tira) await delLabel(l).catch(() => null);
+    if (!acao.rotulos.includes(L.fila)) await addLabel(L.fila);
+    await addLabel(`destrava-${acao.passo}`);
+    await comentar(acao.passo === 1
+      ? 'Travada sem saída: o Cortex vai tentar de forma diferente (não igual à última vez). Voltou para a fila do zero: a Reserva tenta de novo com outra IA, e se o pedido for grande ele pode ser dividido. A conferência de entrega agora olha só os arquivos desta tarefa e aceita PR ainda aberto.'
+      : 'Segunda saída automática: além do passo anterior, o Cortex vai refazer o teste da tarefa (contrato) do começo, com as IAs que tiverem cota hoje.');
+  } else if (acao.tipo === 'pedir-humano') {
+    for (const l of acao.rotulos.filter(x => [L.rodando, L.fila].includes(x) || /^pista-\d+$/.test(x))) await delLabel(l).catch(() => null);
+    await addLabel('so-humano');
+    await comentar(`O Cortex já se destravou ${acao.passo - 1} vezes sozinho (outra IA, dividir, refazer o teste) e não deu. Agora é decisão do dono. Em /meu-cortex escolha UMA: (1) "Tentar de novo" se a cota das IAs voltou; (2) "Reescrever o pedido" menor, com uma linha "Teste:" e "Arquivos:"; (3) "Cancelar" se não vale mais. Se a tarefa já foi feita, comente "Feito no PR #número" e o Cortex fecha sozinho.`);
+    await avisarDono('travado', n, acao.titulo);
   } else if (acao.tipo === 'reserva-volta' && acao.motivo === 'contrato') {
     // #3419: travada vai direto para o executor de contrato (não repete os 7 agentes que já falharam).
     const d = await gh(token, 'POST', '/actions/workflows/cortex-contrato.yml/dispatches', { ref: 'develop', inputs: { numero: String(n) } });
@@ -1075,5 +1156,5 @@ async function main() {
   }
 }
 
-module.exports = { decidirConflito, refazerConflitos, MAX_REFAZER_CONFLITO, MARCA_CONFLITO, caminhosRecusados, bibliotecaDoPedido, comFecha, juntarTravadas, tentaContrato, FORA_DO_CONTRATO, vaiParaContrato, ultimoRotuloEm, travadasPeloCofre, entregaComprovada, MAX_RECUPERAR_POR_CICLO, FORA_DA_RECUPERACAO, soPipelineModelo, assinaturaDoSmoke, errosDeAmbiente, mexeEmWorkflow, planejarComIA, revisarParte, dadosDoPlanejador, corrigirCiDosPrs, reservaVolta, reservasQueVoltam, travouAntesDoConserto, devePedirReserva, entregouAlgo, depoisSemEntrega, MAX_SEM_ENTREGA, rascunhosParados, candidatosRascunho, MSG_RASCUNHO_PARADO, tokenDaApp, TENTATIVAS_ATE_DIVIDIR, caminhosDoPedido, sondarCota, decidir, precisaTesteFinal, precisaDividir, paisConcluidos, dividirComIA, MAX_TENTATIVAS, validarCortexFeito, reabrirFeitosInvalidos };
+module.exports = { planoDeDestrava, feitoPorComentario, MAX_DESTRAVAS, caminhosDoPedido, decidirConflito, refazerConflitos, MAX_REFAZER_CONFLITO, MARCA_CONFLITO, caminhosRecusados, bibliotecaDoPedido, comFecha, juntarTravadas, tentaContrato, FORA_DO_CONTRATO, vaiParaContrato, ultimoRotuloEm, travadasPeloCofre, entregaComprovada, MAX_RECUPERAR_POR_CICLO, FORA_DA_RECUPERACAO, soPipelineModelo, assinaturaDoSmoke, errosDeAmbiente, mexeEmWorkflow, planejarComIA, revisarParte, dadosDoPlanejador, corrigirCiDosPrs, reservaVolta, reservasQueVoltam, travouAntesDoConserto, devePedirReserva, entregouAlgo, depoisSemEntrega, MAX_SEM_ENTREGA, rascunhosParados, candidatosRascunho, MSG_RASCUNHO_PARADO, tokenDaApp, TENTATIVAS_ATE_DIVIDIR, caminhosDoPedido, sondarCota, decidir, precisaTesteFinal, precisaDividir, paisConcluidos, dividirComIA, MAX_TENTATIVAS, validarCortexFeito, reabrirFeitosInvalidos };
 if (require.main === module) main().catch(e => { console.error(e.message); process.exit(1); });
