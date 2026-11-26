@@ -1,11 +1,10 @@
 // Cortex: service worker mínimo. Deixa o Chrome instalar o Cortex como app de verdade (sem barra de endereço)
 // e guarda o visual (scripts, estilos, ícones) para abrir bem mais rápido. Dados e /api sempre vão direto à rede.
 
-const CACHE = "cortex-v10";
+const CACHE = "cortex-v11";
 self.addEventListener("message", (e) => { if (e.data && e.data.tipo === "atualizar") self.skipWaiting(); });
 self.addEventListener("install", (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(["/cortex"])));
-  self.skipWaiting();
 });
 self.addEventListener("activate", (e) => {
   e.waitUntil(
