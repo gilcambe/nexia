@@ -48,6 +48,13 @@ test('testa habilidades (skills)', async (t) => {
     assert.strictEqual(escolhidas[0].nome, 'job-agendado');
   });
 
+  await t.test('escolher deve selecionar tela-finance para tela', () => {
+    const lista = listar();
+    const escolhidas = escolher('mexe em telas do finance', lista);
+    assert.strictEqual(escolhidas.length, 1);
+    assert.strictEqual(escolhidas[0].nome, 'tela-finance');
+  });
+
   await t.test('carregar devolve o corpo sem frontmatter', () => {
     const corpo = carregar('tela-finance');
     assert.strictEqual(corpo.trim(), 'corpo finance');
