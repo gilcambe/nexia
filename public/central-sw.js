@@ -3,7 +3,7 @@
 
 // #2917: a versão nova espera o toque em "Atualizar" (public/js/update-banner.js) e então assume.
 self.addEventListener("message", (e) => { if (e.data && e.data.tipo === "atualizar") self.skipWaiting(); });
-const CACHE = "central-v8";
+const CACHE = "central-v9";
 self.addEventListener("install", (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(["/central"])));
 });
