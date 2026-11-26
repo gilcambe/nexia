@@ -6,18 +6,15 @@ const { execSync } = require('node:child_process');
 
 const TAREFAS_DIR = path.resolve(__dirname, '../../nexia-ai/contrato/regua/tarefas');
 
-// IDs das tarefas conforme a estrutura do diretório, filtrando apenas pastas válidas
 const getTarefas = () => {
   return fs.readdirSync(TAREFAS_DIR)
     .filter(name => fs.statSync(path.join(TAREFAS_DIR, name)).isDirectory())
     .sort();
 };
 
-test('validar estrutura das tarefas da régua', () => {
+test('validar estrutura das 8 tarefas', () => {
   const tarefas = getTarefas();
-  // Esperado 10 tarefas conforme listagem, mas o pedido menciona 8 (3 originais + 5 novas).
-  // Ajustando para validar todas que existem na pasta.
-  assert.ok(tarefas.length >= 8, `Esperado pelo menos 8 tarefas, encontrado ${tarefas.length}`);
+  assert.strictEqual(tarefas.length, 8, `Esperado exatamente 8 tarefas, encontrado ${tarefas.length}`);
 
   for (const id of tarefas) {
     const dir = path.join(TAREFAS_DIR, id);
@@ -27,69 +24,57 @@ test('validar estrutura das tarefas da régua', () => {
   }
 });
 
-test('validar falha de implementação inicial para tarefas novas', () => {
+test('validar falha de implementação para tarefas novas', () => {
   const tarefas = getTarefas();
+  // Assume que as tarefas novas são as últimas 5 da lista ordenada
+  const tarefasNovas = tarefas.slice(-5);
   
-  for (const id of tarefas) {
+  for (const id of tarefasNovas) {
     const dir = path.join(TAREFAS_DIR, id);
-    const tmp = fs.mkdtempSync(path.join(require('node:os').tmpdir(), `test-${id}-`));
+    const tmp = fs.mkdtempSync(path.join(require('node:os').tmpdir(), `test-fail-${id}-`));
     
     try {
-      // Simula ausência de implementação copiando apenas o básico
-      const files = ['visivel.test.js', 'oculto.test.js'];
-      files.forEach(f => {
-        if (fs.existsSync(path.join(dir, f))) {
-          fs.copyFileSync(path.join(dir, f), path.join(tmp, f));
-        }
-      });
+      // Simula ausência de implementação criando apenas um arquivo vazio
+      fs.writeFileSync(path.join(tmp, 'index.js'), 'module.exports = {};');
 
-      // Roda testes contra um ambiente sem arquivos de solução
+      // Roda testes contra o ambiente vazio
       const runTest = (testFile) => {
         try {
-          execSync(`node --test ${path.join(tmp, testFile)}`, { stdio: 'pipe' });
-          return true; // passou
+          // Copia o teste para o tmp
+          fs.copyFileSync(path.join(dir, testFile), path.join(tmp, testFile));
+          execSync(`node --test ${path.join(tmp, testFile)}`, { stdio: 'ignore' });
+          return true;
         } catch {
-          return false; // falhou (esperado)
+          return false;
         }
       };
 
-      const visivelPassou = runTest('visivel.test.js');
-      const ocultoPassou = runTest('oculto.test.js');
-
-      assert.strictEqual(visivelPassou, false, `Tarefa ${id} deveria falhar no teste visível sem solução`);
-      assert.strictEqual(ocultoPassou, false, `Tarefa ${id} deveria falhar no teste oculto sem solução`);
+      assert.strictEqual(runTest('visivel.test.js'), false, `Tarefa ${id} deveria falhar no teste visível sem solução`);
+      assert.strictEqual(runTest('oculto.test.js'), false, `Tarefa ${id} deveria falhar no teste oculto sem solução`);
     } finally {
       fs.rmSync(tmp, { recursive: true, force: true });
     }
   }
 });
 
-test('validar sucesso de implementação com solucao.js', () => {
+test('validar sucesso de implementação com solucao.js para tarefas novas', () => {
   const tarefas = getTarefas();
+  const tarefasNovas = tarefas.slice(-5);
 
-  for (const id of tarefas) {
+  for (const id of tarefasNovas) {
     const dir = path.join(TAREFAS_DIR, id);
-    if (!fs.existsSync(path.join(dir, 'solucao.js'))) continue;
+    assert.ok(fs.existsSync(path.join(dir, 'solucao.js')), `Tarefa nova ${id} faltando solucao.js`);
 
     const tmp = fs.mkdtempSync(path.join(require('node:os').tmpdir(), `test-sol-${id}-`));
     
     try {
       // Copia tudo (incluindo solução)
-      const copyRecursive = (src, dest) => {
-        fs.mkdirSync(dest, { recursive: true });
-        fs.readdirSync(src).forEach(n => {
-          const s = path.join(src, n);
-          const d = path.join(dest, n);
-          if (fs.statSync(s).isDirectory()) copyRecursive(s, d);
-          else fs.copyFileSync(s, d);
-        });
-      };
-      copyRecursive(dir, tmp);
+      fs.copyFileSync(path.join(dir, 'solucao.js'), path.join(tmp, 'index.js'));
 
-      // Roda testes
       const runTest = (testFile) => {
         try {
-          execSync(`node --test ${path.join(tmp, testFile)}`, { stdio: 'pipe' });
+          fs.copyFileSync(path.join(dir, testFile), path.join(tmp, testFile));
+          execSync(`node --test ${path.join(tmp, testFile)}`, { stdio: 'ignore' });
           return true;
         } catch {
           return false;
