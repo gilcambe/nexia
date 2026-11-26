@@ -5,6 +5,7 @@ const CACHE = "cortex-v10";
 self.addEventListener("message", (e) => { if (e.data && e.data.tipo === "atualizar") self.skipWaiting(); });
 self.addEventListener("install", (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(["/cortex"])));
+  self.skipWaiting();
 });
 self.addEventListener("activate", (e) => {
   e.waitUntil(

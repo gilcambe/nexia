@@ -6,6 +6,7 @@ self.addEventListener("message", (e) => { if (e.data && e.data.tipo === "atualiz
 const CACHE = "central-v10";
 self.addEventListener("install", (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(["/central"])));
+  self.skipWaiting();
 });
 self.addEventListener("activate", (e) => {
   e.waitUntil(
