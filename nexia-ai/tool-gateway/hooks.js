@@ -1,6 +1,6 @@
-const crypto = require('crypto');
+'use strict';
 
-function bloquearPerigoso({ tool, input }) {
+const bloquearPerigoso = async ({ tool, input }) => {
   const inputStr = JSON.stringify(input);
   const perigos = [
     'git push --force',
@@ -9,43 +9,36 @@ function bloquearPerigoso({ tool, input }) {
     '.env'
   ];
   for (const p of perigos) if (inputStr.includes(p)) return { bloquear: `Ação perigosa detectada: ${p}` };
-  
-  // Chaves sk-... de 20+ chars
-  if (inputStr.match(/sk-[a-zA-Z0-9]{20,}/)) return { bloquear: 'Chave secreta detectada' };
-  
-  return null;
-}
+  const skMatch = inputStr.match(/sk-[a-zA-Z0-9]{20,}/);
+  if (skMatch) return { bloquear: 'Chave secreta (sk-...) detectada.' };
+  return { bloquear: null };
+};
 
-function checarSintaxe({ tool, input }, resultado) {
-  if (input && input.path && input.path.endsWith('.js')) {
-    if (input.content && input.content.includes('function (')) {
-      return { avisos: ['Sintaxe de arquivo JS suspeita: "function ("'] };
-    }
+const checarSintaxe = async ({ tool, input }, resultado) => {
+  if (typeof resultado === 'string' && resultado.includes('function (')) {
+    return { avisos: ['Sintaxe possivelmente incompleta: "function (" detectado.'] };
   }
-  return null;
-}
+  return { avisos: [] };
+};
 
 function criarHooks(custom = {}) {
-  const hooks = {
-    antes: custom.antes || [bloquearPerigoso],
-    depois: custom.depois || [checarSintaxe]
-  };
-
+  const antes = custom.antes || [bloquearPerigoso];
+  const depois = custom.depois || [checarSintaxe];
   return {
-    async rodarAntes(data) {
-      for (const hook of hooks.antes) {
-        const res = await hook(data);
+    rodarAntes: async (ctx) => {
+      for (const fn of antes) {
+        const res = await fn(ctx);
         if (res && res.bloquear) return res;
       }
-      return null;
+      return { bloquear: null };
     },
-    async rodarDepois(data, resultado) {
-      const avisos = [];
-      for (const hook of hooks.depois) {
-        const res = await hook(data, resultado);
-        if (res && res.avisos) avisos.push(...res.avisos);
+    rodarDepois: async (ctx, resultado) => {
+      let avisos = [];
+      for (const fn of depois) {
+        const res = await fn(ctx, resultado);
+        if (res && res.avisos) avisos = avisos.concat(res.avisos);
       }
-      return avisos.length ? { avisos } : null;
+      return { avisos };
     }
   };
 }
