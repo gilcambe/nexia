@@ -37,7 +37,7 @@ const itauUniclassBlack = {
 async function testLeituraFatura() {
   console.log('Testando leitura de fatura...');
   
-  const { listar, base } = require('./db/mock'); // Ajustado para ambiente de teste
+  const listar = () => [];\nconst base = { salvar: () => Promise.resolve(true) };
 
 // Testar normalização
   const lanc1 = normalizarLancamento(itauUniclassInfini.lancamentos[0], itauUniclassInfini);
