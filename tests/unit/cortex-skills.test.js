@@ -28,6 +28,11 @@ test('testa habilidades (skills)', async (t) => {
     assert.ok(lista.find(s => s.nome === 'job-agendado'));
   });
 
+  await t.test('listar ignora pasta sem SKILL.md ou com frontmatter invalido', () => {
+    const lista = listar();
+    assert.ok(!lista.find(s => s.nome === 'quebrada'));
+  });
+
   await t.test('catalogo nao deve conter o corpo', () => {
     const lista = listar();
     const cat = catalogo(lista);
