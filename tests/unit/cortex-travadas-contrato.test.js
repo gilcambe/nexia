@@ -29,8 +29,8 @@ test('TC2. travadasPeloCofre devolve a travada recente para o contrato (motivo c
   const issues = [issue(10), issue(11, ['jules-enviado']), issue(12, ['contrato-falhou']), issue(13)];
   const prs = [{ number: 99, merged_at: '2026-11-11T00:00:00Z', title: 'x', body: 'Closes #13' }];
   const r = await travadasPeloCofre('t', issues, { ghFn: githubFalso({ prs }), agora: Date.parse(DEPOIS) + 4 * 24 * 3600 * 1000 });
-  assert.deepEqual(r.map(a => [a.numero, a.motivo]), [[10, 'contrato'], [11, 'contrato']]);
-  assert.ok(r.every(a => a.tipo === 'reserva-volta'));
+  assert.deepEqual(r.map(a => [a.numero, a.motivo]), [[10, 'contrato'], [11, 'contrato'], [12, undefined]]);
+  assert.deepEqual(r.map(a => a.tipo), ['reserva-volta', 'reserva-volta', 'destravar']);   // 12: contrato já falhou -> degrau de destrava
 });
 
 test('TC3. no máximo MAX_RECUPERAR_POR_CICLO por ciclo', async () => {
