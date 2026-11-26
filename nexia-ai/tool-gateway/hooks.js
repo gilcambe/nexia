@@ -1,44 +1,24 @@
-'use strict';
+const { bloquearPerigoso, checarSintaxe } = require('./hooks-rules');
 
-const bloquearPerigoso = async ({ tool, input }) => {
-  const inputStr = JSON.stringify(input);
-  const perigos = [
-    'git push --force',
-    'rm -rf /',
-    'DROP TABLE',
-    '.env'
-  ];
-  for (const p of perigos) if (inputStr.includes(p)) return { bloquear: `Ação perigosa detectada: ${p}` };
-  const skMatch = inputStr.match(/sk-[a-zA-Z0-9]{20,}/);
-  if (skMatch) return { bloquear: 'Chave secreta (sk-...) detectada.' };
-  return { bloquear: null };
-};
+function criarHooks(config = {}) {
+  const antes = config.antes || [bloquearPerigoso];
+  const depois = config.depois || [checarSintaxe];
 
-const checarSintaxe = async ({ tool, input }, resultado) => {
-  if (typeof resultado === 'string' && resultado.includes('function (')) {
-    return { avisos: ['Sintaxe possivelmente incompleta: "function (" detectado.'] };
-  }
-  return { avisos: [] };
-};
-
-function criarHooks(custom = {}) {
-  const antes = custom.antes || [bloquearPerigoso];
-  const depois = custom.depois || [checarSintaxe];
   return {
-    rodarAntes: async (ctx) => {
-      for (const fn of antes) {
-        const res = await fn(ctx);
-        if (res && res.bloquear) return res;
+    async rodarAntes({ tool, input }) {
+      for (const hook of antes) {
+        const resultado = await hook({ tool, input });
+        if (resultado && resultado.bloquear) return resultado;
       }
-      return { bloquear: null };
+      return { ok: true };
     },
-    rodarDepois: async (ctx, resultado) => {
-      let avisos = [];
-      for (const fn of depois) {
-        const res = await fn(ctx, resultado);
-        if (res && res.avisos) avisos = avisos.concat(res.avisos);
+    async rodarDepois({ tool, input }, resultado) {
+      const avisos = [];
+      for (const hook of depois) {
+        const res = await hook({ tool, input }, resultado);
+        if (res && res.aviso) avisos.push(res.aviso);
       }
-      return { avisos };
+      return avisos;
     }
   };
 }
