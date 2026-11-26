@@ -5,7 +5,7 @@
 self.addEventListener("message", (e) => { if (e.data && e.data.tipo === "atualizar") self.skipWaiting(); });
 const CACHE = "central-v8";
 self.addEventListener("install", (e) => {
-  self.skipWaiting();
+  e.waitUntil(Promise.resolve());
 });
 self.addEventListener("activate", (e) => {
   e.waitUntil(
