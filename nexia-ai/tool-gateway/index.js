@@ -13,6 +13,7 @@ const { decide } = require('../policy-engine');
 const { validate } = require('../model-router');
 const { VaultError, CODES: VAULT_CODES } = require('../vault');
 const { GatewayError, CODES } = require('./errors');
+const { criarHooks, bloquearPerigoso, checarSintaxe } = require('./hooks');
 
 const QUEUE_COLLECTION = 'nexia_tool_queue';
 const DEFAULT_TTL_MS = 24 * 60 * 60 * 1000;
@@ -46,7 +47,7 @@ function checkInput(tool, input) {
 }
 
 /**
- * @param {{ db, vault, tools?, env?, fetchImpl?, github?: (repo) => adapter, now?: () => Date, approvalTtlMs?: number }} o
+ * @param {{ db, vault, tools?, env?, fetchImpl?, github?: (repo) => adapter, now?: () => Date, approvalTtlMs?: number, hooks?: object }} o
  */
 function createGateway(o) {
   const { db, vault } = o;
@@ -54,6 +55,13 @@ function createGateway(o) {
   const fetchImpl = o.fetchImpl || ((...a) => fetch(...a));
   const now = o.now || (() => new Date());
   const ttl = o.approvalTtlMs || DEFAULT_TTL_MS;
+  const hooks = o.hooks || (() => {
+    const h = criarHooks();
+    h.antes(bloquearPerigoso);
+    h.depois(checarSintaxe);
+    return h;
+  })();
+
   const registry = new Map();
   for (const t of o.tools || DEFAULT_TOOLS) {
     if (!/^[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)+$/.test(t.name) || !['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'].includes(t.risk) || typeof t.run !== 'function') {
@@ -72,9 +80,10 @@ function createGateway(o) {
     const t0 = Date.now();
     try {
       const result = await tool.run({ vault, ctx, project, env, fetchImpl, github: o.github }, input);
+      const avisos = await hooks.rodarDepois({ tool: tool.name, input }, result);
       const out = tool.summarizeOutput ? tool.summarizeOutput(result, input) : 'ok';
       const record = await vault.ToolCall.update(ctx, call.id, { status: 'succeeded', output_summary: safeText(out, 2000) || 'ok', duration_ms: Date.now() - t0 }, { expectedVersion: call.version });
-      return { tool_call: record, status: 'succeeded', result };
+      return { tool_call: record, status: 'succeeded', result, ...(avisos && avisos.length ? { avisos } : {}) };
     } catch (e) {
       const code = (e && e.code && /^[A-Z0-9_]+$/.test(e.code) ? e.code : 'TOOL_ERROR').slice(0, 64);
       const record = await vault.ToolCall.update(ctx, call.id, { status: 'failed', error_code: code, duration_ms: Date.now() - t0 }, { expectedVersion: call.version });
@@ -91,6 +100,12 @@ function createGateway(o) {
     const tool = registry.get(req.tool);
     if (!tool) throw new GatewayError(CODES.UNKNOWN_TOOL, `Ferramenta desconhecida: ${req.tool}`);
     const input = checkInput(tool, req.input);
+
+    const blockCheck = await hooks.rodarAntes({ tool: tool.name, input });
+    if (blockCheck && blockCheck.bloquear) {
+      return { ok: false, erro: { codigo: 'HOOK_BLOCKED', mensagem: blockCheck.bloquear } };
+    }
+
     const project = await vault.Project.get(ctx, req.projectId);
     const policy = await policyFor(ctx, project.id);
     const d = decide({ tool, project, environment: req.environment, policy });
