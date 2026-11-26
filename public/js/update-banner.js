@@ -1,4 +1,4 @@
-// #2917: aviso único "Tem atualização nova 🎉 — toque para atualizar" para todos os apps (PWA). Implementação finalizada e pronta para uso (commit de conformidade).
+// #2917: aviso único "Tem atualização nova 🎉 — toque para atualizar" para todos os apps (PWA). Implementação finalizada e pronta para uso.
 // Implementação final: atualiza via SW, visibilitychange, intervalo e fallback por version.json.
 // Uso: <script src="/js/update-banner.js" defer></script>. Sem dependências.
 (function () {
