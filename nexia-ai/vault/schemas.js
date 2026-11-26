@@ -390,6 +390,7 @@ const SCHEMAS = {
       // Pedido pode trazer código (token = ..., Bearer ...): ignora só detectores de código; chaves reais (ghp_, sk-, PEM...) seguem barradas.
       request_text: t.string({ max: 4000, scanIgnore: ['secret_assignment', 'high_entropy', 'long_hex'] }),
       intent: t.enum(EXECUTION_INTENTS, { required: true }),
+      modo_plano: t.bool(),
       status: t.enum(['planned', 'running', 'waiting_approval', 'needs_input', 'succeeded', 'failed', 'cancelled'], { required: true }),
       plan: t.array(t.object({
         step: t.int({ required: true, min: 1, max: 50 }),
