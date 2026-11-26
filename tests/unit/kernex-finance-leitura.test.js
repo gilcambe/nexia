@@ -1,5 +1,5 @@
 const assert = require('assert');
-const { normalizarLancamento, idDe, CATEGORIAS_KF } = require('./netlify/functions/prumo-lib/documentos');
+const { normalizarLancamento, idDe, CATEGORIAS_KF, agirDoc } = require('../netlify/functions/prumo-lib/documentos');
 
 // Testes de leitura dos prints do Itaú
 const itauUniclassInfini = {
@@ -37,7 +37,9 @@ const itauUniclassBlack = {
 async function testLeituraFatura() {
   console.log('Testando leitura de fatura...');
   
-  // Testar normalização
+  const { listar, base } = require('./db/mock'); // Ajustado para ambiente de teste
+
+// Testar normalização
   const lanc1 = normalizarLancamento(itauUniclassInfini.lancamentos[0], itauUniclassInfini);
   assert.strictEqual(lanc1.ok, true, 'Deve normalizar lançamento do Infini');
   assert.strictEqual(lanc1.item.valor, 3020.13);
