@@ -37,6 +37,8 @@ class Cofre {
   }
 }
 
-// Exportar instância única do Cofre
-const cofre = new Cofre();
-module.exports = cofre;
+/**
+ * Exporta a instância única do Cofre para persistência de dados.
+ */
+const cofreInstance = new Cofre();
+module.exports = cofreInstance;
