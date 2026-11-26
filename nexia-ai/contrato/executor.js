@@ -308,6 +308,8 @@ async function executar(o) {
   const livrosUsados = mem ? memoria.livros(c, mem) : [];
   const listaSkills = skills.listar();
   const catalogo = skills.catalogo(listaSkills);
+  let skillsEscolhidas = skills.escolher(c.pedido, listaSkills, 2);
+  let corpoSkills = skillsEscolhidas.map(s => `\n\nSKILL ${s.nome}:\n${skills.carregar(s.nome)}`).join('');
   const sistema = (lic ? `${SISTEMA}\n\n${catalogo}${corpoSkills}\n\nLIÇÕES DO CORTEX (aprendidas em tarefas anteriores; siga sempre):\n${lic}` : `${SISTEMA}\n\n${catalogo}${corpoSkills}`)
     + livrosUsados.map(l => `\n\nLIÇÕES DO CORTEX SOBRE ${l.nome.toUpperCase()} (siga sempre nesta tarefa):\n${l.texto}`).join('');
   const exemplosUsados = mem ? memoria.buscarExemplos(c, { ...mem, excluir: o.numero }) : [];
