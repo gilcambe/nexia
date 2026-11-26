@@ -1,16 +1,18 @@
-import assert from 'node:assert';
+import test from 'node:test';
+import assert from 'node:assert/strict';
 import { utilBarColor } from './utilBarColor.js';
 
-// Testes para utilBarColor
-const test = (val, expected, label) => {
-  const result = utilBarColor(val);
-  assert.strictEqual(result, expected, `${label}: esperava ${expected}, recebeu ${result}`);
-};
+test('utilBarColor: até 70% fica azul (normal)', () => {
+  assert.equal(utilBarColor(0), 'bg-indigo-500');
+  assert.equal(utilBarColor(70), 'bg-indigo-500');
+});
 
-test(70, 'bg-indigo-500', '70% deve ser azul');
-test(70.1, 'bg-amber-500', '70.1% deve ser amarelo');
-test(90, 'bg-amber-500', '90% deve ser amarelo');
-test(90.1, 'bg-red-500', '90.1% deve ser vermelho');
-test(100, 'bg-red-500', '100% deve ser vermelho');
+test('utilBarColor: acima de 70% fica amarelo (atenção)', () => {
+  assert.equal(utilBarColor(70.1), 'bg-amber-500');
+  assert.equal(utilBarColor(90), 'bg-amber-500');
+});
 
-console.log('Todos os testes de utilBarColor passaram!');
+test('utilBarColor: acima de 90% fica vermelho (crítico)', () => {
+  assert.equal(utilBarColor(90.1), 'bg-red-500');
+  assert.equal(utilBarColor(100), 'bg-red-500');
+});
