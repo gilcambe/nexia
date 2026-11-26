@@ -13,6 +13,7 @@ const { decide } = require('../policy-engine');
 const { validate } = require('../model-router');
 const { VaultError, CODES: VAULT_CODES } = require('../vault');
 const { GatewayError, CODES } = require('./errors');
+const { criarHooks, bloquearPerigoso, checarSintaxe } = require('./hooks');
 
 const QUEUE_COLLECTION = 'nexia_tool_queue';
 const DEFAULT_TTL_MS = 24 * 60 * 60 * 1000;
@@ -46,7 +47,7 @@ function checkInput(tool, input) {
 }
 
 /**
- * @param {{ db, vault, tools?, env?, fetchImpl?, github?: (repo) => adapter, now?: () => Date, approvalTtlMs?: number }} o
+ * @param {{ db, vault, tools?, env?, fetchImpl?, github?: (repo) => adapter, now?: () => Date, approvalTtlMs?: number, hooks?: object }} o
  */
 function createGateway(o) {
   const { db, vault } = o;
@@ -54,6 +55,7 @@ function createGateway(o) {
   const fetchImpl = o.fetchImpl || ((...a) => fetch(...a));
   const now = o.now || (() => new Date());
   const ttl = o.approvalTtlMs || DEFAULT_TTL_MS;
+  const hooks = o.hooks || criarHooks({ antes: [bloquearPerigoso], depois: [checarSintaxe] });
   const registry = new Map();
   for (const t of o.tools || DEFAULT_TOOLS) {
     if (!/^[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)+$/.test(t.name) || !['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'].includes(t.risk) || typeof t.run !== 'function') {
@@ -71,10 +73,26 @@ function createGateway(o) {
   async function execute(ctx, call, tool, project, input) {
     const t0 = Date.now();
     try {
+      const blockRes = await hooks.rodarAntes({ tool, input });
+      if (blockRes && blockRes.bloquear) {
+        const record = await vault.ToolCall.update(ctx, call.id, { status: 'failed', error_code: 'HOOK_BLOCKED', duration_ms: Date.now() - t0 }, { expectedVersion: call.version });
+        return { tool_call: record, status: 'failed', ok: false, erro: { codigo: 'HOOK_BLOCKED', mensagem: blockRes.bloquear }, error: { code: 'HOOK_BLOCKED', message: blockRes.bloquear } };
+      }
+
       const result = await tool.run({ vault, ctx, project, env, fetchImpl, github: o.github }, input);
+      const avisos = [];
+      try {
+        const posRes = await hooks.rodarDepois({ tool, input }, result);
+        if (posRes && Array.isArray(posRes.avisos)) {
+          avisos.push(...posRes.avisos);
+        }
+      } catch (err) {
+        // Ignorar erros em ganchos de pós-processamento para não quebrar a execução
+      }
+
       const out = tool.summarizeOutput ? tool.summarizeOutput(result, input) : 'ok';
       const record = await vault.ToolCall.update(ctx, call.id, { status: 'succeeded', output_summary: safeText(out, 2000) || 'ok', duration_ms: Date.now() - t0 }, { expectedVersion: call.version });
-      return { tool_call: record, status: 'succeeded', result };
+      return { tool_call: record, status: 'succeeded', result, ...(avisos.length ? { avisos } : {}) };
     } catch (e) {
       const code = (e && e.code && /^[A-Z0-9_]+$/.test(e.code) ? e.code : 'TOOL_ERROR').slice(0, 64);
       const record = await vault.ToolCall.update(ctx, call.id, { status: 'failed', error_code: code, duration_ms: Date.now() - t0 }, { expectedVersion: call.version });
