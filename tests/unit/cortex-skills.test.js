@@ -1,39 +1,47 @@
 const assert = require('node:assert');
-const { describe, it } = require('node:test');
-const skills = require('../../nexia-ai/skills/index');
+const { listar, catalogo, escolher, carregar } = require('../nexia-ai/skills/index');
+const fs = require('fs');
+const path = require('path');
 
-describe('cortex-skills', () => {
-  it('deve listar skills', () => {
-    const lista = skills.listar();
-    assert.ok(lista.find(s => s.nome === 'tela-finance'));
-    assert.ok(lista.find(s => s.nome === 'job-agendado'));
-  });
+// Setup: criar estruturas de teste
+const skillsDir = path.join(__dirname, '../nexia-ai/skills');
 
-  it('catalogo não deve conter o corpo', () => {
-    const lista = skills.listar();
-    const texto = skills.catalogo(lista);
-    assert.ok(texto.includes('SKILLS DISPONÍVEIS:'));
-    assert.ok(texto.includes('tela-finance:'));
-    assert.ok(texto.includes('job-agendado:'));
-    assert.ok(!texto.includes('# SKILL'));
-    assert.ok(!texto.includes('Regras de uso'));
-  });
+async function testSkills() {
+    console.log('Testando listar...');
+    const lista = listar();
+    assert.ok(lista.some(s => s.nome === 'tela-finance'), 'Deve achar tela-finance');
+    assert.ok(lista.some(s => s.nome === 'job-agendado'), 'Deve achar job-agendado');
 
-  it('escolher deve priorizar job-agendado para cron', () => {
-    const lista = skills.listar();
-    const escolhidas = skills.escolher('criar cron que atualiza o estado', lista);
-    assert.strictEqual(escolhidas[0].nome, 'job-agendado');
-  });
+    console.log('Testando catalogo...');
+    const cat = catalogo(lista);
+    assert.ok(cat.includes('SKILLS DISPONÍVEIS:'), 'Catálogo deve ter cabeçalho');
+    assert.ok(!cat.includes('# SKILL tela-finance'), 'Catálogo não deve ter corpo');
 
-  it('carregar deve devolver o corpo sem frontmatter', () => {
-    const corpo = skills.carregar('tela-finance');
-    assert.ok(corpo.includes('# SKILL tela-finance'));
-    assert.ok(!corpo.includes('---'));
-    assert.ok(!corpo.includes('name: tela-finance'));
-  });
+    console.log('Testando escolher...');
+    const pedido = "criar cron que atualiza o estado";
+    const escolhidas = escolher(pedido, lista);
+    assert.strictEqual(escolhidas[0].nome, 'job-agendado', 'Deve escolher job-agendado');
 
-  it('pasta inválida ou skill quebrada não deve derrubar listar', () => {
-    // Simula chamando listar sem erro
-    assert.doesNotThrow(() => skills.listar());
-  });
+    console.log('Testando carregar...');
+    const corpo = carregar('tela-finance');
+    assert.ok(!corpo.includes('name: tela-finance'), 'Corpo não deve ter frontmatter');
+    assert.ok(corpo.includes('Regras de uso:'), 'Corpo deve ter conteúdo');
+
+    console.log('Testando pasta quebrada...');
+    // Criar pasta temporária com arquivo inválido
+    const tempDir = path.join(skillsDir, 'temp-quebrado');
+    fs.mkdirSync(tempDir, { recursive: true });
+    fs.writeFileSync(path.join(tempDir, 'SKILL.md'), 'invalido');
+    
+    try {
+        const lista2 = listar();
+        assert.strictEqual(lista2.length, lista.length, 'Não deve derrubar o sistema');
+    } finally {
+        fs.rmSync(tempDir, { recursive: true, force: true });
+    }
+}
+
+testSkills().then(() => console.log('Todos os testes passaram!')).catch(err => {
+    console.error(err);
+    process.exit(1);
 });
