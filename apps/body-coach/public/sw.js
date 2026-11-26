@@ -20,7 +20,7 @@ function aparar(c) {
     return Promise.all(toDelete.map((k) => c.delete(k)));
   });
 }
-const CACHE = 'body-coach-v19';
+const CACHE = 'body-coach-v20';
 self.addEventListener('install', (e) => { 
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(['./', './index.html'])));
 });
