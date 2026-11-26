@@ -1,7 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert');
 const { createGateway } = require('./index');
-const { bloquearPerigoso, checarSintaxe } = require('./hooks');
 
 test('Testes de hooks do Gateway', async (t) => {
   const mockDb = { collection: () => ({ doc: () => ({ set: async () => {}, delete: async () => {}, get: async () => ({ exists: true, data: () => ({ tenant_id: 'test-tenant' }) }) }) }) };
@@ -44,16 +43,8 @@ test('Testes de hooks do Gateway', async (t) => {
   });
 
   await t.test('sintaxe quebrada retorna aviso', async () => {
-    const gatewayComSintaxe = createGateway({ 
-      db: mockDb, 
-      vault: mockVault, 
-      tools: [mockTool],
-      hooks: { 
-        rodarAntes: async () => ({}), 
-        rodarDepois: async () => ({ avisos: ['Sintaxe inválida'] }) 
-      }
-    });
-    const res = await gatewayComSintaxe.invoke({ tenantId: 'test-tenant', actor: { type: 'system' } }, { projectId: 'p1', tool: 'test.tool', input: { code: 'function (' } });
-    assert.ok(res.avisos.includes('Sintaxe inválida'));
+    // Usando a ferramenta real que deve rodar o checarSintaxe hook por padrão
+    const res = await gateway.invoke({ tenantId: 'test-tenant', actor: { type: 'system' } }, { projectId: 'p1', tool: 'test.tool', input: { code: 'function (' } });
+    assert.ok(res.avisos && res.avisos.length > 0);
   });
 });
