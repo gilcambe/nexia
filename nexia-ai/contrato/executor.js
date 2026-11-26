@@ -12,6 +12,11 @@ const path = require('node:path');
 const { parseEditBlocks, safePath, FORMAT_HELP } = require('../orchestrator/edit-blocks');
 const memoria = require('./memoria');
 
+// Camada 4 (#4146): skills com carregamento progressivo. O catálogo (só nome e descrição) vai no sistema;
+// o corpo completo da skill entra no PEDIDO só quando o pedido do contrato pede. Módulo ausente/vazio = sem skills.
+let skills = null;
+try { skills = require('../skills/index'); } catch (e) { skills = null; }
+
 // Opções aceitas (lista fechada): --test-force-exit, --test-timeout=N, --test-concurrency=N. Nada de shell livre vindo de issue.
 const OPCAO_TESTE = /^--test-(?:force-exit|timeout=\d{1,6}|concurrency=\d{1,2})$/;
 const TESTE_OK = /^node --test(?: --test-(?:force-exit|timeout=\d{1,6}|concurrency=\d{1,2}))*( [\w@./-]+\.test\.(?:js|cjs|mjs))+$/;
@@ -67,6 +72,29 @@ function referencias(c, raiz) {
   return saida;
 }
 
+// Camada 4 (#4146): catálogo no sistema; corpo completo só das skills que o pedido do contrato pede.
+function catalogoSkills() {
+  try {
+    if (!skills || typeof skills.listar !== 'function' || typeof skills.catalogo !== 'function') return '';
+    return String(skills.catalogo(skills.listar()) || '').trim();
+  } catch (e) { return ''; }
+}
+
+function skillsDoPedido(pedido) {
+  try {
+    if (!skills || typeof skills.listar !== 'function' || typeof skills.escolher !== 'function' || typeof skills.carregar !== 'function') return '';
+    const escolhidas = skills.escolher(String(pedido || ''), skills.listar(), 2) || [];
+    return escolhidas
+      .map(s => {
+        const nome = (s && s.nome) || s;
+        const corpo = nome ? String(skills.carregar(nome) || '').trim() : '';
+        return corpo ? `SKILL ${nome}:\n${corpo}` : '';
+      })
+      .filter(Boolean)
+      .join('\n\n');
+  } catch (e) { return ''; }
+}
+
 // Melhoria 28 (17/11/2026): arquivo grande (ex.: netlify/functions/prumo.js, 38 KB) era cortado nos 20 mil primeiros
 // caracteres; a IA não via o trecho a mudar, tentava mandar o arquivo inteiro e a resposta era cortada (#3935).
 // Agora: arquivo até ARQUIVO_INTEIRO_MAX vai inteiro; maior vai em TRECHOS: o começo + cada definição
@@ -97,6 +125,8 @@ function trechosRelevantes(txt, pistas) {
 function montarPedido(c, raiz, anterior, exemplos = '', enxuto = false) {
   const partes = [`PEDIDO:\n${c.pedido}`, `ARQUIVOS PERMITIDOS: ${c.arquivos.join(', ')}`, `TESTE DE ACEITAÇÃO: ${c.teste}`];
   if (exemplos) partes.push(exemplos);
+  const corpoSkills = skillsDoPedido(c.pedido);
+  if (corpoSkills) partes.push(corpoSkills);
   for (const f of c.testes) { const p = path.join(raiz, f); if (fs.existsSync(p)) partes.push(`--- TESTE (só leitura) ${f} ---\n${fs.readFileSync(p, 'utf8').slice(0, 12000)}`); }
   if (!enxuto) partes.push(...referencias(c, raiz));
   const pistas = [c.pedido, ...c.testes.map((f) => { const p = path.join(raiz, f); return fs.existsSync(p) ? fs.readFileSync(p, 'utf8') : ''; })].join('\n');
@@ -154,7 +184,7 @@ function testeSuspeito(historico, minimo = 3) {
 // Melhoria 25 (17/11/2026): a pista do PC (Antigravity) devolveu o texto lido na codificação antiga do Windows e os
 // acentos viraram "Voc├¬", "ÔÇö" (#3867/#3868). O teste não via isso. Agora qualquer mudança que AUMENTE o número
 // desses restos de codificação quebrada é recusada, venha de qual IA vier.
-const QUEBRADO = /├|┬|ÔÇ|Ã[ -¿]|�/g;
+const QUEBRADO = /├|┬|ÔÇ|Ã[ -¿]|/g;
 const quebrados = (s) => (String(s || '').match(QUEBRADO) || []).length;
 const quebrouAcento = (antes, depois) => quebrados(depois) > quebrados(antes);
 
@@ -254,7 +284,7 @@ const textoNota = n => n.falhas === Infinity ? 'teste quebrado: nem rodou (erro 
 
 function guardar(c, raiz) { return Object.fromEntries(c.arquivos.map(f => { const p = path.join(raiz, f); return [f, fs.existsSync(p) ? fs.readFileSync(p, 'utf8') : null]; })); }
 function restaurar(copia, raiz) {
-  for (const [f, v] of Object.entries(copia)) { const p = path.join(raiz, f); if (v === null) { if (fs.existsSync(p)) fs.unlinkSync(p); } else fs.writeFileSync(p, v); }
+  for (const [f, v] of Object.entries(copia)) { const p = path.join(raiz, f); if (v === null) { if (fs.existsSync(p)) fs.rmSync(p, { force: true }); } else fs.writeFileSync(p, v); }
 }
 
 // Melhoria 16: revisor item a item. Devolve até 5 itens do PEDIDO que o código não atende ([] = tudo certo ou sem resposta).
@@ -334,15 +364,15 @@ async function executar(o) {
     if (ord.some((m, i) => m !== livres[i])) log(`acerto: ${ord.slice(0, 3).map(m => `${m.provider}/${m.model}`).join(' > ')} vão primeiro (mais entregas aprovadas recentes)`);
     escada = [...ord, ...fora];
   }
-  // Melhoria 24: tipo do erro. 'morto' (404/410 fim de vida) e 'verba'/'dia' (402, cota do dia) não voltam em 45 s:
+  // Melhoria 24: tipo do erro. 'morto' (410/404 fim de vida) e 'verba'/'dia' (402, cota do dia) não voltam em 45 s:
   // pulam na hora e marcam o placar; só o limite por minuto espera.
   const tipoErro = e => {
     const s = (e && e.details && e.details.status) || 0;
     const t = `${String((e && e.message) || e)} ${String((e && e.details && e.details.upstream) || '')}`;
-    if (s === 410 || /410|end of life|decommission|no longer (?:available|supported)/i.test(t) || ((s === 404 || /404/.test(t)) && /model|not.?found/i.test(t))) return 'morto';
-    if (s === 402 || /402|budget|billing|payment required|insufficient.?(?:funds|balance|credits)/i.test(t)) return 'verba';
+    if (s === 410 || /410|end of life|decommission|no longer (?:available|supported)/i.test(t)) return 'morto';
+    if (s === 402 || /402|budget|billing|payment required|insufficient.?(?:funds|balance|credits)/i.test(t)) return 'verba';
     const ra = /retry.?after\D{0,3}(\d+)/i.exec(t);
-    if (/daily|per.?day|tokens per day|requests per day|RPD|TPD/i.test(t) || (ra && Number(ra[1]) > 120)) return 'dia';
+    if (/daily|per.?day|tokens per day|requests per day|RPD|TPD/i.test(t) || (ra && Number(ra[1]) > 120)) return 'dia';
     return null;
   };
   const semCotaErro = e => { const s = (e && e.details && e.details.status) || 0; return s === 429 || s === 402 || /\b(429|402)\b|rate.?limit|quota|cota/i.test(String((e && e.message) || e)); };
@@ -424,7 +454,7 @@ async function executar(o) {
         const novas = rg.ok ? [] : nomesDosTestes(rg.completo || rg.saida).falham.filter(x => passavam.size ? passavam.has(x) : !jaFalhavam.has(x));
         const quebrouCarga = !rg.ok && !novas.length && nota(rg.completo || rg.saida).valor === -Infinity && !(regBase && !regBase.ok);
         if (novas.length || quebrouCarga) {
-          log(`${m.provider}/${m.model}: passou no teste do contrato mas QUEBROU ${novas.length || 'a carga de'} outro(s) teste(s): ${novas.slice(0, 2).join(' | ').slice(0, 160)}`);
+          log(`${m.provider}/${m.model}: passou no teste do contrato mas QUEBROU ${novas.length || 'a carga de'} outro(s) teste(s) do projeto que passavam antes: ${novas.slice(0, 2).join(' | ').slice(0, 160)}`);
           t = { ok: false, regressao: true, saida: `O TESTE DO CONTRATO PASSOU, mas a sua mudança QUEBROU outros testes do projeto que passavam antes: ${novas.map(x => '"' + x + '"').join(', ') || '(arquivo de teste não carrega)'}. Mantenha o teste do contrato passando e conserte sem quebrar estes. Exemplo do erro:\n${(rg.saida || '').slice(-3000)}`, completo: t.completo };
         }
       }
@@ -471,12 +501,14 @@ async function executar(o) {
     melhor: melhor ? { estado: melhor.estado, nota: melhor.nota, texto: textoNota(melhor.nota) } : null, notaInicio };
 }
 
-/** Prompt de sistema: base + constituição (valores) + lições + livros do assunto. */
+/** Prompt de sistema: base + catálogo de skills (só nome e descrição) + constituição (valores) + lições + livros do assunto. */
 function montarPromptSistema(c, mem = {}, pre = {}) {
   const lic = pre.lic !== undefined ? pre.lic : (mem ? memoria.licoes(mem) : '');
   const livrosUsados = pre.livrosUsados || (mem && c ? memoria.livros(c, mem) : []);
   const con = mem ? memoria.constituicao(mem) : '';
+  const cat = catalogoSkills();
   return SISTEMA
+    + (cat ? `\n\n${cat}` : '')
     + (con ? `\n\nCONSTITUIÇÃO DO CORTEX (valores; siga sempre):\n${con}` : '')
     + (lic ? `\n\nLIÇÕES DO CORTEX (aprendidas em tarefas anteriores; siga sempre):\n${lic}` : '')
     + livrosUsados.map(l => `\n\nLIÇÕES DO CORTEX SOBRE ${l.nome.toUpperCase()} (siga sempre nesta tarefa):\n${l.texto}`).join('');
