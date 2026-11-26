@@ -191,9 +191,12 @@ async function agirDoc(acao, body, c) {
         const item = { ...l, status: prv.statusInicial(l.data, hoje), origem: 'documento', criado_em: agoraIso, lote };
         if (item.conta_ou_cartao) {
             const cartoes = await listar(base.collection('cartoes'));
-            const c = cartoes.find(k => sem(k.nome) === sem(item.conta_ou_cartao) || k.nome.includes(item.conta_ou_cartao));
+            const c = cartoes.find(k => sem(k.nome) === sem(item.conta_ou_cartao) || sem(k.nome).includes(sem(item.conta_ou_cartao)));
             if (c) item.cartao_id = c.id;
         }
+        // Validação de unicidade para evitar duplicidade (especialmente reenvios de faturas)
+        const existe = await col.doc(id).get();
+        if (existe.exists) { jaExistiam++; continue; }
         await col.doc(id).set(item);
         doLote.push(item); gravados++;
       }
