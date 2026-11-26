@@ -8,7 +8,7 @@ const TAREFAS_DIR = path.resolve(__dirname, '../../nexia-ai/contrato/regua/taref
 
 const getTarefas = () => {
   return fs.readdirSync(TAREFAS_DIR)
-    .filter(name => fs.statSync(path.join(TAREFAS_DIR, name)).isDirectory())
+    .filter(name => fs.statSync(path.join(TAREFAS_DIR, name)).isDirectory() && fs.existsSync(path.join(TAREFAS_DIR, name, 'pedido.md')))
     .sort();
 };
 
