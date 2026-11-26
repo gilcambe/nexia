@@ -13,6 +13,7 @@ const { decide } = require('../policy-engine');
 const { validate } = require('../model-router');
 const { VaultError, CODES: VAULT_CODES } = require('../vault');
 const { GatewayError, CODES } = require('./errors');
+const { criarHooks, bloquearPerigoso, checarSintaxe } = require('./hooks');
 
 const QUEUE_COLLECTION = 'nexia_tool_queue';
 const DEFAULT_TTL_MS = 24 * 60 * 60 * 1000;
@@ -46,10 +47,11 @@ function checkInput(tool, input) {
 }
 
 /**
- * @param {{ db, vault, tools?, env?, fetchImpl?, github?: (repo) => adapter, now?: () => Date, approvalTtlMs?: number }} o
+ * @param {{ db, vault, tools?, env?, fetchImpl?, github?: (repo) => adapter, now?: () => Date, approvalTtlMs?: number, hooks?: any }} o
  */
 function createGateway(o) {
   const { db, vault } = o;
+  const hooks = o.hooks || criarHooks({ antes: [bloquearPerigoso], depois: [checarSintaxe] });
   const env = o.env || process.env;
   const fetchImpl = o.fetchImpl || ((...a) => fetch(...a));
   const now = o.now || (() => new Date());
@@ -71,10 +73,17 @@ function createGateway(o) {
   async function execute(ctx, call, tool, project, input) {
     const t0 = Date.now();
     try {
+      const hookBloqueio = await hooks.rodarAntes({ tool, input });
+      if (hookBloqueio && hookBloqueio.bloquear) {
+        const record = await vault.ToolCall.update(ctx, call.id, { status: 'denied', error_code: 'HOOK_BLOCKED', duration_ms: Date.now() - t0 }, { expectedVersion: call.version });
+        return { tool_call: record, status: 'denied', erro: { codigo: 'HOOK_BLOCKED', mensagem: hookBloqueio.bloquear } };
+      }
       const result = await tool.run({ vault, ctx, project, env, fetchImpl, github: o.github }, input);
+      const postHooks = await hooks.rodarDepois({ tool, input }, result);
+      const avisos = postHooks && postHooks.avisos ? postHooks.avisos : [];
       const out = tool.summarizeOutput ? tool.summarizeOutput(result, input) : 'ok';
       const record = await vault.ToolCall.update(ctx, call.id, { status: 'succeeded', output_summary: safeText(out, 2000) || 'ok', duration_ms: Date.now() - t0 }, { expectedVersion: call.version });
-      return { tool_call: record, status: 'succeeded', result };
+      return { tool_call: record, status: 'succeeded', result, ...(avisos.length ? { avisos } : {}) };
     } catch (e) {
       const code = (e && e.code && /^[A-Z0-9_]+$/.test(e.code) ? e.code : 'TOOL_ERROR').slice(0, 64);
       const record = await vault.ToolCall.update(ctx, call.id, { status: 'failed', error_code: code, duration_ms: Date.now() - t0 }, { expectedVersion: call.version });
