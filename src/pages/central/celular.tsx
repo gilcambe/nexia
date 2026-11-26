@@ -35,14 +35,24 @@ export function Folha({ titulo, fechar, acao, children }: { titulo: string; fech
   fecharRef.current = fechar;
   const fechouPorVoltar = useRef(false);
   useEffect(() => {
+    // Garante que a tela atual entre no histórico para capturar o voltar do celular
     history.pushState({ folha: titulo }, "");
-    const voltar = () => fecharRef.current();
+
+    const voltar = (event: PopStateEvent) => {
+      // Impede o fechamento da página inteira e trata o modal/folha
+      event.preventDefault();
+      fechouPorVoltar.current = true;
+      fecharRef.current();
+    };
+
     window.addEventListener("popstate", voltar);
     const rolagem = document.body.style.overflow;
     document.body.style.overflow = "hidden";
+
     return () => {
       window.removeEventListener("popstate", voltar);
       document.body.style.overflow = rolagem;
+      // Se fechou via botão próprio (X ou Voltar), não dispara histórico extra
       if (!fechouPorVoltar.current) {
         history.back();
       }
