@@ -5,7 +5,7 @@
   if (window.__kxUpdateBanner) return;
   window.__kxUpdateBanner = true;
   var recarregou = false;
-  var tinhaControle = "serviceWorker" in navigator && !!navigator.serviceWorker.controller; // na 1ª instalação não recarrega
+  var tinhaControle = "serviceWorker" in navigator && !!navigator.serviceWorker.controller;
 
   function mostrar(worker) {
     if (document.getElementById("kx-atualizar")) return;
@@ -23,7 +23,7 @@
     btnAtualizar.onclick = function () {
       btnAtualizar.textContent = "Atualizando…";
       if (worker) worker.postMessage({ tipo: "atualizar" });
-      setTimeout(function () { location.reload(); }, 3000); // reserva, se o worker não responder
+      setTimeout(function () { location.reload(); }, 3000);
     };
     btnFechar.onclick = function (e) { e.stopPropagation(); b.remove(); };
     (document.body || document.documentElement).appendChild(b);
@@ -36,7 +36,7 @@
       var novo = reg.installing;
       if (!novo) return;
       novo.addEventListener("statechange", function () {
-        if (novo.state === "installed") mostrar(novo);
+        if (novo.state === "installed" && navigator.serviceWorker.controller) mostrar(novo);
       });
     });
     var checar = function () { reg.update().catch(function () {}); };
@@ -54,7 +54,6 @@
     navigator.serviceWorker.ready.then(function () { return navigator.serviceWorker.getRegistration(); }).then(vigiar).catch(function () {});
   }
 
-  // Extra: fallback se não houver Service Worker ativo.
   function verificarVersao() {
     fetch("/version.json?t=" + Date.now()).then(function (res) {
       if (!res.ok) return;
