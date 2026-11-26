@@ -19,6 +19,209 @@ function dentroDoLimite(uid, agora = Date.now()) {
 }
 const extra = require('./prumo-lib/extra');
 
+// ---------- Parte 5: print de fatura de cartão (fase 5, épico #4013) ----------
+function validarFaturaPrint(o) {
+  if (!o || typeof o !== 'object' || Array.isArray(o)) return erro('Dados da fatura faltando.');
+  const cardName = texto(o.cardName, 120);
+  if (!cardName) return erro('Informe o nome do cartão.');
+  const cardLast4 = texto(typeof o.cardLast4 === 'number' ? String(o.cardLast4) : o.cardLast4, 8);
+  if (!cardLast4) return erro('Informe os últimos dígitos do cartão.');
+  const inv = o.invoice;
+  if (!inv || typeof inv !== 'object' || Array.isArray(inv)) return erro('Dados da fatura faltando.');
+  const month = texto(inv.month, 7);
+  if (!MES.test(month)) return erro('Mês da fatura inválido (AAAA-MM).');
+  const amount = valorLido(inv.amount);
+  if (!Number.isFinite(amount) || amount <= 0) return erro('O valor da fatura precisa ser maior que zero.');
+  const dueDate = dataLida(inv.dueDate);
+  if (!DATA.test(dueDate)) return erro('Vencimento da fatura inválido (AAAA-MM-DD).');
+  const rawBest = inv.bestPurchaseDate == null ? '' : String(inv.bestPurchaseDate).trim();
+  const bestPurchaseDate = rawBest ? dataLida(rawBest) : null;
+  if (rawBest && !DATA.test(bestPurchaseDate)) return erro('Melhor data de compra inválida.');
+  return {
+    ok: true,
+    item: {
+      cardName, cardLast4,
+      month, amount: dinheiro(amount), dueDate, bestPurchaseDate,
+      summary: inv.summary && typeof inv.summary === 'object' && !Array.isArray(inv.summary) ? inv.summary : {},
+      history: Array.isArray(inv.history) ? inv.history : []
+    }
+  };
+}
+
+function hashConteudoPrint(item) {
+  const normSummary = {};
+  for (const k of Object.keys(item.summary || {}).sort()) {
+    const n = valorLido(item.summary[k]);
+    normSummary[k] = Number.isFinite(n) ? dinheiro(n) : item.summary[k];
+  }
+  const normHistory = (item.history || []).map((h) => {
+    const n = valorLido(h && h.amount);
+    return {
+      month: texto(h && h.month, 7),
+      amount: Number.isFinite(n) ? dinheiro(n) : null,
+      status: texto(h && h.status, 20)
+    };
+  });
+  const payload = JSON.stringify({
+    amount: item.amount,
+    dueDate: item.dueDate,
+    bestPurchaseDate: item.bestPurchaseDate || null,
+    summary: normSummary,
+    history: normHistory
+  });
+  try {
+    return require('crypto').createHash('sha256').update(payload).digest('hex');
+  } catch (_) {
+    let h = 0x811c9dc5;
+    for (let i = 0; i < payload.length; i++) {
+      h ^= payload.charCodeAt(i);
+      h = Math.imul(h, 0x01000193);
+    }
+    return `fnv_${(h >>> 0).toString(16).padStart(8, '0')}_${payload.length}`;
+  }
+}
+
+async function removerDoc(col, id) {
+  if (!col || id == null) return;
+  if (typeof col.deleteOne === 'function') { await col.deleteOne({ _id: id }); return; }
+  if (typeof col.delete === 'function') { await col.delete(id); return; }
+  if (Array.isArray(col.items)) {
+    const idx = col.items.findIndex((x) => x && x._id === id);
+    if (idx >= 0) col.items.splice(idx, 1);
+  }
+}
+
+async function restaurarDoc(col, prevDoc) {
+  if (!col || !prevDoc || prevDoc._id == null) return;
+  if (Array.isArray(col.items)) {
+    const idx = col.items.findIndex((x) => x && x._id === prevDoc._id);
+    if (idx >= 0) { col.items[idx] = { ...prevDoc }; return; }
+  }
+  if (typeof col.replaceOne === 'function') { await col.replaceOne({ _id: prevDoc._id }, prevDoc); return; }
+  if (typeof col.updateOne === 'function') {
+    const { _id, ...rest } = prevDoc;
+    await col.updateOne({ _id }, { $set: rest });
+  }
+}
+
+async function upsertComRollback(col, filtro, docNovo, camposUpdate, rollbackOps) {
+  const existing = await col.findOne(filtro);
+  if (existing) {
+    const snapshot = { ...existing };
+    await col.updateOne({ _id: existing._id }, { $set: camposUpdate });
+    rollbackOps.push(() => restaurarDoc(col, snapshot));
+    return existing;
+  }
+  const doc = { ...docNovo };
+  const ins = await col.insertOne(doc);
+  doc._id = ins && ins.insertedId != null ? ins.insertedId : doc._id;
+  rollbackOps.push(() => removerDoc(col, doc._id));
+  return doc;
+}
+
+async function handleFaturaPrint(req, ctx) {
+  const rollbackOps = [];
+  try {
+    if (!req || req.method !== 'POST') return { status: 405, body: JSON.stringify({ ok: false, erro: 'Método não permitido.' }) };
+    let body;
+    try {
+      body = typeof req.json === 'function' ? await req.json() : req.body;
+    } catch (_) {
+      return { status: 400, body: JSON.stringify({ ok: false, erro: 'JSON inválido.' }) };
+    }
+    const v = validarFaturaPrint(body);
+    if (!v.ok) return { status: 400, body: JSON.stringify({ ok: false, erro: v.erro }) };
+    const db = (ctx && ctx.deps && ctx.deps.db) || null;
+    if (!db || !db.cards || !db.invoices || !db.dashboard) return { status: 500, body: JSON.stringify({ ok: false, erro: 'Banco de dados indisponível.' }) };
+    const { cardName, cardLast4, month, amount, dueDate, bestPurchaseDate, summary, history } = v.item;
+    const contentHash = hashConteudoPrint(v.item);
+    const agora = new Date().toISOString();
+    const diaVenc = Number(dueDate.slice(8, 10)) || 15;
+    const dadosCartao = {
+      dueDate,
+      bestPurchaseDate,
+      fatura_aberta: { month, amount, dueDate, bestPurchaseDate, summary },
+      history
+    };
+    const card = await upsertComRollback(
+      db.cards,
+      { name: cardName, last4: cardLast4 },
+      { name: cardName, last4: cardLast4, limite: 0, dia_fechamento: 10, dia_vencimento: diaVenc, ...dadosCartao, criado_em: agora },
+      { ...dadosCartao, atualizado_em: agora },
+      rollbackOps
+    );
+    const cardId = card._id;
+    let existingInv = await db.invoices.findOne({ cardId, contentHash });
+    if (!existingInv) existingInv = await db.invoices.findOne({ cardId, month });
+    let invoice;
+    if (existingInv) {
+      const snapshot = { ...existingInv };
+      await db.invoices.updateOne(
+        { _id: existingInv._id },
+        { $set: { amount, dueDate, bestPurchaseDate, summary, history, contentHash, status: 'open', atualizado_em: agora } }
+      );
+      rollbackOps.push(() => restaurarDoc(db.invoices, snapshot));
+      invoice = existingInv;
+    } else {
+      invoice = { cardId, cardName, cardLast4, month, amount, dueDate, bestPurchaseDate, summary, history, contentHash, status: 'open', criado_em: agora };
+      const ins = await db.invoices.insertOne(invoice);
+      invoice._id = ins && ins.insertedId != null ? ins.insertedId : invoice._id;
+      rollbackOps.push(() => removerDoc(db.invoices, invoice._id));
+    }
+    const mesFatura = invoice.month || month;
+    const payableCol = db.payables || db.bills || db.a_pagar || db.aPagar;
+    if (payableCol) {
+      await upsertComRollback(
+        payableCol,
+        { referenceId: invoice._id },
+        { referenceId: invoice._id, cardId, cardName, cardLast4, month: mesFatura, amount, dueDate, status: 'open', tela: 'a_pagar', criado_em: agora },
+        { cardName, cardLast4, month: mesFatura, amount, dueDate, status: 'open', atualizado_em: agora },
+        rollbackOps
+      );
+    }
+    await upsertComRollback(
+      db.dashboard,
+      { type: 'payable', referenceId: invoice._id },
+      { type: 'payable', screen: 'a_pagar', referenceId: invoice._id, cardId, cardName, cardLast4, month: mesFatura, amount, dueDate, status: 'open', criado_em: agora },
+      { cardName, cardLast4, month: mesFatura, amount, dueDate, status: 'open', atualizado_em: agora },
+      rollbackOps
+    );
+    await upsertComRollback(
+      db.dashboard,
+      { type: 'upcoming', referenceId: invoice._id },
+      { type: 'upcoming', referenceId: invoice._id, cardId, cardName, cardLast4, month: mesFatura, amount, dueDate, criado_em: agora },
+      { cardName, cardLast4, month: mesFatura, amount, dueDate, atualizado_em: agora },
+      rollbackOps
+    );
+    return { status: 200, body: JSON.stringify({ ok: true, cardId, invoiceId: invoice._id, month: mesFatura, amount, dueDate }) };
+  } catch (e) {
+    for (let i = rollbackOps.length - 1; i >= 0; i--) {
+      try { await rollbackOps[i](); } catch (_) {}
+    }
+    return { status: 500, body: JSON.stringify({ ok: false, erro: 'Falha ao salvar fatura.' }) };
+  }
+}
+
+// Preserva handleFaturaPrint caso module.exports seja reatribuído no trecho final do arquivo.
+if (typeof module !== 'undefined' && module) {
+  let _prumoExports = module.exports;
+  if (_prumoExports && typeof _prumoExports === 'object') _prumoExports.handleFaturaPrint = handleFaturaPrint;
+  const desc = Object.getOwnPropertyDescriptor(module, 'exports');
+  if (!desc || desc.configurable) {
+    Object.defineProperty(module, 'exports', {
+      configurable: true,
+      enumerable: true,
+      get() { return _prumoExports; },
+      set(val) {
+        if (val && typeof val === 'object' && !('handleFaturaPrint' in val)) {
+          val.handleFaturaPrint = handleFaturaPrint;
+        }
+        _prumoExports = val;
+      }
+    });
+  }
+}
+
 const TIPOS = ['renda_fixa', 'acoes', 'fiis', 'etf', 'fundos', 'tesouro', 'cripto', 'previdencia', 'fgts', 'poupanca', 'outro'];
 const CATEGORIAS = ['mercado', 'casa', 'transporte', 'saude', 'lazer', 'educacao', 'restaurante', 'assinaturas', 'outros'];
 const PERFIS = ['conservador', 'moderado', 'arrojado'];
