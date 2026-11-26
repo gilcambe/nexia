@@ -26,7 +26,6 @@ test('validar estrutura das 8 tarefas', () => {
 
 test('validar falha de implementação para tarefas novas', () => {
   const tarefas = getTarefas();
-  // Assume que as tarefas novas são as últimas 5 da lista ordenada
   const tarefasNovas = tarefas.slice(-5);
   
   for (const id of tarefasNovas) {
@@ -34,13 +33,10 @@ test('validar falha de implementação para tarefas novas', () => {
     const tmp = fs.mkdtempSync(path.join(require('node:os').tmpdir(), `test-fail-${id}-`));
     
     try {
-      // Simula ausência de implementação criando apenas um arquivo vazio
       fs.writeFileSync(path.join(tmp, 'index.js'), 'module.exports = {};');
 
-      // Roda testes contra o ambiente vazio
       const runTest = (testFile) => {
         try {
-          // Copia o teste para o tmp
           fs.copyFileSync(path.join(dir, testFile), path.join(tmp, testFile));
           execSync(`node --test ${path.join(tmp, testFile)}`, { stdio: 'ignore' });
           return true;
@@ -68,7 +64,6 @@ test('validar sucesso de implementação com solucao.js para tarefas novas', () 
     const tmp = fs.mkdtempSync(path.join(require('node:os').tmpdir(), `test-sol-${id}-`));
     
     try {
-      // Copia tudo (incluindo solução)
       fs.copyFileSync(path.join(dir, 'solucao.js'), path.join(tmp, 'index.js'));
 
       const runTest = (testFile) => {
