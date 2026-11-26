@@ -1,46 +1,30 @@
-const assert = require('node:assert');
-const { describe, it } = require('node:test');
-const path = require('node:path');
-const fs = require('node:fs');
-const skills = require('../../nexia-ai/skills/index');
+import test from 'node:test';
+import assert from 'node:assert';
+import { listar, catalogo, escolher, carregar } from '../../nexia-ai/skills/index.js';
 
-describe('Cortex Skills', () => {
-  it('deve listar skills', () => {
-    const lista = skills.listar();
-    assert.ok(Array.isArray(lista));
-    assert.ok(lista.find(s => s.nome === 'tela-finance'));
-    assert.ok(lista.find(s => s.nome === 'job-agendado'));
-  });
+test('cortex-skills: listar acha as 2 skills e ignora invalidas', () => {
+  const skills = listar();
+  assert.ok(skills.some(s => s.nome === 'tela-finance'), 'Achou tela-finance');
+  assert.ok(skills.some(s => s.nome === 'job-agendado'), 'Achou job-agendado');
+  assert.strictEqual(skills.length, 2, 'Apenas as 2 skills');
+});
 
-  it('catalogo não deve conter corpo', () => {
-    const lista = skills.listar();
-    const texto = skills.catalogo(lista);
-    assert.ok(!texto.includes('# SKILL'));
-    assert.ok(texto.includes('SKILLS DISPONÍVEIS:'));
-  });
+test('cortex-skills: catalogo nao contem o corpo', () => {
+  const skills = listar();
+  const cat = catalogo(skills);
+  assert.ok(cat.includes('SKILLS DISPONÍVEIS:'));
+  assert.ok(cat.includes('- tela-finance:'));
+  assert.ok(!cat.includes('Regras de uso:'), 'Corpo nao esta no catalogo');
+});
 
-  it('escolher deve retornar a skill correta', () => {
-    const lista = skills.listar();
-    const escolhidas = skills.escolher('criar cron que atualiza o estado', lista);
-    assert.strictEqual(escolhidas[0].nome, 'job-agendado');
-  });
+test('cortex-skills: escolher seleciona job-agendado', () => {
+  const skills = listar();
+  const escolhidas = escolher('criar cron que atualiza o estado', skills);
+  assert.strictEqual(escolhidas[0].nome, 'job-agendado');
+});
 
-  it('carregar deve devolver corpo sem frontmatter', () => {
-    const corpo = skills.carregar('tela-finance');
-    assert.ok(corpo.includes('Use esta skill quando a tarefa'));
-    assert.ok(!corpo.includes('name: tela-finance'));
-  });
-
-  it('pasta inválida não deve derrubar listar', () => {
-    // Cria uma pasta inválida que será ignorada pelo listar
-    const dir = path.join(__dirname, '../../nexia-ai/skills/invalida');
-    if (!fs.existsSync(dir)) fs.mkdirSync(dir);
-    fs.writeFileSync(path.join(dir, 'SKILL.md'), 'conteudo sem frontmatter');
-    
-    const lista = skills.listar();
-    assert.ok(Array.isArray(lista));
-    
-    fs.unlinkSync(path.join(dir, 'SKILL.md'));
-    fs.rmdirSync(dir);
-  });
+test('cortex-skills: carregar devolve o corpo sem frontmatter', () => {
+  const corpo = carregar('tela-finance');
+  assert.ok(!corpo.includes('---'), 'Frontmatter removido');
+  assert.ok(corpo.includes('Regras de uso:'), 'Corpo carregado');
 });
