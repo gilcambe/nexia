@@ -4,7 +4,7 @@
 self.addEventListener("message", (e) => { if (e.data && e.data.tipo === "atualizar") self.skipWaiting(); });
 const CACHE = "cortex-v8";
 self.addEventListener("install", (e) => {
-  e.skipWaiting();
+  e.waitUntil(Promise.resolve());
 });
 self.addEventListener("activate", (e) => {
   e.waitUntil(
