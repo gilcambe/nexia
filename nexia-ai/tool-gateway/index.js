@@ -51,7 +51,7 @@ function checkInput(tool, input) {
  */
 function createGateway(o) {
   const { db, vault } = o;
-  const hooks = o.hooks || criarHooks();
+  const hooks = o.hooks || criarHooks({ antes: [bloquearPerigoso], depois: [checarSintaxe] });
   const env = o.env || process.env;
   const fetchImpl = o.fetchImpl || ((...a) => fetch(...a));
   const now = o.now || (() => new Date());
