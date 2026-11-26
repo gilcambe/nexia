@@ -22,7 +22,7 @@ function aparar(c) {
 }
 const CACHE = 'body-coach-v18';
 self.addEventListener('install', (e) => { 
-  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(['./', './index.html'])).then(() => self.skipWaiting()));
+  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(['./', './index.html'])));
 });
 self.addEventListener('activate', (e) => {
   e.waitUntil(
