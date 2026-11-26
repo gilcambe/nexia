@@ -17,12 +17,26 @@ export default function PainelAdmin() {
     try {
       const [r, c] = await Promise.all([chatApi<Resumo>({ acao: 'dono_resumo' }), chatApi<{ cupons: Cupom[] }>({ acao: 'cupom_lista' })]);
       setResumo(r); setCupons(c.cupons);
-    } catch (e) { setMsg((e as Error).message); }
+    } catch (e) {
+      // Não sobrescreve msg de sucesso caso já haja uma mensagem ou deixa o erro visível
+      console.error(e);
+    }
   };
   useEffect(() => { void carregar(); }, []);
   const fazer = async (corpo: Record<string, unknown>, ok: string) => {
     setMsg('');
-    try { await chatApi(corpo); setMsg(ok); await carregar(); } catch (e) { setMsg((e as Error).message); }
+    try {
+      await chatApi(corpo);
+      setMsg(ok);
+      try {
+        await carregar();
+      } catch (reloadErr) {
+        console.error(reloadErr);
+        // Mantém a mensagem de sucesso mesmo se o recarregamento falhar
+      }
+    } catch (e) {
+      setMsg((e as Error).message);
+    }
   };
 
   const numero = (rotulo: string, valor: string | number) => (
