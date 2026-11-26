@@ -8,6 +8,7 @@ import Logo, { logoServico } from "./Logo";
 import { Icone } from "./icones";
 import { estadoVaga } from "./ConectarIAs";
 import { Abre, Compacto, Grupo, NaFolha, pedirAbrir, useCelular, useModo } from "./celular";
+import DailySpendCard from "@/central/DailySpendCard";
 
 // Início da Central Kernex: visão geral com dados reais. Sem dado, mostra "sem dado ainda"; nunca número inventado.
 type Estado = "ok" | "atencao" | "erro" | "cinza";
@@ -522,6 +523,7 @@ export default function Painel({ d, erros, avisos, ir, conferir, carregando, abr
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-[1.4fr_1fr_1fr] gap-6">
+            <DailySpendCard />
             {cxTarefas}
 
             {cxTopologia}
