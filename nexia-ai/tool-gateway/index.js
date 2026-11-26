@@ -79,8 +79,7 @@ function createGateway(o) {
         return { tool_call: record, status: 'denied', erro: { codigo: 'HOOK_BLOCKED', mensagem: hookBloqueio.bloquear } };
       }
       const result = await tool.run({ vault, ctx, project, env, fetchImpl, github: o.github }, input);
-      const postHooks = await hooks.rodarDepois({ tool, input }, result);
-      const avisos = postHooks && postHooks.avisos ? postHooks.avisos : [];
+      const avisos = await hooks.rodarDepois({ tool, input }, result);
       const out = tool.summarizeOutput ? tool.summarizeOutput(result, input) : 'ok';
       const record = await vault.ToolCall.update(ctx, call.id, { status: 'succeeded', output_summary: safeText(out, 2000) || 'ok', duration_ms: Date.now() - t0 }, { expectedVersion: call.version });
       return { tool_call: record, status: 'succeeded', result, ...(avisos.length ? { avisos } : {}) };
