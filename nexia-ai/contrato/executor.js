@@ -11,6 +11,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { parseEditBlocks, safePath, FORMAT_HELP } = require('../orchestrator/edit-blocks');
 const memoria = require('./memoria');
+const skills = require('../skills');
 
 // Opções aceitas (lista fechada): --test-force-exit, --test-timeout=N, --test-concurrency=N. Nada de shell livre vindo de issue.
 const OPCAO_TESTE = /^--test-(?:force-exit|timeout=\d{1,6}|concurrency=\d{1,2})$/;
@@ -305,7 +306,9 @@ async function executar(o) {
   const lic = mem ? memoria.licoes(mem) : '';
   // 22/11: livros por assunto (memoria/livros/*.md) entram só quando o contrato cita o assunto.
   const livrosUsados = mem ? memoria.livros(c, mem) : [];
-  const sistema = (lic ? `${SISTEMA}\n\nLIÇÕES DO CORTEX (aprendidas em tarefas anteriores; siga sempre):\n${lic}` : SISTEMA)
+  const listaSkills = skills.listar();
+  const catalogo = skills.catalogo(listaSkills);
+  const sistema = (lic ? `${SISTEMA}\n\n${catalogo}${corpoSkills}\n\nLIÇÕES DO CORTEX (aprendidas em tarefas anteriores; siga sempre):\n${lic}` : `${SISTEMA}\n\n${catalogo}${corpoSkills}`)
     + livrosUsados.map(l => `\n\nLIÇÕES DO CORTEX SOBRE ${l.nome.toUpperCase()} (siga sempre nesta tarefa):\n${l.texto}`).join('');
   const exemplosUsados = mem ? memoria.buscarExemplos(c, { ...mem, excluir: o.numero }) : [];
   const exemplos = memoria.textoExemplos(exemplosUsados);
