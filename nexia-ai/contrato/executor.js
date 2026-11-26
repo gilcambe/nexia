@@ -12,6 +12,35 @@ const path = require('node:path');
 const { parseEditBlocks, safePath, FORMAT_HELP } = require('../orchestrator/edit-blocks');
 const memoria = require('./memoria');
 
+// Skills (parte 4/5 #4146): carregamento progressivo. O catálogo (nome+descrição) vai no prompt de sistema;
+// o corpo completo entra no pedido só quando o pedido do contrato combina com a descrição.
+// Require lazy e tolerante: se o módulo ainda não existe ou está vazio, o executor continua como antes.
+let skillsMod = null;
+function skills() {
+  if (skillsMod !== null) return skillsMod || null;
+  try { skillsMod = require('../skills/index'); } catch (_) { skillsMod = false; }
+  return skillsMod || null;
+}
+const pastaSkills = raiz => path.join(raiz, 'nexia-ai', 'skills');
+function catalogoSkills(raiz) {
+  const s = skills();
+  if (!s || typeof s.listar !== 'function' || typeof s.catalogo !== 'function') return '';
+  try { return String(s.catalogo(s.listar(pastaSkills(raiz))) || ''); } catch (_) { return ''; }
+}
+function skillsDoPedido(c, raiz) {
+  const s = skills();
+  if (!s || typeof s.escolher !== 'function' || typeof s.carregar !== 'function') return '';
+  try {
+    const pasta = pastaSkills(raiz);
+    const escolhidas = s.escolher(c.pedido, s.listar(pasta), 2) || [];
+    return escolhidas.map(x => {
+      if (!x || !x.nome) return '';
+      const corpo = s.carregar(x.nome, pasta);
+      return corpo ? `SKILL ${x.nome}:\n${corpo}` : '';
+    }).filter(Boolean).join('\n\n');
+  } catch (_) { return ''; }
+}
+
 // Opções aceitas (lista fechada): --test-force-exit, --test-timeout=N, --test-concurrency=N. Nada de shell livre vindo de issue.
 const OPCAO_TESTE = /^--test-(?:force-exit|timeout=\d{1,6}|concurrency=\d{1,2})$/;
 const TESTE_OK = /^node --test(?: --test-(?:force-exit|timeout=\d{1,6}|concurrency=\d{1,2}))*( [\w@./-]+\.test\.(?:js|cjs|mjs))+$/;
@@ -97,6 +126,7 @@ function trechosRelevantes(txt, pistas) {
 function montarPedido(c, raiz, anterior, exemplos = '', enxuto = false) {
   const partes = [`PEDIDO:\n${c.pedido}`, `ARQUIVOS PERMITIDOS: ${c.arquivos.join(', ')}`, `TESTE DE ACEITAÇÃO: ${c.teste}`];
   if (exemplos) partes.push(exemplos);
+  if (!enxuto) { const sk = skillsDoPedido(c, raiz); if (sk) partes.push(sk); }
   for (const f of c.testes) { const p = path.join(raiz, f); if (fs.existsSync(p)) partes.push(`--- TESTE (só leitura) ${f} ---\n${fs.readFileSync(p, 'utf8').slice(0, 12000)}`); }
   if (!enxuto) partes.push(...referencias(c, raiz));
   const pistas = [c.pedido, ...c.testes.map((f) => { const p = path.join(raiz, f); return fs.existsSync(p) ? fs.readFileSync(p, 'utf8') : ''; })].join('\n');
@@ -154,7 +184,7 @@ function testeSuspeito(historico, minimo = 3) {
 // Melhoria 25 (17/11/2026): a pista do PC (Antigravity) devolveu o texto lido na codificação antiga do Windows e os
 // acentos viraram "Voc├¬", "ÔÇö" (#3867/#3868). O teste não via isso. Agora qualquer mudança que AUMENTE o número
 // desses restos de codificação quebrada é recusada, venha de qual IA vier.
-const QUEBRADO = /├|┬|ÔÇ|Ã[ -¿]|�/g;
+const QUEBRADO = /├|┬|ÔÇ|Ã[ -¿]|/g;
 const quebrados = (s) => (String(s || '').match(QUEBRADO) || []).length;
 const quebrouAcento = (antes, depois) => quebrados(depois) > quebrados(antes);
 
@@ -305,7 +335,7 @@ async function executar(o) {
   const lic = mem ? memoria.licoes(mem) : '';
   // 22/11: livros por assunto (memoria/livros/*.md) entram só quando o contrato cita o assunto.
   const livrosUsados = mem ? memoria.livros(c, mem) : [];
-  const sistema = montarPromptSistema(c, mem, { lic, livrosUsados });
+  const sistema = montarPromptSistema(c, mem, { lic, livrosUsados, catalogo: catalogoSkills(raiz) });
   const exemplosUsados = mem ? memoria.buscarExemplos(c, { ...mem, excluir: o.numero }) : [];
   const exemplos = memoria.textoExemplos(exemplosUsados);
   if (lic || exemplosUsados.length) log(`memória: ${lic ? 'lições' : 'sem lições'}${livrosUsados.length ? ` + livros ${livrosUsados.map(l => l.nome).join(', ')}` : ''}; exemplos ${exemplosUsados.map(e => '#' + e.numero).join(', ') || 'nenhum'}`);
@@ -334,15 +364,15 @@ async function executar(o) {
     if (ord.some((m, i) => m !== livres[i])) log(`acerto: ${ord.slice(0, 3).map(m => `${m.provider}/${m.model}`).join(' > ')} vão primeiro (mais entregas aprovadas recentes)`);
     escada = [...ord, ...fora];
   }
-  // Melhoria 24: tipo do erro. 'morto' (404/410 fim de vida) e 'verba'/'dia' (402, cota do dia) não voltam em 45 s:
+  // Melhoria 24: tipo do erro. 'morto' (410/404 fim de vida) e 'verba'/'dia' (402, cota do dia) não voltam em 45 s:
   // pulam na hora e marcam o placar; só o limite por minuto espera.
   const tipoErro = e => {
     const s = (e && e.details && e.details.status) || 0;
     const t = `${String((e && e.message) || e)} ${String((e && e.details && e.details.upstream) || '')}`;
-    if (s === 410 || /410|end of life|decommission|no longer (?:available|supported)/i.test(t) || ((s === 404 || /404/.test(t)) && /model|not.?found/i.test(t))) return 'morto';
-    if (s === 402 || /402|budget|billing|payment required|insufficient.?(?:funds|balance|credits)/i.test(t)) return 'verba';
+    if (s === 410 || /410|end of life|decommission|no longer (?:available|supported)/i.test(t) || ((s === 404 || /404/.test(t)) && /model|not.?found/i.test(t))) return 'morto';
+    if (s === 402 || /402|budget|billing|payment required|insufficient.?(?:funds|balance|credits)/i.test(t)) return 'verba';
     const ra = /retry.?after\D{0,3}(\d+)/i.exec(t);
-    if (/daily|per.?day|tokens per day|requests per day|RPD|TPD/i.test(t) || (ra && Number(ra[1]) > 120)) return 'dia';
+    if (/daily|per.?day|tokens per day|requests per day|RPD|TPD/i.test(t) || (ra && Number(ra[1]) > 120)) return 'dia';
     return null;
   };
   const semCotaErro = e => { const s = (e && e.details && e.details.status) || 0; return s === 429 || s === 402 || /\b(429|402)\b|rate.?limit|quota|cota/i.test(String((e && e.message) || e)); };
@@ -471,7 +501,7 @@ async function executar(o) {
     melhor: melhor ? { estado: melhor.estado, nota: melhor.nota, texto: textoNota(melhor.nota) } : null, notaInicio };
 }
 
-/** Prompt de sistema: base + constituição (valores) + lições + livros do assunto. */
+/** Prompt de sistema: base + constituição (valores) + lições + livros do assunto + catálogo de skills. */
 function montarPromptSistema(c, mem = {}, pre = {}) {
   const lic = pre.lic !== undefined ? pre.lic : (mem ? memoria.licoes(mem) : '');
   const livrosUsados = pre.livrosUsados || (mem && c ? memoria.livros(c, mem) : []);
@@ -479,7 +509,8 @@ function montarPromptSistema(c, mem = {}, pre = {}) {
   return SISTEMA
     + (con ? `\n\nCONSTITUIÇÃO DO CORTEX (valores; siga sempre):\n${con}` : '')
     + (lic ? `\n\nLIÇÕES DO CORTEX (aprendidas em tarefas anteriores; siga sempre):\n${lic}` : '')
-    + livrosUsados.map(l => `\n\nLIÇÕES DO CORTEX SOBRE ${l.nome.toUpperCase()} (siga sempre nesta tarefa):\n${l.texto}`).join('');
+    + livrosUsados.map(l => `\n\nLIÇÕES DO CORTEX SOBRE ${l.nome.toUpperCase()} (siga sempre nesta tarefa):\n${l.texto}`).join('')
+    + (pre.catalogo ? `\n\n${pre.catalogo}` : '');
 }
 
 module.exports = { montarPromptSistema, trechosRelevantes, porAcerto, testeSuspeito, lerContrato, executar, aplicar, montarPedido, resgatarFormato, nota, nomesDosTestes, foco, referencias, SISTEMA, TESTE_OK };
