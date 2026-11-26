@@ -4,22 +4,80 @@ import { dataCurta } from '@/lib/acesso';
 import type { Cupom } from './painelTipos';
 
 const campo = 'w-full rounded-lg border border-background-200 bg-background-50 px-3 py-2.5 text-base';
-const botao = 'rounded-lg bg-primary-500 px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50';
+const botao = 'rounded-lg bg-primary-500 px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50 disabled:cursor-not-allowed';
+
+// Validação simples e eficaz de e-mail
+const emailValido = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
 
 // Presente, cupom e promoção: cada formulário chama uma ação de admin no servidor.
 export default function Ferramentas({ cupons, fazer }: { cupons: Cupom[]; fazer: (corpo: Record<string, unknown>, ok: string) => Promise<void> }) {
   const [email, setEmail] = useState('');
   const [cupom, setCupom] = useState({ codigo: '', pct: '20', dias: '30', maxUsos: '0' });
   const [promo, setPromo] = useState({ pct: '20', ate: '', texto: '' });
+
+  // Feedback local ao lado do botão clicado
+  const [presenteandoDia, setPresenteandoDia] = useState<number | null>(null);
+  const [statusPresente, setStatusPresente] = useState<{ tipo: 'ok' | 'erro'; texto: string } | null>(null);
+
+  const valido = emailValido(email);
+  const dicaEmail = valido ? '' : 'digite um e-mail válido';
+
+  async function handlePresentear(dias: number) {
+    if (!valido) return;
+    setPresenteandoDia(dias);
+    setStatusPresente(null);
+    try {
+      await fazer({ acao: 'dono_presente', email: email.trim(), dias }, `Presente de ${dias} dias enviado para ${email.trim()}.`);
+      setStatusPresente({ tipo: 'ok', texto: `Presente de ${dias} dias enviado com sucesso!` });
+    } catch (err: unknown) {
+      const msgErro = err instanceof Error ? err.message : 'Erro ao presentear';
+      setStatusPresente({ tipo: 'erro', texto: msgErro });
+    } finally {
+      setPresenteandoDia(null);
+    }
+  }
+
   return (
     <>
       <Card>
         <h2 className="font-semibold text-foreground-900"><i className="ri-gift-line mr-1"></i>Presentear</h2>
         <p className="text-sm text-foreground-500">A pessoa precisa já ter entrado no app uma vez.</p>
-        <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" placeholder="email@da.pessoa" className={`${campo} mt-2`} />
+        <input
+          value={email}
+          onChange={(e) => {
+            setEmail(e.target.value);
+            setStatusPresente(null);
+          }}
+          type="email"
+          placeholder="email@da.pessoa"
+          className={`${campo} mt-2`}
+        />
+
         <div className="mt-2 grid grid-cols-4 gap-2">
-          {[7, 30, 90, 365].map((d) => <button key={d} disabled={!email.includes('@')} onClick={() => void fazer({ acao: 'dono_presente', email, dias: d }, `Presente de ${d} dias enviado para ${email}.`)} className={botao}>{d} dias</button>)}
+          {[7, 30, 90, 365].map((d) => (
+            <div key={d} title={dicaEmail} className="w-full">
+              <button
+                type="button"
+                disabled={!valido || presenteandoDia !== null}
+                onClick={() => void handlePresentear(d)}
+                className={`${botao} w-full`}
+              >
+                {presenteandoDia === d ? 'Enviando...' : `${d} dias`}
+              </button>
+            </div>
+          ))}
         </div>
+
+        {statusPresente && (
+          <div
+            className={`mt-2 flex items-center gap-1.5 text-sm font-medium ${
+              statusPresente.tipo === 'ok' ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'
+            }`}
+          >
+            <i className={statusPresente.tipo === 'ok' ? 'ri-checkbox-circle-line' : 'ri-error-warning-line'} />
+            <span>{statusPresente.texto}</span>
+          </div>
+        )}
       </Card>
       <Card>
         <h2 className="font-semibold text-foreground-900"><i className="ri-coupon-line mr-1"></i>Cupom de desconto</h2>
