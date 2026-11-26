@@ -1,6 +1,7 @@
 /**
  * Lições do Cortex em CommonJS
  * Implementação da classe LessonStore com persistência via módulo Cofre.
+ * (Atualizado conforme especificação de persistência)
  */
 
 const cofreInstance = require('./cofre');
