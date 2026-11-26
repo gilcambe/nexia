@@ -11,6 +11,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { parseEditBlocks, safePath, FORMAT_HELP } = require('../orchestrator/edit-blocks');
 const memoria = require('./memoria');
+const skills = require('../skills');
 
 // Opções aceitas (lista fechada): --test-force-exit, --test-timeout=N, --test-concurrency=N. Nada de shell livre vindo de issue.
 const OPCAO_TESTE = /^--test-(?:force-exit|timeout=\d{1,6}|concurrency=\d{1,2})$/;
@@ -305,7 +306,9 @@ async function executar(o) {
   const lic = mem ? memoria.licoes(mem) : '';
   // 22/11: livros por assunto (memoria/livros/*.md) entram só quando o contrato cita o assunto.
   const livrosUsados = mem ? memoria.livros(c, mem) : [];
-  const sistema = montarPromptSistema(c, mem, { lic, livrosUsados });
+  const skillsDisponiveis = skills.listar();
+  const skillsEscolhidas = skills.escolher(c.pedido, skillsDisponiveis);
+  const sistema = montarPromptSistema(c, mem, { lic, livrosUsados }) + (skillsDisponiveis.length ? `\n\nSKILLS DISPONÍVEIS:\n${skills.catalogo(skillsDisponiveis)}` : '') + skillsEscolhidas.map(s => `\n\nSKILL ${s.nome}:\n${skills.carregar(s.nome)}`).join('');
   const exemplosUsados = mem ? memoria.buscarExemplos(c, { ...mem, excluir: o.numero }) : [];
   const exemplos = memoria.textoExemplos(exemplosUsados);
   if (lic || exemplosUsados.length) log(`memória: ${lic ? 'lições' : 'sem lições'}${livrosUsados.length ? ` + livros ${livrosUsados.map(l => l.nome).join(', ')}` : ''}; exemplos ${exemplosUsados.map(e => '#' + e.numero).join(', ') || 'nenhum'}`);
