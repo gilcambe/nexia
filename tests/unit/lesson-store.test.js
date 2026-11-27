@@ -4,7 +4,7 @@ const cofreInstance = require('../../nexia-ai/cortex/cofre');
 const test = require('node:test');
 const assert = require('node:assert');
 
-async function test() {
+test('lesson store integration', async () => {
   const store = new LessonStore();
   await store.ensureInitialized();
 
@@ -18,14 +18,14 @@ async function test() {
 
   // Recupera lições similares
   const similar = store.getSimilarLessons('test');
-  console.log('Similar lessons:', similar);
+  assert.ok(Array.isArray(similar), 'Similar lessons deve ser um array');
 
   // Incrementa contagem de evitação
   await store.incrementAvoidCount('test-assinatura');
   const avoidCounts = store.getAvoidCounts();
-  console.log('Avoid counts:', avoidCounts);
+  assert.strictEqual(avoidCounts['test-assinatura'], 2, 'Contagem de evitações deve ser incrementada corretamente');
 
   // Recupera lições recentes
   const recent = store.getRecentLessons();
-  console.log('Recent lessons:', recent);
-}
+  assert.ok(Array.isArray(recent), 'Recent lessons deve ser um array');
+});
