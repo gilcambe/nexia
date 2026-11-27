@@ -1,5 +1,5 @@
 // AVISO DE ATUALIZAÇÃO (PWA/WEB)
-// Atualizado e validado para uso.
+// Atualizado e validado para uso (branch nexia/criar-o-novo-arquivo-public-js-update-ba-f38841).
 // Implementação: getRegistration + update em 30 min/visibilidade, faixa fixa e fallback version.json.
 // Uso: <script src="/js/update-banner.js" defer></script>. Sem dependências.
 (function () {
