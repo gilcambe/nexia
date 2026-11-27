@@ -12,7 +12,8 @@ const DailySpendCard = () => {
   React.useEffect(() => {
     const fetchUsage = async () => {
       try {
-        const data = await api.getUsage();
+        const res = await api.usage();
+        const data = res?.data ?? {};
         const list = Array.isArray(data) ? data : (data?.providers ?? []);
         setUsageData(list);
       } catch (err) {
