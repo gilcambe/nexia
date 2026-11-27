@@ -37,23 +37,24 @@ class LessonStore {
     await this.ensureInitialized();
     const lesson = { assinatura, causa, resolucao, issue, createdAt: new Date().toISOString() };
     this.lessons.push(lesson);
-    
+    this.avoidCounts[assinatura] = (this.avoidCounts[assinatura] || 0) + 1;
+
     await cofreInstance.salvar('lessons', this.lessons);
+    await cofreInstance.salvar('avoidCounts', this.avoidCounts);
     await cofreInstance.sincronizar();
 
     return lesson;
   }
 
-  async getSimilarLessons(assinatura, limit = 3) {
+  getSimilarLessons(assinatura, limit = 3) {
     if (!assinatura || typeof assinatura !== 'string' || !assinatura.trim()) {
       return [];
     }
-    await this.ensureInitialized();
     const safeLimit = parseInt(limit) || 3;
-    // Similaridade por relevância: lições com a mesma assinatura, ordenadas pela mais recente
-    // (createdAt desc) e limitadas ao solicitado.
+    // Similaridade por substring: a assinatura da lição contém (ou é contida por) a assinatura buscada,
+    // ordenadas pela mais recente (createdAt desc) e limitadas ao solicitado.
     return this.lessons
-      .filter(lesson => lesson.assinatura === assinatura)
+      .filter(lesson => String(lesson.assinatura || '').includes(assinatura) || assinatura.includes(String(lesson.assinatura || '')))
       .sort((a, b) => String(b.createdAt || '').localeCompare(String(a.createdAt || '')))
       .slice(0, safeLimit);
   }
@@ -69,14 +70,12 @@ class LessonStore {
     return this.avoidCounts[assinatura];
   }
 
-  async getRecentLessons(limit = 10) {
-    await this.ensureInitialized();
+  getRecentLessons(limit = 10) {
     const safeLimit = parseInt(limit) || 10;
     return this.lessons.slice(-safeLimit);
   }
 
-  async getAvoidCounts() {
-    await this.ensureInitialized();
+  getAvoidCounts() {
     return { ...this.avoidCounts };
   }
 }
@@ -85,6 +84,6 @@ class LessonStore {
  * Instância exportada do LessonStore para gerenciamento de lições e persistência.
  */
 const lessonStore = new LessonStore();
-module.exports = LessonStore;
+module.exports = { LessonStore };
 module.exports.LessonStore = LessonStore;
 module.exports.lessonStore = lessonStore;
