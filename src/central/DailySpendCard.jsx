@@ -79,9 +79,12 @@ const DailySpendCard = () => {
                 {provider.name || provider.provider || provider.model || 'Provedor'}
               </span>
               <span className="text-slate-500">{Math.round(percentual(provider))}% do limite grátis</span>
+              {percentual(provider) > 90 && (
+                <span className="text-red-600 text-xs font-semibold">Acima de 90%</span>
+              )}
             </div>
             <div
-              className="h-2 rounded-full bg-slate-100 overflow-hidden"
+              className="h-2 rounded-full bg-slate-100 overflow-hidden mt-1"
               role="progressbar"
               aria-label={`Uso de ${provider.name || 'Provedor'}`}
               aria-valuemin={0}
