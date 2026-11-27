@@ -21,7 +21,7 @@ function aparar(c) {
     return Promise.all(toDelete.map((k) => c.delete(k)));
   });
 }
-}
+
 // Versão do cache: suba o número a cada mudança deste arquivo (o activate apaga os caches antigos).
 const CACHE = 'body-coach-v31';
 // #2917: a versão nova espera o toque em "Atualizar" (o botão do app) e só então assume o controle.
