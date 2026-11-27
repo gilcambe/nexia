@@ -21,8 +21,8 @@ function aparar(c) {
   });
 }
 const CACHE = 'body-coach-v25';
-self.addEventListener('install', (e) => { 
-  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(['./', './index.html'])));
+self.addEventListener('install', (e) => {
+  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(['./', './index.html'])).catch(() => undefined));
 });
 self.addEventListener('activate', (e) => {
   e.waitUntil(
