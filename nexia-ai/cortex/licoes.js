@@ -13,10 +13,16 @@ class LessonStore {
   }
 
   async loadInitialState() {
-    const savedLessons = await cofreInstance.recuperar('lessons');
-    const savedAvoidCounts = await cofreInstance.recuperar('avoidCounts');
-    if (savedLessons) this.lessons = savedLessons;
-    if (savedAvoidCounts) this.avoidCounts = savedAvoidCounts;
+    try {
+      const savedLessons = await cofreInstance.recuperar('lessons');
+      const savedAvoidCounts = await cofreInstance.recuperar('avoidCounts');
+      if (Array.isArray(savedLessons)) this.lessons = savedLessons;
+      if (savedAvoidCounts && typeof savedAvoidCounts === 'object' && !Array.isArray(savedAvoidCounts)) this.avoidCounts = savedAvoidCounts;
+    } catch (err) {
+      // Estado inicial seguro: mantém lessons/avoidCounts vazios se o Cofre tiver dado inválido.
+      this.lessons = [];
+      this.avoidCounts = {};
+    }
     return true;
   }
 
@@ -32,10 +38,7 @@ class LessonStore {
     const lesson = { assinatura, causa, resolucao, issue, createdAt: new Date().toISOString() };
     this.lessons.push(lesson);
     
-    this.avoidCounts[assinatura] = (this.avoidCounts[assinatura] || 0) + 1;
-    
     await cofreInstance.salvar('lessons', this.lessons);
-    await cofreInstance.salvar('avoidCounts', this.avoidCounts);
     await cofreInstance.sincronizar();
 
     return lesson;
@@ -47,9 +50,12 @@ class LessonStore {
     }
     await this.ensureInitialized();
     const safeLimit = parseInt(limit) || 3;
+    // Similaridade por relevância: lições com a mesma assinatura, ordenadas pela mais recente
+    // (createdAt desc) e limitadas ao solicitado.
     return this.lessons
       .filter(lesson => lesson.assinatura === assinatura)
-      .slice(-safeLimit);
+      .sort((a, b) => String(b.createdAt || '').localeCompare(String(a.createdAt || '')))
+      .slice(0, safeLimit);
   }
 
   async incrementAvoidCount(assinatura) {
@@ -69,8 +75,8 @@ class LessonStore {
     return this.lessons.slice(-safeLimit);
   }
 
-  getAvoidCounts() {
-    this.ensureInitialized();
+  async getAvoidCounts() {
+    await this.ensureInitialized();
     return { ...this.avoidCounts };
   }
 }
