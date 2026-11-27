@@ -51,6 +51,7 @@ class LessonStore {
     await this.ensureInitialized();
     this.avoidCounts[assinatura] = (this.avoidCounts[assinatura] || 0) + 1;
 
+    // incrementAvoidCount atualiza apenas a contagem de evitações, não as lições em si.
     await cofreInstance.salvar('avoidCounts', this.avoidCounts);
     await cofreInstance.sincronizar();
 
