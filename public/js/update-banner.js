@@ -74,6 +74,6 @@
     verificarVersao();
   }
 
-  // Hook mínimo para testes: window.KxUpdateBanner = { mostrar, vigiar, verificarVersao }.
+  // Hook mínimo para testes: window.KxUpdateBanner = { mostrar, vigiar, verificarVersao, _reiniciar: function () { recarregou = false; } }.
   global.KxUpdateBanner = { mostrar: mostrar, vigiar: vigiar, verificarVersao: verificarVersao };
 })(typeof window !== "undefined" ? window : this);
