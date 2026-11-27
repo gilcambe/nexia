@@ -20,8 +20,9 @@ function aparar(c) {
     return Promise.all(toDelete.map((k) => c.delete(k)));
   });
 }
-const CACHE = 'body-coach-v22';
+const CACHE = 'body-coach-v23';
 self.addEventListener('install', (e) => { 
+  self.skipWaiting();
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(['./', './index.html'])));
 });
 self.addEventListener('activate', (e) => {
