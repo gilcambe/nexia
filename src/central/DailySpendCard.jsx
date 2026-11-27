@@ -8,6 +8,7 @@ import { utilBarColor } from './utilBarColor';
  */
 const DailySpendCard = () => {
   const [usageData, setUsageData] = React.useState([]);
+  const [status, setStatus] = React.useState('loading');
 
   React.useEffect(() => {
     const fetchUsage = async () => {
@@ -16,12 +17,31 @@ const DailySpendCard = () => {
         const data = res?.data ?? {};
         const list = Array.isArray(data) ? data : (data?.providers ?? []);
         setUsageData(list);
+        setStatus('ready');
       } catch (err) {
-        setUsageData([]);
+        setStatus('error');
       }
     };
     fetchUsage();
   }, []);
+
+  if (status === 'loading') {
+    return (
+      <div className="rounded-2xl bg-white border border-slate-200/80 shadow-[0_1px_3px_rgba(15,23,42,0.06)] p-5">
+        <h2 className="font-semibold text-slate-900 mb-4">Gasto de hoje</h2>
+        <p className="text-slate-500 text-sm">Carregando uso das IAs...</p>
+      </div>
+    );
+  }
+
+  if (status === 'error') {
+    return (
+      <div className="rounded-2xl bg-white border border-slate-200/80 shadow-[0_1px_3px_rgba(15,23,42,0.06)] p-5">
+        <h2 className="font-semibold text-slate-900 mb-4">Gasto de hoje</h2>
+        <p className="text-red-600 text-sm">Nao foi possivel carregar o uso das IAs. Tente atualizar a pagina.</p>
+      </div>
+    );
+  }
 
   if (!usageData || usageData.length === 0) {
     return (
