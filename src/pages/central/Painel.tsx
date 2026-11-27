@@ -8,7 +8,6 @@ import Logo, { logoServico } from "./Logo";
 import { Icone } from "./icones";
 import { estadoVaga } from "./ConectarIAs";
 import { Abre, Compacto, Grupo, NaFolha, pedirAbrir, useCelular, useModo } from "./celular";
-import DailySpendCard from "@/central/DailySpendCard";
 
 // Início da Central Kernex: visão geral com dados reais. Sem dado, mostra "sem dado ainda"; nunca número inventado.
 type Estado = "ok" | "atencao" | "erro" | "cinza";
