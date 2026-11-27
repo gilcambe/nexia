@@ -23,7 +23,6 @@
     btnAtualizar.onclick = function () {
       btnAtualizar.textContent = "Atualizando…";
       if (worker) worker.postMessage({ tipo: "atualizar" });
-      setTimeout(function () { location.reload(); }, 3000);
     };
     btnFechar.onclick = function (e) { e.stopPropagation(); b.remove(); };
     (document.body || document.documentElement).appendChild(b);
@@ -55,7 +54,7 @@
   }
 
   function verificarVersao() {
-    fetch("/version.json?t=" + Date.now()).then(function (res) {
+    fetch("/version.json?t=" + Date.now(), { cache: "no-store" }).then(function (res) {
       if (!res.ok) return;
       return res.json();
     }).then(function (data) {
