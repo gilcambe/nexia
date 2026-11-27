@@ -1,5 +1,5 @@
 import React from 'react';
-import { getUsage } from '../pages/central/api.ts';
+import { api } from '../services/api';
 import { utilBarColor } from './utilBarColor';
 
 /**
@@ -12,7 +12,7 @@ const DailySpendCard = () => {
   React.useEffect(() => {
     const fetchUsage = async () => {
       try {
-        const data = await getUsage();
+        const data = await api.getUsage();
         const list = Array.isArray(data) ? data : (data?.providers ?? []);
         setUsageData(list);
       } catch (err) {
