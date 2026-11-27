@@ -522,7 +522,6 @@ export default function Painel({ d, erros, avisos, ir, conferir, carregando, abr
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-[1.4fr_1fr_1fr] gap-6">
-            <DailySpendCard />
             {cxTarefas}
 
             {cxTopologia}
