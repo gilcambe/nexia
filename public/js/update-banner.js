@@ -1,6 +1,6 @@
 // #2917: aviso único "Tem atualização nova 🎉 — Toque para atualizar" para todos os apps (PWA).
 // Created per request to ensure update banner functionality
-// Implementação: atualiza via SW, visibilitychange, intervalo e fallback por version.json.
+// Implementação: getRegistration + update em 30 min/visibilidade, faixa fixa e fallback version.json.
 // Uso: <script src="/js/update-banner.js" defer></script>. Sem dependências.
 (function () {
   if (window.__kxUpdateBanner) return;
@@ -16,8 +16,9 @@
     b.setAttribute("aria-live", "polite");
     b.setAttribute("aria-label", "Aviso de atualização");
     b.style.cssText = "position:fixed;left:12px;right:12px;bottom:12px;z-index:2147483647;display:flex;align-items:center;gap:12px;" +
-      "padding:12px 14px;border-radius:14px;background:#111827;color:#fff;font:15px/1.3 system-ui,sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.35);max-width:520px;margin:0 auto";
-    b.innerHTML = '<button type="button" style="flex:1;cursor:pointer;background:none;border:none;color:white;text-align:left;font:bold 15px/1.3 system-ui,sans-serif">Tem atualização nova 🎉 — Toque para atualizar</button>' +
+      "padding:12px 14px;border-radius:14px;background:#f3f4f6;color:#111827;font:15px/1.3 system-ui,sans-serif;" +
+      "box-shadow:0 8px 24px rgba(0,0,0,.2);max-width:520px;margin:0 auto;border:1px solid #d1d5db";
+    b.innerHTML = '<button type="button" style="flex:1;min-height:44px;cursor:pointer;background:#111827;color:#fff;border:0;border-radius:10px;padding:10px 14px;text-align:left;font:bold 15px/1.3 system-ui,sans-serif">Tem atualização nova 🎉 — Toque para atualizar</button>' +
       '<button type="button" aria-label="Fechar" style="border:0;background:none;color:#9ca3af;font-size:20px;cursor:pointer;margin-left:10px">×</button>';
     var btnAtualizar = b.querySelector('button');
     var btnFechar = b.querySelectorAll('button')[1];
@@ -52,7 +53,7 @@
       recarregou = true;
       location.reload();
     });
-    navigator.serviceWorker.ready.then(function () { return navigator.serviceWorker.getRegistration(); }).then(vigiar).catch(function () {});
+    navigator.serviceWorker.getRegistration().then(vigiar).catch(function () {});
   }
 
   function verificarVersao() {
