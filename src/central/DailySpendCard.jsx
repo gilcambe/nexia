@@ -3,6 +3,19 @@ import { api } from '../services/api';
 import { utilBarColor } from './utilBarColor';
 
 /**
+ * Percentual de uso do limite gratuito de um provedor.
+ * Aceita pct/percent/percentual direto ou calcula used/limit.
+ */
+function percentual(provider) {
+  const direto = provider?.pct ?? provider?.percent ?? provider?.percentual;
+  if (direto !== undefined && direto !== null && direto !== '') return Number(direto) || 0;
+  const used = Number(provider?.used ?? provider?.usage ?? provider?.requests ?? 0) || 0;
+  const limit = Number(provider?.limit ?? provider?.freeLimit ?? 0) || 0;
+  if (limit > 0) return (used / limit) * 100;
+  return 0;
+}
+
+/**
  * Componente DailySpendCard - Exibe o uso de cada provedor de IA.
  * Cores: >70% amarelo, >90% vermelho.
  */
@@ -15,7 +28,9 @@ const DailySpendCard = () => {
       try {
         const res = await api.usage();
         const data = res?.data ?? {};
-        const list = Array.isArray(data) ? data : (data?.providers ?? []);
+        const list = Array.isArray(data)
+          ? data
+          : (data?.providers ?? data?.usage ?? data?.items ?? []);
         setUsageData(list);
         setStatus('ready');
       } catch (err) {
@@ -60,8 +75,10 @@ const DailySpendCard = () => {
         {usageData.map((provider, index) => (
           <div key={index} className="space-y-1">
             <div className="flex justify-between text-sm">
-              <span className="text-slate-700 font-medium">{provider.name || 'Provedor'}</span>
-              <span className="text-slate-500">{Math.round(provider.pct || 0)}%</span>
+              <span className="text-slate-700 font-medium">
+                {provider.name || provider.provider || provider.model || 'Provedor'}
+              </span>
+              <span className="text-slate-500">{Math.round(percentual(provider))}%</span>
             </div>
             <div
               className="h-2 rounded-full bg-slate-100 overflow-hidden"
@@ -69,11 +86,11 @@ const DailySpendCard = () => {
               aria-label={`Uso de ${provider.name || 'Provedor'}`}
               aria-valuemin={0}
               aria-valuemax={100}
-              aria-valuenow={Math.round(provider.pct || 0)}
+              aria-valuenow={Math.round(percentual(provider))}
             >
               <div
-                className={`h-full rounded-full transition-all duration-300 ${utilBarColor(provider.pct || 0)}`}
-                style={{ width: `${Math.max(2, Math.min(100, provider.pct || 0))}%` }}
+                className={`h-full rounded-full transition-all duration-300 ${utilBarColor(percentual(provider))}`}
+                style={{ width: `${Math.max(2, Math.min(100, percentual(provider)))}%` }}
               ></div>
             </div>
           </div>
