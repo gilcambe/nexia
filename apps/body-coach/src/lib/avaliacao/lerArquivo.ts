@@ -96,6 +96,38 @@ export async function lerArquivos(arquivos: File[], aviso: Progresso = () => {})
 }
 
 // Só o texto corrido de um PDF (até 8 páginas), para a IA procurar a lista de alunos.
+export async function textoDoArquivo(arquivo: File): Promise<string> {
+  const tipo = arquivo.type;
+  const nome = arquivo.name.toLowerCase();
+
+  if (tipo === 'application/pdf' || nome.endsWith('.pdf')) {
+    // textoDoPdf só tem texto quando o PDF nasceu com letras; PDF escaneado vem vazio.
+    const texto = await textoDoPdf(arquivo);
+    if (texto.trim().length > 0) return texto;
+
+    // PDF escaneado (sem texto reconhecido): aplica OCR.
+    const aviso: Progresso = () => {};
+    const lib = await pdfjs();
+    const doc = await lib.getDocument({ data: new Uint8Array(await arquivo.arrayBuffer()) }).promise;
+    const telas: HTMLCanvasElement[] = [];
+    for (let i = 1; i <= Math.min(doc.numPages, 3); i += 1) {
+      const pg = await doc.getPage(i);
+      const vp = pg.getViewport({ scale: 2 });
+      const canvas = document.createElement('canvas');
+      canvas.width = vp.width;
+      canvas.height = vp.height;
+      await pg.render({ canvasContext: canvas.getContext('2d')!, viewport: vp }).promise;
+      telas.push(canvas);
+    }
+    return ocr(telas, aviso);
+  }
+
+  if (tipo.startsWith('image/') || nome.endsWith('.png') || nome.endsWith('.jpg') || nome.endsWith('.jpeg') || nome.endsWith('.gif') || nome.endsWith('.webp')) {
+    return ocr([arquivo], () => {});
+  }
+  return arquivo.text();
+}
+
 export async function textoDoPdf(arquivo: File): Promise<string> {
   const lib = await pdfjs();
   const doc = await lib.getDocument({ data: new Uint8Array(await arquivo.arrayBuffer()) }).promise;
