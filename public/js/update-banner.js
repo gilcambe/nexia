@@ -1,4 +1,5 @@
 // AVISO DE ATUALIZAÇÃO (PWA/WEB)
+// Atualizado e validado para uso.
 // Implementação: getRegistration + update em 30 min/visibilidade, faixa fixa e fallback version.json.
 // Uso: <script src="/js/update-banner.js" defer></script>. Sem dependências.
 (function () {
