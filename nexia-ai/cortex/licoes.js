@@ -48,7 +48,7 @@ class LessonStore {
     const safeLimit = parseInt(limit) || 3;
     return this.lessons
       .filter(lesson => lesson.assinatura === assinatura)
-      .slice(0, safeLimit);
+      .slice(-safeLimit);
   }
 
   async incrementAvoidCount(assinatura) {
