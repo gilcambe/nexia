@@ -6,10 +6,6 @@ import { utilBarColor } from './utilBarColor';
  * Componente DailySpendCard - Exibe o uso de cada provedor de IA.
  * Cores: >70% amarelo, >90% vermelho.
  */
-/**
- * Componente DailySpendCard - Exibe o uso de cada provedor de IA.
- * Cores: >70% amarelo, >90% vermelho.
- */
 const DailySpendCard = () => {
   const [usageData, setUsageData] = React.useState([]);
   const [status, setStatus] = React.useState('loading');
