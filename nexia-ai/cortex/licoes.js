@@ -72,7 +72,10 @@ class LessonStore {
 
   getRecentLessons(limit = 10) {
     const safeLimit = parseInt(limit) || 10;
-    return this.lessons.slice(-safeLimit);
+    // Ordena pela data de criação (mais recente primeiro) e limita ao solicitado.
+    return [...this.lessons]
+      .sort((a, b) => String(b.createdAt || '').localeCompare(String(a.createdAt || '')))
+      .slice(0, safeLimit);
   }
 
   getAvoidCounts() {
