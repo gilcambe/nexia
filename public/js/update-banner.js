@@ -16,10 +16,10 @@
     b.setAttribute("aria-live", "polite");
     b.setAttribute("aria-label", "Aviso de atualização");
     b.style.cssText = "position:fixed;left:12px;right:12px;bottom:12px;z-index:2147483647;display:flex;align-items:center;gap:12px;" +
-      "padding:12px 14px;border-radius:14px;background:#f3f4f6;color:#111827;font:15px/1.3 system-ui,sans-serif;" +
+      "padding:12px 14px;border-radius:14px;background:#f3f4f6;color:#111827;font:16px/1.35 system-ui,sans-serif;" +
       "box-shadow:0 8px 24px rgba(0,0,0,.2);max-width:520px;margin:0 auto;border:1px solid #d1d5db";
-    b.innerHTML = '<button type="button" style="flex:1;min-height:44px;cursor:pointer;background:#111827;color:#fff;border:0;border-radius:10px;padding:10px 14px;text-align:left;font:bold 15px/1.3 system-ui,sans-serif">Tem atualização nova 🎉 — Toque para atualizar</button>' +
-      '<button type="button" aria-label="Fechar" style="border:0;background:none;color:#9ca3af;font-size:20px;cursor:pointer;margin-left:10px">×</button>';
+    b.innerHTML = '<button type="button" style="flex:1;min-height:48px;cursor:pointer;background:#111827;color:#fff;border:0;border-radius:10px;padding:12px 14px;text-align:left;font:bold 16px/1.35 system-ui,sans-serif">Tem atualização nova 🎉 — Toque para atualizar</button>' +
+      '<button type="button" aria-label="Fechar aviso" style="border:0;background:none;color:#4b5563;font-size:22px;cursor:pointer;margin-left:10px;min-width:44px;min-height:44px">×</button>';
     var btnAtualizar = b.querySelector('button');
     var btnFechar = b.querySelectorAll('button')[1];
     btnAtualizar.onclick = function () {
@@ -49,7 +49,7 @@
 
   if ("serviceWorker" in navigator) {
     navigator.serviceWorker.addEventListener("controllerchange", function () {
-      if (recarregou || !tinhaControle) return;
+      if (recarregou) return;
       recarregou = true;
       location.reload();
     });
@@ -77,7 +77,7 @@
       localStorage.setItem(chave, data.version);
     }).catch(function () {});
   }
-  if (!("serviceWorker" in navigator) || !navigator.serviceWorker.controller) {
+  if (!("serviceWorker" in navigator)) {
     verificarVersao();
   }
 })();
