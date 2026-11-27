@@ -41,10 +41,11 @@ class LessonStore {
     return lesson;
   }
 
-  getSimilarLessons(assinatura, limit = 3) {
+  async getSimilarLessons(assinatura, limit = 3) {
     if (!assinatura || typeof assinatura !== 'string' || !assinatura.trim()) {
       return [];
     }
+    await this.ensureInitialized();
     const safeLimit = parseInt(limit) || 3;
     return this.lessons
       .filter(lesson => lesson.assinatura === assinatura)
@@ -62,12 +63,14 @@ class LessonStore {
     return this.avoidCounts[assinatura];
   }
 
-  getRecentLessons(limit = 10) {
-    return this.lessons.slice(-limit);
+  async getRecentLessons(limit = 10) {
+    await this.ensureInitialized();
+    const safeLimit = parseInt(limit) || 10;
+    return this.lessons.slice(-safeLimit);
   }
 
   getAvoidCounts() {
-    return this.avoidCounts;
+    return { ...this.avoidCounts };
   }
 }
 
