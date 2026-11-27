@@ -19,6 +19,7 @@ const DailySpendCard = () => {
         setUsageData(list);
         setStatus('ready');
       } catch (err) {
+        console.error('Erro ao carregar uso das IAs:', err);
         setStatus('error');
       }
     };

@@ -2,9 +2,9 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { utilBarColor } from './utilBarColor.js';
 
-test('utilBarColor: até 70% fica azul (normal)', () => {
-  assert.equal(utilBarColor(0), 'bg-indigo-500');
-  assert.equal(utilBarColor(70), 'bg-indigo-500');
+test('utilBarColor: até 70% fica verde (normal)', () => {
+  assert.equal(utilBarColor(0), 'bg-emerald-500');
+  assert.equal(utilBarColor(70), 'bg-emerald-500');
 });
 
 test('utilBarColor: acima de 70% fica amarelo (atenção)', () => {
