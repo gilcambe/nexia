@@ -50,7 +50,7 @@ class LessonStore {
     if (!assinatura || typeof assinatura !== 'string' || !assinatura.trim()) {
       return [];
     }
-    const safeLimit = parseInt(limit) || 3;
+    const safeLimit = Number.isFinite(parseInt(limit, 10)) && parseInt(limit, 10) > 0 ? parseInt(limit, 10) : 3;
     // Similaridade por substring: a assinatura da lição contém (ou é contida por) a assinatura buscada,
     // ordenadas pela mais recente (createdAt desc) e limitadas ao solicitado.
     return this.lessons
@@ -71,7 +71,7 @@ class LessonStore {
   }
 
   getRecentLessons(limit = 10) {
-    const safeLimit = parseInt(limit) || 10;
+    const safeLimit = Number.isFinite(parseInt(limit, 10)) && parseInt(limit, 10) > 0 ? parseInt(limit, 10) : 10;
     // Ordena pela data de criação (mais recente primeiro) e limita ao solicitado.
     return [...this.lessons]
       .sort((a, b) => String(b.createdAt || '').localeCompare(String(a.createdAt || '')))
