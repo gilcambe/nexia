@@ -22,7 +22,7 @@ function aparar(c) {
   });
 }
 // Versão do cache: suba o número a cada mudança deste arquivo (o activate apaga os caches antigos).
-const CACHE = 'body-coach-v28';
+const CACHE = 'body-coach-v29';
 // #2917: a versão nova espera o toque em "Atualizar" (o botão do app) e só então assume o controle.
 const avisoAtualizar = (e) => { if (e.data && e.data.tipo === 'atualizar') self.skipWaiting(); };
 self.addEventListener('install', (e) => {
