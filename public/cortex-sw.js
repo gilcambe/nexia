@@ -3,15 +3,19 @@
 // e guarda o visual (scripts, estilos, ícones) para abrir bem mais rápido. Dados e /api sempre vão direto à rede.
 
 // Versão do cache: suba o número a cada mudança deste arquivo (o activate apaga os caches antigos).
-const CACHE = "cortex-v17";
-self.addEventListener("message", (e) => { if (e.data && e.data.tipo === "atualizar") self.skipWaiting(); });
+const CACHE = "cortex-v18";
+// #2917: só a própria página (mesma origem) pode mandar atualizar; msg de outra origem é ignorada.
+self.addEventListener("message", (e) => {
+  if (e.origin !== self.location.origin) return;
+  if (e.data && e.data.tipo === "atualizar") self.skipWaiting();
+});
 self.addEventListener("install", (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(["/cortex"])).catch(() => undefined));
 });
 self.addEventListener("activate", (e) => {
   e.waitUntil(
     caches.keys().then(keys =>
-      Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
+      Promise.all(keys.filter(k => k.startsWith("cortex-") && k !== CACHE).map(k => caches.delete(k)))
     ).then(() => self.clients.claim())
   );
 });

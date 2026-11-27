@@ -22,15 +22,18 @@ function aparar(c) {
   });
 }
 // Versão do cache: suba o número a cada mudança deste arquivo (o activate apaga os caches antigos).
-const CACHE = 'body-coach-v29';
+const CACHE = 'body-coach-v30';
 // #2917: a versão nova espera o toque em "Atualizar" (o botão do app) e só então assume o controle.
-const avisoAtualizar = (e) => { if (e.data && e.data.tipo === 'atualizar') self.skipWaiting(); };
+const avisoAtualizar = (e) => {
+  if (e.origin !== self.location.origin) return;
+  if (e.data && e.data.tipo === 'atualizar') self.skipWaiting();
+};
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(['./', './index.html'])).catch(() => undefined));
 });
 self.addEventListener('activate', (e) => {
   e.waitUntil(
-    caches.keys().then((ks) => Promise.all(ks.filter((k) => k !== CACHE).map((k) => caches.delete(k)))
+    caches.keys().then((ks) => Promise.all(ks.filter((k) => k.startsWith('body-coach-') && k !== CACHE).map((k) => caches.delete(k)))
     ).then(() => self.clients.claim())
   );
 });

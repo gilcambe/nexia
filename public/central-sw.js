@@ -3,16 +3,19 @@
 // /api e /__/ (login do Firebase) e qualquer dado vão sempre direto à rede.
 
 // #2917: a versão nova espera o toque em "Atualizar" (public/js/update-banner.js) e então assume.
-self.addEventListener("message", (e) => { if (e.data && e.data.tipo === "atualizar") self.skipWaiting(); });
+self.addEventListener("message", (e) => {
+  if (e.origin !== self.location.origin) return;
+  if (e.data && e.data.tipo === "atualizar") self.skipWaiting();
+});
 // Versão do cache: suba o número a cada mudança deste arquivo (o activate apaga os caches antigos).
-const CACHE = "central-v17";
+const CACHE = "central-v18";
 self.addEventListener("install", (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(["/central"])).catch(() => undefined));
 });
 self.addEventListener("activate", (e) => {
   e.waitUntil(
     caches.keys().then(keys =>
-      Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
+      Promise.all(keys.filter(k => k.startsWith("central-") && k !== CACHE).map(k => caches.delete(k)))
     ).then(() => self.clients.claim())
   );
 });
