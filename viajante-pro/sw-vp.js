@@ -1,4 +1,4 @@
-// Viajante Pro — Service Worker v2.0
+// Viajante Pro — Service Worker v3.0
 // FIX: fetch handler always returns a valid Response (no undefined returns)
 
 const CACHE_NAME = 'vp-app-v3';
