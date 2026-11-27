@@ -78,7 +78,7 @@ const DailySpendCard = () => {
               <span className="text-slate-700 font-medium">
                 {provider.name || provider.provider || provider.model || 'Provedor'}
               </span>
-              <span className="text-slate-500">{Math.round(percentual(provider))}%</span>
+              <span className="text-slate-500">{Math.round(percentual(provider))}% do limite grátis</span>
             </div>
             <div
               className="h-2 rounded-full bg-slate-100 overflow-hidden"
