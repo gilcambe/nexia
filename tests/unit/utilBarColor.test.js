@@ -1,4 +1,4 @@
-import { assert } from 'node:assert';
+import assert from 'node:assert/strict';
 import { utilBarColor } from '../src/central/utilBarColor.js';
 
 test('utilBarColor devolve vermelho acima de 90%', () => {
