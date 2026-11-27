@@ -1,7 +1,10 @@
 const { LessonStore } = require('../../nexia-ai/cortex/licoes');
 const cofreInstance = require('../../nexia-ai/cortex/cofre');
 
-export async function test() {
+const test = require('node:test');
+const assert = require('node:assert');
+
+async function test() {
   const store = new LessonStore();
   await store.ensureInitialized();
 
