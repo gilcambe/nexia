@@ -33,7 +33,6 @@ class LessonStore {
     this.lessons.push(lesson);
     
     await cofreInstance.salvar('lessons', this.lessons);
-    await cofreInstance.salvar('avoidCounts', this.avoidCounts);
     await cofreInstance.sincronizar();
 
     return lesson;
@@ -52,7 +51,6 @@ class LessonStore {
     await this.ensureInitialized();
     this.avoidCounts[assinatura] = (this.avoidCounts[assinatura] || 0) + 1;
 
-    await cofreInstance.salvar('lessons', this.lessons);
     await cofreInstance.salvar('avoidCounts', this.avoidCounts);
     await cofreInstance.sincronizar();
 
