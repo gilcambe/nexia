@@ -5,7 +5,6 @@
   if (window.__kxUpdateBanner) return;
   window.__kxUpdateBanner = true;
   var recarregou = false;
-  var tinhaControle = "serviceWorker" in navigator && !!navigator.serviceWorker.controller;
 
   function mostrar(worker) {
     if (document.getElementById("kx-atualizar")) return;
