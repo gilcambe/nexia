@@ -1,4 +1,5 @@
 // #2917: aviso único "Tem atualização nova 🎉 — Toque para atualizar" para todos os apps (PWA).
+// Created per request to ensure update banner functionality
 // Implementação: atualiza via SW, visibilitychange, intervalo e fallback por version.json.
 // Uso: <script src="/js/update-banner.js" defer></script>. Sem dependências.
 (function () {
