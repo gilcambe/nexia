@@ -12,8 +12,8 @@
     b.setAttribute("aria-label", "Aviso de atualização");
     b.style.cssText = "position:fixed;left:12px;right:12px;bottom:12px;z-index:2147483647;display:flex;align-items:center;gap:12px;" +
       "padding:12px 14px;border-radius:14px;background:#f3f4f6;color:#111827;font:16px/1.35 system-ui,sans-serif;" +
-      "box-shadow:0 8px 24px rgba(0,0,0,.2);max-width:520px;margin:0 auto;border:1px solid #d1d5db";
-    b.innerHTML = '<button type="button" style="flex:1;min-height:48px;cursor:pointer;background:#111827;color:#fff;border:0;border-radius:10px;padding:12px 14px;text-align:left;font:bold 16px/1.35 system-ui,sans-serif">Tem atualização nova 🎉 — Toque para atualizar</button>' +
+      "box-shadow:0 8px 24px rgba(0,0,0,.2);width:calc(100% - 24px);max-width:520px;margin:0 auto;border:1px solid #d1d5db";
+    b.innerHTML = '<button type="button" style="flex:1;min-height:48px;cursor:pointer;background:#111827;color:#fff;border:0;border-radius:10px;padding:12px 14px;text-align:left;font:bold 16px/1.35 system-ui,sans-serif;outline-offset:3px">Tem atualização nova 🎉 — Toque para atualizar</button>' +
       '<button type="button" aria-label="Fechar aviso" style="border:0;background:none;color:#4b5563;font-size:22px;cursor:pointer;margin-left:10px;min-width:44px;min-height:44px">×</button>';
     var btnAtualizar = b.querySelector('button');
     var btnFechar = b.querySelectorAll('button')[1];
@@ -65,7 +65,6 @@
       var chave = "kx_ver";
       var atual = localStorage.getItem(chave);
       if (atual && atual !== data.version) {
-        var reg = navigator.serviceWorker ? null : null;
         mostrar(null);
       }
       localStorage.setItem(chave, data.version);
