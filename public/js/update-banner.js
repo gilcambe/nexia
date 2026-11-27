@@ -19,7 +19,11 @@
     var btnFechar = b.querySelectorAll('button')[1];
     btnAtualizar.onclick = function () {
       btnAtualizar.textContent = "Atualizando…";
-      if (worker) worker.postMessage({ tipo: "atualizar" });
+      if (worker) {
+        worker.postMessage({ tipo: "atualizar" });
+      } else {
+        location.reload();
+      }
     };
     btnFechar.onclick = function (e) { e.stopPropagation(); b.remove(); };
     (document.body || document.documentElement).appendChild(b);
