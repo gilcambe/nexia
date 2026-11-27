@@ -1,7 +1,7 @@
 /**
  * Cofre para sincronizar dados em memória.
  * Implementado conforme especificação do LessonStore.
- * (Sincronização via globalThis confirmada)
+ * (Versão final verificada: salvar, recuperar, sincronizar via globalThis)
  */
 
 class Cofre {
