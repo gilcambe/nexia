@@ -1,6 +1,5 @@
 // AVISO DE ATUALIZAÇÃO (PWA/WEB)
 // Implementação: getRegistration + update em 30 min/visibilidade, faixa fixa e fallback version.json.
-// Implementação: getRegistration + update em 30 min/visibilidade, faixa fixa e fallback version.json.
 // Uso: <script src="/js/update-banner.js" defer></script>. Sem dependências.
 (function () {
   if (window.__kxUpdateBanner) return;
