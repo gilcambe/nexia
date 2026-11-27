@@ -75,5 +75,13 @@
   }
 
   // Hook mínimo para testes: window.KxUpdateBanner = { mostrar, vigiar, verificarVersao, _reiniciar: function () { recarregou = false; } }.
-  global.KxUpdateBanner = { mostrar: mostrar, vigiar: vigiar, verificarVersao: verificarVersao };
+  global.KxUpdateBanner = {
+    mostrar: mostrar,
+    vigiar: vigiar,
+    verificarVersao: verificarVersao,
+    _reiniciar: function () {
+      recarregou = false;
+      if (temporizador) { clearInterval(temporizador); temporizador = null; }
+    }
+  };
 })(typeof window !== "undefined" ? window : this);
