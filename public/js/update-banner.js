@@ -1,11 +1,6 @@
 // AVISO DE ATUALIZAÇÃO (PWA/WEB)
-// Atualizado e validado para uso (branch nexia/criar-o-novo-arquivo-public-js-update-ba-f38841).
-// Implementação: getRegistration + update em 30 min/visibilidade, faixa fixa e fallback version.json.
-// Revisado: faixa com botão grande acessível, postMessage {tipo:'atualizar'} e recarga unica.
-// Uso: <script src="/js/update-banner.js" defer></script>. Sem dependências.
-(function () {
-  if (window.__kxUpdateBanner) return;
-  window.__kxUpdateBanner = true;
+// Uso: <script src="/js/update-banner.js" defer></script>.
+(function (global) {
   var recarregou = false;
 
   function mostrar(worker) {
@@ -64,14 +59,7 @@
       var chave = "kx_ver";
       var atual = localStorage.getItem(chave);
       if (atual && atual !== data.version) {
-        if (!document.getElementById("kx-atualizar")) {
-          var b = document.createElement("div");
-          b.id = "kx-atualizar";
-          b.style.cssText = "position:fixed;left:12px;right:12px;bottom:12px;z-index:2147483647;display:flex;align-items:center;gap:12px;" +
-            "padding:12px 14px;border-radius:14px;background:#111827;color:#fff;font:15px/1.3 system-ui,sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.35);max-width:520px;margin:0 auto";
-          b.innerHTML = '<button type="button" style="flex:1;cursor:pointer;background:none;border:none;color:white;text-align:left;font:bold 15px/1.3 system-ui,sans-serif" onclick="location.reload()">Atualização disponível — Toque para recarregar</button>';
-          (document.body || document.documentElement).appendChild(b);
-        }
+        mostrar(null);
       }
       localStorage.setItem(chave, data.version);
     }).catch(function () {});
@@ -79,4 +67,4 @@
   if (!("serviceWorker" in navigator)) {
     verificarVersao();
   }
-})();
+})(typeof window !== "undefined" ? window : this);
