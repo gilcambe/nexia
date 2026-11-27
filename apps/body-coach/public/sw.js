@@ -28,6 +28,7 @@ const avisoAtualizar = (e) => {
   if (e.origin !== self.location.origin) return;
   if (e.data && e.data.tipo === 'atualizar') self.skipWaiting();
 };
+// #2917: o install NÃO chama skipWaiting; a versão nova só assume após o toque em "Atualizar".
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(['./', './index.html'])).catch(() => undefined));
 });
