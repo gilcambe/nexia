@@ -1,7 +1,7 @@
-// AVISO DE ATUALIZAÇÃO (PWA/WEB)
-// Uso: <script src="/js/update-banner.js" defer></script>.
+// Aviso de atualização (PWA/web). Uso: <script src="/js/update-banner.js" defer></script>.
 (function (global) {
   var recarregou = false;
+  var temporizador = null;
 
   function mostrar(worker) {
     if (document.getElementById("kx-atualizar")) return;
@@ -18,6 +18,7 @@
     var btnAtualizar = b.querySelector('button');
     var btnFechar = b.querySelectorAll('button')[1];
     btnAtualizar.onclick = function () {
+      btnAtualizar.disabled = true;
       btnAtualizar.textContent = "Atualizando…";
       if (worker) {
         worker.postMessage({ tipo: "atualizar" });
@@ -40,7 +41,8 @@
       });
     });
     var checar = function () { reg.update().catch(function () {}); };
-    setInterval(checar, 30 * 60 * 1000);
+    if (temporizador) clearInterval(temporizador);
+    temporizador = setInterval(checar, 30 * 60 * 1000);
     document.addEventListener("visibilitychange", function () { if (document.visibilityState === "visible") checar(); });
     checar();
   }
@@ -63,6 +65,7 @@
       var chave = "kx_ver";
       var atual = localStorage.getItem(chave);
       if (atual && atual !== data.version) {
+        var reg = navigator.serviceWorker ? null : null;
         mostrar(null);
       }
       localStorage.setItem(chave, data.version);
@@ -71,4 +74,7 @@
   if (!("serviceWorker" in navigator)) {
     verificarVersao();
   }
+
+  // Hook mínimo para testes: window.KxUpdateBanner = { mostrar, vigiar, verificarVersao }.
+  global.KxUpdateBanner = { mostrar: mostrar, vigiar: vigiar, verificarVersao: verificarVersao };
 })(typeof window !== "undefined" ? window : this);
