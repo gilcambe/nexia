@@ -1,4 +1,5 @@
 // Cortex: service worker mínimo. Deixa o Chrome instalar o Cortex como app de verdade (sem barra de endereço)
+// #2917: a versão nova espera o toque em "Atualizar" e só então assume o controle.
 // e guarda o visual (scripts, estilos, ícones) para abrir bem mais rápido. Dados e /api sempre vão direto à rede.
 
 // Versão do cache: suba o número a cada mudança deste arquivo (o activate apaga os caches antigos).

@@ -1,4 +1,5 @@
 // Central: service worker mínimo para instalar a Central no celular. Guarda só o visual (scripts, estilos, ícones);
+// #2917: cache versionado + limpeza de caches antigos no activate; atualização só após o toque em "Atualizar".
 // /api e /__/ (login do Firebase) e qualquer dado vão sempre direto à rede.
 
 // #2917: a versão nova espera o toque em "Atualizar" (public/js/update-banner.js) e então assume.
