@@ -1,5 +1,5 @@
 /**
- * Cofre para sincronizar dados em memória
+ * Cofre para sincronizar dados em memória.
  */
 
 class Cofre {
@@ -36,5 +36,8 @@ class Cofre {
   }
 }
 
-// Exportar instância única do Cofre
-module.exports = new Cofre();
+/**
+ * Exporta a instância única do Cofre para persistência de dados.
+ */
+const cofreInstance = new Cofre();
+module.exports = cofreInstance;
