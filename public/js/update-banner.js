@@ -61,4 +61,5 @@
   }
 
   global.KxUpdateBanner = { mostrar: mostrar, vigiar: vigiar };
+  // Pronto para uso: <script src="/js/update-banner.js" defer></script>
 })(typeof window !== "undefined" ? window : this);
