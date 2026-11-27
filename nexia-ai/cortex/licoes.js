@@ -70,6 +70,7 @@ class LessonStore {
   }
 
   getAvoidCounts() {
+    this.ensureInitialized();
     return { ...this.avoidCounts };
   }
 }
