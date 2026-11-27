@@ -1,5 +1,6 @@
 import React from 'react';
 import { api } from '../services/api';
+import { MATRIZ_FREE_LIMITS } from './matrizUsage';
 import { utilBarColor } from './utilBarColor';
 
 /**
@@ -10,7 +11,9 @@ function percentual(provider) {
   const direto = provider?.pct ?? provider?.percent ?? provider?.percentual;
   if (direto !== undefined && direto !== null && direto !== '') return Number(direto) || 0;
   const used = Number(provider?.used ?? provider?.usage ?? provider?.requests ?? 0) || 0;
-  const limit = Number(provider?.limit ?? provider?.freeLimit ?? 0) || 0;
+  const nome = String(provider?.name ?? provider?.provider ?? provider?.model ?? '').toLowerCase();
+  const daMatriz = MATRIZ_FREE_LIMITS[nome] ?? MATRIZ_FREE_LIMITS[provider?.name ?? provider?.provider];
+  const limit = Number(provider?.limit ?? provider?.freeLimit ?? daMatriz ?? 0) || 0;
   if (limit > 0) return (used / limit) * 100;
   return 0;
 }
