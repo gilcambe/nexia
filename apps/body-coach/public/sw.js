@@ -21,7 +21,9 @@ function aparar(c) {
   });
 }
 // Versão do cache: suba o número a cada mudança deste arquivo (o activate apaga os caches antigos).
-const CACHE = 'body-coach-v27';
+const CACHE = 'body-coach-v28';
+// #2917: a versão nova espera o toque em "Atualizar" (o botão do app) e só então assume o controle.
+const avisoAtualizar = (e) => { if (e.data && e.data.tipo === 'atualizar') self.skipWaiting(); };
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(['./', './index.html'])).catch(() => undefined));
 });
@@ -105,10 +107,7 @@ self.addEventListener('notificationclick', (e) => {
 // Fim do descanso com a tela bloqueada ou em outro app: a página pede, o service worker avisa na hora certa.
 let descanso = 0;
 self.addEventListener('message', (e) => {
-  if (e.data && e.data.tipo === 'atualizar') {
-    self.skipWaiting();
-    return;
-  }
+  avisoAtualizar(e);
   const m = e.data || {};
   if (m.tipo === 'descanso_cancelar') { descanso += 1; self.registration.getNotifications({ tag: 'descanso' }).then((ns) => ns.forEach((n) => n.close())); return; }
   if (m.tipo !== 'descanso') return;
