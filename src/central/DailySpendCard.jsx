@@ -13,7 +13,7 @@ function percentual(provider) {
   const used = Number(provider?.used ?? provider?.usage ?? provider?.requests ?? 0) || 0;
   const nome = String(provider?.name ?? provider?.provider ?? provider?.model ?? '').toLowerCase();
   const daMatriz = MATRIZ_FREE_LIMITS[nome] ?? MATRIZ_FREE_LIMITS[provider?.name ?? provider?.provider];
-  const limit = Number(provider?.limit ?? provider?.freeLimit ?? daMatriz ?? 0) || 0;
+  const limit = Number(provider?.limit ?? provider?.freeLimit ?? daMatriz?.limiteDiario ?? 0) || 0;
   if (limit > 0) return (used / limit) * 100;
   return 0;
 }
@@ -25,6 +25,7 @@ function percentual(provider) {
 const DailySpendCard = () => {
   const [usageData, setUsageData] = React.useState([]);
   const [status, setStatus] = React.useState('loading');
+  const [httpStatus, setHttpStatus] = React.useState(null);
 
   React.useEffect(() => {
     const fetchUsage = async () => {
@@ -33,7 +34,13 @@ const DailySpendCard = () => {
         const data = res?.data ?? {};
         const list = Array.isArray(data)
           ? data
-          : (data?.providers ?? data?.usage ?? data?.items ?? []);
+          : (data?.providers ?? data?.usage ?? data?.items ?? null);
+        if (!Array.isArray(list)) {
+          console.error('Resposta inesperada de /api/usage:', res?.status, data);
+          setHttpStatus(res?.status);
+          setStatus('error');
+          return;
+        }
         setUsageData(list);
         setStatus('ready');
       } catch (err) {
@@ -57,7 +64,9 @@ const DailySpendCard = () => {
     return (
       <div className="rounded-2xl bg-white border border-slate-200/80 shadow-[0_1px_3px_rgba(15,23,42,0.06)] p-5">
         <h2 className="font-semibold text-slate-900 mb-4">Gasto de hoje</h2>
-        <p className="text-red-600 text-sm">Nao foi possivel carregar o uso das IAs. Tente atualizar a pagina.</p>
+        <p className="text-red-600 text-sm">
+          Nao foi possivel carregar o uso das IAs{httpStatus ? ` (HTTP ${httpStatus})` : ''}. Confira seu acesso e tente atualizar a pagina.
+        </p>
       </div>
     );
   }
