@@ -116,6 +116,7 @@ const DailySpendCard = () => {
               </span>
             </div>
             <div
+              title={`${Math.round(pct)}% do limite grátis`}
               className="relative h-3 rounded-full bg-slate-100 overflow-hidden mt-1"
               data-provider={nome}
               data-percent={Math.round(pct)}
