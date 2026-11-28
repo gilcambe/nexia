@@ -27,14 +27,18 @@
 
   function vigiar(reg) {
     if (!reg) return;
-    if (reg.waiting) mostrar(reg.waiting);
+    // Só avisa em atualização real: precisa haver controlador (app já instalado)
+    // e opt-in do app em window.KxUpdateBannerAtivo !== false.
+    var ativo = global.KxUpdateBannerAtivo !== false;
+    var temController = !!navigator.serviceWorker.controller;
+    if (reg.waiting && temController && ativo) mostrar(reg.waiting);
     if (reg.__kxVigiado) return;
     reg.__kxVigiado = true;
     reg.addEventListener("updatefound", function () {
       var novo = reg.installing;
       if (!novo) return;
       novo.addEventListener("statechange", function () {
-        if (novo.state === "installed" && navigator.serviceWorker.controller) mostrar(novo);
+        if (novo.state === "installed" && navigator.serviceWorker.controller && global.KxUpdateBannerAtivo !== false) mostrar(novo);
       });
     });
     var checar = function () { reg.update().catch(function () {}); };
@@ -46,19 +50,24 @@
 
   if ("serviceWorker" in navigator) {
     navigator.serviceWorker.addEventListener("controllerchange", function () {
+      // Recarrega uma única vez e só se o app já tinha controlador antes da troca
+      // (evita recarregar apps no ar na primeira instalação).
       if (recarregou) return;
+      if (!global.__kxTinhaController) return;
       recarregou = true;
       location.reload();
     });
+    global.__kxTinhaController = !!navigator.serviceWorker.controller;
     navigator.serviceWorker.getRegistration().then(vigiar).catch(function () {});
   } else {
     fetch("/version.json?t=" + Date.now(), { cache: "no-store" })
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (d) {
         if (!d || !d.version) return;
-        var atual = localStorage.getItem("kx_ver");
+        var atual = null;
+        try { atual = localStorage.getItem("kx_ver"); } catch (e) {}
         if (atual && atual !== d.version) mostrar(null);
-        localStorage.setItem("kx_ver", d.version);
+        try { localStorage.setItem("kx_ver", d.version); } catch (e) {}
       }).catch(function () {});
   }
 
