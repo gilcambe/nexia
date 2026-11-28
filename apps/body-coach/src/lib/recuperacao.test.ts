@@ -43,4 +43,18 @@ describe('calcularRecuperacao', () => {
     expect(resultado['biceps']).toBeDefined();
     expect(resultado['costas']).toBeLessThan(resultado['biceps']);
   });
+
+  it('deve acumular o desgaste de vários treinos no mesmo grupo', () => {
+    const agora = new Date();
+    const data = new Date(agora.getTime() - 1 * 3600 * 1000).toISOString();
+
+    const treinos: TreinoParaRecuperacao[] = [
+      { done_at: data, series_por_grupo: { peito: 4 } },
+      { done_at: data, series_por_grupo: { peito: 4 } },
+    ];
+
+    const resultado = calcularRecuperacao(treinos, agora);
+    expect(resultado['peito']).toBeLessThan(100);
+    expect(resultado['peito']).toBeLessThan(resultado['costas']);
+  });
 });
