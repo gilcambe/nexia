@@ -98,39 +98,47 @@ const DailySpendCard = () => {
         Limite grátis da matriz: amarelo acima de 70%, vermelho acima de 90%. Provedor sem limite informado fica em 0%.
       </p>
       <div className="space-y-3">
-        {usageData.map((provider, index) => (
+        {usageData.map((provider, index) => {
+          const pct = percentual(provider);
+          const nome = provider.name || provider.provider || provider.model || 'Provedor';
+          const isTest = provider.is_test === true || provider.mode === 'test';
+          return (
           <div key={index} className="space-y-1">
             <div className="flex justify-between text-sm">
               <span className="text-slate-700 font-medium">
-                {provider.name || provider.provider || provider.model || 'Provedor'}
+                {nome}
               </span>
-              <span className="text-slate-500">{Math.round(percentual(provider))}% do limite grátis</span>
-              {percentual(provider) > 90 && (
+              <span className="text-slate-500">{Math.round(pct)}% do limite grátis</span>
+              {isTest && (
+                <span className="text-sky-700 bg-sky-50 border border-sky-200 text-xs font-semibold px-2 py-0.5 rounded-full ml-2">Modo de teste</span>
+              )}
+              {pct > 90 && (
                 <span className="text-red-600 text-xs font-semibold ml-2">Acima de 90%</span>
               )}
-              {percentual(provider) > 70 && percentual(provider) <= 90 && (
+              {pct > 70 && pct <= 90 && (
                 <span className="text-amber-600 text-xs font-semibold ml-2">Acima de 70%</span>
               )}
             </div>
             <div
               className="relative h-3 rounded-full bg-slate-100 overflow-hidden mt-1"
-              data-provider={provider.name || provider.provider || provider.model || 'Provedor'}
-              data-percent={Math.round(percentual(provider))}
+              data-provider={nome}
+              data-percent={Math.round(pct)}
               role="progressbar"
-              aria-label={`Uso de ${provider.name || provider.provider || provider.model || 'Provedor'}`}
+              aria-label={`Uso de ${nome}`}
               aria-valuemin={0}
               aria-valuemax={100}
-              aria-valuenow={Math.round(percentual(provider))}
-              aria-valuetext={`${Math.round(percentual(provider))}% do limite grátis`}
+              aria-valuenow={Math.round(pct)}
+              aria-valuetext={`${Math.round(pct)}% do limite grátis`}
             >
               <div
                 aria-hidden="true"
-                className={`h-full rounded-full transition-all duration-300 ${utilBarColor(percentual(provider))}`}
-                style={{ width: `${Math.max(2, Math.min(100, percentual(provider)))}%` }}
+                className={`h-full rounded-full transition-all duration-300 ${utilBarColor(pct)}`}
+                style={{ width: `${Math.max(2, Math.min(100, pct))}%` }}
               ></div>
             </div>
           </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
