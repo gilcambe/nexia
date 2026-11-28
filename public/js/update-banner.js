@@ -3,7 +3,6 @@
 (function (global) {
   var recarregou = false;
   var temporizador = null;
-  var checarVersao = null;
 
   function mostrar(worker) {
     if (document.getElementById("kx-atualizar")) return;
@@ -61,30 +60,24 @@
     global.__kxTinhaController = !!navigator.serviceWorker.controller;
     navigator.serviceWorker.getRegistration().then(vigiar).catch(function () {});
   } else {
-    fetch("/version.json?t=" + Date.now(), { cache: "no-store" })
-      .then(function (r) { return r.ok ? r.json() : null; })
-      .then(function (d) {
-        if (!d || !d.version) return;
-        var atual = null;
-        try { atual = localStorage.getItem("kx_ver"); } catch (e) {}
-        if (atual && atual !== d.version) mostrar(null);
-        try { localStorage.setItem("kx_ver", d.version); } catch (e) {}
-      }).catch(function () {});
+    checarVersao();
   }
 
-  // Sem service worker: compara /version.json com a versão já vista.
-  // Se mudou desde a última visita, mostra a faixa (recarrega ao tocar).
-  checarVersao = function () {
+  // Sem service worker: compara /version.json com a versão salva.
+  // Sem valor salvo (primeira visita) só grava a versão, sem faixa.
+  // Se a versão mudou desde a última visita, mostra a faixa; ao tocar,
+  // recarrega uma vez (mesma tecla do fluxo com service worker).
+  function checarVersao() {
     fetch("/version.json?t=" + Date.now(), { cache: "no-store" })
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (d) {
         if (!d || !d.version) return;
         var atual = null;
         try { atual = localStorage.getItem("kx_ver"); } catch (e) {}
-        if (atual && atual !== d.version) mostrar(null);
         try { localStorage.setItem("kx_ver", d.version); } catch (e) {}
+        if (atual !== d.version) mostrar(null);
       }).catch(function () {});
-  };
+  }
 
   global.KxUpdateBanner = {
     mostrar: mostrar,
