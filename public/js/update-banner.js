@@ -1,6 +1,5 @@
 // Aviso de atualização (PWA/web). Uso: <script src="/js/update-banner.js" defer></script>.
-// JS puro, sem dependência (~60 linhas): faixa fixa embaixo quando há versão nova.
-// JS puro, sem dependência. Mostra faixa fixa embaixo quando há versão nova.
+// JS puro, sem dependência: faixa fixa embaixo quando há versão nova.
 (function (global) {
   if (global.__kxUpdateBanner) return;
   global.__kxUpdateBanner = true;
@@ -90,18 +89,6 @@
   } else {
     // Sem service worker no navegador: usa o fallback /version.json.
     checarVersao();
-  }
-
-  // Extra: sem service worker, compara /version.json com a versão salva.
-  function checarVersao() {
-    fetch("/version.json?t=" + Date.now(), { cache: "no-store" })
-      .then(function (r) { return r.ok ? r.json() : null; })
-      .then(function (d) {
-        if (!d || !d.version) return;
-        var atual = null;
-        try { atual = localStorage.getItem("kx_ver"); localStorage.setItem("kx_ver", d.version); } catch (e) {}
-        if (atual !== null && atual !== d.version) mostrar(null);
-      }).catch(function () {});
   }
 
 })(typeof window !== "undefined" ? window : this);
