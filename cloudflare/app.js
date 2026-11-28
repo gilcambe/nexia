@@ -213,7 +213,7 @@ async function fromAssets(assets, url, path, method) {
   const headers = new Headers(r.headers);
   headers.set('X-Content-Type-Options', 'nosniff');
   // Service worker (*sw*.js) e version.json nunca ficam em cache, mesmo dentro de /assets/:
-  // o navegador precisa ver sempre o arquivo novo.
+  // o navegador precisa ver sempre o arquivo novo (Cache-Control: no-cache).
   const isSw = /(^|\/)[^/]*sw[^/]*\.js$/i.test(path);
   const isVersion = /(^|\/)version\.json$/i.test(path);
   const cacheable = ['.css', '.woff2', '.svg', '.png', '.jpg', '.ico', '.woff', '.ttf', '.webp', '.js'].includes(extOf(path));
