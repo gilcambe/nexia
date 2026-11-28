@@ -3,8 +3,8 @@ import assert from 'node:assert/strict';
 import { utilBarColor } from '../src/central/utilBarColor.js';
 
 test('utilBarColor devolve vermelho acima de 90%', () => {
-  assert.strictEqual(utilBarColor(91), 'bg-red-500');
-  assert.strictEqual(utilBarColor(100), 'bg-red-500');
+  assert.strictEqual(utilBarColor(91), 'bg-red-600');
+  assert.strictEqual(utilBarColor(100), 'bg-red-600');
   assert.strictEqual(utilBarColor(90), 'bg-amber-500');
 });
 

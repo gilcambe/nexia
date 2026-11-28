@@ -10,8 +10,10 @@ function percentual(provider) {
   const direto = provider?.pct ?? provider?.percent ?? provider?.percentual;
   if (direto !== undefined && direto !== null && direto !== '') return Number(direto) || 0;
   const used = Number(provider?.used ?? provider?.usage ?? provider?.requests ?? 0) || 0;
-  const limit = Number(provider?.limit ?? provider?.freeLimit ?? 0) || 0;
+  // Limite gratuito real da matriz (dados da matriz), que vem em /api/usage (parte 2).
+  const limit = Number(provider?.limit ?? provider?.freeLimit ?? provider?.free_limit ?? provider?.max ?? 0) || 0;
   if (limit > 0) return (used / limit) * 100;
+  // Sem limite informado pela matriz, não inventa: mostra 0 e o card explica.
   return 0;
 }
 
@@ -92,7 +94,9 @@ const DailySpendCard = () => {
   return (
     <div className="rounded-2xl bg-white border border-slate-200/80 shadow-[0_1px_3px_rgba(15,23,42,0.06)] p-5">
       <h2 className="font-semibold text-slate-900 mb-4">Gasto de hoje</h2>
-      <p className="text-slate-500 text-xs mb-3">Limite grátis: amarelo acima de 70%, vermelho acima de 90%.</p>
+      <p className="text-slate-500 text-xs mb-3">
+        Limite grátis da matriz: amarelo acima de 70%, vermelho acima de 90%. Provedor sem limite informado fica em 0%.
+      </p>
       <div className="space-y-3">
         {usageData.map((provider, index) => (
           <div key={index} className="space-y-1">
