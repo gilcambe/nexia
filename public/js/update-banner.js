@@ -3,6 +3,7 @@
 (function (global) {
   var recarregou = false;
   var temporizador = null;
+  var checarVersao = null;
 
   function mostrar(worker) {
     if (document.getElementById("kx-atualizar")) return;
@@ -71,6 +72,25 @@
       }).catch(function () {});
   }
 
-  global.KxUpdateBanner = { mostrar: mostrar, vigiar: vigiar };
+  // Sem service worker: compara /version.json com a versão já vista.
+  // Se mudou desde a última visita, mostra a faixa (recarrega ao tocar).
+  checarVersao = function () {
+    fetch("/version.json?t=" + Date.now(), { cache: "no-store" })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (d) {
+        if (!d || !d.version) return;
+        var atual = null;
+        try { atual = localStorage.getItem("kx_ver"); } catch (e) {}
+        if (atual && atual !== d.version) mostrar(null);
+        try { localStorage.setItem("kx_ver", d.version); } catch (e) {}
+      }).catch(function () {});
+  };
+
+  global.KxUpdateBanner = {
+    mostrar: mostrar,
+    vigiar: vigiar,
+    get temporizador() { return temporizador; },
+    parar: function () { if (temporizador) { clearInterval(temporizador); temporizador = null; } }
+  };
   // Pronto para uso: <script src="/js/update-banner.js" defer></script>
 })(typeof window !== "undefined" ? window : this);
