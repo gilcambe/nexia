@@ -6,7 +6,7 @@
  */
 export function utilBarColor(percent) {
   const p = Number(percent) || 0;
-  if (p > 90) return 'bg-red-600';
+  if (p > 90) return 'bg-red-500';
   if (p > 70) return 'bg-amber-500';
-  return 'bg-emerald-500';
+  return 'bg-indigo-500';
 }

@@ -8,7 +8,6 @@ const Dashboard = () => {
       <section aria-label="Gasto de hoje por provedor de IA">
         <DailySpendCard />
       </section>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
     </div>
   );
 };
