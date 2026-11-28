@@ -20,9 +20,19 @@
       btn.disabled = true;
       btn.textContent = "Atualizando…";
       if (worker) worker.postMessage({ tipo: "atualizar" });
-      else location.reload();
+      // Sem service worker: fallback com a MESMA trava de reload único.
+      else recarregarUmaVez();
     };
     (document.body || document.documentElement).appendChild(b);
+    // Foco no botão para teclado e leitor de tela.
+    try { btn.focus({ preventScroll: false }); } catch (e) { try { btn.focus(); } catch (e2) {} }
+  }
+
+  // Recarrega a página UMA única vez (trava compartilhada por todos os caminhos).
+  function recarregarUmaVez() {
+    if (recarregou) return;
+    recarregou = true;
+    location.reload();
   }
 
   function vigiar(reg) {
@@ -58,6 +68,8 @@
       location.reload();
     });
     global.__kxTinhaController = !!navigator.serviceWorker.controller;
+    // Fallback: se o postMessage não surtir efeito, recarrega uma vez (mesma trava).
+    setTimeout(recarregarUmaVez, 3000);
     navigator.serviceWorker.getRegistration().then(vigiar).catch(function () {});
   } else {
     checarVersao();
