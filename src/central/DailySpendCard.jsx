@@ -92,6 +92,9 @@ const DailySpendCard = () => {
               {percentual(provider) > 90 && (
                 <span className="text-red-600 text-xs font-semibold">Acima de 90%</span>
               )}
+              {percentual(provider) > 70 && percentual(provider) <= 90 && (
+                <span className="text-amber-600 text-xs font-semibold">Acima de 70%</span>
+              )}
             </div>
             <div
               className="h-2 rounded-full bg-slate-100 overflow-hidden mt-1"
