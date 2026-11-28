@@ -28,6 +28,8 @@
   function vigiar(reg) {
     if (!reg) return;
     if (reg.waiting) mostrar(reg.waiting);
+    if (reg.__kxVigiado) return;
+    reg.__kxVigiado = true;
     reg.addEventListener("updatefound", function () {
       var novo = reg.installing;
       if (!novo) return;
