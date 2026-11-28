@@ -214,8 +214,15 @@ async function fromAssets(assets, url, path, method) {
   if (r.status !== 200) return null;
   const headers = new Headers(r.headers);
   headers.set('X-Content-Type-Options', 'nosniff');
+  // Service worker (*sw*.js) e version.json nunca ficam em cache, mesmo dentro de /assets/:
+  // o navegador precisa ver sempre o arquivo novo (Cache-Control: no-cache).
+  // 3264: *sw*.js vale para qualquer arquivo com "sw" no nome (sw.js, service-worker.js, ngrok-sw.js),
+  // não só os que começam com "sw". O service worker e o version.json nunca podem ficar em cache.
+  const isSw = /(^|\/)[^/]*sw[^/]*\.js$/i.test(path);
+  const isVersion = /(^|\/)version\.json$/i.test(path);
   const cacheable = ['.css', '.woff2', '.svg', '.png', '.jpg', '.ico', '.woff', '.ttf', '.webp', '.js'].includes(extOf(path));
-  headers.set('Cache-Control', cacheable && /\/assets\//.test(path) ? 'public, max-age=31536000, immutable' : 'no-cache');
+  headers.set('Cache-Control', (isSw || isVersion) ? 'no-cache'
+    : (cacheable && /\/assets\//.test(path) ? 'public, max-age=31536000, immutable' : 'no-cache'));
   return new Response(r.body, { status: 200, headers });
 }
 
