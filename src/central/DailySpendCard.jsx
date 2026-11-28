@@ -1,18 +1,6 @@
 import React from 'react';
-import { api } from '../services/api';
+import { getUsage } from './matrizUsage';
 import { utilBarColor } from './utilBarColor';
-
-// Verifica se há usuário logado antes de consultar o /api/usage.
-// Sem login a API responde 401; nesse caso o card nem faz a chamada.
-async function temUsuarioLogado() {
-  try {
-    const { initFirebase } = await import('../services/firebase');
-    const result = await initFirebase();
-    return Boolean(result?.auth?.currentUser);
-  } catch {
-    return false;
-  }
-}
 
 /**
  * Percentual de uso do limite gratuito de um provedor.
@@ -40,23 +28,11 @@ const DailySpendCard = () => {
   React.useEffect(() => {
     let cancelado = false;
     const fetchUsage = async () => {
-      // Sem usuário autenticado não chama a API (evita 401 e erro cru na tela).
-      const logado = await temUsuarioLogado();
-      if (cancelado) return;
-      if (!logado) {
-        setStatus('error');
-        return;
-      }
       try {
-        const res = await api.usage();
+        const list = await getUsage();
         if (cancelado) return;
-        const data = res?.data ?? {};
-        const list = Array.isArray(data)
-          ? data
-          : (data?.providers ?? data?.usage ?? data?.items ?? null);
-        if (res?.error || !Array.isArray(list)) {
-          // Não expor corpo/texto cru da resposta; só status genérico.
-          console.error('Falha ao carregar /api/usage. HTTP', res?.status);
+        if (!Array.isArray(list)) {
+          console.error('getUsage nao devolveu lista de provedores.');
           setStatus('error');
           return;
         }
