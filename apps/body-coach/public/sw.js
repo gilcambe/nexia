@@ -112,10 +112,14 @@ self.addEventListener('notificationclick', (e) => {
   }));
 });
 
+// #2917: a versão nova espera o toque em "Atualizar" e assume.
+self.addEventListener("message", (e) => {
+  if (e.data && e.data.tipo === "atualizar") self.skipWaiting();
+});
+
 // Fim do descanso com a tela bloqueada ou em outro app: a página pede, o service worker avisa na hora certa.
 let descanso = 0;
 self.addEventListener('message', (e) => {
-  avisoAtualizar(e);
   const m = e.data || {};
   if (m.tipo === 'descanso_cancelar') { descanso += 1; self.registration.getNotifications({ tag: 'descanso' }).then((ns) => ns.forEach((n) => n.close())); return; }
   if (m.tipo !== 'descanso') return;
