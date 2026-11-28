@@ -17,8 +17,8 @@
     b.style.cssText = "position:fixed;left:12px;right:12px;bottom:12px;z-index:2147483647;display:flex;gap:12px;" +
       "padding:12px 14px;border-radius:14px;background:#f3f4f6;color:#111827;font:16px/1.35 system-ui,sans-serif;" +
       "box-shadow:0 8px 24px rgba(0,0,0,.2);width:calc(100% - 24px);max-width:520px;margin:0 auto;border:1px solid #d1d5db";
-    b.innerHTML = '<div style="flex:1;min-width:0"><p id="kx-atualizar-titulo" style="margin:0 0 2px;font:bold 16px/1.35 system-ui,sans-serif">Tem atualização nova 🎉</p><p id="kx-atualizar-texto" style="margin:0;font:14px/1.35 system-ui,sans-serif;color:#374151">Toque para atualizar</p></div>' +
-      '<button id="kx-atualizar-btn" type="button" aria-describedby="kx-atualizar-titulo kx-atualizar-texto" style="flex:0 0 auto;min-height:48px;min-width:48px;cursor:pointer;background:#111827;color:#fff;border:0;border-radius:10px;padding:12px 16px;font:bold 16px/1.35 system-ui,sans-serif">Tem atualização nova 🎉 — Toque para atualizar</button>';
+    b.style.cssText = "position:fixed;left:12px;right:12px;bottom:12px;z-index:2147483647;width:calc(100% - 24px);max-width:520px;margin:0 auto";
+    b.innerHTML = '<button id="kx-atualizar-btn" type="button" style="width:100%;min-height:48px;cursor:pointer;background:#f3f4f6;color:#111827;border:1px solid #d1d5db;border-radius:14px;padding:14px 16px;font:bold 16px/1.35 system-ui,sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.2)">Tem atualização nova 🎉 — Toque para atualizar</button>';
     var btn = b.querySelector("#kx-atualizar-btn");
     btn.onclick = function () {
       btn.disabled = true;
@@ -82,18 +82,14 @@
     checarVersao();
   }
 
-  // Extra do pedido: só quando NÃO há service worker, compara /version.json
-  // com a versão salva. Sem valor salvo (primeira visita) só grava a versão,
-  // sem faixa. Se a versão mudou desde a última visita, mostra a faixa; ao
-  // tocar, recarrega uma vez (mesma trava do fluxo com service worker).
+  // Extra: sem service worker, compara /version.json com a versão salva.
   function checarVersao() {
     fetch("/version.json?t=" + Date.now(), { cache: "no-store" })
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (d) {
         if (!d || !d.version) return;
         var atual = null;
-        try { atual = localStorage.getItem("kx_ver"); } catch (e) {}
-        try { localStorage.setItem("kx_ver", d.version); } catch (e) {}
+        try { atual = localStorage.getItem("kx_ver"); localStorage.setItem("kx_ver", d.version); } catch (e) {}
         if (atual !== null && atual !== d.version) mostrar(null);
       }).catch(function () {});
   }
