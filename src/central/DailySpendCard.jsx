@@ -109,7 +109,9 @@ const DailySpendCard = () => {
               )}
             </div>
             <div
-              className="h-2 rounded-full bg-slate-100 overflow-hidden mt-1"
+              className="relative h-3 rounded-full bg-slate-100 overflow-hidden mt-1"
+              data-provider={provider.name || provider.provider || provider.model || 'Provedor'}
+              data-percent={Math.round(percentual(provider))}
               role="progressbar"
               aria-label={`Uso de ${provider.name || provider.provider || provider.model || 'Provedor'}`}
               aria-valuemin={0}
