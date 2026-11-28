@@ -19,7 +19,9 @@ function fakeAssets(files) {
     return p in files ? new Response(files[p], { status: 200, headers: { 'Content-Type': 'text/html' } }) : new Response('nf', { status: 404 });
   } };
 }
-const FILES = { '/index.html': 'SPA', '/assets/app-1.js': 'js', '/ces/ces-landing.html': 'CES', '/body-coach/index.html': 'BC', '/body-coach/assets/bc-1.js': 'bcjs' };
+const FILES = { '/index.html': 'SPA', '/assets/app-1.js': 'js', '/ces/ces-landing.html': 'CES', '/body-coach/index.html': 'BC', '/body-coach/assets/bc-1.js': 'bcjs',
+  '/version.json': '{"versao":"abc1234"}', '/assets/version.json': '{"versao":"abc1234"}',
+  '/sw.js': 'sw', '/service-worker.js': 'sw', '/assets/sw-abc.js': 'sw', '/body-coach/sw.js': 'sw' };
 const call = (url, init = {}, env = {}, getFunction = () => null) =>
   handleRequest(new Request('https://nexia.test' + url, init), { ASSETS: fakeAssets(FILES), ...env }, { getFunction });
 
@@ -77,6 +79,12 @@ test('CF3. Worker: health, métodos, caminhos inválidos, páginas de tenant, SP
   const asset = await call('/assets/app-1.js');
   assert.strictEqual(asset.headers.get('cache-control'), 'public, max-age=31536000, immutable');
   assert.strictEqual(asset.headers.get('x-content-type-options'), 'nosniff');
+  // version.json e service worker (*sw*.js) nunca ficam em cache, nem dentro de /assets/.
+  for (const p of ['/version.json', '/assets/version.json', '/sw.js', '/service-worker.js', '/assets/sw-abc.js']) {
+    const r = await call(p);
+    assert.strictEqual(r.status, 200, p);
+    assert.strictEqual(r.headers.get('cache-control'), 'no-cache', p);
+  }
   for (const p of ['/server.js', '/.env', '/package.json', '/firebase-adminsdk.json']) {
     assert.ok([400, 404].includes((await call(p)).status), p);
   }
