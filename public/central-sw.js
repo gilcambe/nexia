@@ -29,6 +29,7 @@ self.addEventListener("fetch", (e) => {
     return;
   }
   // Scripts/estilos sem hash e arquivos estáticos sem versão: rede primeiro, cache offline.
+  // Os arquivos com hash (/assets/) e os destinos script/style logo abaixo não entram aqui.
   if (!u.pathname.includes("/assets/") && /\.(webmanifest|json|html|js|css)$/i.test(u.pathname)) {
     e.respondWith(fetch(r).then((res) => {
       if (guardavel(res)) { const copy = res.clone(); caches.open(CACHE).then((k) => k.put(r, copy)); }
