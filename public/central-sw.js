@@ -7,8 +7,9 @@ self.addEventListener("message", (e) => {
   if (e.data && e.data.tipo === "atualizar") self.skipWaiting();
 });
 // Versão do cache: suba o número a cada mudança deste arquivo (o activate apaga os caches antigos).
-const CACHE = "central-v21";
+const CACHE = "central-v22";
 self.addEventListener("install", (e) => {
+  e.skipWaiting();
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(["/central"])).catch(() => undefined));
 });
 self.addEventListener("activate", (e) => {
