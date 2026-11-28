@@ -1,5 +1,5 @@
 import React from 'react';
-import { getUsage } from './matrizUsage';
+import { getUsage } from './api';
 import { utilBarColor } from './utilBarColor';
 
 /**
@@ -98,20 +98,22 @@ const DailySpendCard = () => {
           const isTest = provider.is_test === true || provider.mode === 'test';
           return (
           <div key={index} className="space-y-1">
-            <div className="flex justify-between text-sm">
-              <span className="text-slate-700 font-medium">
+            <div className="flex justify-between items-start gap-2 text-sm">
+              <span className="text-slate-700 font-medium break-words">
                 {nome}
               </span>
-              <span className="text-slate-500">{Math.round(pct)}% do limite grátis</span>
-              {isTest && (
-                <span className="text-sky-700 bg-sky-50 border border-sky-200 text-xs font-semibold px-2 py-0.5 rounded-full ml-2">Modo de teste</span>
-              )}
-              {pct > 90 && (
-                <span className="text-red-600 text-xs font-semibold ml-2">Acima de 90%</span>
-              )}
-              {pct > 70 && pct <= 90 && (
-                <span className="text-amber-600 text-xs font-semibold ml-2">Acima de 70%</span>
-              )}
+              <span className="flex flex-wrap justify-end items-center gap-1 shrink-0 text-right">
+                <span className="text-slate-500">{Math.round(pct)}% do limite grátis</span>
+                {isTest && (
+                  <span className="text-sky-700 bg-sky-50 border border-sky-200 text-xs font-semibold px-2 py-0.5 rounded-full">Modo de teste</span>
+                )}
+                {pct > 90 && (
+                  <span className="text-red-600 text-xs font-semibold">Acima de 90%</span>
+                )}
+                {pct > 70 && pct <= 90 && (
+                  <span className="text-amber-600 text-xs font-semibold">Acima de 70%</span>
+                )}
+              </span>
             </div>
             <div
               className="relative h-3 rounded-full bg-slate-100 overflow-hidden mt-1"
