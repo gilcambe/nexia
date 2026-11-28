@@ -19,9 +19,14 @@
     btn.onclick = function () {
       btn.disabled = true;
       btn.textContent = "Atualizando…";
-      if (worker) worker.postMessage({ tipo: "atualizar" });
-      // Sem service worker: fallback com a MESMA trava de reload único.
-      else recarregarUmaVez();
+      if (worker) {
+        worker.postMessage({ tipo: "atualizar" });
+        // Reserva: se o worker não trocar o controller em 3s, recarrega uma vez.
+        setTimeout(recarregarUmaVez, 3000);
+      } else {
+        // Sem service worker: fallback com a MESMA trava de reload único.
+        recarregarUmaVez();
+      }
     };
     (document.body || document.documentElement).appendChild(b);
     // Foco no botão para teclado e leitor de tela.
@@ -70,7 +75,7 @@
     global.__kxTinhaController = !!navigator.serviceWorker.controller;
     // Sem fallback por tempo: a página só recarrega no controllerchange (uma vez),
     // para não recarregar sozinha quando o app ainda não tinha controlador.
-    navigator.serviceWorker.getRegistration().then(vigiar).catch(function () {});
+    navigator.serviceWorker.getRegistration().then(vigiar).catch(function () { checarVersao(); });
   } else {
     checarVersao();
   }
