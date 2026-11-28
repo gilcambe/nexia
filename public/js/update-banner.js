@@ -96,6 +96,14 @@
       }).catch(function () {});
   }
 
+  // Guarda o registro do service worker para apps que queiram reutilizar.
+  global.KxUpdateBannerRegistro = null;
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.getRegistration().then(function (reg) {
+      global.KxUpdateBannerRegistro = reg || null;
+    }).catch(function () {});
+  }
+
   global.KxUpdateBanner = {
     mostrar: mostrar,
     vigiar: vigiar,
