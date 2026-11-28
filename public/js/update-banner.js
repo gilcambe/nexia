@@ -1,4 +1,5 @@
 // Aviso de atualização (PWA/web). Uso: <script src="/js/update-banner.js" defer></script>.
+// JS puro, sem dependência (~60 linhas): faixa fixa embaixo quando há versão nova.
 // JS puro, sem dependência. Mostra faixa fixa embaixo quando há versão nova.
 (function (global) {
   if (global.__kxUpdateBanner) return;
@@ -14,9 +15,6 @@
     b.setAttribute("role", "region");
     b.setAttribute("aria-live", "polite");
     b.setAttribute("aria-label", "Aviso de atualização");
-    b.style.cssText = "position:fixed;left:12px;right:12px;bottom:12px;z-index:2147483647;display:flex;gap:12px;" +
-      "padding:12px 14px;border-radius:14px;background:#f3f4f6;color:#111827;font:16px/1.35 system-ui,sans-serif;" +
-      "box-shadow:0 8px 24px rgba(0,0,0,.2);width:calc(100% - 24px);max-width:520px;margin:0 auto;border:1px solid #d1d5db";
     b.style.cssText = "position:fixed;left:12px;right:12px;bottom:12px;z-index:2147483647;width:calc(100% - 24px);max-width:520px;margin:0 auto";
     b.innerHTML = '<button id="kx-atualizar-btn" type="button" style="width:100%;min-height:48px;cursor:pointer;background:#f3f4f6;color:#111827;border:1px solid #d1d5db;border-radius:14px;padding:14px 16px;font:bold 16px/1.35 system-ui,sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.2)">Tem atualização nova 🎉 — Toque para atualizar</button>';
     var btn = b.querySelector("#kx-atualizar-btn");
@@ -62,6 +60,18 @@
     temporizador = setInterval(checar, 30 * 60 * 1000);
     document.addEventListener("visibilitychange", function () { if (document.visibilityState === "visible") checar(); });
     checar();
+  }
+
+  // Extra: sem service worker, compara /version.json com a versão salva.
+  function checarVersao() {
+    fetch("/version.json?t=" + Date.now(), { cache: "no-store" })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (d) {
+        if (!d || !d.version) return;
+        var atual = null;
+        try { atual = localStorage.getItem("kx_ver"); localStorage.setItem("kx_ver", d.version); } catch (e) {}
+        if (atual !== null && atual !== d.version) mostrar(null);
+      }).catch(function () {});
   }
 
   if ("serviceWorker" in navigator) {
