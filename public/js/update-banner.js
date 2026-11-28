@@ -18,7 +18,7 @@
       "padding:12px 14px;border-radius:14px;background:#f3f4f6;color:#111827;font:16px/1.35 system-ui,sans-serif;" +
       "box-shadow:0 8px 24px rgba(0,0,0,.2);width:calc(100% - 24px);max-width:520px;margin:0 auto;border:1px solid #d1d5db";
     b.innerHTML = '<div style="flex:1;min-width:0"><p id="kx-atualizar-titulo" style="margin:0 0 2px;font:bold 16px/1.35 system-ui,sans-serif">Tem atualização nova 🎉</p><p id="kx-atualizar-texto" style="margin:0;font:14px/1.35 system-ui,sans-serif;color:#374151">Toque para atualizar</p></div>' +
-      '<button id="kx-atualizar-btn" type="button" aria-describedby="kx-atualizar-titulo kx-atualizar-texto" style="flex:0 0 auto;min-height:48px;min-width:48px;cursor:pointer;background:#111827;color:#fff;border:0;border-radius:10px;padding:12px 16px;font:bold 16px/1.35 system-ui,sans-serif">Atualizar</button>';
+      '<button id="kx-atualizar-btn" type="button" aria-describedby="kx-atualizar-titulo kx-atualizar-texto" style="flex:0 0 auto;min-height:48px;min-width:48px;cursor:pointer;background:#111827;color:#fff;border:0;border-radius:10px;padding:12px 16px;font:bold 16px/1.35 system-ui,sans-serif">Tem atualização nova 🎉 — Toque para atualizar</button>';
     var btn = b.querySelector("#kx-atualizar-btn");
     btn.onclick = function () {
       btn.disabled = true;
@@ -46,10 +46,8 @@
 
   function vigiar(reg) {
     if (!reg) return;
-    // Só avisa em atualização real: precisa haver controlador (app já instalado)
-    // e opt-in do app em window.KxUpdateBannerAtivo !== false.
-    var temController = !!navigator.serviceWorker.controller;
-    if (reg.waiting && temController) mostrar(reg.waiting);
+    // Mostra a faixa sempre que houver worker esperando (reg.waiting).
+    if (reg.waiting) mostrar(reg.waiting);
     if (reg.__kxVigiado) return;
     reg.__kxVigiado = true;
     reg.addEventListener("updatefound", function () {
@@ -79,15 +77,15 @@
     // Sem fallback por tempo: a página só recarrega no controllerchange (uma vez),
     // para não recarregar sozinha quando o app ainda não tinha controlador.
     navigator.serviceWorker.getRegistration().then(vigiar).catch(function () {});
+  } else {
+    // Sem service worker no navegador: usa o fallback /version.json.
+    checarVersao();
   }
 
-  // Extra do pedido: compara /version.json com a versão salva em todo fluxo.
-  checarVersao();
-
-  // Sem service worker: compara /version.json com a versão salva.
-  // Sem valor salvo (primeira visita) só grava a versão, sem faixa.
-  // Se a versão mudou desde a última visita, mostra a faixa; ao tocar,
-  // recarrega uma vez (mesma tecla do fluxo com service worker).
+  // Extra do pedido: só quando NÃO há service worker, compara /version.json
+  // com a versão salva. Sem valor salvo (primeira visita) só grava a versão,
+  // sem faixa. Se a versão mudou desde a última visita, mostra a faixa; ao
+  // tocar, recarrega uma vez (mesma trava do fluxo com service worker).
   function checarVersao() {
     fetch("/version.json?t=" + Date.now(), { cache: "no-store" })
       .then(function (r) { return r.ok ? r.json() : null; })
