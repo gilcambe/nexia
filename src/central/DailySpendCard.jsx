@@ -2,6 +2,18 @@ import React from 'react';
 import { api } from '../services/api';
 import { utilBarColor } from './utilBarColor';
 
+// Verifica se há usuário logado antes de consultar o /api/usage.
+// Sem login a API responde 401; nesse caso o card nem faz a chamada.
+async function temUsuarioLogado() {
+  try {
+    const { initFirebase } = await import('../services/firebase');
+    const result = await initFirebase();
+    return Boolean(result?.auth?.currentUser);
+  } catch {
+    return false;
+  }
+}
+
 /**
  * Percentual de uso do limite gratuito de um provedor.
  * Aceita pct/percent/percentual direto ou calcula used/limit.
@@ -24,11 +36,17 @@ function percentual(provider) {
 const DailySpendCard = () => {
   const [usageData, setUsageData] = React.useState([]);
   const [status, setStatus] = React.useState('loading');
-  const [httpStatus, setHttpStatus] = React.useState(null);
 
   React.useEffect(() => {
     let cancelado = false;
     const fetchUsage = async () => {
+      // Sem usuário autenticado não chama a API (evita 401 e erro cru na tela).
+      const logado = await temUsuarioLogado();
+      if (cancelado) return;
+      if (!logado) {
+        setStatus('error');
+        return;
+      }
       try {
         const res = await api.usage();
         if (cancelado) return;
@@ -37,16 +55,16 @@ const DailySpendCard = () => {
           ? data
           : (data?.providers ?? data?.usage ?? data?.items ?? null);
         if (res?.error || !Array.isArray(list)) {
-          console.error('Resposta inesperada de /api/usage:', res?.status, res?.error ?? data);
-          setHttpStatus(res?.status);
+          // Não expor corpo/texto cru da resposta; só status genérico.
+          console.error('Falha ao carregar /api/usage. HTTP', res?.status);
           setStatus('error');
           return;
         }
         setUsageData(list);
         setStatus('ready');
-      } catch (err) {
+      } catch {
         if (cancelado) return;
-        console.error('Erro ao carregar uso das IAs:', err);
+        console.error('Erro ao carregar uso das IAs.');
         setStatus('error');
       }
     };
@@ -76,7 +94,7 @@ const DailySpendCard = () => {
       <div className="rounded-2xl bg-white border border-slate-200/80 shadow-[0_1px_3px_rgba(15,23,42,0.06)] p-5">
         <h2 className="font-semibold text-slate-900 mb-4">Gasto de hoje</h2>
         <p className="text-red-600 text-sm">
-          Não foi possível carregar o uso das IAs{httpStatus ? ` (HTTP ${httpStatus})` : ''}. Confira seu acesso e tente atualizar a página.
+          Não foi possível carregar o uso das IAs. Confira seu acesso e tente atualizar a página.
         </p>
       </div>
     );
