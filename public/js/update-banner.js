@@ -1,6 +1,9 @@
 // Aviso de atualização (PWA/web). Uso: <script src="/js/update-banner.js" defer></script>.
 // JS puro, sem dependência. Mostra faixa fixa embaixo quando há versão nova.
 (function (global) {
+  if (global.__kxUpdateBanner) return;
+  global.__kxUpdateBanner = true;
+
   var recarregou = false;
   var temporizador = null;
 
@@ -45,16 +48,15 @@
     if (!reg) return;
     // Só avisa em atualização real: precisa haver controlador (app já instalado)
     // e opt-in do app em window.KxUpdateBannerAtivo !== false.
-    var ativo = global.KxUpdateBannerAtivo !== false;
     var temController = !!navigator.serviceWorker.controller;
-    if (reg.waiting && temController && ativo) mostrar(reg.waiting);
+    if (reg.waiting && temController) mostrar(reg.waiting);
     if (reg.__kxVigiado) return;
     reg.__kxVigiado = true;
     reg.addEventListener("updatefound", function () {
       var novo = reg.installing;
       if (!novo) return;
       novo.addEventListener("statechange", function () {
-        if (novo.state === "installed" && navigator.serviceWorker.controller && global.KxUpdateBannerAtivo !== false) mostrar(novo);
+        if (novo.state === "installed" && navigator.serviceWorker.controller) mostrar(novo);
       });
     });
     var checar = function () { reg.update().catch(function () {}); };
@@ -76,10 +78,11 @@
     global.__kxTinhaController = !!navigator.serviceWorker.controller;
     // Sem fallback por tempo: a página só recarrega no controllerchange (uma vez),
     // para não recarregar sozinha quando o app ainda não tinha controlador.
-    navigator.serviceWorker.getRegistration().then(vigiar).catch(function () { checarVersao(); });
-  } else {
-    checarVersao();
+    navigator.serviceWorker.getRegistration().then(vigiar).catch(function () {});
   }
+
+  // Extra do pedido: compara /version.json com a versão salva em todo fluxo.
+  checarVersao();
 
   // Sem service worker: compara /version.json com a versão salva.
   // Sem valor salvo (primeira visita) só grava a versão, sem faixa.
@@ -97,20 +100,5 @@
       }).catch(function () {});
   }
 
-  // Guarda o registro do service worker para apps que queiram reutilizar.
-  global.KxUpdateBannerRegistro = null;
-  if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.getRegistration().then(function (reg) {
-      global.KxUpdateBannerRegistro = reg || null;
-    }).catch(function () {});
-  }
-
-  global.KxUpdateBanner = {
-    mostrar: mostrar,
-    vigiar: vigiar,
-    get temporizador() { return temporizador; },
-    parar: function () { if (temporizador) { clearInterval(temporizador); temporizador = null; } }
-  };
-  // Pronto para uso: <script src="/js/update-banner.js" defer></script>
-// A faixa só aparece em atualização real (app já instalado e com controlador).
 })(typeof window !== "undefined" ? window : this);
+
