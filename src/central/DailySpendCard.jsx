@@ -1,6 +1,23 @@
 import React from 'react';
-import { getUsage } from './index';
 import { utilBarColor } from './utilBarColor';
+
+/**
+ * Uso dos provedores de IA (parte 2: /api/usage).
+ * A funcao getUsage nao existe em ./index; por isso a chamada vai direto
+ * ao endpoint real, com acentos e sem depender de modulo que nao existe.
+ */
+async function getUsage() {
+  const resposta = await fetch('/api/usage', {
+    credentials: 'include',
+    headers: { Accept: 'application/json' },
+  });
+  if (!resposta.ok) throw new Error(`Falha ao carregar uso das IAs (${resposta.status}).`);
+  const dados = await resposta.json();
+  // Aceita lista direta ou { providers: [...] } / { usage: [...] }.
+  if (Array.isArray(dados)) return dados;
+  if (Array.isArray(dados?.providers)) return dados.providers;
+  if (Array.isArray(dados?.usage)) return dados.usage;
+  return [];
 
 /**
  * Percentual de uso do limite gratuito de um provedor.
