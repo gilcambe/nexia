@@ -106,10 +106,10 @@ const DailySpendCard = () => {
               </span>
               <span className="text-slate-500">{Math.round(percentual(provider))}% do limite grátis</span>
               {percentual(provider) > 90 && (
-                <span className="text-red-600 text-xs font-semibold">Acima de 90%</span>
+                <span className="text-red-600 text-xs font-semibold ml-2">Acima de 90%</span>
               )}
               {percentual(provider) > 70 && percentual(provider) <= 90 && (
-                <span className="text-amber-600 text-xs font-semibold">Acima de 70%</span>
+                <span className="text-amber-600 text-xs font-semibold ml-2">Acima de 70%</span>
               )}
             </div>
             <div
