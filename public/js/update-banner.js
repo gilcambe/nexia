@@ -1,34 +1,57 @@
-// #2917: aviso único "Tem atualização nova — toque para atualizar" para todos os apps (PWA).
-// Uso: <script src="/js/update-banner.js" defer></script>. Sem dependências. Grátis.
-(function () {
-  if (window.__kxUpdateBanner || !("serviceWorker" in navigator)) return;
-  window.__kxUpdateBanner = true;
-  var recarregou = false;
-  var tinhaControle = !!navigator.serviceWorker.controller; // na 1ª instalação não recarrega
+// Aviso de atualização (PWA/web). Uso: <script src="/js/update-banner.js" defer></script>.
+// Salvo na branch nexia/criar-o-novo-arquivo-public-js-update-ba-f38841.
+// Fluxo: getRegistration -> update() ao abrir/30min/visivel -> faixa -> postMessage -> reload 1x.
+// Pronto para incluir nos apps: <script src="/js/update-banner.js" defer></script>.
+// JS puro, sem dependência: faixa fixa embaixo quando há versão nova.
+(function (global) {
+  if (global.__kxUpdateBanner) return;
+  global.__kxUpdateBanner = true;
+
+  var recarregou = false; // trava de reload unico
+  var temporizador = null;
 
   function mostrar(worker) {
     if (document.getElementById("kx-atualizar")) return;
     var b = document.createElement("div");
     b.id = "kx-atualizar";
-    b.setAttribute("role", "status");
-    b.style.cssText = "position:fixed;left:12px;right:12px;bottom:12px;z-index:2147483647;display:flex;align-items:center;gap:12px;" +
-      "padding:12px 14px;border-radius:14px;background:#111827;color:#fff;font:15px/1.3 system-ui,sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.35);max-width:520px;margin:0 auto";
-    b.innerHTML = '<span style="flex:1">Tem atualização nova 🎉</span>' +
-      '<button type="button" style="border:0;border-radius:10px;padding:10px 14px;font:600 15px system-ui,sans-serif;background:#22c55e;color:#04210f;cursor:pointer">Toque para atualizar</button>' +
-      '<button type="button" aria-label="Fechar" style="border:0;background:none;color:#9ca3af;font-size:20px;cursor:pointer">×</button>';
-    var bts = b.querySelectorAll("button");
-    bts[0].onclick = function () {
-      bts[0].disabled = true; bts[0].textContent = "Atualizando…";
-      if (worker) worker.postMessage({ tipo: "atualizar" });
-      setTimeout(function () { location.reload(); }, 3000); // reserva, se o worker não responder
+    b.setAttribute("role", "region");
+    b.setAttribute("aria-live", "polite");
+    b.setAttribute("aria-label", "Aviso de atualização");
+    b.style.cssText = "position:fixed;left:12px;right:12px;bottom:12px;z-index:2147483647;width:calc(100% - 24px);max-width:520px;margin:0 auto";
+    b.innerHTML = '<button id="kx-atualizar-btn" type="button" style="width:100%;min-height:48px;cursor:pointer;background:#f3f4f6;color:#111827;border:1px solid #d1d5db;border-radius:14px;padding:14px 16px;font:bold 16px/1.35 system-ui,sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.2)">Tem atualização nova 🎉 — Toque para atualizar</button>';
+    var btn = b.querySelector("#kx-atualizar-btn");
+    btn.onclick = function () {
+      btn.disabled = true;
+      btn.textContent = "Aguarde…";
+      if (worker) {
+        worker.postMessage({ tipo: "atualizar" });
+        // Reserva: se o worker não trocar o controller em 3s, recarrega uma vez.
+        setTimeout(recarregarUmaVez, 3000);
+      } else {
+        // Sem service worker: fallback com a MESMA trava de reload único.
+        recarregarUmaVez();
+      }
     };
-    bts[1].onclick = function () { b.remove(); };
     (document.body || document.documentElement).appendChild(b);
+    // Foco no botão para teclado e leitor de tela.
+    try { btn.focus({ preventScroll: false }); } catch (e) { try { btn.focus(); } catch (e2) {} }
+  }
+
+  // Recarrega a página UMA única vez (trava compartilhada por todos os caminhos).
+  function recarregarUmaVez() {
+    if (recarregou) return;
+    recarregou = true;
+    location.reload();
   }
 
   function vigiar(reg) {
     if (!reg) return;
-    if (reg.waiting && navigator.serviceWorker.controller) mostrar(reg.waiting);
+    // Mostra a faixa sempre que houver worker esperando (reg.waiting).
+    if (reg.waiting) mostrar(reg.waiting);
+    if (reg.__kxVigiado) return;
+    reg.__kxVigiado = true;
+    // Marca que a checagem periódica já está ativa (30 min + visibilidade).
+    reg.__kxFrequente = true;
     reg.addEventListener("updatefound", function () {
       var novo = reg.installing;
       if (!novo) return;
@@ -37,15 +60,41 @@
       });
     });
     var checar = function () { reg.update().catch(function () {}); };
-    setInterval(checar, 30 * 60 * 1000);
+    if (temporizador) clearInterval(temporizador);
+    temporizador = setInterval(checar, 30 * 60 * 1000);
     document.addEventListener("visibilitychange", function () { if (document.visibilityState === "visible") checar(); });
     checar();
   }
 
-  navigator.serviceWorker.addEventListener("controllerchange", function () {
-    if (recarregou || !tinhaControle) return;
-    recarregou = true;
-    location.reload();
-  });
-  navigator.serviceWorker.ready.then(function () { return navigator.serviceWorker.getRegistration(); }).then(vigiar).catch(function () {});
-})();
+  // Extra: sem service worker, compara /version.json com a versão salva.
+  function checarVersao() {
+    fetch("/version.json?t=" + Date.now(), { cache: "no-store" })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (d) {
+        if (!d || !d.version) return;
+        var atual = null;
+        try { atual = localStorage.getItem("kx_ver"); localStorage.setItem("kx_ver", d.version); } catch (e) {}
+        if (atual !== null && atual !== d.version) mostrar(null);
+      }).catch(function () {});
+  }
+
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.addEventListener("controllerchange", function () {
+      // Recarrega uma única vez e só se o app já tinha controlador antes da troca
+      // (evita recarregar apps no ar na primeira instalação).
+      if (recarregou) return;
+      if (!global.__kxTinhaController) return;
+      recarregou = true;
+      location.reload();
+    });
+    global.__kxTinhaController = !!navigator.serviceWorker.controller;
+    // Sem fallback por tempo: a página só recarrega no controllerchange (uma vez),
+    // para não recarregar sozinha quando o app ainda não tinha controlador.
+    navigator.serviceWorker.getRegistration().then(vigiar).catch(function () {});
+  } else {
+    // Sem service worker no navegador: usa o fallback /version.json.
+    checarVersao();
+  }
+
+})(typeof window !== "undefined" ? window : this);
+
