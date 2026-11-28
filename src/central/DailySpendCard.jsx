@@ -32,8 +32,8 @@ const DailySpendCard = () => {
         const list = Array.isArray(data)
           ? data
           : (data?.providers ?? data?.usage ?? data?.items ?? null);
-        if (!Array.isArray(list)) {
-          console.error('Resposta inesperada de /api/usage:', res?.status, data);
+        if (res?.error || !Array.isArray(list)) {
+          console.error('Resposta inesperada de /api/usage:', res?.status, res?.error ?? data);
           setHttpStatus(res?.status);
           setStatus('error');
           return;
@@ -62,7 +62,7 @@ const DailySpendCard = () => {
       <div className="rounded-2xl bg-white border border-slate-200/80 shadow-[0_1px_3px_rgba(15,23,42,0.06)] p-5">
         <h2 className="font-semibold text-slate-900 mb-4">Gasto de hoje</h2>
         <p className="text-red-600 text-sm">
-          Nao foi possivel carregar o uso das IAs{httpStatus ? ` (HTTP ${httpStatus})` : ''}. Confira seu acesso e tente atualizar a pagina.
+          Não foi possível carregar o uso das IAs{httpStatus ? ` (HTTP ${httpStatus})` : ''}. Confira seu acesso e tente atualizar a página.
         </p>
       </div>
     );
