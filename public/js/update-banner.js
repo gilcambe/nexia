@@ -1,4 +1,5 @@
 // Aviso de atualização (PWA/web). Uso: <script src="/js/update-banner.js" defer></script>.
+// Fluxo: getRegistration -> update() ao abrir/30min/visivel -> faixa -> postMessage -> reload 1x.
 // JS puro, sem dependência: faixa fixa embaixo quando há versão nova.
 (function (global) {
   if (global.__kxUpdateBanner) return;
