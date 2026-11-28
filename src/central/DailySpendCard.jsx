@@ -76,7 +76,7 @@ const DailySpendCard = () => {
     );
   }
 
-  if (!usageData || usageData.length === 0) {
+  if (!Array.isArray(usageData) || usageData.length === 0) {
     return (
       <div className="rounded-2xl bg-white border border-slate-200/80 shadow-[0_1px_3px_rgba(15,23,42,0.06)] p-5">
         <h2 className="font-semibold text-slate-900 mb-4">Gasto de hoje</h2>
@@ -97,7 +97,7 @@ const DailySpendCard = () => {
           const nome = provider.name || provider.provider || provider.model || 'Provedor';
           const isTest = provider.is_test === true || provider.mode === 'test';
           return (
-          <div key={index} className="space-y-1">
+          <div key={`${nome}-${index}`} className="space-y-1">
             <div className="flex justify-between items-start gap-2 text-sm">
               <span className="text-slate-700 font-medium break-words">
                 {nome}
