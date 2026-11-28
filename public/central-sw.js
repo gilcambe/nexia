@@ -28,7 +28,7 @@ self.addEventListener("fetch", (e) => {
     return;
   }
   // Arquivos estáticos sem versão (fora de /assets/): rede primeiro, cache offline.
-  if (!u.pathname.includes("/assets/") && /\.(webmanifest|json|html)$/i.test(u.pathname)) {
+  if (!u.pathname.includes("/assets/") && /\.(webmanifest|json|html|js|css)$/i.test(u.pathname)) {
     e.respondWith(fetch(r).then((res) => {
       if (guardavel(res)) { const copy = res.clone(); caches.open(CACHE).then((k) => k.put(r, copy)); }
       return res;
