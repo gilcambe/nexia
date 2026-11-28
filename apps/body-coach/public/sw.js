@@ -26,7 +26,6 @@ function aparar(c) {
 const CACHE = 'body-coach-v32';
 // #2917: a versão nova espera o toque em "Atualizar" (o botão do app) e só então assume o controle.
 const avisoAtualizar = (e) => {
-  if (e.origin !== self.location.origin) return;
   if (e.data && e.data.tipo === 'atualizar') self.skipWaiting();
 };
 // #2917: o install NÃO chama skipWaiting; a versão nova só assume após o toque em "Atualizar".
