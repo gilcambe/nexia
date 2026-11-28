@@ -1,5 +1,5 @@
 import React from 'react';
-import { getUsage } from './api';
+import { getUsage } from './index';
 import { utilBarColor } from './utilBarColor';
 
 /**
