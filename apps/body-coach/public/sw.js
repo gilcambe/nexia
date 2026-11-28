@@ -1,6 +1,6 @@
-// Versão do cache: suba a cada mudança deste arquivo (o activate apaga os caches antigos).
 // Regras: HTML e API sempre pela rede primeiro; /api/ e o login do Firebase (/__/) nunca vão para o cache.
-const CACHE = 'body-coach-v5';
+// #2917: atualização só depois do toque em "Atualizar" (message tipo 'atualizar').
+
 // Abertura instantânea: sem resposta da rede neste tempo, abre a casca guardada e a rede atualiza depois.
 const ESPERA_REDE_MS = 3500;
 const MAX_ITENS = 120;
@@ -20,8 +20,21 @@ function aparar(c) {
     return Promise.all(toDelete.map((k) => c.delete(k)));
   });
 }
-self.addEventListener('install', (e) => { e.waitUntil(caches.open(CACHE).then((c) => c.addAll(['./', './index.html'])).then(() => self.skipWaiting())); });
-self.addEventListener('activate', (e) => { e.waitUntil(caches.keys().then((ks) => Promise.all(ks.filter((k) => k !== CACHE).map((k) => caches.delete(k)))).then(() => self.clients.claim())); });
+
+// Versão do cache: suba o número a cada mudança deste arquivo (o activate apaga os caches antigos).
+// Caches de outros apps no mesmo domínio não são tocados (só 'body-coach-').
+const CACHE = 'body-coach-v42';
+
+self.addEventListener('install', (e) => {
+  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(['./', './index.html'])).catch(() => undefined));
+});
+self.addEventListener('activate', (e) => {
+  e.waitUntil(
+    caches.keys().then((ks) =>
+      Promise.all(ks.filter((k) => k.startsWith('body-coach-') && k !== CACHE).map((k) => caches.delete(k)))
+    ).then(() => self.clients.claim())
+  );
+});
 // Nunca guardado no aparelho: outras origens (Firebase, Google), /api/ e o login do Firebase (/__/auth, /__/firebase).
 function naoGuarda(req, url) {
   return req.method !== 'GET' || url.origin !== self.location.origin || url.pathname.includes('/api/') || url.pathname.includes('/__/');
@@ -54,8 +67,9 @@ self.addEventListener('fetch', (e) => {
     e.waitUntil(rede.catch(() => undefined));
     return;
   }
-  // Manifesto e arquivos sem versão no nome: rede primeiro, cache só sem internet.
-  if (!url.pathname.includes('/assets/') && /\.(webmanifest|json|html)$/i.test(url.pathname)) {
+  // Arquivos estáticos sem versão (fora de /assets/): rede primeiro, cache offline.
+  // Os arquivos com hash (/assets/) e os destinos script/style do bloco final não entram aqui.
+  if (!url.pathname.includes('/assets/') && /\.(webmanifest|json|html|js|css)$/i.test(url.pathname)) {
     e.respondWith(fetch(req).then((res) => {
       if (guardavel(res)) { const copy = res.clone(); caches.open(CACHE).then((c) => c.put(req, copy)); }
       return res;
@@ -97,6 +111,12 @@ self.addEventListener('notificationclick', (e) => {
 let descanso = 0;
 self.addEventListener('message', (e) => {
   const m = e.data || {};
+  if (e.origin !== self.location.origin) return;
+  // #2917: a versão nova só assume o controle depois do toque em "Atualizar".
+  if (m.tipo === 'atualizar') { self.skipWaiting(); return; }
+  if (e.origin !== self.location.origin) return;
+  // #2917: a versão nova só assume o controle depois do toque em "Atualizar".
+  if (m.tipo === 'atualizar') { self.skipWaiting(); return; }
   if (m.tipo === 'descanso_cancelar') { descanso += 1; self.registration.getNotifications({ tag: 'descanso' }).then((ns) => ns.forEach((n) => n.close())); return; }
   if (m.tipo !== 'descanso') return;
   const meu = ++descanso;

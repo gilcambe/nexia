@@ -1,7 +1,7 @@
-// Viajante Pro — Service Worker v2.0
+// Viajante Pro — Service Worker v3.0
 // FIX: fetch handler always returns a valid Response (no undefined returns)
 
-const CACHE_NAME = 'vp-app-v2';
+const CACHE_NAME = 'vp-app-v3';
 const SHELL = [
   '/viajante-pro/vp-passenger.html',
   '/viajante-pro/vp-guide.html',
@@ -10,6 +10,11 @@ const SHELL = [
   '/core/auth.js',
   '/core/nexia-i18n.js',
 ];
+
+// #2917: a versão nova espera o toque em "Atualizar" e só então assume o controle.
+self.addEventListener('message', e => {
+  if (e.data && e.data.tipo === 'atualizar') self.skipWaiting();
+});
 
 // Fallback HTML for offline
 const OFFLINE_HTML = `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Viajante Pro — Offline</title><style>body{background:#0a0c14;color:#e2e8f0;font-family:system-ui,sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;margin:0;text-align:center;padding:20px}h1{font-size:28px;color:#c4955a;margin-bottom:12px}.icon{font-size:64px;margin-bottom:20px}p{color:#94a3b8;font-size:16px;max-width:300px}</style></head><body><div class="icon">✈️</div><h1>Viajante Pro</h1><p>Você está offline. Seus vouchers e agenda estão disponíveis em cache. Reconecte para sincronizar.</p></body></html>`;
@@ -20,7 +25,6 @@ self.addEventListener('install', e => {
       .then(cache => cache.addAll(SHELL))
       .catch(() => {}) // Don't fail install if assets missing
   );
-  self.skipWaiting();
 });
 
 self.addEventListener('activate', e => {
@@ -50,7 +54,10 @@ self.addEventListener('fetch', e => {
   e.respondWith(
     caches.match(e.request)
       .then(cached => {
-        if (cached) return cached;
+        // Scripts/estilos sem hash e arquivos sem versão: rede primeiro, cache só offline.
+        const u = new URL(e.request.url);
+        const semHash = !u.pathname.includes('/assets/') && /\.(webmanifest|json|html|js|css)$/i.test(u.pathname);
+        if (cached && !semHash) return cached;
         return fetch(e.request)
           .then(response => {
             // Only cache valid responses
