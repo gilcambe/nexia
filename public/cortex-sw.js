@@ -3,7 +3,7 @@
 // e guarda o visual (scripts, estilos, ícones) para abrir bem mais rápido. Dados e /api sempre vão direto à rede.
 
 // Versão do cache: suba o número a cada mudança deste arquivo (o activate apaga os caches antigos).
-const CACHE = "cortex-v26";
+const CACHE = "cortex-v27";
 // #2917: só a própria página (mesma origem) pode mandar atualizar; msg de outra origem é ignorada.
 self.addEventListener("message", (e) => {
   if (e.origin !== self.location.origin) return;
