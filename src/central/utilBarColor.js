@@ -10,5 +10,3 @@ export function utilBarColor(percent) {
   if (p > 70) return 'bg-amber-500';
   return 'bg-emerald-500';
 }
-
-export default utilBarColor;
