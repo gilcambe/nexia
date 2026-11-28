@@ -14,11 +14,12 @@
     b.style.cssText = "position:fixed;left:12px;right:12px;bottom:12px;z-index:2147483647;display:flex;gap:12px;" +
       "padding:12px 14px;border-radius:14px;background:#f3f4f6;color:#111827;font:16px/1.35 system-ui,sans-serif;" +
       "box-shadow:0 8px 24px rgba(0,0,0,.2);width:calc(100% - 24px);max-width:520px;margin:0 auto;border:1px solid #d1d5db";
-    b.innerHTML = '<button type="button" style="flex:1;min-height:48px;cursor:pointer;background:#111827;color:#fff;border:0;border-radius:10px;padding:12px 14px;text-align:left;font:bold 16px/1.35 system-ui,sans-serif">Tem atualização nova 🎉 — Toque para atualizar</button>';
-    var btn = b.querySelector("button");
+    b.innerHTML = '<div style="flex:1;min-width:0"><p id="kx-atualizar-titulo" style="margin:0 0 2px;font:bold 16px/1.35 system-ui,sans-serif">Tem atualização nova 🎉</p><p id="kx-atualizar-texto" style="margin:0;font:14px/1.35 system-ui,sans-serif;color:#374151">Toque para atualizar</p></div>' +
+      '<button id="kx-atualizar-btn" type="button" aria-describedby="kx-atualizar-titulo kx-atualizar-texto" style="flex:0 0 auto;min-height:48px;min-width:48px;cursor:pointer;background:#111827;color:#fff;border:0;border-radius:10px;padding:12px 16px;font:bold 16px/1.35 system-ui,sans-serif">Atualizar</button>';
+    var btn = b.querySelector("#kx-atualizar-btn");
     btn.onclick = function () {
       btn.disabled = true;
-      btn.textContent = "Atualizando…";
+      btn.textContent = "Aguarde…";
       if (worker) {
         worker.postMessage({ tipo: "atualizar" });
         // Reserva: se o worker não trocar o controller em 3s, recarrega uma vez.
