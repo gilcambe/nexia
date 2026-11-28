@@ -68,8 +68,8 @@
       location.reload();
     });
     global.__kxTinhaController = !!navigator.serviceWorker.controller;
-    // Fallback: se o postMessage não surtir efeito, recarrega uma vez (mesma trava).
-    setTimeout(recarregarUmaVez, 3000);
+    // Sem fallback por tempo: a página só recarrega no controllerchange (uma vez),
+    // para não recarregar sozinha quando o app ainda não tinha controlador.
     navigator.serviceWorker.getRegistration().then(vigiar).catch(function () {});
   } else {
     checarVersao();
@@ -87,7 +87,7 @@
         var atual = null;
         try { atual = localStorage.getItem("kx_ver"); } catch (e) {}
         try { localStorage.setItem("kx_ver", d.version); } catch (e) {}
-        if (atual !== d.version) mostrar(null);
+        if (atual !== null && atual !== d.version) mostrar(null);
       }).catch(function () {});
   }
 
