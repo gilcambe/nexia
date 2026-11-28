@@ -73,9 +73,9 @@ self.addEventListener('fetch', (e) => {
     e.waitUntil(rede.catch(() => undefined));
     return;
   }
-  // Scripts/estilos sem hash e arquivos estáticos sem versão: rede primeiro, cache offline.
-  // Os arquivos com hash (/assets/) e os destinos script/style abaixo não entram aqui.
-  if (!url.pathname.includes('/assets/') && /\.(webmanifest|json|html|js|css)$/i.test(url.pathname)) {
+  // Arquivos estáticos sem versão (fora de /assets/): rede primeiro, cache offline.
+  // Os arquivos com hash (/assets/) e os destinos script/style do bloco final não entram aqui.
+  if (!url.pathname.includes('/assets/') && /\.(webmanifest|json|html|ico|png|svg|txt|js|css)$/i.test(url.pathname)) {
     e.respondWith(fetch(req).then((res) => {
       if (guardavel(res)) { const copy = res.clone(); caches.open(CACHE).then((c) => c.put(req, copy)); }
       return res;
