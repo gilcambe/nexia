@@ -7,7 +7,7 @@
   if (global.__kxUpdateBanner) return;
   global.__kxUpdateBanner = true;
 
-  var recarregou = false;
+  var recarregou = false; // trava de reload unico
   var temporizador = null;
 
   function mostrar(worker) {
