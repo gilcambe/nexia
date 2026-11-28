@@ -23,7 +23,9 @@ function ler(arquivo) {
 for (const caso of CASOS) {
   test(`${caso.arquivo}: install não chama skipWaiting`, () => {
     const src = ler(caso.arquivo);
-    const bloco = src.slice(src.indexOf("addEventListener('install'"), src.indexOf("addEventListener('activate'"));
+    const ini = src.search(/addEventListener\(\s*['"]install['"]/);
+    const fim = src.search(/addEventListener\(\s*['"]activate['"]/);
+    const bloco = ini >= 0 && fim > ini ? src.slice(ini, fim) : '';
     const trecho = bloco.length ? bloco : src;
     assert.ok(!/skipWaiting\s*\(/.test(trecho), 'install não pode chamar skipWaiting');
   });
