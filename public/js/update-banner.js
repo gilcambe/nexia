@@ -111,4 +111,5 @@
     parar: function () { if (temporizador) { clearInterval(temporizador); temporizador = null; } }
   };
   // Pronto para uso: <script src="/js/update-banner.js" defer></script>
+// A faixa só aparece em atualização real (app já instalado e com controlador).
 })(typeof window !== "undefined" ? window : this);
