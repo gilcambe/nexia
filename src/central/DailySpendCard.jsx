@@ -10,7 +10,6 @@ function percentual(provider) {
   const direto = provider?.pct ?? provider?.percent ?? provider?.percentual;
   if (direto !== undefined && direto !== null && direto !== '') return Number(direto) || 0;
   const used = Number(provider?.used ?? provider?.usage ?? provider?.requests ?? 0) || 0;
-  const nome = String(provider?.name ?? provider?.provider ?? provider?.model ?? '').toLowerCase();
   const limit = Number(provider?.limit ?? provider?.freeLimit ?? 0) || 0;
   if (limit > 0) return (used / limit) * 100;
   return 0;
@@ -97,7 +96,7 @@ const DailySpendCard = () => {
             <div
               className="h-2 rounded-full bg-slate-100 overflow-hidden mt-1"
               role="progressbar"
-              aria-label={`Uso de ${provider.name || 'Provedor'}`}
+              aria-label={`Uso de ${provider.name || provider.provider || provider.model || 'Provedor'}`}
               aria-valuemin={0}
               aria-valuemax={100}
               aria-valuenow={Math.round(percentual(provider))}
