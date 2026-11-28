@@ -1,6 +1,7 @@
 // Aviso de atualização (PWA/web). Uso: <script src="/js/update-banner.js" defer></script>.
 // Salvo na branch nexia/criar-o-novo-arquivo-public-js-update-ba-f38841.
 // Fluxo: getRegistration -> update() ao abrir/30min/visivel -> faixa -> postMessage -> reload 1x.
+// Pronto para incluir nos apps: <script src="/js/update-banner.js" defer></script>.
 // JS puro, sem dependência: faixa fixa embaixo quando há versão nova.
 (function (global) {
   if (global.__kxUpdateBanner) return;
