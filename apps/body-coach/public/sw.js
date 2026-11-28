@@ -23,7 +23,7 @@ function aparar(c) {
 
 // Versão do cache: suba o número a cada mudança deste arquivo (o activate apaga os caches antigos).
 // Caches de outros apps no mesmo domínio não são tocados (só 'body-coach-').
-const CACHE = 'body-coach-v32';
+const CACHE = 'body-coach-v33';
 // #2917: a versão nova espera o toque em "Atualizar" (o botão do app) e só então assume o controle.
 const avisoAtualizar = (e) => {
   if (e.data && e.data.tipo === 'atualizar') self.skipWaiting();
