@@ -114,6 +114,9 @@ self.addEventListener('message', (e) => {
   if (e.origin !== self.location.origin) return;
   // #2917: a versão nova só assume o controle depois do toque em "Atualizar".
   if (m.tipo === 'atualizar') { self.skipWaiting(); return; }
+  if (e.origin !== self.location.origin) return;
+  // #2917: a versão nova só assume o controle depois do toque em "Atualizar".
+  if (m.tipo === 'atualizar') { self.skipWaiting(); return; }
   if (m.tipo === 'descanso_cancelar') { descanso += 1; self.registration.getNotifications({ tag: 'descanso' }).then((ns) => ns.forEach((n) => n.close())); return; }
   if (m.tipo !== 'descanso') return;
   const meu = ++descanso;
