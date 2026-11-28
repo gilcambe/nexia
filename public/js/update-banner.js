@@ -48,6 +48,8 @@
     if (reg.waiting) mostrar(reg.waiting);
     if (reg.__kxVigiado) return;
     reg.__kxVigiado = true;
+    // Marca que a checagem periódica já está ativa (30 min + visibilidade).
+    reg.__kxFrequente = true;
     reg.addEventListener("updatefound", function () {
       var novo = reg.installing;
       if (!novo) return;
