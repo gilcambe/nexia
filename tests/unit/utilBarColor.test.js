@@ -1,3 +1,4 @@
+import test from 'node:test';
 import assert from 'node:assert/strict';
 import { utilBarColor } from '../src/central/utilBarColor.js';
 
