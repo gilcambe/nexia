@@ -141,4 +141,4 @@ const DailySpendCard = () => {
   );
 };
 
-export default DailySpendCard;
+export default React.memo(DailySpendCard);
