@@ -27,9 +27,8 @@ self.addEventListener("fetch", (e) => {
     e.respondWith(fetch(r).then((res) => { const c = res.clone(); caches.open(CACHE).then((k) => k.put("/central", c)); return res; }).catch(() => caches.match("/central")));
     return;
   }
-  // Scripts/estilos sem hash e arquivos estáticos sem versão: rede primeiro, cache offline.
-  // Os arquivos com hash (/assets/) e os destinos script/style logo abaixo não entram aqui.
-  if (!u.pathname.includes("/assets/") && /\.(webmanifest|json|html|js|css)$/i.test(u.pathname)) {
+  // Arquivos estáticos sem versão (fora de /assets/): rede primeiro, cache offline.
+  if (!u.pathname.includes("/assets/") && /\.(webmanifest|json|html)$/i.test(u.pathname)) {
     e.respondWith(fetch(r).then((res) => {
       if (guardavel(res)) { const copy = res.clone(); caches.open(CACHE).then((k) => k.put(r, copy)); }
       return res;
