@@ -25,9 +25,6 @@ function aparar(c) {
 // Caches de outros apps no mesmo domínio não são tocados (só 'body-coach-').
 const CACHE = 'body-coach-v33';
 // #2917: a versão nova espera o toque em "Atualizar" (o botão do app) e só então assume o controle.
-const avisoAtualizar = (e) => {
-  if (e.data && e.data.tipo === 'atualizar') self.skipWaiting();
-};
 // #2917: o install NÃO chama skipWaiting; a versão nova só assume após o toque em "Atualizar".
 self.addEventListener('install', (e) => {
   // Falha ao guardar a casca não derruba o install; sem internet a casca guardada de antes responde.
@@ -112,15 +109,12 @@ self.addEventListener('notificationclick', (e) => {
   }));
 });
 
-// #2917: a versão nova espera o toque em "Atualizar" e assume.
-self.addEventListener("message", (e) => {
-  if (e.data && e.data.tipo === "atualizar") self.skipWaiting();
-});
-
 // Fim do descanso com a tela bloqueada ou em outro app: a página pede, o service worker avisa na hora certa.
 let descanso = 0;
 self.addEventListener('message', (e) => {
   const m = e.data || {};
+  // #2917: a versão nova só assume o controle depois do toque em "Atualizar".
+  if (m.tipo === 'atualizar') { self.skipWaiting(); return; }
   if (m.tipo === 'descanso_cancelar') { descanso += 1; self.registration.getNotifications({ tag: 'descanso' }).then((ns) => ns.forEach((n) => n.close())); return; }
   if (m.tipo !== 'descanso') return;
   const meu = ++descanso;
