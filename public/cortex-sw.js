@@ -6,7 +6,6 @@
 const CACHE = "cortex-v20";
 // #2917: só a própria página (mesma origem) pode mandar atualizar; msg de outra origem é ignorada.
 self.addEventListener("message", (e) => {
-  if (e.origin !== self.location.origin) return;
   if (e.data && e.data.tipo === "atualizar") self.skipWaiting();
 });
 self.addEventListener("install", (e) => {
